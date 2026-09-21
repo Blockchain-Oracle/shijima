@@ -471,8 +471,9 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
         // sent, so it can never be a stale sentence written an hour before anyone read it.
         payload: { lastCheck: now.toISOString() },
       })
-      // Going live is earned: 24 completed checks in shadow mode, and the report opened.
-      if (desk.mode === 'shadow') await bumpShadowChecks(db, desk.id)
+      // Going live is earned: 24 completed checks in shadow mode, and the report opened. Only the desk's own
+      // hourly checks count. A check the owner asked for by hand never does, or 24 could be run in minutes.
+      if (desk.mode === 'shadow' && input.trigger !== 'manual') await bumpShadowChecks(db, desk.id)
       await finishWake(db, wake.id, { status: 'completed', sourceHealth: { rpc: true } })
     }
     return { status: 'completed', records }

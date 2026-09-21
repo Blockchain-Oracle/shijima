@@ -10,7 +10,16 @@
  */
 import { APPROVED_TOKENS, type DeskCall } from '@desk/chain'
 import { chainReferenceSource, gradeAtReopen, type SendReport, wakeDesk } from '@desk/core'
-import { type ActionRow, hasWake, lastSealAt, planCheckpoint, runningDesks, type WakeTrigger } from '@desk/db'
+import {
+  type ActionRow,
+  finishCheckRequest,
+  hasWake,
+  lastSealAt,
+  pendingCheckRequests,
+  planCheckpoint,
+  runningDesks,
+  type WakeTrigger,
+} from '@desk/db'
 import type { Address, Hex } from 'viem'
 import type { openCli } from './cli/context'
 import { implementationsByVersion } from './cli/context'
@@ -81,6 +90,46 @@ export async function reviewAllDesks(
 
   const overdue = now.getTime() - hour.getTime() >= TIMER_GRACE_MS
   const mayCheck = trigger !== 'tick' || overdue
+  const wakeDeps = {
+    db: cli.db,
+    pub: cli.pub,
+    approved: APPROVED_TOKENS,
+    servApiKey: cli.env.SERV_API_KEY,
+    finnhubKey: process.env.FINNHUB_API_KEY,
+    operator: cli.wallet.account.address,
+    implementations: implementationsByVersion(),
+    send,
+  }
+
+  // "Check now", from the chat or the website. Each runs at its own request time, never the top of the hour, so
+  // it can never take the hourly check's slot. It does not wait for the hourly grace: a person is waiting.
+  const running = new Set((await runningDesks(cli.db)).map((d) => d.id))
+  for (const request of await pendingCheckRequests(cli.db)) {
+    if (!running.has(request.deskId)) {
+      await finishCheckRequest(cli.db, request.id, {
+        status: 'refused',
+        refusedReason: 'the desk is not running',
+      })
+      continue
+    }
+    if (!(await clearToSend())) {
+      log('holding', { note: 'an earlier transaction may still land' })
+      summary.held = true
+      return summary
+    }
+    const report = await wakeDesk(wakeDeps, {
+      deskId: request.deskId,
+      scheduledFor: request.createdAt,
+      trigger: 'manual',
+    })
+    await finishCheckRequest(cli.db, request.id, { status: 'done' })
+    log('check_now', {
+      desk: request.deskId,
+      status: report.status,
+      note: report.note,
+      records: report.records,
+    })
+  }
 
   for (const desk of await runningDesks(cli.db)) {
     summary.desks++
@@ -90,19 +139,7 @@ export async function reviewAllDesks(
         summary.held = true
         return summary
       }
-      const report = await wakeDesk(
-        {
-          db: cli.db,
-          pub: cli.pub,
-          approved: APPROVED_TOKENS,
-          servApiKey: cli.env.SERV_API_KEY,
-          finnhubKey: process.env.FINNHUB_API_KEY,
-          operator: cli.wallet.account.address,
-          implementations: implementationsByVersion(),
-          send,
-        },
-        { deskId: desk.id, scheduledFor: hour, trigger },
-      )
+      const report = await wakeDesk(wakeDeps, { deskId: desk.id, scheduledFor: hour, trigger })
       log('check', {
         desk: desk.address,
         hour: hour.toISOString(),
