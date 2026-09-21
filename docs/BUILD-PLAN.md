@@ -527,6 +527,37 @@ while committing. Ten were real and are now fixed:
 
   Building now.
 
+**Mon 21 Sep, 14:45 UTC. STEPS 2 TO 5 BUILT: THE SESSION KEY, THE ENGINE FIXES, THE PRICE LOG AND THE CHAT.**
+All proven on the anvil fork. Nothing is deployed to mainnet yet.
+- **Desk v1 with the session grant.** It passes 41 fork tests. `prove-limits` holds all 6 session cases,
+  `batch` included. v0 stays live on mainnet until Abu says go.
+- **Engine fixes:**
+  - owner and session sells are absorbed as `owner_action` events, instead of halting the next check;
+  - check now runs at the request's own time and does not count as a practice check;
+  - going live needs 24 checks **and** the report opened, enforced in code;
+  - notes reach the model as r1, r2 and so on, and are kept out of the public record;
+  - The Mag Seven and AI Builders presets;
+  - the Timing sum.
+- **Price log:** one row per Stock Token every 5 minutes, using the engine's own reference. A 30-day backfill is
+  running.
+- **The chat core** (`packages/core/src/ask/`). The worker answers from a Postgres row: LISTEN plus a 1-second
+  sweep, with SKIP LOCKED claims. It makes one SERV call on a strict schema. Plain code checks the proposal, and
+  it is saved with a 10-minute expiry. Confirming runs only the saved arguments. Proven on the fork:
+  - "Move me into AI Builders" gave a before-and-after card; confirming applied mandate v3 with the desk's
+    read-back, and a second tap was refused;
+  - "buy Alphabet now anyway" gave a card with a fresh quote. Confirming ended the wait, and the worker bought on
+    the fork within the 0.5% rule, recorded as `ACTED_BY_OVERRIDE` with `override: by owner`;
+  - pause, resume and check now work. A $5,000 withdraw, a 90% weight, an override in practice, and going live at
+    3 checks are each refused in words.
+- **Telegram:** free text now uses the same chat, with Confirm buttons. `pnpm desk:ask` talks to the dev desk.
+- **Web:** `POST /api/ask` and `GET /api/ask/[id]` (401 when signed out, 403 for someone else's desk), plus
+  `confirmProposalAction`.
+- **Decided:** a strategy change is drafted as the saved proposal, not as a `draft` mandate row. One call does
+  both jobs: the chat's reply is the read-back, and it is saved on confirm.
+- **Blocker: SERV credit is $0.02.** Every hourly check fails with FAILED_NO_DECISION, and the chat can no longer
+  answer. Abu tops it up. Calls were already made cheaper: the chat reserves $0.03 a call, not $0.07.
+- **Next:** step 6, Masayume's look (foundation). Vault sweeps are still owed from step 3.
+
 ## 6. Schedule
 
 | Day | Work | Must be true by end of day |

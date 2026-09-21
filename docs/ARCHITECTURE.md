@@ -288,6 +288,25 @@ Chat (added 21 Sep, migration 0001):
 - `price_alerts`.
 
 `notifications` gained `read_at` for the web inbox.
+
+How the chat runs (`packages/core/src/ask/`, `apps/worker/src/ask.ts`):
+1. The web writes an `ask_requests` row and sends `pg_notify('ask_requests', id)`.
+2. The worker LISTENs on one held connection and sweeps every second. It claims rows with `FOR UPDATE SKIP LOCKED`,
+   answering at most 3 at once, beside the hourly clock and never inside it.
+3. Context comes from Postgres only. Every fact gets an id (d41, a1, w1, r1, p-NVDA), and a cite outside that
+   set is dropped.
+4. One `servJson` call on the frozen `ask.v1` prompt, with a strict `AskReply` schema: 1,200 tokens, no shadow
+   agent, and the prompt guard on.
+5. `checkProposal` checks the one proposal against the desk as it is now. It then gets a path: `signin`,
+   `session` or `wallet`.
+6. A proposal that passes is saved with a 10-minute expiry. For "do it anyway", the fresh quote is saved too.
+7. `confirmSigninProposal` takes the proposal with a guarded update, then runs the existing guarded query for its
+   kind. A mandate change refuses if the settings changed since the proposal was made (`baseVersion`).
+8. "Do it anyway" is an approval with reason `owner_override`, already answered via `chat`. The wait ends as
+   broken. The engine carries it out like any approval, recorded as `ACTED_BY_OVERRIDE`. It counts against the
+   daily limit and is left out of the desk's Timing.
+9. The chat's calls are logged under the purposes `ask` and `readback`, with a daily allowance of 200. The
+   engine's calls never count against it. Each owner may send 6 messages a minute and 150 a day.
 Web uses the pooled URL with `attachDatabasePool`. The worker uses the direct URL. Migrations are
 additive and run as the worker's pre-deploy step. The worker deploys before the web.
 
