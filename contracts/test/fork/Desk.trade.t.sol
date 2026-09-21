@@ -29,25 +29,29 @@ contract DeskTradeForkTest is ForkBase {
         desk.buy(NVDA, 10e6, 0, _deadline(), H1);
         vm.expectRevert(Desk.NotOwnerOrOperator.selector);
         desk.pause();
-        vm.expectRevert(Desk.NotOwner.selector);
+        vm.expectRevert(Desk.NotOwnerOrSession.selector); // owner or the owner's session key only
         desk.withdraw(USDG, 1);
+        vm.expectRevert(Desk.NotOwnerOrSession.selector);
+        desk.revokeSession();
         vm.stopPrank();
     }
 
     function test_operator_cannotUseOwnerPowers() public {
         vm.startPrank(operator);
-        vm.expectRevert(Desk.NotOwner.selector);
+        vm.expectRevert(Desk.NotOwnerOrSession.selector);
         desk.withdraw(USDG, 1);
         vm.expectRevert(Desk.NotOwner.selector);
         desk.unpause();
-        vm.expectRevert(Desk.NotOwner.selector);
+        vm.expectRevert(Desk.NotOwnerOrSession.selector);
         desk.setLimits(1e12, 1e12);
         vm.expectRevert(Desk.NotOwner.selector);
         desk.allowToken(NVDA, 500, NVDA_FEED);
         vm.expectRevert(Desk.NotOwner.selector);
         desk.setOperator(stranger);
-        vm.expectRevert(Desk.NotOwner.selector);
+        vm.expectRevert(Desk.NotOwnerOrSession.selector);
         desk.batch(new bytes[](0));
+        vm.expectRevert(Desk.NotOwner.selector);
+        desk.grantSession(operator, uint40(block.timestamp + 1 hours));
         vm.stopPrank();
     }
 

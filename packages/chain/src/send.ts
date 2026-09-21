@@ -26,18 +26,32 @@ import {
 } from 'viem'
 import type { OperatorWallet } from './desk'
 import { deskAbi } from './generated/desk-abi'
+import { deskAbiV0 } from './generated/desk-abi-v0'
+
+/**
+ * The contract version a desk runs, as stored on its row (`desks.contract_version`). v0 desks keep speaking the
+ * frozen v0 ABI. Every later version speaks the current source. The two differ only where v1 added deadlines
+ * (`checkpoint`, `sweepToVault`, `redeemFromVault`); events and errors in v1 are a superset of v0's, so one
+ * decoder reads receipts and refusals from both.
+ */
+export const isV0Desk = (version: string) => version === 'v0'
+
+/** How long a v1 checkpoint may wait to land. Past it, the transaction can never land, which makes recovery safe. */
+const CHECKPOINT_DEADLINE_S = 300
 
 export type DeskCall =
   | {
       kind: 'buy' | 'sell'
       desk: Address
+      /** The desk's contract version, from its row. */
+      version: string
       token: Address
       amountIn: bigint
       minOut: bigint
       deadline: number
       decisionHash: Hex
     }
-  | { kind: 'checkpoint'; desk: Address; decisionHash: Hex }
+  | { kind: 'checkpoint'; desk: Address; version: string; decisionHash: Hex }
 
 export interface SignedDeskCall {
   kind: DeskCall['kind']
@@ -48,7 +62,7 @@ export interface SignedDeskCall {
   txHash: Hex
   nonce: number
   calldataHash: Hex
-  /** The contract's own deadline. Only buy and sell have one. */
+  /** The contract's own deadline. Buy and sell always have one; so does a checkpoint on v1 and later. */
   deadlineUnix?: number
 }
 
@@ -67,15 +81,6 @@ export type DeskOutcome =
       feedPrice?: bigint
     }
   | { status: 'reverted'; txHash: Hex; blockNumber: bigint; gasUsed: bigint; effectiveGasPrice: bigint }
-
-function callArgs(call: DeskCall) {
-  return call.kind === 'checkpoint'
-    ? ({ functionName: 'checkpoint', args: [call.decisionHash] } as const)
-    : ({
-        functionName: call.kind,
-        args: [call.token, call.amountIn, call.minOut, call.deadline, call.decisionHash],
-      } as const)
-}
 
 /** The operator wallet cannot cover the most this transaction could cost. Nothing was signed. */
 export class OperatorLowGasError extends Error {
@@ -114,18 +119,38 @@ export async function signDeskCall(
   wallet: OperatorWallet,
   call: DeskCall,
 ): Promise<SignedDeskCall> {
-  const target = { account: wallet.account, address: call.desk, abi: deskAbi } as const
-  // Two call sites, because viem types each contract function separately and cannot take a union of them.
-  if (call.kind === 'checkpoint') {
-    await pub.simulateContract({ ...target, functionName: 'checkpoint', args: [call.decisionHash] })
-  } else {
+  const account = wallet.account
+  // Separate call sites, because viem types each contract function separately and cannot take a union of them.
+  let data: Hex
+  let deadlineUnix: number | undefined
+  if (call.kind !== 'checkpoint') {
+    const args = [call.token, call.amountIn, call.minOut, call.deadline, call.decisionHash] as const
+    // buy and sell are the same shape in every version.
+    await pub.simulateContract({ account, address: call.desk, abi: deskAbi, functionName: call.kind, args })
+    data = encodeFunctionData({ abi: deskAbi, functionName: call.kind, args })
+    deadlineUnix = call.deadline
+  } else if (isV0Desk(call.version)) {
+    const args = [call.decisionHash] as const
     await pub.simulateContract({
-      ...target,
-      functionName: call.kind,
-      args: [call.token, call.amountIn, call.minOut, call.deadline, call.decisionHash],
+      account,
+      address: call.desk,
+      abi: deskAbiV0,
+      functionName: 'checkpoint',
+      args,
     })
+    data = encodeFunctionData({ abi: deskAbiV0, functionName: 'checkpoint', args })
+  } else {
+    deadlineUnix = await deadlineIn(pub, CHECKPOINT_DEADLINE_S)
+    const args = [deadlineUnix, call.decisionHash] as const
+    await pub.simulateContract({
+      account,
+      address: call.desk,
+      abi: deskAbi,
+      functionName: 'checkpoint',
+      args,
+    })
+    data = encodeFunctionData({ abi: deskAbi, functionName: 'checkpoint', args })
   }
-  const data = encodeFunctionData({ abi: deskAbi, ...callArgs(call) })
   // Pin the nonce to what is MINED, not to what is pending. If an earlier transaction is stuck, the next one
   // must REPLACE it rather than queue behind it: two desk actions from one decision must never both land.
   // It is also what makes "it never landed" safe to act on, because reusing its nonce is what voids it.
@@ -146,7 +171,7 @@ export async function signDeskCall(
     txHash: keccak256(serialized),
     nonce: request.nonce,
     calldataHash: keccak256(data),
-    ...(call.kind === 'checkpoint' ? {} : { deadlineUnix: call.deadline }),
+    ...(deadlineUnix === undefined ? {} : { deadlineUnix }),
   }
 }
 

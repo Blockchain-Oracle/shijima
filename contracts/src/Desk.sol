@@ -19,9 +19,13 @@ import {ISwapRouter02, IUniswapV3Factory, IUniswapV3Pool, IAggregatorV3, IStockT
 ///           3. The operator's trades are capped per action and per day, may only use the pool the OWNER
 ///              pinned for that token, and must land within BAND_BPS of the Chainlink price.
 ///           4. The owner is never blocked: not by pause, caps, the band, a dead feed or a revoked operator.
+///           5. The owner may grant ONE browser key (a session) for at most seven days. It can pay the owner
+///              (`withdraw`), stop the desk, fire the agent, lower the caps, and sell under the operator's own
+///              guards. It can never buy, raise a limit, add a token, change the operator or extend itself.
 ///
 ///         So the worst a stolen operator key can do is make bad trades, costing at most BAND_BPS of the
-///         daily cap per day plus pool fees, until the owner calls `revokeOperator`.
+///         daily cap per day plus pool fees, until the owner calls `revokeOperator`. A stolen session key can
+///         do no more than that, and only until it expires or the owner calls `revokeSession`.
 ///
 /// @dev    No upgrade path, no admin, no fee switch, no ownership transfer. Deployed as EIP-1167 clones.
 contract Desk is Initializable, ReentrancyGuardTransient {
@@ -41,6 +45,8 @@ contract Desk is Initializable, ReentrancyGuardTransient {
     /// @notice A "the feed is dead" detector only. It must exceed the longest holiday weekend.
     uint256 public constant MAX_FEED_AGE = 4 days;
     uint256 public constant MAX_TOKENS = 16;
+    /// @notice The longest a session key may live. The owner grants again after that.
+    uint256 public constant MAX_SESSION = 7 days;
     /// @dev tokens(18) + feed(8) - usdg(6). Enforced at allowlist time, so the maths below is exact.
     uint256 private constant PRICE_SCALE = 1e20;
     uint256 private constant BPS = 10_000;
@@ -66,6 +72,10 @@ contract Desk is Initializable, ReentrancyGuardTransient {
     mapping(address token => TokenCfg) public tokenCfg;
     address[] public tokens;
 
+    /// @notice The owner's browser key, for one-click actions that cannot hurt the owner. address(0) means none.
+    address public session;
+    uint40 public sessionExpiresAt;
+
     struct Config {
         address operator;
         uint128 perActionCapUsdg;
@@ -89,6 +99,8 @@ contract Desk is Initializable, ReentrancyGuardTransient {
     event TokenAllowed(address indexed token, uint24 fee, address feed);
     event TokenDisallowed(address indexed token);
     event Withdrawn(address indexed token, uint256 amount);
+    event SessionGranted(address indexed key, uint40 expiresAt);
+    event SessionRevoked(address indexed key);
 
     // ------------------------------------------------------------------ errors
     error NotOwner();
@@ -112,6 +124,9 @@ contract Desk is Initializable, ReentrancyGuardTransient {
     error TooManyTokens();
     error BadOperator();
     error NothingReceived();
+    error NotOwnerOrSession();
+    error BadSession();
+    error NotLower();
 
     /// @dev The implementation itself can never be initialised or used.
     constructor() {
@@ -136,11 +151,31 @@ contract Desk is Initializable, ReentrancyGuardTransient {
         _;
     }
 
+    /// @dev The owner, or the owner's live session key. Only for actions that pay the owner or protect them.
+    modifier onlyOwnerOrSession() {
+        if (msg.sender != owner && !_isLiveSession()) revert NotOwnerOrSession();
+        _;
+    }
+
     /// @dev Returns true when the caller is the operator, so the body can apply the operator-only guards.
+    ///      A session key is neither owner nor operator here, so it can never buy, sweep or checkpoint.
     function _auth() private view returns (bool isOperator) {
         if (msg.sender == owner) return false;
         if (msg.sender != operator || operator == address(0)) revert NotOwnerOrOperator();
         return true;
+    }
+
+    function _isLiveSession() private view returns (bool) {
+        return session != address(0) && msg.sender == session && block.timestamp <= sessionExpiresAt;
+    }
+
+    /// @dev Who is selling. The operator and the session key are both GUARDED: the per-action cap, the daily cap,
+    ///      the oracle floor and a healthy feed. Only the operator is stopped by pause, because pause exists to stop
+    ///      the agent; the session key acts for the owner. The owner is never guarded.
+    function _sellAuth() private view returns (bool guarded) {
+        if (msg.sender == owner) return false;
+        if ((msg.sender == operator && operator != address(0)) || _isLiveSession()) return true;
+        revert NotOwnerOrOperator();
     }
 
     // ------------------------------------------------------------------ operator OR owner
@@ -201,15 +236,15 @@ contract Desk is Initializable, ReentrancyGuardTransient {
         nonReentrant
         returns (uint256 usdgOut)
     {
-        bool isOperator = _auth();
+        bool guarded = _sellAuth();
         _checkCommon(decisionHash, deadline);
         TokenCfg memory cfg = tokenCfg[token];
         if (cfg.fee == 0) revert TokenNotConfigured();
 
         int256 price;
         uint256 oracleValue;
-        if (isOperator) {
-            if (paused) revert IsPaused();
+        if (guarded) {
+            if (paused && msg.sender == operator) revert IsPaused(); // pause stops the agent, not the owner's key
             price = _healthyPrice(token, cfg.feed);
             // forge-lint: disable-next-line(unsafe-typecast)
             uint256 p = uint256(price); // price > 0 checked in _healthyPrice
@@ -240,13 +275,14 @@ contract Desk is Initializable, ReentrancyGuardTransient {
 
         if (tokenBefore - IERC20(token).balanceOf(address(this)) != amountIn) revert UnexpectedSpend();
         usdgOut = IERC20(USDG).balanceOf(address(this)) - usdgBefore;
-        if (usdgOut < minUsdgOut) _revertBelow(isOperator);
+        if (usdgOut < minUsdgOut) _revertBelow(guarded);
 
         // Count the LARGER of what came back and what the oracle says was sold. In the attack case the
         // attacker arranges for little USDG to come back, so counting only receipts would make the cap
         // weakest exactly when it matters. The oracle value is the one number the operator cannot move.
+        // The session key shares the operator's daily window: together they can never spend more than the cap.
         uint256 counted;
-        if (isOperator) {
+        if (guarded) {
             counted = usdgOut > oracleValue ? usdgOut : oracleValue;
             _spend(counted);
         }
@@ -301,9 +337,10 @@ contract Desk is Initializable, ReentrancyGuardTransient {
         emit Checkpoint(_record(decisionHash), decisionHash);
     }
 
-    /// @notice Either party may stop the desk. Only the owner may start it again.
+    /// @notice The owner, the operator or the owner's session key may stop the desk. Only the owner may start
+    ///         it again.
     function pause() external {
-        _auth();
+        if (!_isLiveSession()) _auth();
         paused = true;
         emit Paused(msg.sender);
     }
@@ -312,7 +349,8 @@ contract Desk is Initializable, ReentrancyGuardTransient {
     /// @notice The ONLY way value leaves the desk, and it can only go to `owner`. Works for any ERC-20,
     ///         including vault shares and anything sent here by mistake. One token per call, so a frozen
     ///         token can never trap the others.
-    function withdraw(address token, uint256 amount) external onlyOwner nonReentrant {
+    ///         The session key may call it too: it still pays only `owner`.
+    function withdraw(address token, uint256 amount) external onlyOwnerOrSession nonReentrant {
         IERC20(token).safeTransfer(owner, amount);
         emit Withdrawn(token, amount);
     }
@@ -328,15 +366,40 @@ contract Desk is Initializable, ReentrancyGuardTransient {
     }
 
     /// @notice Fire the agent. One transaction. It loses all access immediately and the desk is paused.
-    function revokeOperator() external onlyOwner {
+    ///         The session key may do this too: it can only take power away.
+    function revokeOperator() external onlyOwnerOrSession {
         operator = address(0);
         paused = true;
         emit OperatorRevoked();
         emit Paused(msg.sender);
     }
 
-    function setLimits(uint128 perActionCapUsdg_, uint128 dailyCapUsdg_) external onlyOwner {
+    /// @notice The owner sets the caps freely. The session key may only lower them.
+    function setLimits(uint128 perActionCapUsdg_, uint128 dailyCapUsdg_) external onlyOwnerOrSession {
+        if (msg.sender != owner && (perActionCapUsdg_ > perActionCapUsdg || dailyCapUsdg_ > dailyCapUsdg)) {
+            revert NotLower();
+        }
         _setLimits(perActionCapUsdg_, dailyCapUsdg_);
+    }
+
+    /// @notice Give one browser key the session powers listed at the top of this file, until `expiresAt`, at most
+    ///         MAX_SESSION from now. Replaces any earlier key. The key pays its own gas: fund it with a plain
+    ///         transfer from the owner's wallet. This desk never receives ETH.
+    function grantSession(address key, uint40 expiresAt) external onlyOwner {
+        if (key == address(0) || key == owner || key == operator) revert BadSession();
+        if (expiresAt <= block.timestamp || expiresAt > block.timestamp + MAX_SESSION) revert BadSession();
+        session = key;
+        sessionExpiresAt = expiresAt;
+        emit SessionGranted(key, expiresAt);
+    }
+
+    /// @notice End the session key's powers now. The owner or the key itself may call it.
+    function revokeSession() external {
+        address key = session;
+        if (msg.sender != owner && (key == address(0) || msg.sender != key)) revert NotOwnerOrSession();
+        session = address(0);
+        sessionExpiresAt = 0;
+        emit SessionRevoked(key);
     }
 
     function allowToken(address token, uint24 fee, address feed) external onlyOwner {
@@ -349,10 +412,11 @@ contract Desk is Initializable, ReentrancyGuardTransient {
         emit TokenDisallowed(token);
     }
 
-    /// @notice Several owner actions in ONE wallet confirmation: "sell everything", "withdraw all",
-    ///         "close the desk". Each inner call runs with its own guards. Owner only.
-    /// @dev    Self-delegatecall keeps msg.sender as the owner. Not nonReentrant, because the inner calls are.
-    function batch(bytes[] calldata calls) external onlyOwner returns (bytes[] memory results) {
+    /// @notice Several actions in ONE confirmation: "sell everything", "withdraw all", "close the desk". Each
+    ///         inner call runs with its OWN guards, so the session key's batch can reach only what the key itself
+    ///         may call: an owner-only call inside it reverts the whole batch.
+    /// @dev    Self-delegatecall keeps msg.sender as the caller. Not nonReentrant, because the inner calls are.
+    function batch(bytes[] calldata calls) external onlyOwnerOrSession returns (bytes[] memory results) {
         results = new bytes[](calls.length);
         for (uint256 i; i < calls.length; ++i) {
             (bool ok, bytes memory ret) = address(this).delegatecall(calls[i]);
@@ -401,9 +465,9 @@ contract Desk is Initializable, ReentrancyGuardTransient {
         spentInWindow = uint128(total); // total <= dailyCapUsdg, which is a uint128
     }
 
-    /// @dev For the operator, `minOut` was raised to the oracle floor, so a shortfall means the floor failed.
-    function _revertBelow(bool isOperator) private pure {
-        if (isOperator) revert BelowOracleFloor();
+    /// @dev For a guarded caller, `minOut` was raised to the oracle floor, so a shortfall means the floor failed.
+    function _revertBelow(bool guarded) private pure {
+        if (guarded) revert BelowOracleFloor();
         revert BelowMinOut();
     }
 
@@ -432,7 +496,8 @@ contract Desk is Initializable, ReentrancyGuardTransient {
     }
 
     function _setOperator(address newOperator) private {
-        if (newOperator == owner) revert BadOperator(); // keep the two roles distinct
+        if (newOperator == owner) revert BadOperator(); // keep the roles distinct
+        if (session != address(0) && newOperator == session) revert BadOperator();
         operator = newOperator;
         emit OperatorSet(newOperator);
     }

@@ -213,6 +213,7 @@ export async function commit(
   const sent = await deps.send(action, {
     kind: c.side,
     desk: desk.address as Address,
+    version: desk.contractVersion,
     token: c.token.address,
     amountIn: k.preview.amountIn,
     minOut: k.gate.minOut,

@@ -281,8 +281,13 @@ export async function pendingApprovalSince(
 }
 
 /** Every desk the clock should check. A paused or stopped desk is still checked: it records that it looked. */
-export async function runningDesks(db: DbOrTx): Promise<{ id: string; address: string }[]> {
-  return db.select({ id: desks.id, address: desks.address }).from(desks).where(eq(desks.lifecycle, 'running'))
+export async function runningDesks(
+  db: DbOrTx,
+): Promise<{ id: string; address: string; contractVersion: string }[]> {
+  return db
+    .select({ id: desks.id, address: desks.address, contractVersion: desks.contractVersion })
+    .from(desks)
+    .where(eq(desks.lifecycle, 'running'))
 }
 
 /** True when this desk already has a check for that scheduled time. */

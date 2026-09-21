@@ -6,6 +6,10 @@
  *   pnpm dev:prove-limits --send   also send the cases marked below for real, so a reverted transaction
  *                                  exists on the explorer. Costs a few cents of gas. Nothing else can move.
  *
+ * On a v1 desk it also proves the owner's SESSION key: the owner grants a throwaway key for an hour, the contract
+ * is asked to do every forbidden thing as that key, and the key is revoked again. That part needs the owner's key
+ * (DEPLOYER_PRIVATE_KEY, the dev desk's owner) and costs two small transactions.
+ *
  * Set RPC_URL to rehearse on a local fork. LOCAL DEVELOPMENT ONLY, dev desk and dev keys.
  */
 import { readFileSync } from 'node:fs'
@@ -32,7 +36,7 @@ import {
   keccak256,
   toBytes,
 } from 'viem'
-import { privateKeyToAccount } from 'viem/accounts'
+import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
 import { robinhood } from 'viem/chains'
 
 registerSecretsFromEnv(process.env)
@@ -50,6 +54,9 @@ const deployments = JSON.parse(
   ),
 )
 const desk = deployments[deployments.current].devDesk as Address
+/** v1 and later answer owner-or-session calls with NotOwnerOrSession; v0 answers NotOwner. */
+const v1 = deployments.current !== 'v0'
+const ownerOnlyError = v1 ? 'NotOwnerOrSession' : 'NotOwner'
 const pub = makePublicClient([rpc])
 const account = privateKeyToAccount(key as Hex)
 const wallet = createWalletClient({ account, chain: robinhood, transport: http(rpc) })
@@ -77,7 +84,7 @@ const cases: { name: string; expect: string; sendForReal: boolean; data: Hex }[]
   },
   {
     name: 'withdraw 1 USDG from the desk with the operator key',
-    expect: 'NotOwner',
+    expect: ownerOnlyError,
     sendForReal: true,
     data: encodeFunctionData({ abi: deskAbi, functionName: 'withdraw', args: [USDG, 1_000_000n] }),
   },
@@ -93,16 +100,20 @@ const cases: { name: string; expect: string; sendForReal: boolean; data: Hex }[]
   },
   {
     name: 'raise the limits with the operator key',
-    expect: 'NotOwner',
+    expect: ownerOnlyError,
     sendForReal: false,
     data: encodeFunctionData({ abi: deskAbi, functionName: 'setLimits', args: [10n ** 12n, 10n ** 12n] }),
   },
 ]
 
 /** The error the contract answers with, by asking the node to run the call. undefined means it did NOT revert. */
-async function refusal(data: Hex, blockNumber?: bigint): Promise<string | undefined> {
+async function refusal(
+  data: Hex,
+  blockNumber?: bigint,
+  from: Address = account.address,
+): Promise<string | undefined> {
   try {
-    await pub.call({ account: account.address, to: desk, data, ...(blockNumber ? { blockNumber } : {}) })
+    await pub.call({ account: from, to: desk, data, ...(blockNumber ? { blockNumber } : {}) })
     return undefined
   } catch (e) {
     return revertName(e) ?? 'an unnamed revert'
@@ -129,6 +140,99 @@ for (const c of cases) {
     `      sent for real: ${reverted ? 'REVERTED on-chain' : 'DID NOT REVERT'}, reason ${onChain}, gas used ${receipt.gasUsed}`,
   )
   console.log(process.env.RPC_URL ? `      fork tx ${txHash}` : `      ${EXPLORER}/tx/${txHash}`)
+}
+
+// ---------------------------------------------------------------- the owner's session key (v1 and later)
+if (v1) {
+  const ownerKey = process.env.DEPLOYER_PRIVATE_KEY
+  if (!ownerKey)
+    throw new Error('DEPLOYER_PRIVATE_KEY (the dev desk owner) is needed to prove the session key')
+  const owner = createWalletClient({
+    account: privateKeyToAccount(ownerKey as Hex),
+    chain: robinhood,
+    transport: http(rpc),
+  })
+  const sessionKey = privateKeyToAccount(generatePrivateKey()).address
+  const expiresAt = Math.floor(Date.now() / 1000) + 3600
+  const granted = await owner.writeContract({
+    address: desk,
+    abi: deskAbi,
+    functionName: 'grantSession',
+    args: [sessionKey, expiresAt],
+  })
+  await pub.waitForTransactionReceipt({ hash: granted, timeout: 180_000 })
+  console.log(`
+session key ${sessionKey} granted for an hour, to prove what it cannot do`)
+
+  const sessionCases: { name: string; expect: string; data: Hex }[] = [
+    {
+      name: 'buy with the session key',
+      expect: 'NotOwnerOrOperator',
+      data: encodeFunctionData({
+        abi: deskAbi,
+        functionName: 'buy',
+        args: [nvda.address, 1_000_000n, 0n, deadline, hash],
+      }),
+    },
+    {
+      name: 'raise the limits with the session key',
+      expect: 'NotLower',
+      data: encodeFunctionData({
+        abi: deskAbi,
+        functionName: 'setLimits',
+        args: [state.perActionCapUsdg + 1n, state.dailyCapUsdg + 1n],
+      }),
+    },
+    {
+      name: 'restart a paused desk with the session key',
+      expect: 'NotOwner',
+      data: encodeFunctionData({ abi: deskAbi, functionName: 'unpause' }),
+    },
+    {
+      name: 'change the operator with the session key',
+      expect: 'NotOwner',
+      data: encodeFunctionData({ abi: deskAbi, functionName: 'setOperator', args: [sessionKey] }),
+    },
+    {
+      name: 'extend its own session',
+      expect: 'NotOwner',
+      data: encodeFunctionData({
+        abi: deskAbi,
+        functionName: 'grantSession',
+        args: [sessionKey, expiresAt + 86_400],
+      }),
+    },
+    {
+      name: 'reach an owner power through batch',
+      expect: 'NotOwner',
+      data: encodeFunctionData({
+        abi: deskAbi,
+        functionName: 'batch',
+        args: [[encodeFunctionData({ abi: deskAbi, functionName: 'setOperator', args: [sessionKey] })]],
+      }),
+    },
+  ]
+  for (const c of sessionCases) {
+    const answered = await refusal(c.data, undefined, sessionKey)
+    const ok = answered === c.expect
+    failed ||= !ok
+    console.log(`
+${ok ? 'HELD' : 'BROKEN'}  ${c.name}`)
+    console.log(`      the contract answers: ${answered ?? 'NOTHING, THE CALL WOULD SUCCEED'}`)
+  }
+  // And what it may do goes only one way: a withdraw by the key pays the owner, never the key.
+  const allowed = await refusal(
+    encodeFunctionData({ abi: deskAbi, functionName: 'withdraw', args: [USDG, 1n] }),
+    undefined,
+    sessionKey,
+  )
+  console.log(`
+${allowed === undefined ? 'OK' : 'BROKEN'}  the session key may withdraw, and it can only pay the owner`)
+  failed ||= allowed !== undefined
+
+  const revoked = await owner.writeContract({ address: desk, abi: deskAbi, functionName: 'revokeSession' })
+  await pub.waitForTransactionReceipt({ hash: revoked, timeout: 180_000 })
+  console.log('session key revoked')
 }
 
 const after = await readDeskState(pub, desk)

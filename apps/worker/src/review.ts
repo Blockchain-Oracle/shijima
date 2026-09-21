@@ -136,6 +136,7 @@ export async function reviewAllDesks(
         const sealed = await send(plan.action, {
           kind: 'checkpoint',
           desk: desk.address as Address,
+          version: desk.contractVersion,
           decisionHash: plan.recordHash as Hex,
         })
         log('daily_seal', {

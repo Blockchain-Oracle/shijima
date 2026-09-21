@@ -244,13 +244,14 @@ async function main() {
     ? {
         kind: side,
         desk,
+        version: deskRow.contractVersion,
         token: token.address,
         amountIn,
         minOut: finalGate.minOut,
         deadline,
         decisionHash: recordHash,
       }
-    : { kind: 'checkpoint', desk, decisionHash: recordHash }
+    : { kind: 'checkpoint', desk, version: deskRow.contractVersion, decisionHash: recordHash }
   const sent = await sendAction(deps, action, call, {
     ...(flag('kill-before-send') ? { afterPrepared: () => dieHere('after signing, before broadcast') } : {}),
     ...(flag('kill-after-send') ? { afterSent: () => dieHere('right after broadcast') } : {}),

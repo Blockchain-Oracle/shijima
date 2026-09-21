@@ -181,34 +181,6 @@ export const deskBuy = (pub: PublicClient, wallet: OperatorWallet, a: TradeArgs)
 export const deskSell = (pub: PublicClient, wallet: OperatorWallet, a: TradeArgs) =>
   trade('sell', pub, wallet, a)
 
-/** Seals a non-action into the on-chain record chain. "I looked, and chose not to act" is a record too. */
-export async function deskCheckpoint(
-  pub: PublicClient,
-  wallet: OperatorWallet,
-  desk: Address,
-  decisionHash: Hex,
-) {
-  const { request } = await pub.simulateContract({
-    account: wallet.account,
-    address: desk,
-    abi: deskAbi,
-    functionName: 'checkpoint',
-    args: [decisionHash],
-  })
-  const txHash = await wallet.writeContract(request)
-  const receipt = await pub.waitForTransactionReceipt({ hash: txHash, timeout: 180_000 })
-  if (receipt.status !== 'success') throw new Error(`checkpoint reverted on-chain, tx ${txHash}`)
-  const [log] = parseEventLogs({ abi: deskAbi, eventName: 'Checkpoint', logs: receipt.logs })
-  if (!log) throw new Error(`no Checkpoint event in tx ${txHash}`)
-  return {
-    txHash,
-    blockNumber: receipt.blockNumber,
-    gasUsed: receipt.gasUsed,
-    seq: log.args.seq,
-    eventHash: log.args.decisionHash,
-  }
-}
-
 /** How the OWNER configured one token on this desk. The contract trades only through this fee tier. */
 export interface DeskTokenConfig {
   fee: number
