@@ -1,7 +1,10 @@
 /**
  * The price history the charts draw. Reads the chain only. Never trades.
  *
- *   pnpm prices:log                       write the current five-minute slot, once
+ *   pnpm prices:log                       write the current five-minute slot, once, then fire any price alert
+ *                                         the new rows reached
+ *   pnpm prices:facts                     read every multiplier change from the chain and each company's report
+ *                                         dates from Finnhub, for the stock pages
  *   pnpm prices:backfill [--days 30]      fill hourly rows for the past days, oldest first, skipping any hour
  *                                         already written. Slow on purpose: one hour at a time, so it never
  *                                         competes with the engine for the RPC budget.
@@ -9,7 +12,15 @@
  * The halt flag has no history, so backfilled rows store it as unknown. Set RPC_URL to use a fork.
  */
 import { APPROVED_TOKENS, blockAtOrBefore, makePublicClient, OFFICIAL_RPC } from '@desk/chain'
-import { chainReferenceSource, logPrices, priceSlot, readPricePoint } from '@desk/core'
+import {
+  chainReferenceSource,
+  checkPriceAlerts,
+  logPrices,
+  priceSlot,
+  readPricePoint,
+  syncEarnings,
+  syncMultipliers,
+} from '@desk/core'
 import { createDb, priceSlotWritten, savePricePoints } from '@desk/db'
 import { errorText, registerSecretsFromEnv } from '@desk/shared'
 
@@ -49,8 +60,14 @@ try {
       if (t.getUTCHours() === 0) log('backfill', { day: t.toISOString().slice(0, 10), rowsSoFar: written })
     }
     log('backfill_done', { rows: written })
+  } else if (process.argv[2] === 'facts') {
+    log('multipliers', { saved: await syncMultipliers(db, pub, APPROVED_TOKENS) })
+    const key = process.env.FINNHUB_API_KEY
+    if (!key) throw new Error('FINNHUB_API_KEY is not in .env')
+    log('earnings', await syncEarnings(db, APPROVED_TOKENS, key))
   } else {
     log('prices', { rows: await logPrices({ db, pub, approved: APPROVED_TOKENS, reference, log }) })
+    log('price_alerts', { fired: await checkPriceAlerts(db, APPROVED_TOKENS) })
   }
 } finally {
   await close()

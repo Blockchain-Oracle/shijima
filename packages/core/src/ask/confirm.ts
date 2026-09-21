@@ -24,7 +24,8 @@ import {
   setDeskMode,
   takeProposal,
 } from '@desk/db'
-import { checkMandate, errorText } from '@desk/shared'
+import { alertsCopy, checkMandate, errorText } from '@desk/shared'
+import { setPriceAlert } from '../alerts'
 import { ASK_PROMPT_VERSION } from './prompts'
 import { mandateFromArgs, type ProposalKind } from './proposal'
 
@@ -195,6 +196,16 @@ export async function confirmSigninProposal(
           ok: true,
           text: 'Done. The desk acts on your call within a minute, if the price is still within half a percent of what you saw and every limit holds.',
         })
+      }
+      case 'price_alert': {
+        const set = await setPriceAlert(db, approved, {
+          ownerAddress: input.ownerAddress,
+          deskId: desk.id,
+          symbol: String(args.symbol),
+          direction: String(args.direction),
+          thresholdBps: Number(args.thresholdBps),
+        })
+        return finish(set.ok ? { ok: true, text: alertsCopy.saved } : { ok: false, text: set.why })
       }
       default:
         return finish({ ok: false, text: 'That one needs your wallet or your session key, not a tap here.' })

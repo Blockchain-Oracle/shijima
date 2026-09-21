@@ -13,8 +13,9 @@
  */
 import { APPROVED_TOKENS, type ApprovedToken } from '@desk/chain'
 import { GO_LIVE_CHECKS } from '@desk/db'
-import { checkMandate, Mandate, presetById } from '@desk/shared'
+import { alertsCopy, checkMandate, Mandate, presetById } from '@desk/shared'
 import { z } from 'zod'
+import { checkAlertInput, pctText } from '../alerts'
 
 export const PROPOSAL_KINDS = [
   'switch_strategy',
@@ -34,6 +35,7 @@ export const PROPOSAL_KINDS = [
   'add_money',
   'set_chain_limits',
   'close_desk',
+  'price_alert',
 ] as const
 export type ProposalKind = (typeof PROPOSAL_KINDS)[number]
 
@@ -67,6 +69,10 @@ export const AskReply = z.object({
       /** The limits the desk's account itself enforces, in dollars, for set_chain_limits. Null keeps the current one. */
       perActionCapUsdg: z.string().nullable(),
       dailyCapUsdg: z.string().nullable(),
+      /** A price alert, for price_alert: the stock, which way, and how far from its reference in basis points. */
+      symbol: z.string().nullable(),
+      alertDirection: z.enum(['above', 'below', 'either']).nullable(),
+      thresholdBps: z.number().int().nullable(),
     })
     .nullable(),
 })
@@ -414,6 +420,25 @@ export function checkProposal(
           card: {
             title: 'Change the limits on the chain',
             note: `Your account holds the assistant to these, whatever it decides. It also keeps to your settings' own $${formatUsd(m.perActionCapUsdg)} per action and $${formatUsd(m.dailyCapUsdg)} a day, whichever is lower.`,
+          },
+        },
+      }
+    }
+    case 'price_alert': {
+      const check = checkAlertInput(
+        { symbol: p.symbol ?? '', direction: p.alertDirection ?? '', thresholdBps: p.thresholdBps ?? 0 },
+        approved,
+      )
+      if (!check.ok) return check
+      return {
+        ok: true,
+        proposal: {
+          kind: p.kind,
+          path: 'signin',
+          args: { symbol: check.token.symbol, direction: check.direction, thresholdBps: check.thresholdBps },
+          card: {
+            title: alertsCopy.card(check.token.displayName, pctText(check.thresholdBps), check.direction),
+            note: alertsCopy.cardNote,
           },
         },
       }

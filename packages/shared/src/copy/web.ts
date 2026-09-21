@@ -152,31 +152,227 @@ export const webCopy = {
 export type DiagnosisKind = keyof typeof webCopy.states.diagnosis
 
 /** The Markets page. */
+const times = (n: number) => (n === 1 ? 'once' : n === 2 ? 'twice' : `${n} times`)
+
 export const marketsCopy = {
   kicker: 'Markets',
-  title: 'The ten Stock Tokens',
-  intro:
-    'Every price here is the trading pool’s own, logged every five minutes, with how far it sits from its reference and what trading $1,000 would cost now.',
+  title: 'Strategies and the ten Stock Tokens',
   empty: 'No prices have been logged yet. The logger writes one row per Stock Token every five minutes.',
   stale: (age: string) => `The newest price is from ${age}. The price logger may have stopped.`,
-  columns: {
-    token: 'Stock Token',
-    price: 'Pool price',
-    gap: 'From reference',
-    reference: 'Reference',
-    cost: 'Cost of $1,000',
-  },
   priceSource: (age: string) => `pool, ${age}`,
   inLine: 'in line',
-  gap: (bps: number) => `${bps > 0 ? '+' : '−'}${(Math.abs(bps) / 100).toFixed(2)}%`,
+  gap: (bps: number) => `${bps > 0 ? '+' : bps < 0 ? '−' : ''}${(Math.abs(bps) / 100).toFixed(2)}%`,
+  /** "0.84% above reference", or "in line" under half a percent, which is noise. */
+  fromReference: (bps: number) =>
+    Math.abs(bps) < 50
+      ? 'in line with reference'
+      : `${(Math.abs(bps) / 100).toFixed(2)}% ${bps > 0 ? 'above' : 'below'} reference`,
   referenceClose: (when: string) => `The pool at the last regular close, ${when}`,
   referenceOfficial: (age: string) => `Last official update, ${age}`,
   halted: 'trading halted',
-  watch: 'Desks you can watch',
-  noneShared: 'No desk has been shared yet.',
   running: (age: string) => `running since ${age}`,
   footnote:
-    'The reference is what this same pool traded at when the US market last closed; while the market is open, it is the last official update. A gap under half a percent is noise.',
+    'The reference is what the same pool traded at when the US market last closed; while the market is open, it is the last official update. A gap under half a percent is noise.',
+
+  hero: {
+    ranges: { '1D': '1D', '1W': '1W', '1M': '1M' },
+    strategiesLabel: 'Strategies',
+    rangeLabel: 'Period',
+    stocks: (n: number) => `${n} stocks`,
+    /** The question slot: what $1,000 put in at the start of the period is worth now. */
+    worth: (start: string) => `$1,000 put in ${start}, at the pools’ prices`,
+    asOf: (age: string) => `as of ${age}`,
+    since: (dollars: string) => `${dollars} over the period`,
+    opensIn: 'Reopens in',
+    closesIn: 'Closes in',
+    noClock: '—',
+    legendValue: 'Value',
+    legendReference: 'Reference',
+    askAbout: 'Ask about this',
+    askQuestion: (name: string) => `How is ${name} doing against its reference right now?`,
+    noHistory: 'Not enough prices logged for this period yet.',
+    chartAria: (name: string) => `${name}: value of $1,000 against its reference`,
+  },
+
+  /** The caption under the chart, built from facts, in the desk's voice. Never a forecast. */
+  caption: {
+    gap: (name: string, bps: number, reference: string) =>
+      Math.abs(bps) < 50
+        ? `${name} is in line with its reference, ${reference}.`
+        : `${name} is ${(Math.abs(bps) / 100).toFixed(1)}% ${bps > 0 ? 'above' : 'below'} its reference, ${reference}.`,
+    referenceClose: (when: string) => `the pools at the last regular close, ${when}`,
+    referenceOfficial: (age: string) => `the last official update, ${age}`,
+    mover: (name: string, bps: number) =>
+      `${name} has moved most, ${(Math.abs(bps) / 100).toFixed(1)}% ${bps > 0 ? 'above' : 'below'}.`,
+    noise: 'Inside half a percent, I treat it as noise.',
+    desks: (acted: number, waited: number) => {
+      const parts = [
+        acted > 0 ? `acted ${times(acted)}` : '',
+        waited > 0 ? `waited ${times(waited)}` : '',
+      ].filter(Boolean)
+      return parts.length === 0 ? '' : `Shared desks ${parts.join(' and ')} on these stocks in this period.`
+    },
+    halted: (names: string) =>
+      `${names} ${names.includes(' and ') ? 'are' : 'is'} halted, so no desk can trade it now.`,
+  },
+
+  rail: {
+    label: 'In this strategy',
+    cash: 'Cash',
+    cashNote: 'kept aside',
+    cost: (dollars: string, pct: string) =>
+      `Putting $500 in now would cost about ${dollars} (${pct}) to trade.`,
+    costUnknown: 'The cost to trade is not known right now.',
+    nothingHalted: 'Nothing in it is halted.',
+    report: (name: string, when: string) => `${name} reports ${when}.`,
+    start: 'Start a desk with this',
+    notAdvice: 'This shows what the pools did. It is not advice, and I never forecast a price.',
+  },
+
+  sections: {
+    tokens: {
+      index: '01',
+      title: 'The ten Stock Tokens',
+      desc: 'Each pool’s price against its reference, since the reference was set.',
+    },
+    desks: {
+      index: '02',
+      title: 'What desks did',
+      desc: 'Decisions from desks whose owners share them. Each opens its reason.',
+      none: 'No shared desk has acted or waited in this period.',
+    },
+    watch: { index: '03', title: 'Desks you can watch', none: 'No desk has been shared yet.' },
+  },
+
+  card: {
+    against: (reference: string) => `against ${reference}`,
+    refTick: 'ref',
+    cost: (pct: string) => `$1,000 costs ${pct}`,
+    open: (name: string) => `Open ${name}`,
+  },
+
+  outcomes: {
+    acted: 'Acted',
+    acted_in_part: 'Acted in part',
+    acted_by_override: 'Acted on the owner’s word',
+    waited: 'Waited',
+    declined: 'Declined',
+    would_have_acted: 'Would have acted',
+  } as Record<string, string>,
+  practice: 'practice',
+  decisionLine: (desk: string, outcome: string, side: string | null, name: string) =>
+    `${desk}: ${outcome.toLowerCase()}${side ? ` on a ${side} of ${name}` : ` on ${name}`}`,
+
+  signInToAsk: 'Sign in to ask your desk about this.',
+} as const
+
+/** One Stock Token's page: Agari's ticker hub on our facts. */
+export const stockCopy = {
+  eyebrow: (fund: boolean) => (fund ? 'Stock Token · fund' : 'Stock Token'),
+  headingJp: '銘柄。',
+  intro: (name: string) =>
+    `Everything Shijima knows about ${name}: the pool’s price and how far it sits from its reference, what trading it costs, how its multiplier has changed, its next report, and what desks decided about it.`,
+  stats: {
+    price: 'Pool price',
+    reference: 'Reference',
+    gap: 'From reference',
+    cost: 'Cost of $1,000',
+    report: 'Next report',
+  },
+  priceAge: (age: string) => `pool · ${age}`,
+  referenceWhen: (when: string) => `pool at close · ${when}`,
+  referenceOfficial: (age: string) => `official · ${age}`,
+  costSmall: (pct: string) => `$100 costs ${pct}`,
+  noReport: 'none scheduled',
+  fundReport: 'funds do not report',
+  dash: '—',
+  chartTitle: 'Price against reference',
+  caption: {
+    gap: (name: string, bps: number, reference: string) =>
+      Math.abs(bps) < 50
+        ? `${name} is in line with its reference, ${reference}.`
+        : `${name} is ${(Math.abs(bps) / 100).toFixed(1)}% ${bps > 0 ? 'above' : 'below'} its reference, ${reference}.`,
+    referenceClose: (when: string) => `the pool at the last regular close, ${when}`,
+    cost: (pct: string) => `Trading $1,000 of it now would cost about ${pct}.`,
+    halted: 'Trading in it is halted, so no desk can trade it now.',
+  },
+  askQuestion: (name: string) => `What is ${name} doing right now, and does it matter for my desk?`,
+  startWith: 'Start a desk with it',
+  back: 'All markets',
+
+  sections: {
+    alerts: {
+      index: '01',
+      title: 'Price alerts',
+      desc: 'One message by Telegram and in the bell when the pool moves this far from its reference. Then it stops.',
+    },
+    multiplier: {
+      index: '02',
+      title: 'The multiplier',
+      desc: 'Dividends are not paid in cash. They raise the multiplier, so one token becomes a little more than one share.',
+      now: (m: string) => `One token is ${m} shares now.`,
+      change: (pct: string, kind: string) => `${pct} · ${kind}`,
+      kinds: { dividend: 'a dividend', split: 'a split', other: 'a change' } as Record<string, string>,
+      none: 'The multiplier has not changed since the token launched.',
+      pending: (to: string, when: string) => `It changes to ${to} shares on ${when}.`,
+    },
+    decisions: {
+      index: '03',
+      title: 'What desks decided',
+      desc: 'From desks whose owners share them, newest first. Each opens its reason.',
+      none: 'No shared desk has acted or waited on it yet.',
+    },
+    events: {
+      index: '04',
+      title: 'Company events',
+      desc: 'Report dates from Finnhub’s calendar. Prices can jump around them, and trading can pause.',
+      none: 'No report is scheduled.',
+      fund: 'A fund has no reports of its own.',
+      earnings: (quarter: number, year: number) => `Results for fiscal quarter ${quarter} of ${year}`,
+      earningsPlain: 'Results',
+      timing: { bmo: 'before the open', amc: 'after the close', dmh: 'during hours' } as Record<
+        string,
+        string
+      >,
+    },
+  },
+} as const
+
+/** Price alerts: set on a stock's page or in the chat, sent once by Telegram and the bell. */
+export const alertsCopy = {
+  directions: { above: 'above', below: 'below', either: 'either way from' } as const,
+  form: {
+    lead: (name: string) => `Tell me when ${name} is`,
+    tail: 'its reference',
+    percentLabel: 'Distance in percent',
+    directionLabel: 'Direction',
+    submit: 'Set alert',
+    saving: 'Saving…',
+  },
+  card: (name: string, pct: string, direction: 'above' | 'below' | 'either') =>
+    direction === 'either'
+      ? `Tell you when ${name} is ${pct} from its reference, either way`
+      : `Tell you when ${name} is ${pct} ${direction} its reference`,
+  cardNote: 'One message by Telegram and in the bell, then the alert is done.',
+  alreadyThere: (gap: string) =>
+    `It is already ${gap} away, so this fires with the next price, within five minutes.`,
+  saved: 'Alert set. You will hear once.',
+  signedOut: 'Sign in to set an alert. It arrives by Telegram and in the bell.',
+  noDesk: 'Alerts arrive through your desk’s Telegram and bell, so start a desk first.',
+  waiting: (pct: string, direction: string) => `Waiting: ${pct} ${direction}`,
+  fired: (when: string, gap: string) => `Sent ${when}, at ${gap}`,
+  cancelled: 'Cancelled',
+  cancel: 'Cancel',
+  none: 'No alerts on this one yet.',
+  refused: {
+    token: 'That is not one of the ten Stock Tokens.',
+    range: 'Pick a distance between 0.25% and 50%.',
+    tooMany: (max: number) => `You have ${max} alerts waiting, the most at once. Cancel one first.`,
+    notYours: 'That alert is not yours.',
+  },
+  /** The message itself. Plain, with the numbers, and it says it will not repeat. */
+  message: (name: string, gap: string, price: string, reference: string, threshold: string) =>
+    `${name} is ${gap} its reference now: the pool at ${price}, against ${reference}. You asked to hear at ${threshold}, so this alert is done.`,
 } as const
 
 /** One desk's page: the chat first, then everything the desk holds and has done. */

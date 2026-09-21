@@ -31,6 +31,9 @@ const NONE: Fields = {
   withdrawAs: null,
   perActionCapUsdg: null,
   dailyCapUsdg: null,
+  symbol: null,
+  alertDirection: null,
+  thresholdBps: null,
 }
 
 /** What a button may ask for. Anything that needs the model's judgement, like "do it anyway", stays in the chat. */

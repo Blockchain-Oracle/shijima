@@ -9,7 +9,16 @@
  * Desks are done one after another, never in parallel: there is one operator key, so there is one sender.
  */
 import { APPROVED_TOKENS, type DeskCall } from '@desk/chain'
-import { chainReferenceSource, gradeAtReopen, logPrices, type SendReport, wakeDesk } from '@desk/core'
+import {
+  chainReferenceSource,
+  checkPriceAlerts,
+  gradeAtReopen,
+  logPrices,
+  type SendReport,
+  syncEarnings,
+  syncMultipliers,
+  wakeDesk,
+} from '@desk/core'
 import {
   type ActionRow,
   finishCheckRequest,
@@ -27,6 +36,10 @@ import { implementationsByVersion } from './cli/context'
 import { resolveUnsettled, sendAction } from './sender'
 
 const SEAL_EVERY_MS = 24 * 60 * 60 * 1000
+/** Multiplier changes are rare and report dates rarer. Read them now and then, never on every tick. */
+const MULTIPLIERS_EVERY_MS = 60 * 60 * 1000
+const EARNINGS_EVERY_MS = 12 * 60 * 60 * 1000
+const lastRead = { multipliers: 0, earnings: 0 }
 /**
  * How long the worker's own timer waits before stepping in.
  *
@@ -198,13 +211,42 @@ export async function reviewAllDesks(
       },
       now,
     )
-    if (priced > 0) log('prices', { rows: priced })
+    if (priced > 0) {
+      log('prices', { rows: priced })
+      // Alerts are checked against the row just written, so one fires within five minutes of the move.
+      const fired = await checkPriceAlerts(cli.db, APPROVED_TOKENS, now)
+      if (fired > 0) log('price_alerts', { fired })
+    }
   } catch (e) {
     log('prices_failed', { error: errorText(e) })
   }
+  await readMarketFacts(cli, log, now)
 
   if (!mayCheck) summary.waitingForPrimaryClock = true
   return summary
+}
+
+/** The stock pages' slow facts: multiplier changes from the chain, report dates from Finnhub. */
+async function readMarketFacts(cli: Cli, log: Log, now: Date): Promise<void> {
+  if (now.getTime() - lastRead.multipliers >= MULTIPLIERS_EVERY_MS) {
+    lastRead.multipliers = now.getTime()
+    try {
+      const saved = await syncMultipliers(cli.db, cli.pub, APPROVED_TOKENS)
+      if (saved > 0) log('multipliers', { saved })
+    } catch (e) {
+      log('multipliers_failed', { error: errorText(e) })
+    }
+  }
+  const key = process.env.FINNHUB_API_KEY
+  if (key && now.getTime() - lastRead.earnings >= EARNINGS_EVERY_MS) {
+    lastRead.earnings = now.getTime()
+    try {
+      const { saved, unreachable } = await syncEarnings(cli.db, APPROVED_TOKENS, key, now)
+      log('earnings', { saved, ...(unreachable.length > 0 ? { unreachable } : {}) })
+    } catch (e) {
+      log('earnings_failed', { error: errorText(e) })
+    }
+  }
 }
 
 export { resolveUnsettled }

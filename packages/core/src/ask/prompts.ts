@@ -93,7 +93,20 @@ HOW TO WRITE
 
 Answer only with the JSON object described by the response schema.`
 
-export const ASK_PROMPTS = { 'ask.v1': ASK_V1, 'ask.v2': ASK_V2 } as const
-export const ASK_PROMPT_VERSION = 'ask.v2' satisfies keyof typeof ASK_PROMPTS
+/**
+ * ask.v3, 21 Sep. ask.v2 with price alerts, so "tell me when Nvidia is 2% from its reference" makes the same card
+ * the stock page's form does. Derived from the frozen v2 text in the same way.
+ */
+const V3_ANCHOR =
+  "- close_desk: sell or send every holding, send everything to the owner's own wallet, remove the assistant and stop the checks. withdrawAs is usdg to sell everything to cash first, or stocks to send the holdings as they are. Only when the owner clearly asks to close the desk.\n"
+if (!ASK_V2.includes(V3_ANCHOR)) throw new Error('ask.v3 cannot be derived: its anchor in ask.v2 is gone')
+export const ASK_V3 = ASK_V2.replace(
+  V3_ANCHOR,
+  `${V3_ANCHOR}- price_alert: one message to the owner when a stock's pool moves a set distance from its reference. symbol is the stock's symbol, alertDirection is above, below or either, and thresholdBps is the distance in basis points, from 25 to 5000, so 2% is 200. It fires once and then stops. It changes nothing in the desk.
+`,
+)
+
+export const ASK_PROMPTS = { 'ask.v1': ASK_V1, 'ask.v2': ASK_V2, 'ask.v3': ASK_V3 } as const
+export const ASK_PROMPT_VERSION = 'ask.v3' satisfies keyof typeof ASK_PROMPTS
 export const READBACK_PROMPTS = { 'readback.v1': READBACK_V1 } as const
 export const READBACK_PROMPT_VERSION = 'readback.v1' satisfies keyof typeof READBACK_PROMPTS

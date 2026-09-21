@@ -6,6 +6,7 @@
  */
 export * from './client'
 export * from './queries/actions'
+export * from './queries/alerts'
 export * from './queries/chat'
 export * from './queries/desks'
 export * from './queries/engine'
