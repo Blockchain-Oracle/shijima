@@ -60,6 +60,10 @@ export interface ServRequest<S extends z.ZodType> {
   raw?: boolean
   shadowHint?: string
   timeoutMs?: number
+  /** Lower for short answers. SERV reserves the most a call could cost before running it. */
+  maxTokens?: number
+  /** False skips the shadow agent's second pass. The prompt guard stays on in SERV mode. The chat uses this. */
+  shadowAgent?: boolean
 }
 
 export async function servJson<S extends z.ZodType>(req: ServRequest<S>): Promise<ServResult<z.infer<S>>> {
@@ -89,7 +93,7 @@ export async function servJson<S extends z.ZodType>(req: ServRequest<S>): Promis
         // SERV reserves the MAXIMUM a call could cost before it runs, and refuses the call if the balance is
         // below that. With no cap it reserved $0.25 for a call that really costs about a cent. A timing answer
         // is about 700 tokens, so this leaves room and keeps the reserve honest.
-        max_completion_tokens: MAX_REPLY_TOKENS,
+        max_completion_tokens: req.maxTokens ?? MAX_REPLY_TOKENS,
         messages: [
           { role: 'system', content: req.system },
           { role: 'user', content: req.user },
@@ -102,13 +106,16 @@ export async function servJson<S extends z.ZodType>(req: ServRequest<S>): Promis
         ...(req.raw
           ? {}
           : {
-              tools: [
-                PROMPT_GUARD,
-                shadowAgent(
-                  req.shadowHint ?? 'Name exactly one option and cite only ids that were supplied.',
-                  2,
-                ),
-              ],
+              tools:
+                req.shadowAgent === false
+                  ? [PROMPT_GUARD]
+                  : [
+                      PROMPT_GUARD,
+                      shadowAgent(
+                        req.shadowHint ?? 'Name exactly one option and cite only ids that were supplied.',
+                        2,
+                      ),
+                    ],
             }),
       },
       req.raw ? { headers: { 'x-openserv-disable-braid': 'true' } } : undefined,
