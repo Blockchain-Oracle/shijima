@@ -18,7 +18,9 @@
       "!**/tokens.scan.json",
       "!**/generated",
       "!packages/db/drizzle",
-      "!**/deployments.json"
+      "!**/deployments.json",
+      "!apps/web/styles/yosuku",
+      "!apps/web/styles/agari"
     ]
   },
   "formatter": {

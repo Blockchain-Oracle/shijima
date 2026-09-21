@@ -1,0 +1,49 @@
+/* Shijima's additions to the ported system. Every colour is a Yosuku value: nothing here invents one.
+ *
+ * 1. The token names our first pages were written with (page, surface, line, ink-soft, ink-faint and the four
+ *    outcome tones) resolve to Yosuku's, so those pages take the new look before each is rebuilt on Yosuku's own
+ *    class vocabulary. `ink` and `accent` already mean the same thing in Agari's bridge.
+ * 2. Session states our calendar has and Agari's chip does not: `extended` and `overnight` read as lit, not live,
+ *    like Agari's pre-market and after hours; `weekend` as still. */
+@theme inline {
+  --color-page: var(--bg);
+  --color-surface: var(--ms-surface-1);
+  --color-line: var(--ms-hairline);
+  --color-ink-soft: var(--gray-400);
+  --color-ink-faint: var(--gray-500);
+  --color-acted: var(--profit);
+  --color-waited: var(--color-info);
+  --color-blocked: var(--vermilion);
+  --color-quiet: var(--gray-500);
+}
+
+.mks-chip[data-state="extended"] .mks-chip-dot,
+.mks-chip[data-state="overnight"] .mks-chip-dot {
+  background: var(--gray-300);
+}
+
+/* The wordmark: Shijima in the display face, しじま in the stamp face beside it. */
+.logo .logo-ja {
+  font-family: var(--font-stamp);
+  font-weight: 500;
+  font-size: 0.82em;
+  letter-spacing: 0.04em;
+  color: var(--gray-500);
+}
+
+/* A number the eye should be able to compare down a column. Kept for the first pages. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The first pages, until each is rebuilt: the old layout's reading width and rhythm. */
+.legacy-page {
+  max-width: 960px;
+  padding-top: 32px;
+  padding-bottom: 48px;
+}
+
+.footer-disclosure {
+  max-width: 72ch;
+  margin-bottom: 16px;
+}

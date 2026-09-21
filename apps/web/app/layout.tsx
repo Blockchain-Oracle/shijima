@@ -1,49 +1,36 @@
+import { webCopy } from '@desk/shared'
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import type { ReactNode } from 'react'
-import { Connect } from '@/components/connect'
 import { Providers } from '@/components/providers'
-import { signedInAddress } from '@/lib/session'
-import './globals.css'
+import { ShellChrome } from '@/components/shell'
+import { Toaster } from '@/components/ui/toast'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { fontVariables } from '@/lib/fonts'
+import { loadShell } from '@/lib/shell.server'
+import { THEME_INIT_SCRIPT } from '@/lib/theme'
+import { cn } from '@/lib/utils'
+import '@/styles/index.css'
 
 export const metadata: Metadata = {
-  title: 'Shijima',
-  description:
-    'A desk that looks after Stock Tokens while the US market is shut, and writes down every decision.',
+  title: { default: webCopy.brand.name, template: `%s · ${webCopy.brand.name}` },
+  description: webCopy.brand.description,
 }
 
+/** Masayume's root, as Agari has it: the faces, the theme painted before the first frame, and the shell. */
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  const signedInAs = await signedInAddress().catch(() => undefined)
+  const shell = await loadShell()
   return (
-    <html lang="en">
-      <body className="min-h-screen">
+    <html lang="en" suppressHydrationWarning>
+      <body className={cn('antialiased cursor-custom', fontVariables)} suppressHydrationWarning>
+        {/* Paint the chosen theme on the first frame, so there is no flash of the other one. */}
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: a fixed script of our own, with no input in it */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <Providers>
-          <header className="border-line border-b">
-            <nav className="mx-auto flex max-w-4xl items-center gap-5 px-4 py-3 text-sm">
-              <Link href="/" className="font-semibold text-ink">
-                Shijima
-              </Link>
-              <Link href="/how-it-works" className="text-ink-soft hover:text-ink">
-                How it decides
-              </Link>
-              {signedInAs ? (
-                <Link href="/desks" className="text-ink-soft hover:text-ink">
-                  Your desks
-                </Link>
-              ) : null}
-              <Link href="/start" className="text-ink-soft hover:text-ink">
-                Open a desk
-              </Link>
-              <div className="ml-auto">
-                <Connect signedInAs={signedInAs} />
-              </div>
-            </nav>
-          </header>
-          <main className="mx-auto max-w-4xl px-4 py-8">{children}</main>
-          <footer className="mx-auto max-w-4xl px-4 pt-4 pb-10 text-ink-faint text-xs">
-            Stock Tokens are not shares. Holding one gives you no ownership of the company and no shareholder
-            rights. Nothing here is advice.
-          </footer>
+          <TooltipProvider>
+            <Toaster limit={1}>
+              <ShellChrome {...shell}>{children}</ShellChrome>
+            </Toaster>
+          </TooltipProvider>
         </Providers>
       </body>
     </html>

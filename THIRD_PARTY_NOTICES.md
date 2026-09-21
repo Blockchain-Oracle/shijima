@@ -1,0 +1,46 @@
+# Third-party notices
+
+This file records where the website's design came from, and the attribution for material it carries. It does
+not grant a licence to Shijima as a whole, change any upstream terms, or imply endorsement by the projects named.
+File-level notices and each dependency's own licence still apply.
+
+## Masayume, Agari and Yosuku: the interface
+
+The website's look comes from **Masayume** (`sommina-events` @ `a255ae9`), by way of **Agari**
+(`agari-wt/w1`, branch `integration/w1` @ `695e7ca`). Agari had already moved Masayume onto US stocks. Both are
+the same author's own projects. Masayume's interface is itself a source-led port of **Yosuku**.
+
+- **Yosuku:** [Cybire1/yosuku](https://github.com/Cybire1/yosuku), pinned reference commit
+  `3c56ef52b78dae28cc198495f753480292f6a5ad`. `apps/web/styles/yosuku/` holds its design system, copied
+  verbatim from Agari. The parts join byte for byte into the reference's `globals.css`. Only the `@source` lines
+  in `index.css` are ours, and they point at this app's folders.
+- **Carried over from Agari:** `apps/web/styles/agari/`, the semantic bridge, the component tokens and the
+  sheets for the surfaces Shijima keeps, all verbatim. `apps/web/components/ui/` holds the shadcn `base-nova`
+  primitives on Base UI. `apps/web/components/shell/` and `apps/web/components/states/` are adapted from
+  Agari's own files, and each file names its source in a comment.
+- **Approval:** the owner approved reusing Yosuku's source, CSS, tokens and assets for Masayume on
+  1 September 2026. Agari carried that approval on 13 September, and Shijima carries it here.
+- **What is not known:** Yosuku's pinned README shows an MIT badge, but its tree has no licence file for the
+  badge to point at. No MIT grant is inferred from the badge or from this notice. The question stays open for
+  public redistribution, as it was for Agari.
+
+## Fonts
+
+| Font | Terms | Where |
+| --- | --- | --- |
+| Sora | Copyright 2019 The Sora Project Authors. SIL Open Font License 1.1. | `apps/web/lib/fonts.ts`, through `next/font/google` |
+| Inter | Copyright 2020 The Inter Project Authors. SIL Open Font License 1.1. | the same |
+| JetBrains Mono | Copyright 2020 The JetBrains Mono Project Authors. SIL Open Font License 1.1. | the same |
+| Noto Serif JP | Copyright 2012 Google Inc. SIL Open Font License 1.1. It sets しじま in the wordmark. | the same |
+
+## Packaged libraries
+
+Packaged libraries keep their own notices. Among them:
+- React and Next.js (MIT);
+- Base UI (MIT);
+- lightweight-charts (Apache-2.0, which asks for a link to TradingView where its charts appear);
+- Lucide (ISC);
+- viem and wagmi (MIT).
+
+This list is a guide to attribution. It does not replace the lockfile or the full licence text shipped with
+each dependency.

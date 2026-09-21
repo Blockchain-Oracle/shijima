@@ -1,0 +1,26 @@
+/* Order matters, as in Agari (web/src/styles/index.css):
+ *   1. the ported Yosuku design system, verbatim (owns Tailwind, the palette, faces, easings)
+ *   2. Agari's semantic bridge and component tiers, verbatim
+ *   3. the sheets for the surfaces Shijima keeps. The betting sheets (tickets, games, parlays,
+ *      leaderboards, edge, pitch) are left out, not overridden.
+ *   4. shijima.css: our old token names mapped onto Yosuku's values, until every page is rebuilt
+ *   5. base rules last */
+@import "./yosuku/index.css";
+@import "tw-animate-css";
+@import "./agari/bridge.css";
+@import "./agari/tokens.css";
+@import "./agari/shell.css";
+@import "./agari/navigation.css";
+@import "./agari/market-session.css";
+@import "./agari/markets-hero.css";
+@import "./agari/modal.css";
+@import "./agari/toast.css";
+@import "./agari/tutorial.css";
+@import "./agari/market-card.css";
+@import "./agari/icons.css";
+@import "./agari/history.css";
+@import "./agari/status.css";
+@import "./agari/how-it-works.css";
+@import "./agari/error.css";
+@import "./shijima.css";
+@import "./agari/base.css";
