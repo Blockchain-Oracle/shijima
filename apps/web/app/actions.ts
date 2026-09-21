@@ -1,6 +1,7 @@
 'use server'
 
 import { APPROVED_TOKENS, isCloneOf, makePublicClient, readDeskState } from '@desk/chain'
+import { confirmSigninProposal } from '@desk/core'
 import {
   answerApproval,
   applyMandate,
@@ -168,6 +169,26 @@ export async function applyMandateAction(formData: FormData): Promise<ActionResu
       ok: true,
       message: `Saved as version ${row.version}. The desk starts in practice mode: it decides for real and spends nothing.`,
     }
+  } catch (e) {
+    return { ok: false, message: errorText(e) }
+  }
+}
+
+/**
+ * The owner's yes to a chat card the sign-in session may confirm. Only the proposal the worker saved runs, and
+ * only if it is this owner's, still open and not expired. The model's words are never re-read here.
+ */
+export async function confirmProposalAction(proposalId: string): Promise<ActionResult> {
+  try {
+    const address = await signedInAddress()
+    if (!address) return { ok: false, message: 'Sign in first.' }
+    const outcome = await confirmSigninProposal(db(), APPROVED_TOKENS, {
+      proposalId,
+      ownerAddress: address,
+      via: 'web',
+    })
+    revalidatePath('/desks')
+    return { ok: outcome.ok, message: outcome.text }
   } catch (e) {
     return { ok: false, message: errorText(e) }
   }
