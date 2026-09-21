@@ -240,6 +240,26 @@ Made 2026-09-20 by Claude. Abu can overrule any of these. Each is a constant in 
 
 ---
 
+## The name
+
+Abu names his projects in Japanese, as he did with Baku (獏). **Shijima (しじま)**, chosen by him on
+2026-09-21 and registered as the Telegram bot @ShijimaBot.
+
+Shijima is the stillness of deep night: the hours when nothing moves and no one is watching. Those are the
+hours this product works, and stillness is most of what it does. Page after page of its record says "nothing
+to do", and that is the point, because those entries are the proof it was awake and honest. The word is rare
+enough in English to be ownable, and nothing in crypto uses it.
+
+**Set aside along the way, kept so the ground is not covered twice.** *Bantō* (番頭), the Edo-period senior
+clerk who ran a merchant's shop within limits the master set: an exact fit for the role, but a common job
+title anyone could take. *Maai* (間合い), the interval a kendoka reads before striking: perfect for a product
+whose only judgment is timing, but MAI is a well-known stablecoin and the two would be confused constantly.
+*Hikae* (控え), which means standing by, holding back AND the written record all at once: the richest fit,
+but English speakers say "hi-kay" and lose it. *Koroai* (頃合い), the right moment. And *Omamori*, the
+protective shrine charm, rejected on purpose: it promises protection, which this product must never imply.
+
+---
+
 ## Still open
 
 | Question | Status |
@@ -251,4 +271,4 @@ Made 2026-09-20 by Claude. Abu can overrule any of these. Each is a constant in 
 | Where the news comes from | **Settled.** Finnhub, with Tavily as fallback. Weekend coverage tested Sunday. |
 | How much real money goes in | About $100 of USDG: a $20 test desk, a $50 demo desk, and the main desk. Abu decides. |
 | Does a build with no MCP qualify for the "Mainnet & MCP" track | **Abu asks in the OpenServ Telegram on day one.** |
-| The product's name | Decided by Thursday 24 September. |
+| The product's name | **Settled 2026-09-21: Shijima (しじま).** Abu chose it. Reasoning below. |

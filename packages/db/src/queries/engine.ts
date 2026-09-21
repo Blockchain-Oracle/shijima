@@ -15,6 +15,7 @@ import {
   grades,
   notifications,
   owners,
+  telegramLinks,
   wakes,
 } from '../schema'
 import type { SnapshotHolding } from '../schema/money'
@@ -626,4 +627,117 @@ export async function recordOutsideChanges(
     })
     await saveValueSnapshot(tx, input.snapshot)
   })
+}
+
+// ---------------------------------------------------------------- Telegram
+
+/** A single-use code that ties a Telegram chat to one desk. It dies after ten minutes. */
+export async function createTelegramLink(db: DbOrTx, deskId: string, code: string, minutes = 10) {
+  const [row] = await db
+    .insert(telegramLinks)
+    .values({ deskId, code, codeExpiresAt: new Date(Date.now() + minutes * 60_000) })
+    .returning()
+  return row
+}
+
+/**
+ * Spends a link code and ties the chat to the desk. Guarded: the row must still be pending and unexpired, so
+ * a code that leaks after it has been used, or after ten minutes, is worth nothing.
+ */
+export async function claimTelegramLink(
+  db: DbOrTx,
+  code: string,
+  chat: { userId: number; chatId: number; username?: string | undefined },
+) {
+  const now = new Date()
+  const [row] = await db
+    .update(telegramLinks)
+    .set({
+      status: 'linked',
+      telegramUserId: chat.userId,
+      telegramChatId: chat.chatId,
+      telegramUsername: chat.username ?? null,
+      linkedAt: now,
+    })
+    .where(
+      and(
+        eq(telegramLinks.code, code),
+        eq(telegramLinks.status, 'pending'),
+        gt(telegramLinks.codeExpiresAt, now),
+      ),
+    )
+    .returning()
+  return row
+}
+
+/** The desk this Telegram user is allowed to hear about. Nobody else's desk is ever answered for. */
+export async function deskForTelegramUser(db: DbOrTx, telegramUserId: number) {
+  const [row] = await db
+    .select({ link: telegramLinks, desk: desks })
+    .from(telegramLinks)
+    .innerJoin(desks, eq(telegramLinks.deskId, desks.id))
+    .where(and(eq(telegramLinks.telegramUserId, telegramUserId), eq(telegramLinks.status, 'linked')))
+  return row
+}
+
+export async function linkForDesk(db: DbOrTx, deskId: string) {
+  const [row] = await db
+    .select()
+    .from(telegramLinks)
+    .where(and(eq(telegramLinks.deskId, deskId), eq(telegramLinks.status, 'linked')))
+  return row
+}
+
+export async function setStatusMessageId(db: DbOrTx, linkId: string, messageId: number): Promise<void> {
+  await db.update(telegramLinks).set({ statusMessageId: messageId }).where(eq(telegramLinks.id, linkId))
+}
+
+/** Messages the engine queued that have not gone out. Oldest first, so a story arrives in order. */
+export async function pendingNotifications(db: DbOrTx, limit = 20) {
+  return db
+    .select()
+    .from(notifications)
+    .where(and(eq(notifications.status, 'pending'), lte(notifications.sendAfter, new Date())))
+    .orderBy(asc(notifications.id))
+    .limit(limit)
+}
+
+export async function markNotificationSent(
+  db: DbOrTx,
+  id: number,
+  outcome: { status: 'sent' | 'failed' | 'skipped'; messageId?: number; error?: string },
+): Promise<void> {
+  await db
+    .update(notifications)
+    .set({
+      status: outcome.status,
+      telegramMessageId: outcome.messageId ?? null,
+      lastError: outcome.error ?? null,
+      attempts: sql`${notifications.attempts} + 1`,
+      sentAt: outcome.status === 'sent' ? new Date() : null,
+    })
+    .where(eq(notifications.id, id))
+}
+
+/** The Telegram message that carried a request, so answering anywhere can update it. */
+export async function approvalMessageId(db: DbOrTx, decisionId: string): Promise<number | undefined> {
+  const [row] = await db
+    .select({ id: notifications.telegramMessageId })
+    .from(notifications)
+    .where(
+      and(
+        eq(notifications.decisionId, decisionId),
+        inArray(notifications.kind, ['approval_request', 'large_action_request']),
+      ),
+    )
+  return row?.id ?? undefined
+}
+
+export async function approvalById(db: DbOrTx, approvalId: string) {
+  const [row] = await db
+    .select({ approval: approvals, decision: decisions })
+    .from(approvals)
+    .innerJoin(decisions, eq(approvals.decisionId, decisions.id))
+    .where(eq(approvals.id, approvalId))
+  return row
 }

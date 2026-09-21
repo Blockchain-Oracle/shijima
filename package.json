@@ -37,7 +37,8 @@
     "web:build": "pnpm --filter @desk/web build",
     "desk:grade": "pnpm --filter @desk/worker grade",
     "openserv:provision": "pnpm --filter @desk/worker openserv:provision",
-    "openserv:fire": "pnpm --filter @desk/worker openserv:fire"
+    "openserv:fire": "pnpm --filter @desk/worker openserv:fire",
+    "desk:link": "pnpm --filter @desk/worker telegram-link"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.14",

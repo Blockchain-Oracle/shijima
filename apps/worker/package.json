@@ -14,7 +14,8 @@
     "approve": "tsx --env-file-if-exists=../../.env src/cli/approve.ts",
     "grade": "tsx --env-file-if-exists=../../.env src/cli/grade.ts",
     "openserv:provision": "tsx --env-file-if-exists=../../.env src/openserv/provision.ts",
-    "openserv:fire": "tsx --env-file-if-exists=../../.env src/openserv/fire.ts"
+    "openserv:fire": "tsx --env-file-if-exists=../../.env src/openserv/fire.ts",
+    "telegram-link": "tsx --env-file-if-exists=../../.env src/cli/link.ts"
   },
   "dependencies": {
     "@desk/chain": "workspace:*",
@@ -23,6 +24,7 @@
     "@desk/shared": "workspace:*",
     "@openserv-labs/client": "2.5.3",
     "@openserv-labs/sdk": "2.4.1",
+    "grammy": "1.46.0",
     "openai": "catalog:",
     "pg": "catalog:",
     "viem": "catalog:",

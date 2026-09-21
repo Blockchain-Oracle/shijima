@@ -10,6 +10,10 @@ const Env = z.object({
   DATABASE_URL: z.string().url(),
   REHEARSAL_DATABASE_URL: z.string().url().optional(),
   RPC_URL: z.string().url().optional(),
+  /** Optional. Without it the desk works exactly as before, it just has no voice. */
+  TELEGRAM_BOT_TOKEN: z.string().min(20).optional(),
+  /** Where the decision pages live, for the link on a request. */
+  SITE_URL: z.string().url().optional(),
 })
 
 export function loadEnv() {

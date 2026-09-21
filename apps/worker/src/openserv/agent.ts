@@ -15,9 +15,9 @@ import type { DoTaskActionSchema } from '@openserv-labs/sdk/dist/types.js'
 import { z } from 'zod'
 import { type Cli, type Log, reviewAllDesks } from '../review'
 
-export const AGENT_NAME = 'after-hours-desk'
+export const AGENT_NAME = 'shijima'
 export const AGENT_DESCRIPTION =
-  'Keeps one owner Stock Token portfolio to its written mandate while the US market is shut, on Robinhood Chain. Every decision, including doing nothing, is recorded and fingerprinted on-chain.'
+  'Shijima (しじま). Keeps one owner Stock Token portfolio to its written mandate while the US market is shut, on Robinhood Chain. It decides only WHEN to act, never what to own, and every decision including doing nothing is recorded and fingerprinted on-chain.'
 
 export interface AgentCredentials {
   /** Identifies this agent to the platform. */

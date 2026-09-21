@@ -7,7 +7,7 @@ import { signedInAddress } from '@/lib/session'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'The Desk',
+  title: 'Shijima',
   description:
     'A desk that looks after Stock Tokens while the US market is shut, and writes down every decision.',
 }
@@ -21,7 +21,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           <header className="border-line border-b">
             <nav className="mx-auto flex max-w-4xl items-center gap-5 px-4 py-3 text-sm">
               <Link href="/" className="font-semibold text-ink">
-                The Desk
+                Shijima
               </Link>
               <Link href="/how-it-works" className="text-ink-soft hover:text-ink">
                 How it decides

@@ -14,6 +14,7 @@ import { tryBecomeLeader } from './leader'
 import { startAgentIfProvisioned } from './openserv/serve'
 import { reviewAllDesks } from './review'
 import { resolveUnsettled } from './sender'
+import { startTelegram } from './telegram/start'
 
 const TICK_MS = 15_000
 /** A check still running after this long was interrupted by a crash. Its hour is freed, and the record says so. */
@@ -33,7 +34,10 @@ let stopping = false
 let running: Promise<unknown> = Promise.resolve()
 const loop = async () => {
   while (!stopping) {
-    running = reviewAllDesks(cli, log).catch((e) => log('tick_failed', { error: errorText(e) }))
+    running = reviewAllDesks(cli, log)
+      // The outbox is drained after the work, so a message never announces something not yet committed.
+      .then(() => telegram?.drain())
+      .catch((e) => log('tick_failed', { error: errorText(e) }))
     await running
     await new Promise((r) => setTimeout(r, TICK_MS))
   }
@@ -44,6 +48,7 @@ const stop = async (signal: string) => {
   log('stopping', { signal, note: 'finishing the check in progress first' })
   await running
   await agent?.stop()
+  await telegram?.stop()
   await leader.release()
   await cli.close()
   process.exit(0)
@@ -53,6 +58,7 @@ process.on('SIGTERM', () => void stop('SIGTERM'))
 
 log('leader', { operator: cli.wallet.account.address, rehearsal: cli.env.isRehearsal })
 const agent = await startAgentIfProvisioned(cli, log)
+const telegram = startTelegram(cli, log)
 for (const stuck of await sweepInterruptedWakes(cli.db, new Date(Date.now() - STUCK_WAKE_MS))) {
   log('interrupted_check', { desk: stuck.deskId, hour: stuck.scheduledFor.toISOString() })
 }

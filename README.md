@@ -1,8 +1,12 @@
-# The Desk
+# Shijima しじま
 
 **An after-hours desk for Stock Tokens on Robinhood Chain.** You decide what to own. It decides only *when*,
 while the US market is shut, inside limits the network itself enforces. Every decision it makes, including the
 many where it does nothing, is written down and fingerprinted on-chain so nobody can rewrite it later.
+
+*Shijima* is the stillness of deep night: the hours when nothing moves and no one is watching. Those are the
+hours this works, and stillness is most of what it does. Page after page of its record says nothing to do,
+and that is the point, because those entries are the proof it was awake and honest.
 
 Built for the SERV Hackathon Edition 01, Mainnet & MCP track. It is live on Robinhood Chain mainnet today.
 

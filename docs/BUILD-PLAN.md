@@ -451,6 +451,30 @@ while committing. Ten were real and are now fixed:
   mostly redundant since cash and the token weights sum to 100%.
 - `.claude/` is now gitignored: it is Claude Code's own working state, not part of the product.
 
+**Mon 21 Sep, 03:35 UTC. The product has a name, and a voice. Both are live.**
+- **Named Shijima (しじま)**, the stillness of deep night. Abu chose it by registering @ShijimaBot. The README,
+  the site, the brief and the decisions doc all carry it, and the OpenServ agent was RENAMED IN PLACE, so it is
+  still agent 4513 and no duplicate appeared. Proven twice now, since it was briefly Bantō in between.
+  Three earlier candidates and why each was set aside are kept in `DECISIONS.md` so the ground is not covered
+  twice. One was dropped for a reason worth remembering: *Maai* was perfect in meaning, but MAI is a well-known
+  stablecoin and the two would be confused constantly.
+- **The Telegram bot is running**: @ShijimaBot, connected, long polling, inside the worker. It has the whole of
+  brief section 9. Every word it says lives in `shared/copy/telegram.ts` and passes the banned-word rule.
+  - **One pinned message, edited in place, that never notifies.** This is the point of the design: an hourly
+    desk would otherwise send about 160 messages a week, and a muted desk is a useless one. A new message is
+    sent only when something needs the owner or has really happened.
+  - **Approve and Reject are buttons.** Pressing one flips the same guarded row the website flips, and moves
+    nothing: the worker re-reads the price on its next check. A press is checked against the Telegram user id
+    and the desk it is linked to, so a forwarded message or a guessed approval id gets nothing.
+  - Answering on the website edits the Telegram message too, so the owner is never left looking at live
+    buttons for something already decided.
+  - Private chats only. A desk in a group would announce one person's money to a room.
+  - Linking is a one-time code that dies in ten minutes: `pnpm desk:link`.
+  - **Without a token the desk runs exactly as before, with no voice.** Telegram is how the owner hears about
+    it, never how anything is decided, so it can never stop the desk working.
+- **Not yet verified:** the bot connects and polls, and its identity checks out as @ShijimaBot, but the round
+  trip through a real chat needs Abu to message it. Everything up to the send is exercised.
+
 ## 6. Schedule
 
 | Day | Work | Must be true by end of day |

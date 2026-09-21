@@ -4,7 +4,8 @@ For a designer. Written in plain language on purpose. It covers everything the p
 screen, every message, and every awkward state. It says nothing about colours, type, or visual style.
 Those are yours to decide.
 
-Working name: **the Desk**. The name is not final.
+Name: **Shijima** (しじま), decided 2026-09-21. The reasoning is in `DECISIONS.md`. In the product's own copy
+the common noun stays lower case: "your desk", "the desk waited". Shijima is the product; a desk is what you own.
 
 *Revised 19 September after the technical research. Changes: the honest worst-case wording in 8.3, the
 "money first" order in 8.4, the headline rule in 8.11, one new awkward state in 8.16, "close the desk" in
@@ -22,7 +23,7 @@ hours. On weekends the real market is shut, but Stock Tokens keep changing hands
 moving, sometimes by 2 or 3 percent. Nobody is watching your holdings during that time. Your broker is
 closed. You are asleep.
 
-**The Desk is an assistant that looks after your Stock Tokens during those hours.** You tell it what
+**Shijima is an assistant that looks after your Stock Tokens during those hours.** You tell it what
 you want to own and what your limits are. It checks on things every hour. Most of the time it finds
 nothing to do, and it says so. When something does need doing, it decides whether to do it now, do
 part of it, wait until the market reopens, or refuse. Every time, it writes down what it saw, what it
