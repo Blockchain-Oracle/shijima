@@ -1,166 +1,91 @@
 /**
- * Chat cards that touch the chain: withdraw, remove the assistant, sell everything, and restart the desk.
+ * Chat cards that touch the chain: add money, withdraw, sell everything, the limits on the chain, remove the
+ * assistant, restart the desk, and close it.
  *
  * The website still holds no key. It reads the chain, builds the one transaction the saved proposal describes,
- * and hands it to the browser, where the owner's session key or wallet signs it. Afterwards it reads the
- * receipt from the chain itself before calling the card done: a transaction hash from the browser proves
- * nothing until the chain agrees that it went to this desk, from its owner or its session key, and succeeded.
+ * and hands it to the browser, where the owner's session key or wallet signs it. Before that it shows what the
+ * owner gets and what it costs, from a simulation on the chain. Afterwards it reads the receipt from the chain
+ * itself before calling the card done: a transaction hash from the browser proves nothing until the chain agrees
+ * that it went where the card said, from its owner or its session key, and succeeded.
  */
-import { APPROVED_TOKENS, deskAbi, erc20Abi, makePublicClient, quotePinned, USDG } from '@desk/chain'
-import { type AskProposalRow, deskById, finishProposal, proposalForOwner, takeProposal } from '@desk/db'
+import { deskAbi, erc20Abi, USDG } from '@desk/chain'
 import {
-  type Address,
-  encodeFunctionData,
-  type Hex,
-  isHash,
-  keccak256,
-  type PublicClient,
-  toBytes,
-} from 'viem'
-import { rpcUrl } from './chain'
+  type AskProposalRow,
+  closeDesk,
+  deskById,
+  finishProposal,
+  markAssistantBack,
+  markAssistantRemoved,
+  proposalForOwner,
+  takeProposal,
+} from '@desk/db'
+import { type Address, type Hex, isHash, parseEventLogs } from 'viem'
+import { type Built, build, type DeskForBuild, estimateFee, pub, targetOf } from './chain-build.server'
 import { db } from './db'
 
-/** What the owner accepts losing to price movement on a sell they asked for, beyond the quote they saw. */
-const OWNER_SELL_SLIPPAGE_BPS = 100n
-const DEADLINE_S = 600
-
 export interface PreparedCall {
-  deskAddress: Address
   to: Address
   data: Hex
   /** True when every call in it is one the session key may make: the browser may sign with the key. */
   sessionMay: boolean
-  /** One line for the owner: what signing this does. */
   summary: string
-  contractVersion: string
 }
 
 export type Prepared = { ok: true; call: PreparedCall } | { ok: false; why: string }
 
-let client: PublicClient | undefined
-const pub = () => {
-  client ??= makePublicClient([rpcUrl()])
-  return client
+export interface Preview {
+  summary: string
+  lines: string[]
+  sessionMay: boolean
+  /** The network fee in dollars, from a simulation. */
+  feeUsd: number
 }
 
-const encode = (functionName: string, args: readonly unknown[]) =>
-  encodeFunctionData({ abi: deskAbi, functionName: functionName as never, args: args as never })
-
-/** Each holding the desk has now, read from the chain. */
-async function balances(desk: Address) {
-  const reads = await Promise.all(
-    [USDG, ...APPROVED_TOKENS.map((t) => t.address)].map(async (token) => ({
-      token,
-      amount: (await pub().readContract({
-        address: token,
-        abi: erc20Abi,
-        functionName: 'balanceOf',
-        args: [desk],
-      })) as bigint,
-    })),
-  )
-  return reads.filter((r) => r.amount > 0n)
+async function ownersCard(proposalId: string, owner: string) {
+  const proposal = await proposalForOwner(db(), proposalId, owner)
+  if (!proposal || proposal.path === 'signin' || !proposal.deskId) return undefined
+  const desk = await deskById(db(), proposal.deskId)
+  if (!desk || desk.ownerAddress.toLowerCase() !== owner.toLowerCase()) return undefined
+  const forBuild: DeskForBuild = {
+    address: desk.address as Address,
+    owner: desk.ownerAddress as Address,
+    operator: desk.operator as Address,
+    contractVersion: desk.contractVersion,
+  }
+  return { proposal, desk, forBuild }
 }
 
-/** Several calls become one `batch`, so the owner signs once. One call goes as itself. */
-function oneTransaction(desk: Address, calls: Hex[]): Hex {
-  const [only] = calls
-  if (only && calls.length === 1) return only
-  return encode('batch', [calls])
-}
-
-async function build(proposal: AskProposalRow, desk: Address): Promise<PreparedCall | string> {
-  const args = proposal.args
-  const version = (await deskById(db(), proposal.deskId ?? ''))?.contractVersion ?? 'v0'
-  const base = { deskAddress: desk, to: desk, contractVersion: version }
-  switch (proposal.kind) {
-    case 'withdraw': {
-      if (args.as === 'stocks') {
-        const held = await balances(desk)
-        if (held.length === 0) return 'The desk holds nothing to withdraw.'
-        return {
-          ...base,
-          data: oneTransaction(
-            desk,
-            held.map((h) => encode('withdraw', [h.token, h.amount])),
-          ),
-          sessionMay: true,
-          summary: 'Withdraw every holding as it is, to your own wallet.',
-        }
-      }
-      const cash = (await pub().readContract({
-        address: USDG,
-        abi: erc20Abi,
-        functionName: 'balanceOf',
-        args: [desk],
-      })) as bigint
-      const wanted = typeof args.amountUsdg === 'string' ? BigInt(args.amountUsdg) : cash
-      if (wanted === 0n) return 'The desk has no cash to withdraw right now.'
-      if (wanted > cash) return `Only $${(Number(cash) / 1e6).toFixed(2)} is in cash right now.`
-      return {
-        ...base,
-        data: encode('withdraw', [USDG, wanted]),
-        sessionMay: true,
-        summary: `Withdraw $${(Number(wanted) / 1e6).toFixed(2)} of USDG to your own wallet.`,
-      }
-    }
-    case 'remove_assistant':
-      return {
-        ...base,
-        data: encode('revokeOperator', []),
-        sessionMay: true,
-        summary: 'Remove the assistant. It loses all access at once.',
-      }
-    case 'unpause':
-      return {
-        ...base,
-        data: encode('unpause', []),
-        sessionMay: false,
-        summary: 'Restart the desk on-chain.',
-      }
-    case 'sell_everything': {
-      const held = (await balances(desk)).filter((h) => h.token.toLowerCase() !== USDG.toLowerCase())
-      if (held.length === 0) return 'The desk holds no Stock Tokens to sell.'
-      const block = await pub().getBlock()
-      const deadline = Number(block.timestamp) + DEADLINE_S
-      const reason = keccak256(toBytes(`shijima:proposal:${proposal.id}`))
-      const calls = await Promise.all(
-        held.map(async (h) => {
-          const token = APPROVED_TOKENS.find((t) => t.address.toLowerCase() === h.token.toLowerCase())
-          if (!token) throw new Error(`unknown token ${h.token}`)
-          const out = await quotePinned(pub(), token, 'sell', h.amount)
-          const minOut = (out * (10_000n - OWNER_SELL_SLIPPAGE_BPS)) / 10_000n
-          return encode('sell', [token.address, h.amount, minOut, deadline, reason])
-        }),
-      )
-      return {
-        ...base,
-        data: oneTransaction(desk, calls),
-        sessionMay: false,
-        summary: 'Sell every holding to USDG inside the desk, at no worse than 1% under the quote.',
-      }
-    }
-    default:
-      return 'That card is not one signed on the chain.'
+/**
+ * What confirming would do, and what it costs, before anything is signed. Reads only: the card stays open, so
+ * an owner who looks and walks away has used nothing.
+ */
+export async function previewChainProposal(
+  proposalId: string,
+  owner: string,
+): Promise<{ ok: true; preview: Preview } | { ok: false; why: string }> {
+  const found = await ownersCard(proposalId, owner)
+  if (!found) return { ok: false, why: 'No such card.' }
+  if (found.proposal.status !== 'open' || found.proposal.expiresAt < new Date())
+    return { ok: false, why: 'This card has expired or was already used. Ask again.' }
+  const built = await build(found.proposal, found.forBuild)
+  if (typeof built === 'string') return { ok: false, why: built }
+  const fee = await estimateFee(owner as Address, built)
+  if (!fee.ok) return { ok: false, why: fee.why }
+  return {
+    ok: true,
+    preview: { summary: built.summary, lines: built.lines, sessionMay: built.sessionMay, feeUsd: fee.usd },
   }
 }
 
-/** Takes the card and builds its transaction. The card cannot be used twice from here on. */
+/** Takes the card and builds its transaction afresh. The card cannot be used twice from here on. */
 export async function prepareChainProposal(proposalId: string, owner: string): Promise<Prepared> {
-  const proposal = await proposalForOwner(db(), proposalId, owner)
-  if (!proposal || proposal.path === 'signin' || !proposal.deskId) return { ok: false, why: 'No such card.' }
-  const desk = await deskById(db(), proposal.deskId)
-  if (!desk || desk.ownerAddress.toLowerCase() !== owner.toLowerCase())
-    return { ok: false, why: 'That desk is not yours.' }
-  const taken = await takeProposal(db(), { id: proposalId, ownerAddress: owner, path: proposal.path })
+  const found = await ownersCard(proposalId, owner)
+  if (!found) return { ok: false, why: 'No such card.' }
+  const taken = await takeProposal(db(), { id: proposalId, ownerAddress: owner, path: found.proposal.path })
   if (!taken) return { ok: false, why: 'This card has expired or was already used. Ask again.' }
+  let built: Built | string
   try {
-    const built = await build(taken, desk.address as Address)
-    if (typeof built === 'string') {
-      await finishProposal(db(), taken.id, { status: 'refused', result: { text: built } })
-      return { ok: false, why: built }
-    }
-    return { ok: true, call: built }
+    built = await build(taken, found.forBuild)
   } catch (e) {
     await finishProposal(db(), taken.id, {
       status: 'failed',
@@ -168,11 +93,23 @@ export async function prepareChainProposal(proposalId: string, owner: string): P
     })
     return { ok: false, why: e instanceof Error ? e.message : 'The transaction could not be built.' }
   }
+  if (typeof built === 'string') {
+    await finishProposal(db(), taken.id, { status: 'refused', result: { text: built } })
+    return { ok: false, why: built }
+  }
+  return {
+    ok: true,
+    call: { to: built.to, data: built.data, sessionMay: built.sessionMay, summary: built.summary },
+  }
 }
 
+/** Who confirmed it, for the desk's own event log: a button on the page, or a card from the chat. */
+const byOf = (proposal: AskProposalRow) =>
+  ({ actor: 'owner', via: proposal.deskView.source === 'button' ? 'web' : 'chat' }) as const
+
 /**
- * The browser says the transaction landed. The chain decides: it must be to this desk, from its owner or its live
- * session key, and it must have succeeded.
+ * The browser says the transaction landed. The chain decides: it must be to where the card said, from the owner
+ * or the desk's live session key, and it must have succeeded. Then the desk's own state follows the chain.
  */
 export async function finishChainProposal(proposalId: string, owner: string, txHash: string) {
   if (!isHash(txHash)) return { ok: false as const, text: 'That is not a transaction.' }
@@ -185,29 +122,59 @@ export async function finishChainProposal(proposalId: string, owner: string, txH
     pub().waitForTransactionReceipt({ hash: txHash, timeout: 60_000 }),
     pub().getTransaction({ hash: txHash }),
   ])
+  const deskAddress = desk.address as Address
   const from = tx.from.toLowerCase()
   let signer = from === desk.ownerAddress.toLowerCase() ? 'owner' : null
-  if (!signer && desk.contractVersion !== 'v0') {
+  if (!signer && desk.contractVersion !== 'v0' && proposal.kind !== 'add_money') {
     const session = (await pub().readContract({
-      address: desk.address as Address,
+      address: deskAddress,
       abi: deskAbi,
       functionName: 'session',
       blockNumber: receipt.blockNumber,
     })) as Address
     if (session.toLowerCase() === from) signer = 'session'
   }
-  const toDesk = receipt.to?.toLowerCase() === desk.address.toLowerCase()
-  if (!signer || !toDesk)
+  const target = targetOf(proposal.kind, deskAddress).toLowerCase()
+  if (!signer || receipt.to?.toLowerCase() !== target)
     return { ok: false as const, text: 'That transaction was not this desk’s owner acting on it.' }
   if (receipt.status !== 'success') {
-    await finishProposal(db(), proposal.id, {
-      status: 'failed',
-      result: { text: 'The transaction was refused by the chain. Nothing moved.' },
-      txHash,
-    })
-    return { ok: false as const, text: 'The transaction was refused by the chain. Nothing moved.' }
+    const text = 'The transaction was refused by the chain. Nothing moved.'
+    await finishProposal(db(), proposal.id, { status: 'failed', result: { text }, txHash })
+    return { ok: false as const, text }
   }
-  const text = 'Done. It is on the chain, and the desk’s record picks it up at its next check.'
+  if (proposal.kind === 'add_money') {
+    // The transfer itself must be from the owner to this desk, for the amount on the card.
+    const moved = parseEventLogs({ abi: erc20Abi, logs: receipt.logs, eventName: 'Transfer' }).some(
+      (l) =>
+        l.address.toLowerCase() === USDG.toLowerCase() &&
+        l.args.from.toLowerCase() === desk.ownerAddress.toLowerCase() &&
+        l.args.to.toLowerCase() === deskAddress.toLowerCase() &&
+        l.args.value === BigInt(String(proposal.args.amountUsdg)),
+    )
+    if (!moved) return { ok: false as const, text: 'That transaction did not move this money into the desk.' }
+  }
+
+  const by = byOf(proposal)
+  let text = 'Done. It is on the chain, and the desk’s record picks it up at its next check.'
+  if (proposal.kind === 'remove_assistant') {
+    await markAssistantRemoved(db(), desk.id, by, txHash)
+    text = 'Done. The assistant has no access now, and your money stays in your account.'
+  } else if (proposal.kind === 'unpause') {
+    const [operator, paused] = await Promise.all([
+      pub().readContract({ address: deskAddress, abi: deskAbi, functionName: 'operator' }),
+      pub().readContract({ address: deskAddress, abi: deskAbi, functionName: 'paused' }),
+    ])
+    if (!paused && (operator as string).toLowerCase() === desk.operator.toLowerCase()) {
+      await markAssistantBack(db(), desk.id, by, txHash)
+      text = 'Done. The desk is running again, and carries on from its next check.'
+    }
+  } else if (proposal.kind === 'close_desk') {
+    await closeDesk(db(), desk.id, by, txHash)
+    text =
+      'Done. Everything went to your wallet, the assistant is removed and the checks have stopped. The record stays readable.'
+  } else if (proposal.kind === 'add_money') {
+    text = 'Done. The money is in the desk. It is valued and put to work at the next check.'
+  }
   await finishProposal(db(), proposal.id, { status: 'done', result: { text, signer }, txHash })
   return { ok: true as const, text }
 }
@@ -215,6 +182,6 @@ export async function finishChainProposal(proposalId: string, owner: string, txH
 /** The owner closed their wallet without signing, or the key could not send. The card ends, honestly. */
 export async function abandonChainProposal(proposalId: string, owner: string, why: string) {
   const proposal = await proposalForOwner(db(), proposalId, owner)
-  if (!proposal || proposal.status !== 'confirmed') return
+  if (proposal?.status !== 'confirmed') return
   await finishProposal(db(), proposal.id, { status: 'refused', result: { text: why.slice(0, 300) } })
 }

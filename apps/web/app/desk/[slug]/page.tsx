@@ -1,6 +1,7 @@
 import { deskCopy, engineCopy } from '@desk/shared'
 import { notFound } from 'next/navigation'
 import { DeskChat } from '@/features/desk/DeskChat'
+import { DeskControls } from '@/features/desk/DeskControls'
 import {
   Holdings,
   Limits,
@@ -57,6 +58,26 @@ export default async function DeskPage({ params }: { params: Promise<{ slug: str
           desk={
             <>
               <NeedsYou view={view} />
+              {view.isOwner && (
+                <DeskControls
+                  view={{
+                    deskId: d.id,
+                    slug: view.slug,
+                    address: d.address,
+                    owner: view.owner,
+                    mode: d.mode,
+                    state: d.state,
+                    lifecycle: d.lifecycle,
+                    assistantRemoved: d.assistantRemoved,
+                    shadowChecks: d.shadowChecks,
+                    goLiveChecks: d.goLiveChecks,
+                    reportOpened: d.reportOpened,
+                    cashUsdg: view.plate?.cashUsdg ?? null,
+                    perActionCapUsdg: view.mandate?.perActionCapUsdg ?? null,
+                    dailyCapUsdg: view.mandate?.dailyCapUsdg ?? null,
+                  }}
+                />
+              )}
               {view.isOwner && <OwnerSessionPanel />}
               <Plate view={view} />
               <NextCheck view={view} />

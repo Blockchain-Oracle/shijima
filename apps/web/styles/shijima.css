@@ -355,3 +355,212 @@
   border-color: color-mix(in srgb, var(--vermilion) 60%, transparent);
   background: color-mix(in srgb, var(--vermilion) 12%, transparent);
 }
+
+/* ── Step 8: the owner's controls, their dialogs, settings and the inbox ── */
+.desk-card-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--gray-300);
+}
+.desk-card-lines li::before {
+  content: "·";
+  margin-right: 8px;
+  color: var(--gray-500);
+}
+.desk-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.desk-control {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--ms-hairline);
+  background: var(--ms-surface-2);
+  color: var(--white);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  transition:
+    border-color 200ms var(--ease),
+    background 200ms var(--ease);
+}
+.desk-control:hover {
+  border-color: color-mix(in srgb, var(--vermilion) 50%, transparent);
+}
+.desk-control[data-tone="danger"] {
+  color: var(--gray-300);
+}
+[data-theme="light"] .desk-control {
+  color: #141210;
+}
+.desk-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.desk-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--ms-hairline);
+  background: var(--ms-surface-2);
+  font-family: var(--font-mono);
+  color: var(--gray-400);
+}
+.desk-input:focus-within {
+  border-color: color-mix(in srgb, var(--vermilion) 60%, transparent);
+}
+.desk-input input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: var(--white);
+  font-size: 16px;
+}
+[data-theme="light"] .desk-input input {
+  color: #141210;
+}
+.desk-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.desk-choice-option {
+  flex: 1 1 auto;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--ms-hairline);
+  color: var(--gray-400);
+  font-size: 13px;
+  text-align: center;
+}
+.desk-choice-option.active {
+  color: var(--white);
+  border-color: color-mix(in srgb, var(--vermilion) 60%, transparent);
+  background: color-mix(in srgb, var(--vermilion) 12%, transparent);
+}
+[data-theme="light"] .desk-choice-option.active {
+  color: #141210;
+}
+.desk-choice-option:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.desk-path {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ms-hairline);
+}
+.settings-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  max-width: 720px;
+}
+.settings-telegram {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+.settings-qr {
+  width: 148px;
+  height: 148px;
+  border-radius: 8px;
+}
+/* The bell, drawn like the theme toggle beside it (Yosuku part-14), with Agari's account menu as its panel. */
+.inbox-bell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--gray-400);
+  transition:
+    color 0.18s var(--ease),
+    border-color 0.18s var(--ease);
+}
+.inbox-bell:hover {
+  color: var(--white);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+.inbox-bell svg {
+  width: 16px;
+  height: 16px;
+}
+[data-theme="light"] .inbox-bell {
+  border-color: rgba(20, 18, 16, 0.14);
+}
+.inbox-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--vermilion);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 16px;
+  text-align: center;
+}
+.inbox-menu {
+  width: min(360px, calc(100vw - 32px));
+  max-height: 70vh;
+  overflow-y: auto;
+}
+.inbox-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.inbox-empty {
+  padding: 16px;
+}
+.inbox-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.inbox-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+.inbox-item.is-unread {
+  box-shadow: inset 2px 0 0 var(--vermilion);
+}
+@media (max-width: 640px) {
+  /* The bell is not at the screen's edge on a phone, so its list spans the screen instead of hanging off it. */
+  .inbox-menu {
+    position: fixed;
+    top: 64px;
+    left: 16px;
+    right: 16px;
+    width: auto;
+  }
+  .inbox-bell {
+    width: 28px;
+    height: 28px;
+  }
+  .inbox-bell svg {
+    width: 14px;
+    height: 14px;
+  }
+}

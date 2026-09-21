@@ -5,6 +5,7 @@
  */
 import { APPROVED_TOKENS } from '@desk/chain'
 import {
+  ASSISTANT_REMOVED,
   askHistory,
   currentMandate,
   deskById,
@@ -106,6 +107,8 @@ export async function loadDesk(slug: string) {
       mode: desk.mode,
       state: desk.state,
       stateReason: desk.stateReason,
+      lifecycle: desk.lifecycle,
+      assistantRemoved: desk.state === 'needs_attention' && desk.stateReason === ASSISTANT_REMOVED,
       contractVersion: desk.contractVersion,
       shareSlug: desk.shareEnabled ? desk.shareSlug : null,
       shadowChecks: desk.shadowChecks,

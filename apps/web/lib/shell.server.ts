@@ -3,7 +3,7 @@
  * server from Postgres, so the header needs no chain call and no key.
  */
 import { APPROVED_TOKENS } from '@desk/chain'
-import { desksOfOwner, latestPricePoints, latestValueSnapshot } from '@desk/db'
+import { desksOfOwner, latestPricePoints, latestValueSnapshot, unreadCount } from '@desk/db'
 import { errorText } from '@desk/shared'
 import type { TickerCell } from '@/components/shell'
 import { db } from './db'
@@ -29,14 +29,15 @@ export async function tickerCells(): Promise<TickerCell[]> {
 export async function loadShell() {
   const signedInAs = await signedInAddress().catch(() => undefined)
   try {
-    const [ticker, desksTotalUsdg] = await Promise.all([
+    const [ticker, desksTotalUsdg, unread] = await Promise.all([
       tickerCells(),
       signedInAs ? desksTotal(signedInAs) : Promise.resolve(null),
+      signedInAs ? unreadCount(db(), signedInAs) : Promise.resolve(0),
     ])
-    return { signedInAs, ticker, desksTotalUsdg }
+    return { signedInAs, ticker, desksTotalUsdg, unread }
   } catch (e) {
     console.error(`[shell] ${errorText(e)}`)
-    return { signedInAs, ticker: [], desksTotalUsdg: null }
+    return { signedInAs, ticker: [], desksTotalUsdg: null, unread: 0 }
   }
 }
 

@@ -32,7 +32,7 @@ export interface ChatTurn {
   at: string
 }
 
-interface SavedProposal {
+export interface SavedProposal {
   id: string
   kind: string
   path: ChatPath
@@ -55,11 +55,27 @@ interface SavedRequest {
 const strings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x) => typeof x === 'string') : [])
 const text = (v: unknown): string | null => (typeof v === 'string' ? v : null)
 
+/** A saved proposal as the card the browser draws. */
+export function toChatCard(proposal: SavedProposal): ChatCard {
+  const card = (proposal.deskView.card ?? {}) as Record<string, unknown>
+  return {
+    id: proposal.id,
+    kind: proposal.kind,
+    path: proposal.path,
+    status: proposal.status,
+    title: text(card.title) ?? proposal.kind,
+    before: strings(card.before),
+    after: strings(card.after),
+    note: text(card.note),
+    expiresAt: proposal.expiresAt.toISOString(),
+    result: text(proposal.result?.text),
+    txHash: proposal.txHash,
+  }
+}
+
 export function toChatTurn(request: SavedRequest, proposal: SavedProposal | null): ChatTurn {
   const reply = request.reply ?? {}
   const chart = reply.chart as { symbol?: unknown; days?: unknown } | null | undefined
-  const card = (proposal?.deskView.card ?? {}) as Record<string, unknown>
-  const result = proposal?.result ?? null
   return {
     id: request.id,
     question: request.question,
@@ -72,21 +88,7 @@ export function toChatTurn(request: SavedRequest, proposal: SavedProposal | null
         ? { symbol: chart.symbol, days: chart.days }
         : null,
     error: request.error,
-    card: proposal
-      ? {
-          id: proposal.id,
-          kind: proposal.kind,
-          path: proposal.path,
-          status: proposal.status,
-          title: text(card.title) ?? proposal.kind,
-          before: strings(card.before),
-          after: strings(card.after),
-          note: text(card.note),
-          expiresAt: proposal.expiresAt.toISOString(),
-          result: text(result?.text),
-          txHash: proposal.txHash,
-        }
-      : null,
+    card: proposal ? toChatCard(proposal) : null,
     at: request.createdAt.toISOString(),
   }
 }
