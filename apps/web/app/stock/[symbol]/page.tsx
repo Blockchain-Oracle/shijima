@@ -124,7 +124,7 @@ export default async function StockPage({ params, searchParams }: Props) {
           </dl>
           <div className="prf-actions">
             <AskAbout viewer={view.viewer} question={stockCopy.askQuestion(token.displayName)} />
-            <Link href="/start" className="tkh-link type-caption" data-cursor="hover">
+            <Link href="/strategies" className="tkh-link type-caption" data-cursor="hover">
               {stockCopy.startWith} →
             </Link>
           </div>

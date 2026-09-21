@@ -37,10 +37,10 @@ export const NAV_ITEMS = {
   strategies: {
     id: 'strategies',
     name: webCopy.nav.strategies.name,
-    href: '/start',
+    href: '/strategies',
     description: webCopy.nav.strategies.description,
     icon: Layers3,
-    match: { paths: ['/start', '/strategies'] },
+    match: { paths: ['/strategies', '/start'] },
   },
   howItWorks: {
     id: 'how-it-works',

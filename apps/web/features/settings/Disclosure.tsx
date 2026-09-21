@@ -8,7 +8,14 @@ import { Button } from '@/components/ui/button'
 const d = settingsCopy.disclosure
 
 /** The disclosure (design brief 8.3), always readable again, with the one acceptance and the region declaration. */
-export function Disclosure({ acceptedOn }: { acceptedOn: string | null }) {
+export function Disclosure({
+  acceptedOn,
+  onAccepted,
+}: {
+  acceptedOn: string | null
+  /** The studio waits on this before it lets money move. */
+  onAccepted?: () => void
+}) {
   const [accepted, setAccepted] = useState(acceptedOn)
   const [declared, setDeclared] = useState(false)
   const [pending, start] = useTransition()
@@ -41,7 +48,9 @@ export function Disclosure({ acceptedOn }: { acceptedOn: string | null }) {
           onClick={() =>
             start(async () => {
               const done = await acceptDisclosureAction()
-              if (done.ok) setAccepted(new Date().toLocaleDateString('en-GB', { dateStyle: 'medium' }))
+              if (!done.ok) return
+              setAccepted(new Date().toLocaleDateString('en-GB', { dateStyle: 'medium' }))
+              onAccepted?.()
             })
           }
         >

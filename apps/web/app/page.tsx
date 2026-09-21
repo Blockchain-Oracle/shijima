@@ -15,7 +15,7 @@ export default async function Home() {
   if (address) {
     const [desk] = await desksOfOwner(db(), address)
     if (desk) redirect(`/desk/${desk.shareSlug ?? desk.id}` as Route)
-    redirect('/start')
+    redirect('/strategies')
   }
   redirect('/markets')
 }

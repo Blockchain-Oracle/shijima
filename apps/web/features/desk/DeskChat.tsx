@@ -105,6 +105,7 @@ export function DeskChat({
       error: null,
       card: null,
       at: new Date().toISOString(),
+      promptVersion: null,
     }
     setTurns((all) => [...all, placeholder])
     const res = await fetch('/api/ask', {

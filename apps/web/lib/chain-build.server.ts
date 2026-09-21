@@ -359,7 +359,7 @@ export const targetOf = (kind: string, desk: Address): Address => (kind === 'add
 export async function estimateFee(
   from: Address,
   built: Built,
-): Promise<{ ok: true; usd: number } | { ok: false; why: string }> {
+): Promise<{ ok: true; usd: number; wei: bigint } | { ok: false; why: string }> {
   try {
     const [gas, price, ethUsd] = await Promise.all([
       pub().estimateGas({ account: from, to: built.to, data: built.data }),
@@ -367,7 +367,7 @@ export async function estimateFee(
       readFeed(pub(), ETH_USD_FEED),
     ])
     const wei = gas * price
-    return { ok: true, usd: (Number(wei) / 1e18) * (Number(ethUsd.price) / 1e8) }
+    return { ok: true, usd: (Number(wei) / 1e18) * (Number(ethUsd.price) / 1e8), wei }
   } catch (e) {
     const name = (e as { cause?: { data?: { errorName?: string } } }).cause?.data?.errorName
     return {

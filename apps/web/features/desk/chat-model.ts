@@ -30,6 +30,8 @@ export interface ChatTurn {
   error: string | null
   card: ChatCard | null
   at: string
+  /** Set only when the model answered; a refusal or a failure written in plain code has none. */
+  promptVersion: string | null
 }
 
 export interface SavedProposal {
@@ -90,5 +92,6 @@ export function toChatTurn(request: SavedRequest, proposal: SavedProposal | null
     error: request.error,
     card: proposal ? toChatCard(proposal) : null,
     at: request.createdAt.toISOString(),
+    promptVersion: text(reply.promptVersion),
   }
 }
