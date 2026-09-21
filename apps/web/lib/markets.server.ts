@@ -12,6 +12,7 @@ import {
   companyEventsFrom,
   desksOfOwner,
   latestPricePoints,
+  latestWeekendMove,
   multiplierHistory,
   ownerAlerts,
   type PriceAlertRow,
@@ -19,7 +20,7 @@ import {
   sharedDecisionsOn,
   sharedDesks,
 } from '@desk/db'
-import { ago, marketsCopy, newYorkTime, PRESETS, type Preset, stockCopy } from '@desk/shared'
+import { ago, marketsCopy, newYorkTime, PRESETS, type Preset, stockCopy, tutorialCopy } from '@desk/shared'
 import type { Route } from 'next'
 import { db } from './db'
 import { signedInAddress } from './session'
@@ -274,6 +275,8 @@ export interface MarketsView {
   marks: DeskMark[]
   desks: Awaited<ReturnType<typeof sharedDesks>>
   viewer: Viewer
+  /** For the first-run tutorial. Null when the price log has no weekend in it yet. */
+  weekendFact: string | null
 }
 
 const nyDay = (at: Date) =>
@@ -386,7 +389,7 @@ export async function loadMarkets(presetId: string | undefined, range: Range): P
   const now = new Date()
   const from = new Date(now.getTime() - RANGES[range])
   const today = now.toISOString().slice(0, 10)
-  const [tokens, rows, decisions, events, desks, who] = await Promise.all([
+  const [tokens, rows, decisions, events, desks, who, weekend] = await Promise.all([
     tokensNow(),
     pricesBetween(db(), from, now),
     sharedDecisionsOn(
@@ -397,6 +400,7 @@ export async function loadMarkets(presetId: string | undefined, range: Range): P
     companyEventsFrom(db(), today),
     sharedDesks(db()),
     viewer(),
+    latestWeekendMove(db()).catch(() => undefined),
   ])
   const preset =
     PRESETS.find((p) => p.id === presetId) ?? PRESETS.find((p) => p.id === 'mag-seven') ?? PRESETS[0]
@@ -425,7 +429,23 @@ export async function loadMarkets(presetId: string | undefined, range: Range): P
     marks: toMarks(decisions, allTimes).reverse(),
     desks,
     viewer: who,
+    weekendFact: weekendFact(weekend),
   }
+}
+
+/** The first-run tutorial's real number: the largest weekend move from the Friday reference, in words. */
+function weekendFact(w: Awaited<ReturnType<typeof latestWeekendMove>>): string | null {
+  const token = w ? APPROVED_TOKENS.find((t) => t.address.toLowerCase() === w.token.toLowerCase()) : undefined
+  if (!w || !token || w.gapBps === 0) return null
+  const sat = new Date(`${w.saturday}T12:00:00Z`)
+  const sun = new Date(sat.getTime() + DAY)
+  const days = `${sat.getUTCDate()}–${sun.getUTCDate()} ${sun.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' })}`
+  return tutorialCopy.steps.weekend.fact(
+    `${token.displayName}’s token`,
+    `${(Math.abs(w.gapBps) / 100).toFixed(1)}%`,
+    w.gapBps > 0 ? 'above' : 'below',
+    days,
+  )
 }
 
 // ---------------------------------------------------------------- one stock

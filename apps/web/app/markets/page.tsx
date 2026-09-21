@@ -7,6 +7,7 @@ import { SectionHeader } from '@/components/ui/section-header'
 import { DeskMarks } from '@/features/markets/DeskMarks'
 import { StockCard } from '@/features/markets/StockCard'
 import { StrategyHero } from '@/features/markets/StrategyHero'
+import { Tutorial } from '@/features/onboarding/Tutorial'
 import { loadMarkets, type MarketsView, parseRange } from '@/lib/markets.server'
 
 export const dynamic = 'force-dynamic'
@@ -39,6 +40,7 @@ export default async function Markets({
   const sec = marketsCopy.sections
   return (
     <>
+      <Tutorial weekendFact={view.weekendFact} signedIn={Boolean(view.viewer.address)} />
       <StrategyHero strategy={view.strategy} range={view.range} asOf={view.asOf} viewer={view.viewer} />
       <div className="markets-main">
         <div className="container">
