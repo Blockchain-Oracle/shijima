@@ -19,6 +19,7 @@ import {
 } from '@desk/chain'
 import {
   type ActionRow,
+  ASSISTANT_REMOVED,
   addDeskEvent,
   appendRecord,
   bumpShadowChecks,
@@ -167,6 +168,10 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
   if (!mandateRow) return { status: 'skipped', note: 'no mandate has been applied yet', records }
   if (desk.lifecycle !== 'running')
     return { status: 'skipped', note: `the desk is ${desk.lifecycle}`, records }
+  // The owner took the assistant away on purpose. There is nothing it may do until they bring it back, so the
+  // desk waits quietly instead of recording a failed check every hour.
+  if (desk.state === 'needs_attention' && desk.stateReason === ASSISTANT_REMOVED)
+    return { status: 'skipped', note: 'the owner removed the assistant', records }
   const mandate = mandateFromRow(mandateRow)
   const mandateRef = { version: mandateRow.version, fingerprint: mandateFingerprint(mandate) }
 

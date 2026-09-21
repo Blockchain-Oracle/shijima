@@ -31,6 +31,9 @@ export const PROPOSAL_KINDS = [
   'sell_everything',
   'remove_assistant',
   'unpause',
+  'add_money',
+  'set_chain_limits',
+  'close_desk',
 ] as const
 export type ProposalKind = (typeof PROPOSAL_KINDS)[number]
 
@@ -61,6 +64,9 @@ export const AskReply = z.object({
       decisionId: z.string().nullable(),
       amountUsdg: z.string().nullable(),
       withdrawAs: z.enum(['usdg', 'stocks']).nullable(),
+      /** The limits the desk's account itself enforces, in dollars, for set_chain_limits. Null keeps the current one. */
+      perActionCapUsdg: z.string().nullable(),
+      dailyCapUsdg: z.string().nullable(),
     })
     .nullable(),
 })
@@ -71,6 +77,7 @@ export interface DeskFacts {
   deskId: string
   mode: 'shadow' | 'ask_first' | 'on_its_own'
   state: string
+  lifecycle: string
   mandate: Mandate
   /** The version the proposal was made against. Confirming refuses if the settings changed since. */
   mandateVersion: number
@@ -79,7 +86,6 @@ export interface DeskFacts {
   /** Short ids shown to the model, mapped to the real rows. */
   approvals: Map<string, { id: string; summary: string }>
   waits: Map<string, StandingWait>
-  cashUsdg: bigint
 }
 
 /** A wait the desk is keeping, as "do it anyway" needs it: the record that started it and what it would do. */
@@ -332,16 +338,10 @@ export function checkProposal(
     }
     case 'withdraw': {
       const as = p.withdrawAs ?? 'usdg'
-      let amount: bigint | undefined
-      if (p.amountUsdg) {
-        if (!/^\d+(\.\d{1,6})?$/.test(p.amountUsdg))
-          return { ok: false, why: 'I need the amount in dollars.' }
-        const [whole, frac = ''] = p.amountUsdg.split('.')
-        amount = BigInt(whole ?? '0') * 1_000_000n + BigInt(frac.padEnd(6, '0'))
-        if (amount <= 0n) return { ok: false, why: 'The amount must be more than nothing.' }
-        if (as === 'usdg' && amount > facts.cashUsdg)
-          return { ok: false, why: `The desk holds $${formatUsd(facts.cashUsdg)} in cash, less than that.` }
-      }
+      // Whether the desk has that much is read from the chain when the transaction is built, before anything is
+      // signed. The last hourly valuation is too old to refuse on: money may have arrived since.
+      const amount = dollars(p.amountUsdg)
+      if (typeof amount === 'string') return { ok: false, why: amount }
       return {
         ok: true,
         proposal: {
@@ -370,8 +370,86 @@ export function checkProposal(
         'It loses all access at once and the desk stops. Your money stays in your account.',
       )
     case 'unpause':
-      return simple(p.kind, 'wallet', 'Restart the desk on-chain', 'Only your wallet can do this.')
+      return simple(
+        p.kind,
+        'wallet',
+        'Restart the desk on-chain',
+        'If you removed the assistant, this brings it back too. Only your wallet can do this.',
+      )
+    case 'add_money': {
+      const amount = dollars(p.amountUsdg)
+      if (typeof amount === 'string') return { ok: false, why: amount }
+      if (amount === null) return { ok: false, why: 'How much? I need the amount in dollars.' }
+      return {
+        ok: true,
+        proposal: {
+          kind: p.kind,
+          path: 'wallet',
+          args: { amountUsdg: amount.toString() },
+          card: {
+            title: `Add $${formatUsd(amount)}`,
+            note: 'USDG moves from your wallet on Robinhood Chain into the desk. Only your wallet can send it.',
+          },
+        },
+      }
+    }
+    case 'set_chain_limits': {
+      const perAction = dollars(p.perActionCapUsdg)
+      const daily = dollars(p.dailyCapUsdg)
+      if (typeof perAction === 'string') return { ok: false, why: perAction }
+      if (typeof daily === 'string') return { ok: false, why: daily }
+      if (perAction === null && daily === null)
+        return { ok: false, why: 'Nothing in that changes the limits on the chain.' }
+      if (perAction !== null && daily !== null && perAction > daily)
+        return { ok: false, why: 'The most per action cannot be more than the most per day.' }
+      return {
+        ok: true,
+        proposal: {
+          kind: p.kind,
+          // Lowering runs on the session key; raising needs the wallet. Which one is known only against the chain's
+          // current limits, so the transaction built at confirm time decides, and the card says so before signing.
+          path: 'session',
+          args: { perActionCapUsdg: perAction?.toString() ?? null, dailyCapUsdg: daily?.toString() ?? null },
+          // The before and after come from the chain itself when the card is shown, so they are not repeated here.
+          card: {
+            title: 'Change the limits on the chain',
+            note: `Your account holds the assistant to these, whatever it decides. It also keeps to your settings' own $${formatUsd(m.perActionCapUsdg)} per action and $${formatUsd(m.dailyCapUsdg)} a day, whichever is lower.`,
+          },
+        },
+      }
+    }
+    case 'close_desk': {
+      if (facts.lifecycle === 'closed') return { ok: false, why: 'This desk is already closed.' }
+      const as = p.withdrawAs ?? 'usdg'
+      return {
+        ok: true,
+        proposal: {
+          kind: p.kind,
+          path: 'wallet',
+          args: { as },
+          card: {
+            title: 'Close the desk',
+            after: [
+              as === 'usdg' ? 'Every holding sold to USDG' : 'Every holding sent as it is',
+              'Everything sent to your own wallet',
+              'The assistant removed, and checks stop',
+            ],
+            note: 'One signature does all of it. The record stays readable afterwards. The cost is shown before you sign.',
+          },
+        },
+      }
+    }
   }
+}
+
+/** A dollar amount from the model or a form: "25", "12.50". Null when absent, a sentence when unusable. */
+function dollars(value: string | null): bigint | null | string {
+  if (value === null || value === '') return null
+  if (!/^\d+(\.\d{1,6})?$/.test(value)) return 'I need the amount in dollars, like 25 or 12.50.'
+  const [whole, frac = ''] = value.split('.')
+  const amount = BigInt(whole ?? '0') * 1_000_000n + BigInt(frac.padEnd(6, '0'))
+  if (amount <= 0n) return 'The amount must be more than nothing.'
+  return amount
 }
 
 function simple(

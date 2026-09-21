@@ -56,6 +56,21 @@ HOW TO WRITE
 Answer only with the JSON object described by the response schema.`
 
 /**
+ * ask.v2, 21 Sep. ask.v1 with three more proposals, so everything the desk page's buttons do can also be asked
+ * for in words: add money, the limits the account itself enforces, and closing the desk. Derived from the frozen
+ * v1 text, so both stay byte-stable; the check below fails at load if v1's anchor ever moved.
+ */
+const V2_ANCHOR = '- unpause: restart the desk on-chain after it was paused there. Only when asked.\n'
+if (!ASK_V1.includes(V2_ANCHOR)) throw new Error('ask.v2 cannot be derived: its anchor in ask.v1 is gone')
+export const ASK_V2 = ASK_V1.replace(
+  V2_ANCHOR,
+  `${V2_ANCHOR}- add_money: move USDG from the owner's wallet into the desk. amountUsdg is dollars as a plain number. Only when the owner asks to add or put in money.
+- set_chain_limits: change the limits the desk's account itself holds the assistant to, whatever it decides: perActionCapUsdg (the most in one action) and dailyCapUsdg (the most in a day), in dollars as plain numbers. Leave the one not being changed as null.
+- close_desk: sell or send every holding, send everything to the owner's own wallet, remove the assistant and stop the checks. withdrawAs is usdg to sell everything to cash first, or stocks to send the holdings as they are. Only when the owner clearly asks to close the desk.
+`,
+)
+
+/**
  * readback.v1, 21 Sep. The studio's test read: before a desk exists, it restates a draft mandate in its own
  * words and asks what is unclear. It needs only the draft and the token list.
  */
@@ -78,7 +93,7 @@ HOW TO WRITE
 
 Answer only with the JSON object described by the response schema.`
 
-export const ASK_PROMPTS = { 'ask.v1': ASK_V1 } as const
-export const ASK_PROMPT_VERSION = 'ask.v1' satisfies keyof typeof ASK_PROMPTS
+export const ASK_PROMPTS = { 'ask.v1': ASK_V1, 'ask.v2': ASK_V2 } as const
+export const ASK_PROMPT_VERSION = 'ask.v2' satisfies keyof typeof ASK_PROMPTS
 export const READBACK_PROMPTS = { 'readback.v1': READBACK_V1 } as const
 export const READBACK_PROMPT_VERSION = 'readback.v1' satisfies keyof typeof READBACK_PROMPTS

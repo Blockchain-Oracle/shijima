@@ -6,6 +6,8 @@ export const erc20Abi = parseAbi([
   'function decimals() view returns (uint8)',
   'function symbol() view returns (string)',
   'function allowance(address owner, address spender) view returns (uint256)',
+  'function transfer(address to, uint256 amount) returns (bool)',
+  'event Transfer(address indexed from, address indexed to, uint256 value)',
 ])
 
 export const stockTokenAbi = parseAbi([
@@ -17,7 +19,10 @@ export const stockTokenAbi = parseAbi([
 ])
 
 /** The savings vault is ERC-4626. Never read maxDeposit or maxWithdraw: they return 0 by design. */
-export const vaultAbi = parseAbi(['function convertToAssets(uint256 shares) view returns (uint256)'])
+export const vaultAbi = parseAbi([
+  'function convertToAssets(uint256 shares) view returns (uint256)',
+  'function previewWithdraw(uint256 assets) view returns (uint256 shares)',
+])
 
 export const v3FactoryAbi = parseAbi(['function getPool(address, address, uint24) view returns (address)'])
 

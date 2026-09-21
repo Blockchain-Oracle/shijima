@@ -190,11 +190,9 @@ export async function loadAskContext(
   }
 
   lines.push('', 'MONEY')
-  let cashUsdg = 0n
   if (!snapshot) {
     lines.push('Not valued yet: the desk has not finished a check.')
   } else {
-    cashUsdg = snapshot.cashUsdg
     const total = snapshot.totalUsdg
     const share = (v: bigint) => (total === 0n ? 0 : Number((v * 10_000n) / total))
     lines.push(
@@ -292,13 +290,13 @@ export async function loadAskContext(
     deskId: desk.id,
     mode: desk.mode,
     state: desk.state,
+    lifecycle: desk.lifecycle,
     mandate,
     mandateVersion: mandateRow.version,
     shadowChecks: desk.shadowChecks,
     reportOpened: desk.shadowReportOpenedAt !== null,
     approvals: approvalIds,
     waits: waitIds,
-    cashUsdg,
   }
   return { facts, desk, ids, message: lines.join('\n') }
 }

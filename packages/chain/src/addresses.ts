@@ -24,6 +24,9 @@ export const VAULT: Address = '0xBeEff033F34C046626B8D0A041844C5d1A5409dd'
 export const FEE_TIERS = [100, 500, 3000, 10000] as const
 export type FeeTier = (typeof FEE_TIERS)[number]
 
+/** Chainlink ETH / USD on this chain, 8 decimals. Only for showing network fees in dollars, never for a trade. */
+export const ETH_USD_FEED: Address = '0x78F3556b67E17Df817D51Ef5a990cDaF09E8d3A9'
+
 export const RHJ_API = 'https://api.robinhood.com/rhj'
 export const CHAINLINK_FEEDS_DIRECTORY =
   'https://reference-data-directory.vercel.app/feeds-robinhood-mainnet.json'
