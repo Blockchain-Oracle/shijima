@@ -9,7 +9,14 @@
  * Non-actions are not sealed here one by one. They join the desk's record chain, and the next action or the
  * daily checkpoint seals every one of them at once, because each record's hash commits to the one before it.
  */
-import { type ApprovedToken, CHAIN_ID, type DeskCall, isCloneOf, readDeskState } from '@desk/chain'
+import {
+  type ApprovedToken,
+  CHAIN_ID,
+  type DeskCall,
+  isCloneOf,
+  readDeskState,
+  recordedCallsBetween,
+} from '@desk/chain'
 import {
   type ActionRow,
   addDeskEvent,
@@ -24,11 +31,13 @@ import {
   ensureDrawdownBaseline,
   expireApprovals,
   finishWake,
+  lastConfirmedActionBlock,
   latestValueSnapshot,
   mandateFromRow,
   pendingApprovalSince,
   recordDrawdownBreach,
   recordOutsideChanges,
+  recordOwnerCalls,
   saveValueSnapshot,
   setDeskState,
   spentSince,
@@ -97,6 +106,54 @@ function mandateLine(m: Mandate, version: number, approved: ApprovedToken[]): st
   return `MANDATE v${version}: hold ${targets}, and ${pct(m.targets.cashBps)} cash. A holding may wander ${pct(m.driftToleranceBps)} from its target. No holding above ${pct(m.maxPositionBps)}.`
 }
 
+/**
+ * Explains a chain that is ahead of the database, or says why it cannot be explained. Every call between the
+ * database's `chain_seq` and the chain's `seq` must be present, and none may have come from the operator: an
+ * operator call the database has no record of is exactly what this check exists to catch.
+ */
+async function absorbOwnerCalls(
+  deps: WakeDeps,
+  desk: NonNullable<Awaited<ReturnType<typeof deskById>>>,
+  chainSeq: bigint,
+  dry: boolean,
+  say: (line: string) => void,
+): Promise<string | null> {
+  const unexplained = engineCopy.trouble.chainAhead(String(chainSeq), desk.chainSeq)
+  const fromBlock = BigInt((await lastConfirmedActionBlock(deps.db, desk.id)) ?? 0)
+  const calls = await recordedCallsBetween(
+    deps.pub,
+    desk.address as Address,
+    BigInt(desk.chainSeq),
+    chainSeq,
+    fromBlock,
+  )
+  const operator = desk.operator.toLowerCase()
+  if (BigInt(calls.length) !== chainSeq - BigInt(desk.chainSeq)) return unexplained
+  if (calls.some((c) => c.from.toLowerCase() === operator)) return unexplained
+  const owner = desk.ownerAddress.toLowerCase()
+  say(
+    `the owner made ${calls.length} recorded call(s) of their own: ${calls.map((c) => `${c.event} #${c.seq}`).join(', ')}`,
+  )
+  if (dry) return null
+  const absorbed = await recordOwnerCalls(
+    deps.db,
+    desk.id,
+    desk.chainSeq,
+    Number(chainSeq),
+    calls.map((c) => ({
+      seq: Number(c.seq),
+      event: c.event,
+      txHash: c.txHash.toLowerCase(),
+      blockNumber: Number(c.blockNumber),
+      by: c.from.toLowerCase() === owner ? ('owner' as const) : ('session' as const),
+      from: c.from.toLowerCase(),
+      decisionHash: c.decisionHash.toLowerCase(),
+      detail: c.detail,
+    })),
+  )
+  return absorbed ? null : unexplained
+}
+
 export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeReport> {
   const { db, pub } = deps
   const dry = input.dry === true
@@ -124,15 +181,20 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
     let state = await readDeskState(pub, desk.address as Address)
     const implementation = deps.implementations[desk.contractVersion]
     const ours = implementation ? await isCloneOf(pub, desk.address as Address, implementation) : false
-    const trouble = !ours
+    let trouble: string | null = !ours
       ? engineCopy.trouble.notOurDesk
       : state.operator.toLowerCase() !== desk.operator
         ? engineCopy.trouble.operatorRemoved
         : state.owner.toLowerCase() !== desk.ownerAddress
           ? engineCopy.trouble.differentOwner
-          : Number(state.seq) !== desk.chainSeq
-            ? engineCopy.trouble.chainAhead(String(state.seq), desk.chainSeq)
-            : null
+          : null
+    // The chain is ahead of the database. If every call in between came from the owner or the owner's session
+    // key, those were the owner's own actions: note them and carry on. Anything else stops the desk as before.
+    if (!trouble && Number(state.seq) > desk.chainSeq) {
+      trouble = await absorbOwnerCalls(deps, desk, state.seq, dry, say)
+    } else if (!trouble && Number(state.seq) !== desk.chainSeq) {
+      trouble = engineCopy.trouble.chainAhead(String(state.seq), desk.chainSeq)
+    }
     if (trouble) {
       if (!dry) await setDeskState(db, desk.id, 'needs_attention', trouble)
       throw new Error(trouble)

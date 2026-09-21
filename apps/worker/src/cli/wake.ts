@@ -71,7 +71,7 @@ try {
     if (settled.some((s) => s.now === 'waiting')) {
       throw new Error('An earlier transaction may still land. Nothing new is sent until it is settled.')
     }
-    assertChainSeqAgrees(desk, state, cli.env.isRehearsal)
+    assertChainSeqAgrees(desk, state, cli.env.isRehearsal, true)
 
     const report = await wakeDesk(
       {

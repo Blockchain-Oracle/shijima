@@ -82,10 +82,20 @@ export function registerDevDesk(db: SenderDeps['db'], d: Deployment, state: Desk
 /**
  * The contract counts its own sealed actions. If that count and ours disagree, something happened that the
  * database does not know about, and the desk must not act until it does.
+ *
+ * `engineExplainsAhead`: the engine's own check can explain a chain that is AHEAD when every call in between
+ * came from the owner or the owner's session key, and refuses otherwise. Commands that run the engine pass true
+ * and let it decide. Commands that send on their own, like the skeleton, keep the strict rule.
  */
-export function assertChainSeqAgrees(desk: DeskRow, state: DeskState, isRehearsal: boolean): void {
+export function assertChainSeqAgrees(
+  desk: DeskRow,
+  state: DeskState,
+  isRehearsal: boolean,
+  engineExplainsAhead = false,
+): void {
   const onChain = Number(state.seq)
   if (onChain === desk.chainSeq) return
+  if (onChain > desk.chainSeq && engineExplainsAhead) return
   if (onChain > desk.chainSeq) {
     throw new Error(
       `The chain shows ${onChain} sealed actions for this desk, the database knows ${desk.chainSeq}. ` +

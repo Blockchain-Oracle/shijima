@@ -746,3 +746,60 @@ export async function approvalById(db: DbOrTx, approvalId: string) {
     .where(eq(approvals.id, approvalId))
   return row
 }
+
+/** The block of this desk's newest confirmed action: a safe place to start looking for calls made after it. */
+export async function lastConfirmedActionBlock(db: DbOrTx, deskId: string): Promise<number | undefined> {
+  const [row] = await db
+    .select({ blockNumber: actions.blockNumber })
+    .from(actions)
+    .where(and(eq(actions.deskId, deskId), eq(actions.status, 'confirmed'), isNotNull(actions.blockNumber)))
+    .orderBy(desc(actions.blockNumber))
+    .limit(1)
+  return row?.blockNumber ?? undefined
+}
+
+/** One recorded on-chain call the owner (or the owner's session key) made, not our worker. */
+export interface OwnerCall {
+  seq: number
+  event: string
+  txHash: string
+  blockNumber: number
+  by: 'owner' | 'session'
+  from: string
+  decisionHash: string
+  detail: Record<string, string>
+}
+
+/**
+ * The owner's own recorded calls, noted as desk events, and the desk's `chain_seq` moved past them, in one
+ * transaction. Guarded on the old `chain_seq`, so two workers can never both advance it. False when the desk
+ * had already moved on.
+ */
+export async function recordOwnerCalls(
+  db: Db,
+  deskId: string,
+  fromSeq: number,
+  toSeq: number,
+  calls: OwnerCall[],
+): Promise<boolean> {
+  return db.transaction(async (tx) => {
+    const moved = await tx
+      .update(desks)
+      .set({ chainSeq: toSeq, updatedAt: new Date() })
+      .where(and(eq(desks.id, deskId), eq(desks.chainSeq, fromSeq)))
+      .returning({ id: desks.id })
+    if (moved.length === 0) return false
+    if (calls.length > 0) {
+      await tx.insert(deskEvents).values(
+        calls.map((c) => ({
+          deskId,
+          kind: 'owner_action' as const,
+          actor: 'owner' as const,
+          via: 'chain' as const,
+          detail: { ...c },
+        })),
+      )
+    }
+    return true
+  })
+}
