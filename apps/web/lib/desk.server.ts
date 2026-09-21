@@ -98,6 +98,7 @@ export async function loadDesk(slug: string) {
   return {
     isOwner,
     slug,
+    owner: desk.ownerAddress,
     desk: {
       id: desk.id,
       name: desk.name ?? 'Your desk',

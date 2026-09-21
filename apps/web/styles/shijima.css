@@ -326,3 +326,32 @@
 .desk-quiet summary {
   cursor: pointer;
 }
+
+/* The session key's receipt, in Masayume's CapabilityReceipt layout: label, then what it means. */
+.desk-receipt {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 14px;
+  font-size: 13px;
+  color: var(--gray-400);
+}
+.desk-receipt dt {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+  padding-top: 2px;
+}
+.desk-chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--ms-hairline);
+  color: var(--gray-400);
+  font-size: 12px;
+}
+.desk-chip.active {
+  color: var(--white);
+  border-color: color-mix(in srgb, var(--vermilion) 60%, transparent);
+  background: color-mix(in srgb, var(--vermilion) 12%, transparent);
+}

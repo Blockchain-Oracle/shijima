@@ -12,6 +12,8 @@ import {
   ValueChart,
 } from '@/features/desk/DeskPanels'
 import { DeskTabs } from '@/features/desk/DeskTabs'
+import { DeskSessionProvider } from '@/features/session/DeskSessionProvider'
+import { OwnerSessionPanel } from '@/features/session/OwnerSessionPanel'
 import { loadDesk } from '@/lib/desk.server'
 
 export const dynamic = 'force-dynamic'
@@ -45,21 +47,28 @@ export default async function DeskPage({ params }: { params: Promise<{ slug: str
         </div>
         {!view.isOwner && <p className="type-caption text-ink-muted">{deskCopy.visitor}</p>}
       </header>
-      <DeskTabs
-        chat={view.isOwner ? <DeskChat deskId={d.id} slug={view.slug} initial={view.turns} /> : null}
-        desk={
-          <>
-            <NeedsYou view={view} />
-            <Plate view={view} />
-            <NextCheck view={view} />
-            <Holdings view={view} />
-            <ValueChart view={view} />
-            <Limits view={view} />
-            <Mandate view={view} />
-          </>
-        }
-        record={<Record view={view} />}
-      />
+      <DeskSessionProvider
+        owner={view.owner}
+        desk={d.address as `0x${string}`}
+        contractVersion={d.contractVersion}
+      >
+        <DeskTabs
+          chat={view.isOwner ? <DeskChat deskId={d.id} slug={view.slug} initial={view.turns} /> : null}
+          desk={
+            <>
+              <NeedsYou view={view} />
+              {view.isOwner && <OwnerSessionPanel />}
+              <Plate view={view} />
+              <NextCheck view={view} />
+              <Holdings view={view} />
+              <ValueChart view={view} />
+              <Limits view={view} />
+              <Mandate view={view} />
+            </>
+          }
+          record={<Record view={view} />}
+        />
+      </DeskSessionProvider>
     </div>
   )
 }

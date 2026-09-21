@@ -17,6 +17,12 @@ import { checkMandate, DEFAULT_LIMITS, errorText, Mandate } from '@desk/shared'
 import { revalidatePath } from 'next/cache'
 import { parseUnits, zeroHash } from 'viem'
 import { currentDeployment, rpcUrl } from '@/lib/chain'
+import {
+  abandonChainProposal,
+  finishChainProposal,
+  type Prepared,
+  prepareChainProposal,
+} from '@/lib/chain-proposals.server'
 import { db } from '@/lib/db'
 import { signedInAddress } from '@/lib/session'
 
@@ -192,4 +198,33 @@ export async function confirmProposalAction(proposalId: string): Promise<ActionR
   } catch (e) {
     return { ok: false, message: errorText(e) }
   }
+}
+
+/** Takes a chain card and returns the one transaction it describes, for the owner's key or wallet to sign. */
+export async function prepareChainProposalAction(proposalId: string): Promise<Prepared> {
+  const address = await signedInAddress()
+  if (!address) return { ok: false, why: 'Sign in first.' }
+  try {
+    return await prepareChainProposal(proposalId, address)
+  } catch (e) {
+    return { ok: false, why: errorText(e) }
+  }
+}
+
+/** The transaction landed, says the browser. The server checks the chain before it believes it. */
+export async function finishChainProposalAction(proposalId: string, txHash: string): Promise<ActionResult> {
+  const address = await signedInAddress()
+  if (!address) return { ok: false, message: 'Sign in first.' }
+  try {
+    const done = await finishChainProposal(proposalId, address, txHash)
+    revalidatePath('/desks')
+    return { ok: done.ok, message: done.text }
+  } catch (e) {
+    return { ok: false, message: errorText(e) }
+  }
+}
+
+export async function abandonChainProposalAction(proposalId: string, why: string): Promise<void> {
+  const address = await signedInAddress()
+  if (address) await abandonChainProposal(proposalId, address, why)
 }

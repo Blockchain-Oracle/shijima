@@ -4,8 +4,8 @@ import { deskCopy, until } from '@desk/shared'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { confirmProposalAction } from '@/app/actions'
-import { BlockedButton } from '@/components/states'
 import { Button } from '@/components/ui/button'
+import { ChainConfirm } from '@/features/session/ChainConfirm'
 import { cn } from '@/lib/utils'
 import type { ChatCard } from './chat-model'
 
@@ -83,9 +83,7 @@ export function ProposalCard({ card }: { card: ChatCard }) {
           </span>
         </div>
       ) : (
-        <BlockedButton blocked={deskCopy.card.needsKey} size="sm">
-          {deskCopy.card.confirm}
-        </BlockedButton>
+        <ChainConfirm card={card} onOutcome={(ok, text) => setOutcome({ ok, text })} />
       )}
     </div>
   )

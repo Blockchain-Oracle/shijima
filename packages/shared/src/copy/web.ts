@@ -321,3 +321,40 @@ export const deskCopy = {
     waited: 'waited',
   },
 } as const
+
+/** The browser's session key, from Masayume's tap-to-act key: one key, at most seven days, revocable. */
+export const sessionCopy = {
+  title: 'This browser’s key',
+  unsupported: 'This desk’s contract came before session keys, so your wallet signs its chain actions.',
+  none: 'Give this browser a key and chat actions like a withdrawal run in one click, with no wallet pop-up.',
+  live: (left: string) => `Active. It ends ${left}.`,
+  expired: 'This browser’s key has ended. Give it a new one to keep one-click actions.',
+  elsewhere: 'Another browser holds this desk’s key. Give this one its own, and the other stops working.',
+  give: 'Give this browser a key',
+  giving: 'Check your wallet…',
+  revoke: 'Revoke the key',
+  revoking: 'Revoking…',
+  days: (n: number) => `${n} day${n === 1 ? '' : 's'}`,
+  lasts: 'Lasts',
+  receipt: {
+    title: 'What you are signing',
+    can: 'It can',
+    canValue:
+      'withdraw to your own wallet only, pause the desk, remove the assistant, lower your limits, and sell inside the assistant’s own caps',
+    cannot: 'It can never',
+    cannotValue: 'buy, raise a limit, restart the desk, or send money anywhere but your wallet',
+    ends: 'It ends',
+    gas: 'Fees',
+    gasValue: (eth: string) => `your wallet sends the key ${eth} ETH to pay its own fees`,
+    signatures: 'Signatures',
+    signaturesValue: 'two: the grant, then the fee top-up',
+  },
+  wrongWallet: 'Connect the wallet that owns this desk.',
+  failed: 'The key was not granted. Nothing changed.',
+  signWithKey: 'Your session key signs this. No wallet pop-up.',
+  signWithWallet: 'Your wallet signs this.',
+  sign: 'Sign and send',
+  sending: 'Sending…',
+  cancelled: 'You cancelled in your wallet. Nothing moved.',
+  refusedByChain: 'The chain refused it. Nothing moved.',
+} as const

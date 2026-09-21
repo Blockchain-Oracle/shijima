@@ -458,3 +458,12 @@ export async function askHistory(db: DbOrTx, deskId: string, ownerAddress: strin
   const seen = new Set<string>()
   return rows.filter((r) => !seen.has(r.id) && seen.add(r.id)).reverse()
 }
+
+/** One proposal, only for the owner it was made for. */
+export async function proposalForOwner(db: DbOrTx, id: string, ownerAddress: string) {
+  const [row] = await db
+    .select()
+    .from(askProposals)
+    .where(and(eq(askProposals.id, id), eq(askProposals.ownerAddress, ownerAddress.toLowerCase())))
+  return row
+}
