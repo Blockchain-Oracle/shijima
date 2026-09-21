@@ -270,6 +270,39 @@ Made 2026-09-21 by Claude, in step 8 of the chat-first plan. Abu can overrule an
 
 ---
 
+## Decisions made while building the markets and the stock pages
+
+Made 2026-09-21 by Claude, in step 9 of the chat-first plan. Abu can overrule any of these.
+
+1. **A strategy's chart is $1,000 put in at the start of the period.** Each stock's share grows with its pool price,
+   the cash share stays cash. The reference line is the same basket valued at each stock's reference at that
+   moment, so it STEPS at every close instead of pretending one flat line covers a month. The gap between the two
+   lines is the basket's own gap. Computed from `price_points` on each request; nothing new is stored.
+2. **A chart marks where a choice began, not every hour of it.** A waiting desk writes "waited" every hour; a run of
+   the same outcome on the same desk and stock gets one marker, where it started. Acted is an orange arrow, waited a
+   grey dot, declined and practice grey squares. Clicking a marker opens that decision's reasons, and the same
+   decisions are listed in words under the chart.
+3. **The caption is built from facts, not written by the model.** The basket's gap and what its reference is, the
+   stock that moved most, "inside half a percent, I treat it as noise", halts, and how many times shared desks
+   acted or waited. It costs no SERV and cannot forecast.
+4. **The hero's right panel is the strategy's contents,** each stock with its weight and gap and a link to its page,
+   then the cost of putting $500 in now (from the logged quotes), halts, the next report and **Start a desk with
+   this** (`/start?preset=`). FIDELITY's "See it on Explore" had nothing behind it; the member links replace it.
+5. **"Ask about this" types the question into the owner's desk chat and does not send it.** A chart is not a
+   reason to spend the owner's chat budget unasked. Signed out, it says to sign in.
+6. **A price alert fires once, through the owner's desk.** It is checked on every price slot the logger writes;
+   firing and its message are one transaction, so it can never send twice. It needs a desk because Telegram and the
+   bell are per desk. At least 0.25% (under half a percent is noise), at most 50%, ten waiting at once.
+7. **Alerts come from the stock page and from the chat, through one set of checks** (`setPriceAlert`). The chat
+   prompt is now `ask.v3`: v2 with `price_alert`, derived from the frozen v2 text.
+8. **The multiplier history and report dates are synced by the worker**: multiplier changes from the chain's
+   `UIMultiplierUpdated` events hourly (nine real dividend changes so far), report dates from Finnhub's earnings
+   calendar twice a day, keeping only the date, the hour and the quarter, never Finnhub's text.
+9. **The stock marks are Agari's vendored glyphs** (CC0 from simple-icons; Microsoft drawn as four squares; funds
+   get a monogram). Credited in `THIRD_PARTY_NOTICES.md`.
+
+---
+
 ## The name
 
 Abu names his projects in Japanese, as he did with Baku (獏). **Shijima (しじま)**, chosen by him on

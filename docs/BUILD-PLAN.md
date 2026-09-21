@@ -613,6 +613,38 @@ code and in headless Chrome. Nothing is deployed to mainnet.
 - **Still owed:** vault sweeps (step 3), and a Relay deposit with real money.
 - **Next:** step 9, the markets page and one stock, with charts that talk.
 
+**Mon 21 Sep, late night. STEP 9 BUILT: THE MARKETS PAGE AND ONE STOCK, WITH CHARTS THAT TALK, AND PRICE ALERTS.**
+Read-only against mainnet; nothing was sent to the chain.
+- **`/markets` is Masayume's hero with a strategy in it.** $1,000 put into The Mag Seven (or any preset) at the start
+  of 1D, 1W or 1M, against the same basket at each stock's reference, drawn as a stepped dashed line. The head says
+  what it is worth now and how far it is from its reference; the clock counts to the US market's next change. The
+  caption is built from facts: "The Mag Seven is 0.6% above its reference, the pools at the last regular close, Fri
+  16:00 New York. Meta has moved most, 1.8% above." Markers show where shared desks acted or waited; **clicking one
+  opened `/desk/showcase/decision/1` in headless Chrome.** The right panel lists the strategy's stocks with weight and
+  gap, the cost of putting $500 in now, halts, the next report, and Start a desk with this (`/start?preset=`).
+- **Below it:** the ten Stock Tokens as Masayume rail cards (spark line since the reference was set, the reference
+  rule, the gap, the cost of $1,000, the price's age), what shared desks did in words, and the desks to watch.
+- **`/stock/[symbol]`** on Agari's ticker hub: pool price and reference with their ages, the gap, the cost of $100
+  and $1,000, the next report, the chart with the desks' markers, price alerts, the multiplier and its history, what
+  desks decided, and report dates. `/stock/nvda` redirects to `/stock/NVDA`; an unknown symbol is a 404.
+- **New facts, synced by the worker:** multiplier changes from the chain's `UIMultiplierUpdated` events (9 real
+  dividends found, from Nvidia's 1.0 to 1.000775 to SGOV's three), and report dates from Finnhub's calendar (7
+  companies). `pnpm prices:facts` runs both once.
+- **Price alerts:** "Tell me when Nvidia is 2% from its reference", from the stock page or the chat (`ask.v3`), one set
+  of checks. The price logger fires them once, with the message queued in the same transaction, to Telegram and the
+  bell; a bell item opens the stock. **Proven on the rehearsal database** (`pnpm dev:prove-alerts`): a chat card
+  saved an alert and a second tap was refused; 0.1% and a made-up symbol were refused; a slot with Nvidia 0.8% above
+  fired the 0.5% alert exactly once with its message, and left a 10% alert waiting.
+- "Ask about this" types the question into the owner's desk chat without sending it. The ticker strip's cells open
+  their stock.
+- **Checked** at 390, 768, 1024 and 1440 in both themes, on four views: no sideways scroll, no console errors. Lint
+  clean, typecheck clean, 93 checks pass.
+- **Observed, not fixed:** SGOV's reference line spikes about 0.2% during regular hours, when the reference is the
+  feed rather than the pool at the close. It is the engine's own reference choice, logged as the engine saw it.
+- **The worker is not running**, so the markets page says its newest price is hours old. `pnpm prices:log` writes
+  one slot on demand.
+- **Next:** step 10, the strategies studio and the first run. Vault sweeps are still owed from step 3.
+
 ## 6. Schedule
 
 | Day | Work | Must be true by end of day |
