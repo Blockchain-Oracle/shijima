@@ -1,0 +1,33 @@
+{
+  "name": "@desk/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port 3007",
+    "build": "next build",
+    "start": "next start --port 3007",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@desk/chain": "workspace:*",
+    "@desk/core": "workspace:*",
+    "@desk/db": "workspace:*",
+    "@desk/shared": "workspace:*",
+    "@tanstack/react-query": "5.103.1",
+    "iron-session": "9.0.1",
+    "next": "16.3.5",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "viem": "catalog:",
+    "wagmi": "3.7.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "catalog:",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "tailwindcss": "4.3.3",
+    "typescript": "catalog:"
+  }
+}

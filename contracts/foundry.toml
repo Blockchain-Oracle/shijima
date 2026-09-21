@@ -1,0 +1,30 @@
+[profile.default]
+src = "src"
+out = "out"
+test = "test"
+libs = ["lib", "node_modules"]
+solc = "0.8.28"
+evm_version = "cancun"          # verified live on chain 4663: TSTORE, TLOAD and MCOPY all work
+optimizer = true
+optimizer_runs = 200
+remappings = [
+  "forge-std/=lib/forge-std/src/",
+  "@openzeppelin/contracts/=node_modules/@openzeppelin/contracts/",
+]
+# Fork tests run UNPINNED. The public RPC keeps only about ten minutes of state, so a pinned block
+# breaks within minutes. Assertions in fork tests are relative: deltas and bounds, never prices.
+
+[profile.default.fuzz]
+runs = 256
+
+[profile.default.invariant]
+runs = 64
+depth = 32
+
+[lint]
+# block.timestamp is used for deadlines, the 24 hour cap window and feed age. On an Arbitrum Orbit chain
+# the sequencer sets it, and every use here tolerates drift of seconds. This lint cannot be satisfied.
+exclude_lints = ["block-timestamp"]
+
+[fmt]
+line_length = 120

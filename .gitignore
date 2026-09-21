@@ -1,0 +1,25 @@
+node_modules/
+.pnpm-store/
+dist/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+.DS_Store
+
+# secrets and local state. Never commit these.
+.env
+.env.*
+!.env.example
+.openserv.json
+
+# foundry
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+
+# logs
+*.log
+
+# local runtime data: decision records written before the database exists
+var/

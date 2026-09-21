@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+/*
+ * Functional first. Every colour is a semantic token, never a raw value in a component, so when the real
+ * design arrives the design pass is a re-skin of this block and nothing else.
+ */
+@theme {
+  --color-page: oklch(99% 0.002 260);
+  --color-surface: oklch(100% 0 0);
+  --color-line: oklch(91% 0.004 260);
+  --color-ink: oklch(23% 0.012 260);
+  --color-ink-soft: oklch(52% 0.012 260);
+  --color-ink-faint: oklch(66% 0.01 260);
+  --color-accent: oklch(52% 0.13 250);
+  --color-acted: oklch(45% 0.11 155);
+  --color-waited: oklch(52% 0.09 250);
+  --color-blocked: oklch(50% 0.14 35);
+  --color-quiet: oklch(60% 0.008 260);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  @theme {
+    --color-page: oklch(17% 0.008 260);
+    --color-surface: oklch(21% 0.009 260);
+    --color-line: oklch(29% 0.01 260);
+    --color-ink: oklch(94% 0.004 260);
+    --color-ink-soft: oklch(72% 0.008 260);
+    --color-ink-faint: oklch(58% 0.008 260);
+    --color-accent: oklch(72% 0.12 250);
+    --color-acted: oklch(72% 0.13 155);
+    --color-waited: oklch(74% 0.09 250);
+    --color-blocked: oklch(70% 0.14 40);
+    --color-quiet: oklch(55% 0.008 260);
+  }
+}
+
+html {
+  color-scheme: light dark;
+}
+
+body {
+  background: var(--color-page);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* A number the eye should be able to compare down a column. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}

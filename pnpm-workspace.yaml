@@ -1,0 +1,31 @@
+packages:
+  - apps/*
+  - packages/*
+  - contracts
+
+# One place for every shared version. Packages reference these with "catalog:".
+# All versions were checked on npm on 2026-09-19. Do not bump during the hackathon.
+catalog:
+  typescript: 6.0.3
+  zod: 4.6.5
+  viem: 2.56.8
+  vitest: 5.0.1
+  tsx: 4.23.13
+  pino: 10.3.1
+  drizzle-orm: 0.45.2
+  drizzle-kit: 0.31.10
+  pg: 8.23.0
+  "@types/pg": 8.23.1
+  openai: 5.23.2
+  "@types/node": ^24.0.0
+
+# Build scripts are denied by default in pnpm 11. esbuild is needed by tsx and vitest.
+allowBuilds:
+  esbuild: true
+
+# openai 5.x lists zod 3 as a peer only for its zod helpers, which we do not use.
+# We build JSON schemas with zod 4's own z.toJSONSchema. openai stays on 5.x because
+# @openserv-labs/sdk requires it.
+peerDependencyRules:
+  allowedVersions:
+    "openai>zod": "4"

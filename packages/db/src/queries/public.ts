@@ -1,0 +1,250 @@
+/**
+ * What a stranger may see: a desk the owner chose to share, and its record.
+ *
+ * Every query here names its columns. `decisions.private` is the owner's alone, because it holds headline TEXT
+ * that our news licence forbids us to pass on, and it must never appear in a public projection by accident.
+ * The hashed `record` body is public by design: it is the thing whose fingerprint is written on-chain, and a
+ * record nobody can read proves nothing.
+ */
+import { and, asc, desc, eq, gte, lt } from 'drizzle-orm'
+import type { DbOrTx } from '../client'
+import { actions, decisions, desks, deskValueSnapshots, grades, owners } from '../schema'
+
+/** The public face of a desk. No owner address, no Telegram, no invite code. */
+export const publicDeskColumns = {
+  id: desks.id,
+  name: desks.name,
+  address: desks.address,
+  chainId: desks.chainId,
+  contractVersion: desks.contractVersion,
+  mode: desks.mode,
+  state: desks.state,
+  stateReason: desks.stateReason,
+  lifecycle: desks.lifecycle,
+  shareSlug: desks.shareSlug,
+  startedAt: desks.startedAt,
+  shadowChecks: desks.shadowChecks,
+  chainSeq: desks.chainSeq,
+} as const
+
+export const publicDecisionColumns = {
+  id: decisions.id,
+  seq: decisions.seq,
+  kind: decisions.kind,
+  schemaVersion: decisions.schemaVersion,
+  outcome: decisions.outcome,
+  mode: decisions.mode,
+  shadow: decisions.shadow,
+  token: decisions.token,
+  side: decisions.side,
+  amountUsdg: decisions.amountUsdg,
+  confidencePercent: decisions.confidencePercent,
+  summary: decisions.summary,
+  failureCode: decisions.failureCode,
+  record: decisions.record,
+  recordHash: decisions.recordHash,
+  prevHash: decisions.prevHash,
+  result: decisions.result,
+  sealedByTx: decisions.sealedByTx,
+  sealedAt: decisions.sealedAt,
+  decidedAt: decisions.decidedAt,
+} as const
+
+/** undefined when there is no such desk, or its owner has not shared it. */
+export async function deskByShareSlug(db: DbOrTx, slug: string) {
+  const [row] = await db
+    .select(publicDeskColumns)
+    .from(desks)
+    .where(and(eq(desks.shareSlug, slug), eq(desks.shareEnabled, true)))
+  return row
+}
+
+/** Every shared desk, for the home page. */
+export async function sharedDesks(db: DbOrTx) {
+  return db.select(publicDeskColumns).from(desks).where(eq(desks.shareEnabled, true)).orderBy(desks.createdAt)
+}
+
+/** A page of the record, newest first. `before` is a seq, so paging cannot skip or repeat an entry. */
+export async function deskRecord(
+  db: DbOrTx,
+  deskId: string,
+  options: { limit?: number; before?: number } = {},
+) {
+  const limit = Math.min(options.limit ?? 50, 200)
+  const where =
+    options.before === undefined
+      ? eq(decisions.deskId, deskId)
+      : and(eq(decisions.deskId, deskId), lt(decisions.seq, options.before))
+  return db
+    .select(publicDecisionColumns)
+    .from(decisions)
+    .where(where)
+    .orderBy(desc(decisions.seq))
+    .limit(limit)
+}
+
+/** What a stranger sees of a desk, and of one decision. Derived from the queries, so they can never drift. */
+export type PublicDesk = NonNullable<Awaited<ReturnType<typeof deskByShareSlug>>>
+export type PublicDecision = Awaited<ReturnType<typeof deskRecord>>[number]
+
+export async function decisionInFull(db: DbOrTx, deskId: string, seq: number) {
+  const [decision] = await db
+    .select(publicDecisionColumns)
+    .from(decisions)
+    .where(and(eq(decisions.deskId, deskId), eq(decisions.seq, seq)))
+  if (!decision) return undefined
+  const [legs, [grade]] = await Promise.all([
+    db
+      .select({
+        leg: actions.leg,
+        kind: actions.kind,
+        status: actions.status,
+        txHash: actions.txHash,
+        amountIn: actions.amountIn,
+        expectedOut: actions.expectedOut,
+        minOut: actions.minOut,
+        actualOut: actions.actualOut,
+        gasUsed: actions.gasUsed,
+        effectiveGasPrice: actions.effectiveGasPrice,
+        blockNumber: actions.blockNumber,
+        failureCode: actions.failureCode,
+        failureDetail: actions.failureDetail,
+      })
+      .from(actions)
+      .where(eq(actions.decisionId, decision.id))
+      .orderBy(actions.leg),
+    db
+      .select({
+        verdict: grades.verdict,
+        differenceBps: grades.differenceBps,
+        chosen: grades.chosen,
+        alternative: grades.alternative,
+        gradedAt: grades.gradedAt,
+        replay: grades.replay,
+      })
+      .from(grades)
+      .where(eq(grades.decisionId, decision.id)),
+  ])
+  return { decision, actions: legs, grade }
+}
+
+/** One decision with every on-chain leg it sent and its grade, if the market has reopened since. */
+export type DecisionInFull = NonNullable<Awaited<ReturnType<typeof decisionInFull>>>
+
+/** The desk's value over time, oldest first, for the chart. */
+export async function valueHistory(db: DbOrTx, deskId: string, limit = 400) {
+  const rows = await db
+    .select({
+      takenAt: deskValueSnapshots.takenAt,
+      totalUsdg: deskValueSnapshots.totalUsdg,
+      cashUsdg: deskValueSnapshots.cashUsdg,
+    })
+    .from(deskValueSnapshots)
+    .where(eq(deskValueSnapshots.deskId, deskId))
+    .orderBy(desc(deskValueSnapshots.takenAt))
+    .limit(limit)
+  return rows.reverse()
+}
+
+/**
+ * The record's design problem, solved once here: an hourly desk makes about 160 entries a week and most say
+ * nothing happened. They must be present, because they are the proof the desk was awake and honest, but they
+ * must not bury the few that matter. So a run of consecutive quiet checks becomes one row that can be opened.
+ *
+ * Quiet means: nothing to do, or a check that only continued a decision already made. Anything the desk did,
+ * asked, declined or failed at is never folded away.
+ */
+export type RecordRow =
+  | { kind: 'entry'; decision: PublicDecision }
+  | { kind: 'quiet'; count: number; from: Date; to: Date; decisions: PublicDecision[] }
+
+export function isQuiet(d: PublicDecision): boolean {
+  if (d.outcome === 'nothing_to_do') return true
+  const deferral = (d.record as { deferral?: { stillStanding?: boolean } }).deferral
+  return d.outcome === 'waited' && deferral?.stillStanding === true
+}
+
+export function groupQuietRuns(newestFirst: PublicDecision[], minRun = 3): RecordRow[] {
+  const rows: RecordRow[] = []
+  let run: PublicDecision[] = []
+  const flush = () => {
+    if (run.length === 0) return
+    if (run.length < minRun) {
+      for (const d of run) rows.push({ kind: 'entry', decision: d })
+    } else {
+      const first = run[0]
+      const last = run.at(-1)
+      if (first && last) {
+        rows.push({
+          kind: 'quiet',
+          count: run.length,
+          from: last.decidedAt,
+          to: first.decidedAt,
+          decisions: run,
+        })
+      }
+    }
+    run = []
+  }
+  for (const d of newestFirst) {
+    if (isQuiet(d)) run.push(d)
+    else {
+      flush()
+      rows.push({ kind: 'entry', decision: d })
+    }
+  }
+  flush()
+  return rows
+}
+
+/** Every desk belonging to one signed-in address. The only query keyed on a person. */
+export async function desksOfOwner(db: DbOrTx, ownerAddress: string) {
+  return db
+    .select(publicDeskColumns)
+    .from(desks)
+    .innerJoin(owners, eq(desks.ownerId, owners.id))
+    .where(eq(owners.address, ownerAddress.toLowerCase()))
+    .orderBy(desks.createdAt)
+}
+
+/** True when this address owns this desk. Every owner action checks it first, server side. */
+export async function ownsDesk(db: DbOrTx, deskId: string, ownerAddress: string): Promise<boolean> {
+  const [row] = await db
+    .select({ id: desks.id })
+    .from(desks)
+    .innerJoin(owners, eq(desks.ownerId, owners.id))
+    .where(and(eq(desks.id, deskId), eq(owners.address, ownerAddress.toLowerCase())))
+  return Boolean(row)
+}
+
+/** The owner's row id for an address, or undefined if they have never signed in. */
+export async function ownerIdOf(db: DbOrTx, address: string): Promise<string | undefined> {
+  const [row] = await db
+    .select({ id: owners.id })
+    .from(owners)
+    .where(eq(owners.address, address.toLowerCase()))
+  return row?.id
+}
+
+/** One decision with its grade, for the report. Ungraded ones are included: silence would flatter the desk. */
+export async function recordWithGrades(db: DbOrTx, deskId: string, from: Date, to: Date) {
+  return db
+    .select({
+      seq: decisions.seq,
+      outcome: decisions.outcome,
+      summary: decisions.summary,
+      token: decisions.token,
+      side: decisions.side,
+      shadow: decisions.shadow,
+      decidedAt: decisions.decidedAt,
+      record: decisions.record,
+      verdict: grades.verdict,
+      differenceBps: grades.differenceBps,
+      chosen: grades.chosen,
+      alternative: grades.alternative,
+    })
+    .from(decisions)
+    .leftJoin(grades, eq(grades.decisionId, decisions.id))
+    .where(and(eq(decisions.deskId, deskId), gte(decisions.decidedAt, from), lt(decisions.decidedAt, to)))
+    .orderBy(asc(decisions.seq))
+}

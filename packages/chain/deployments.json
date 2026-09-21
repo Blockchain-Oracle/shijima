@@ -1,0 +1,10 @@
+{
+  "v0": {
+    "chainId": 4663,
+    "factory": "0x35A40883BAD8874F8fB5592c72c4385226070958",
+    "implementation": "0x99a3f0DD497d60308F138f420902BbB2b6406565",
+    "deployedAt": "2026-09-20T14:24:31+00:00",
+    "devDesk": "0x51ce92E1319918Fe3d46Ee0dF09af1a9FB14461D"
+  },
+  "current": "v0"
+}

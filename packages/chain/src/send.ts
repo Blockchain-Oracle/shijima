@@ -1,0 +1,224 @@
+/**
+ * Operator transactions in separate steps, so the caller can save the hash BEFORE anything is broadcast:
+ *
+ *   signDeskCall   simulate (a revert costs nothing and names its cause), then build and sign. Not sent.
+ *   broadcast      hand the signed bytes to the network
+ *   waitForOutcome wait for the receipt and read the contract's event back
+ *   findOutcome    the same without waiting. This is what crash recovery uses: did this hash ever land?
+ *
+ * The signed bytes live in memory only. A signed transaction is a bearer instrument, so it is never stored.
+ * Everything takes explicit clients, so the same code runs against mainnet, a local fork, and tests.
+ */
+
+import type { Address } from 'viem'
+import {
+  BaseError,
+  ContractFunctionRevertedError,
+  decodeErrorResult,
+  encodeFunctionData,
+  type Hex,
+  isHex,
+  keccak256,
+  type PublicClient,
+  parseEventLogs,
+  type TransactionReceipt,
+  TransactionReceiptNotFoundError,
+} from 'viem'
+import type { OperatorWallet } from './desk'
+import { deskAbi } from './generated/desk-abi'
+
+export type DeskCall =
+  | {
+      kind: 'buy' | 'sell'
+      desk: Address
+      token: Address
+      amountIn: bigint
+      minOut: bigint
+      deadline: number
+      decisionHash: Hex
+    }
+  | { kind: 'checkpoint'; desk: Address; decisionHash: Hex }
+
+export interface SignedDeskCall {
+  kind: DeskCall['kind']
+  desk: Address
+  /** The raw signed transaction. Memory only. */
+  serialized: Hex
+  /** keccak256 of the signed bytes: the hash the network will report, known before it is sent. */
+  txHash: Hex
+  nonce: number
+  calldataHash: Hex
+  /** The contract's own deadline. Only buy and sell have one. */
+  deadlineUnix?: number
+}
+
+export type DeskOutcome =
+  | {
+      status: 'confirmed'
+      txHash: Hex
+      blockNumber: bigint
+      gasUsed: bigint
+      effectiveGasPrice: bigint
+      /** The contract's own sequence number, from its event. */
+      chainSeq: bigint
+      /** The decision hash the contract emitted. It must equal the record's fingerprint. */
+      eventHash: Hex
+      amountOut?: bigint
+      feedPrice?: bigint
+    }
+  | { status: 'reverted'; txHash: Hex; blockNumber: bigint; gasUsed: bigint; effectiveGasPrice: bigint }
+
+function callArgs(call: DeskCall) {
+  return call.kind === 'checkpoint'
+    ? ({ functionName: 'checkpoint', args: [call.decisionHash] } as const)
+    : ({
+        functionName: call.kind,
+        args: [call.token, call.amountIn, call.minOut, call.deadline, call.decisionHash],
+      } as const)
+}
+
+/** The operator wallet cannot cover the most this transaction could cost. Nothing was signed. */
+export class OperatorLowGasError extends Error {
+  constructor(
+    readonly balance: bigint,
+    readonly needed: bigint,
+  ) {
+    super(`the operator wallet holds ${balance} wei but this transaction could cost up to ${needed} wei`)
+    this.name = 'OperatorLowGasError'
+  }
+}
+
+/**
+ * The contract's custom error name behind a refused call, for example OverPerActionCap.
+ * A revert found by `simulateContract` arrives decoded. One found during gas estimation arrives as raw bytes,
+ * so those are decoded here against the desk ABI. A name the owner can read beats "custom error 0x70f65caa".
+ */
+export function revertName(error: unknown): string | undefined {
+  if (!(error instanceof BaseError)) return undefined
+  const reverted = error.walk((e) => e instanceof ContractFunctionRevertedError)
+  if (reverted instanceof ContractFunctionRevertedError && reverted.data?.errorName) {
+    return reverted.data.errorName
+  }
+  const withData = error.walk((e) => isHex((e as { data?: unknown }).data)) as { data?: Hex } | null
+  const raw = withData?.data ?? error.message.match(/custom error (0x[0-9a-fA-F]{8})/)?.[1]
+  if (!raw || !isHex(raw)) return undefined
+  try {
+    return decodeErrorResult({ abi: deskAbi, data: raw }).errorName
+  } catch {
+    return undefined
+  }
+}
+
+export async function signDeskCall(
+  pub: PublicClient,
+  wallet: OperatorWallet,
+  call: DeskCall,
+): Promise<SignedDeskCall> {
+  const target = { account: wallet.account, address: call.desk, abi: deskAbi } as const
+  // Two call sites, because viem types each contract function separately and cannot take a union of them.
+  if (call.kind === 'checkpoint') {
+    await pub.simulateContract({ ...target, functionName: 'checkpoint', args: [call.decisionHash] })
+  } else {
+    await pub.simulateContract({
+      ...target,
+      functionName: call.kind,
+      args: [call.token, call.amountIn, call.minOut, call.deadline, call.decisionHash],
+    })
+  }
+  const data = encodeFunctionData({ abi: deskAbi, ...callArgs(call) })
+  const request = await wallet.prepareTransactionRequest({ to: call.desk, data })
+  // Only gas actually used is charged, so headroom is free. It guards against state moving under the estimate.
+  const gas = (request.gas * 12n) / 10n
+  // A node rejects a transaction the sender cannot pay for. Checking BEFORE signing turns that into an instant,
+  // named refusal. Found out afterwards, the action would sit as "prepared" until its deadline had passed.
+  const needed = gas * (request.maxFeePerGas ?? request.gasPrice ?? 0n)
+  const balance = await pub.getBalance({ address: wallet.account.address })
+  if (balance < needed) throw new OperatorLowGasError(balance, needed)
+  const serialized = await wallet.signTransaction({ ...request, gas })
+  return {
+    kind: call.kind,
+    desk: call.desk,
+    serialized,
+    txHash: keccak256(serialized),
+    nonce: request.nonce,
+    calldataHash: keccak256(data),
+    ...(call.kind === 'checkpoint' ? {} : { deadlineUnix: call.deadline }),
+  }
+}
+
+/**
+ * A contract deadline `seconds` from now. It takes the LATER of the chain clock and the local clock: the chain
+ * clock alone is stale whenever the chain has been quiet, which would put the deadline in the past before the
+ * transaction is even signed. A local clock that runs fast only makes the deadline a little longer.
+ */
+export async function deadlineIn(pub: PublicClient, seconds: number): Promise<number> {
+  const block = await pub.getBlock()
+  return Math.max(Number(block.timestamp), Math.floor(Date.now() / 1000)) + seconds
+}
+
+export async function broadcast(pub: PublicClient, signed: SignedDeskCall): Promise<void> {
+  const reported = await pub.sendRawTransaction({ serializedTransaction: signed.serialized })
+  if (reported.toLowerCase() !== signed.txHash.toLowerCase()) {
+    throw new Error(`the network reported hash ${reported}, but the saved hash is ${signed.txHash}`)
+  }
+}
+
+function readReceipt(kind: DeskCall['kind'], receipt: TransactionReceipt): DeskOutcome {
+  const base = {
+    txHash: receipt.transactionHash,
+    blockNumber: receipt.blockNumber,
+    gasUsed: receipt.gasUsed,
+    effectiveGasPrice: receipt.effectiveGasPrice,
+  }
+  if (receipt.status !== 'success') return { status: 'reverted', ...base }
+  if (kind === 'buy') {
+    const [log] = parseEventLogs({ abi: deskAbi, eventName: 'Bought', logs: receipt.logs })
+    if (!log) throw new Error(`no Bought event in tx ${receipt.transactionHash}`)
+    const { seq, tokenOut, feedPrice, decisionHash } = log.args
+    return {
+      status: 'confirmed',
+      ...base,
+      chainSeq: seq,
+      eventHash: decisionHash,
+      amountOut: tokenOut,
+      feedPrice,
+    }
+  }
+  if (kind === 'sell') {
+    const [log] = parseEventLogs({ abi: deskAbi, eventName: 'Sold', logs: receipt.logs })
+    if (!log) throw new Error(`no Sold event in tx ${receipt.transactionHash}`)
+    const { seq, usdgOut, feedPrice, decisionHash } = log.args
+    return {
+      status: 'confirmed',
+      ...base,
+      chainSeq: seq,
+      eventHash: decisionHash,
+      amountOut: usdgOut,
+      feedPrice,
+    }
+  }
+  const [log] = parseEventLogs({ abi: deskAbi, eventName: 'Checkpoint', logs: receipt.logs })
+  if (!log) throw new Error(`no Checkpoint event in tx ${receipt.transactionHash}`)
+  return { status: 'confirmed', ...base, chainSeq: log.args.seq, eventHash: log.args.decisionHash }
+}
+
+export async function waitForOutcome(
+  pub: PublicClient,
+  sent: Pick<SignedDeskCall, 'kind' | 'txHash'>,
+): Promise<DeskOutcome> {
+  const receipt = await pub.waitForTransactionReceipt({ hash: sent.txHash, timeout: 180_000 })
+  return readReceipt(sent.kind, receipt)
+}
+
+/** undefined means the network has no receipt for this hash right now. It does not mean it never will. */
+export async function findOutcome(
+  pub: PublicClient,
+  sent: Pick<SignedDeskCall, 'kind' | 'txHash'>,
+): Promise<DeskOutcome | undefined> {
+  try {
+    return readReceipt(sent.kind, await pub.getTransactionReceipt({ hash: sent.txHash }))
+  } catch (e) {
+    if (e instanceof TransactionReceiptNotFoundError) return undefined
+    throw e
+  }
+}

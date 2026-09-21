@@ -1,0 +1,14 @@
+{
+  "name": "@desk/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "setup": "./setup.sh",
+    "build": "forge build",
+    "test": "forge test --no-match-path 'test/fork/*'",
+    "test:fork": "./fork-test.sh"
+  },
+  "devDependencies": {
+    "@openzeppelin/contracts": "5.7.0"
+  }
+}

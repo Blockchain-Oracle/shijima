@@ -1,0 +1,38 @@
+{
+  "name": "@desk/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "skeleton": "tsx --env-file-if-exists=../../.env src/cli/skeleton.ts",
+    "resolve": "tsx --env-file-if-exists=../../.env src/cli/resolve.ts",
+    "mandate": "tsx --env-file-if-exists=../../.env src/cli/mandate.ts",
+    "wake": "tsx --env-file-if-exists=../../.env src/cli/wake.ts",
+    "start": "tsx --env-file-if-exists=../../.env src/index.ts",
+    "dev": "tsx watch --env-file-if-exists=../../.env src/index.ts",
+    "approve": "tsx --env-file-if-exists=../../.env src/cli/approve.ts",
+    "grade": "tsx --env-file-if-exists=../../.env src/cli/grade.ts",
+    "openserv:provision": "tsx --env-file-if-exists=../../.env src/openserv/provision.ts",
+    "openserv:fire": "tsx --env-file-if-exists=../../.env src/openserv/fire.ts"
+  },
+  "dependencies": {
+    "@desk/chain": "workspace:*",
+    "@desk/core": "workspace:*",
+    "@desk/db": "workspace:*",
+    "@desk/shared": "workspace:*",
+    "@openserv-labs/client": "2.5.3",
+    "@openserv-labs/sdk": "2.4.1",
+    "openai": "catalog:",
+    "pg": "catalog:",
+    "viem": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@types/pg": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

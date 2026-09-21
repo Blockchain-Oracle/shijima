@@ -1,0 +1,3 @@
+- [Review report format](review-report-format.md) — max 12 ranked findings, file:line + failing scenario + smallest fix, no test or style advice
+- [Concurrent edits during review](concurrent-edits-during-review.md) — builders edit the engine mid-review; re-read before citing lines
+- [Engine review open findings](engine-review-open-findings.md) — what the 2026-09-20 correctness review flagged; verify fixed before re-reporting
