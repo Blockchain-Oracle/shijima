@@ -129,6 +129,7 @@ async function main() {
   const fullGate = gateFor(candidate.amountIn, market.quoteOut)
   const pack = buildEvidence(candidate, market, state, fullGate, {
     mandateLine: `MANDATE (skeleton fixture): hold some ${token.displayName}. No owner rules.`,
+    rules: [],
   })
   console.log(`candidate: ${describeCandidate(candidate, market.quoteOut)}`)
 

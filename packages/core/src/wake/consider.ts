@@ -14,7 +14,7 @@ import { engineCopy, type Mandate } from '@desk/shared'
 import { type Address, keccak256, type PublicClient, toBytes } from 'viem'
 import { askTiming, type TimingAnswer } from './decide'
 import { type DeferralBaseline, whyDeferralEnds } from './deferral'
-import { buildEvidence, type EvidencePack } from './evidence'
+import { buildEvidence, type EvidencePack, ownerRules } from './evidence'
 import { type GateResult, gate } from './gate'
 import { type MarketRead, readMarket } from './market'
 import type { Need } from './needs'
@@ -124,6 +124,7 @@ export async function considerCandidate(ctx: ConsiderContext, need: Need): Promi
   const targetBps = targetOf(mandate, c.token.address)
   const pack = buildEvidence(c, market, state, fullGate, {
     mandateLine: ctx.mandateLine,
+    rules: ownerRules(mandate.notes),
     position: {
       weightBps: need.driftBps + targetBps,
       targetBps,
@@ -207,7 +208,7 @@ export async function considerCandidate(ctx: ConsiderContext, need: Need): Promi
     apiKey: ctx.servApiKey,
     userMessage: pack.userMessage,
     evidenceIds: pack.evidenceIds,
-    ruleIds: [],
+    ruleIds: pack.ruleIds,
   })
   const amountIn = sizedAmount(c.amountIn, answer.decision, null)
   const isPart = amountIn < c.amountIn

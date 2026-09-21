@@ -27,6 +27,21 @@ export const PRESETS: Preset[] = [
     weights: { NVDA: 1400, AAPL: 1400, MSFT: 1400, GOOGL: 1400, AMZN: 1400, META: 1400 },
   },
   {
+    id: 'mag-seven',
+    name: 'The Mag Seven',
+    description: 'The seven largest US technology companies in equal measure, with some cash kept aside.',
+    cashBps: 1600,
+    weights: { AAPL: 1200, MSFT: 1200, NVDA: 1200, AMZN: 1200, GOOGL: 1200, META: 1200, TSLA: 1200 },
+  },
+  {
+    id: 'ai-builders',
+    name: 'AI Builders',
+    description:
+      'Five companies building the chips, cloud and models behind AI, in equal measure, with cash aside.',
+    cashBps: 2000,
+    weights: { NVDA: 1600, MSFT: 1600, GOOGL: 1600, META: 1600, AMZN: 1600 },
+  },
+  {
     id: 'mostly-cash',
     name: 'Mostly cash',
     description: 'Mostly cash, with a small broad-market holding.',

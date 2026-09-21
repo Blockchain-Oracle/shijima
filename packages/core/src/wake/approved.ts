@@ -15,7 +15,7 @@ import { DecisionRecordV2, engineCopy, type Mandate } from '@desk/shared'
 import { type Address, type PublicClient, parseUnits } from 'viem'
 import { type CommitContext, commit } from './commit'
 import { type Considered, DEADLINE_SECONDS, SLIPPAGE_BPS } from './consider'
-import { buildEvidence } from './evidence'
+import { buildEvidence, ownerRules } from './evidence'
 import { gate } from './gate'
 import { readMarket } from './market'
 import type { Need } from './needs'
@@ -116,6 +116,7 @@ export async function considerApproved(
       ?.weightBps ?? 0
   const pack = buildEvidence({ ...c, amountIn: request.shown.amountIn }, market, ctx.state, freshGate, {
     mandateLine: ctx.mandateLine,
+    rules: ownerRules(ctx.mandate.notes),
     position: {
       weightBps: need.driftBps + targetBps,
       targetBps,
