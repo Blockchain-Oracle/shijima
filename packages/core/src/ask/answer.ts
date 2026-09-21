@@ -19,7 +19,7 @@ import {
   logServCall,
   saveProposal,
 } from '@desk/db'
-import { checkMandate, errorText } from '@desk/shared'
+import { checkMandate, errorText, findHardBannedWords } from '@desk/shared'
 import { formatUnits, type PublicClient, parseUnits } from 'viem'
 import { z } from 'zod'
 import { type ServResult, servJson } from '../serv/client'
@@ -180,6 +180,12 @@ async function checkAnswer(
   value: AskReply,
   rejected: string[],
 ): Promise<{ reply: AskAnswer; proposal?: CheckedProposal; quote?: Record<string, string> }> {
+  // The same rule as the engine: a promise of gain, or a name we may not use, makes the words unusable.
+  const hard = findHardBannedWords(value.reply)
+  if (hard.length > 0) {
+    rejected.push(`hard banned words: ${hard.join(', ')}`)
+    return { reply: plain('I put that badly, so I will not send it. Ask me again.') }
+  }
   const cites = value.cites.filter((id) => context.ids.has(id))
   if (cites.length < value.cites.length) {
     rejected.push(
@@ -268,6 +274,9 @@ async function answerReadBack(deps: AskDeps, request: AskRequestRow): Promise<As
     return plain('I could not read that back just now. Nothing was saved. Try again in a moment.')
   }
   const unclear = result.value.unclear
+  if (findHardBannedWords([result.value.restatement, ...unclear].join(' ')).length > 0) {
+    return plain('I put that badly, so I will not send it. Try the test read again.')
+  }
   return {
     reply:
       unclear.length > 0
