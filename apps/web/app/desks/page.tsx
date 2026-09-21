@@ -1,4 +1,4 @@
-import { deskRecord, desksOfOwner, pendingApprovals } from '@desk/db'
+import { deskRecord, desksOfOwner, GO_LIVE_CHECKS, pendingApprovals } from '@desk/db'
 import { ago, engineCopy, money, percent } from '@desk/shared'
 import Link from 'next/link'
 import { Answer } from '@/components/answer'
@@ -108,8 +108,11 @@ export default async function MyDesks() {
               <Pause deskId={desk.id} paused={desk.state === 'paused_by_owner'} />
               {desk.mode === 'shadow' ? (
                 <span className="text-ink-faint text-xs">
-                  {desk.shadowChecks} of 24 practice checks done{' '}
-                  {desk.shadowChecks >= 24 ? '· it can go live when you choose' : ''}
+                  {Math.min(desk.shadowChecks, GO_LIVE_CHECKS)} of {GO_LIVE_CHECKS} practice checks done ·{' '}
+                  {desk.shadowReportOpenedAt ? 'report read' : 'report not read yet'}
+                  {desk.shadowChecks >= GO_LIVE_CHECKS && desk.shadowReportOpenedAt
+                    ? ' · it can go live when you choose'
+                    : ''}
                 </span>
               ) : null}
             </div>

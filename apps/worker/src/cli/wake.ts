@@ -13,7 +13,7 @@
  */
 import { APPROVED_TOKENS } from '@desk/chain'
 import { type SendReport, wakeDesk } from '@desk/core'
-import { pauseDesk, resumeDesk, setDeskMode, setDeskShare } from '@desk/db'
+import { GO_LIVE_CHECKS, pauseDesk, resumeDesk, setDeskMode, setDeskShare } from '@desk/db'
 import { errorText } from '@desk/shared'
 import { requireLeader } from '../leader'
 import { resolveUnsettled, sendAction } from '../sender'
@@ -63,8 +63,19 @@ try {
     console.log(done ? 'the desk is active again.' : 'the desk was not paused, so nothing changed.')
   } else if (modeIndex !== -1) {
     if (!newMode) throw new Error(`the mode must be one of: ${MODES.join(', ')}`)
-    await setDeskMode(cli.db, desk.id, newMode, { actor: 'owner', via: 'worker' })
-    console.log(`the desk is now in ${newMode} mode. Pending approvals and remembered waits were cancelled.`)
+    const change = await setDeskMode(cli.db, desk.id, newMode, { actor: 'owner', via: 'worker' })
+    if (!change.ok) {
+      throw new Error(
+        change.reason === 'practice_checks'
+          ? `not yet: going live needs ${GO_LIVE_CHECKS} practice checks, and this desk has done ${change.checksDone}.`
+          : 'not yet: going live needs the owner to open the practice report first.',
+      )
+    }
+    console.log(
+      change.changed
+        ? `the desk is now in ${newMode} mode. Pending approvals and remembered waits were cancelled.`
+        : `the desk was already in ${newMode} mode.`,
+    )
   } else {
     const settled = await resolveUnsettled(cli.deps)
     printSettlements(settled)

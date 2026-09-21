@@ -220,16 +220,39 @@ export async function startDesk(db: DbOrTx, deskId: string): Promise<void> {
     .where(and(eq(desks.id, deskId), inArray(desks.lifecycle, ['onboarding', 'running'])))
 }
 
-/** A mode change cancels pending approvals and standing deferrals: both were promises made under the old mode. */
+/** Who changed something, and from where. `chat` is the chat on the website or in Telegram. */
+export type By = { actor: 'owner' | 'desk' | 'system'; via: 'web' | 'telegram' | 'chain' | 'worker' | 'chat' }
+
+/** Going live is earned (design brief section 7): this many checks in practice, and the report opened. */
+export const GO_LIVE_CHECKS = 24
+
+export type ModeChange =
+  | { ok: true; changed: boolean }
+  | { ok: false; reason: 'practice_checks'; checksDone: number }
+  | { ok: false; reason: 'report_unread'; checksDone: number }
+
+/**
+ * A mode change cancels pending approvals and standing deferrals: both were promises made under the old mode.
+ * Leaving practice for a live mode is refused until the desk has done GO_LIVE_CHECKS practice checks AND the
+ * owner has opened its report. Moving between the live modes, or back to practice, is always allowed.
+ */
 export async function setDeskMode(
   db: DbOrTx,
   deskId: string,
   mode: 'shadow' | 'ask_first' | 'on_its_own',
-  by: { actor: 'owner' | 'desk' | 'system'; via: 'web' | 'telegram' | 'chain' | 'worker' },
-): Promise<void> {
+  by: By,
+): Promise<ModeChange> {
   const now = new Date()
-  const [before] = await db.select({ mode: desks.mode }).from(desks).where(eq(desks.id, deskId))
-  if (!before || before.mode === mode) return
+  const [before] = await db
+    .select({ mode: desks.mode, checks: desks.shadowChecks, reportOpenedAt: desks.shadowReportOpenedAt })
+    .from(desks)
+    .where(eq(desks.id, deskId))
+  if (!before || before.mode === mode) return { ok: true, changed: false }
+  if (before.mode === 'shadow' && mode !== 'shadow') {
+    if (before.checks < GO_LIVE_CHECKS)
+      return { ok: false, reason: 'practice_checks', checksDone: before.checks }
+    if (!before.reportOpenedAt) return { ok: false, reason: 'report_unread', checksDone: before.checks }
+  }
   await db.update(desks).set({ mode, updatedAt: now }).where(eq(desks.id, deskId))
   await db
     .update(approvals)
@@ -247,6 +270,15 @@ export async function setDeskMode(
     detail: { from: before.mode, to: mode },
     at: now,
   })
+  return { ok: true, changed: true }
+}
+
+/** The owner opened the practice report: half of what going live needs. Only the first opening is kept. */
+export async function markShadowReportOpened(db: DbOrTx, deskId: string): Promise<void> {
+  await db
+    .update(desks)
+    .set({ shadowReportOpenedAt: new Date() })
+    .where(and(eq(desks.id, deskId), isNull(desks.shadowReportOpenedAt)))
 }
 
 /** Requests the owner never answered. Returns them so each can be announced: "Nothing was done." */
@@ -363,8 +395,6 @@ export async function didSameTradeSince(
     .limit(1)
   return Boolean(row)
 }
-
-type By = { actor: 'owner' | 'desk' | 'system'; via: 'web' | 'telegram' | 'chain' | 'worker' }
 
 /**
  * The owner's pause. Soft: instant, free and reversible. It cancels every pending approval and remembered

@@ -1,10 +1,11 @@
 import { previousWindow, reportWindow, summarise } from '@desk/core'
-import { deskByShareSlug, recordWithGrades } from '@desk/db'
+import { deskByShareSlug, markShadowReportOpened, ownsDesk, recordWithGrades } from '@desk/db'
 import { localTime, newYorkTime, percent } from '@desk/shared'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Outcome } from '@/components/outcome'
 import { db } from '@/lib/db'
+import { signedInAddress } from '@/lib/session'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,6 +23,12 @@ export default async function ReportPage({
   const [{ slug }, { at }] = await Promise.all([params, searchParams])
   const desk = await deskByShareSlug(db(), slug)
   if (!desk) notFound()
+  // Reading the report is half of what going live needs, so it counts only when the OWNER reads it. A visitor
+  // on a shared link never moves it.
+  const viewer = await signedInAddress().catch(() => undefined)
+  if (viewer && desk.mode === 'shadow' && (await ownsDesk(db(), desk.id, viewer))) {
+    await markShadowReportOpened(db(), desk.id)
+  }
 
   const now = new Date()
   const window = reportWindow(at ? new Date(at) : now)

@@ -24,6 +24,7 @@ export const publicDeskColumns = {
   shareSlug: desks.shareSlug,
   startedAt: desks.startedAt,
   shadowChecks: desks.shadowChecks,
+  shadowReportOpenedAt: desks.shadowReportOpenedAt,
   chainSeq: desks.chainSeq,
 } as const
 

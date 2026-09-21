@@ -9,6 +9,7 @@ import type { Mandate } from '@desk/shared'
 import { and, desc, eq, sql } from 'drizzle-orm'
 import type { Db, DbOrTx } from '../client'
 import { approvals, deferrals, deskEvents, desks, mandates } from '../schema'
+import type { By } from './engine'
 
 export type MandateRow = typeof mandates.$inferSelect
 
@@ -20,12 +21,7 @@ export async function currentMandate(db: DbOrTx, deskId: string): Promise<Mandat
   return row
 }
 
-export async function applyMandate(
-  db: Db,
-  deskId: string,
-  mandate: Mandate,
-  by: { actor: 'owner' | 'desk' | 'system'; via: 'web' | 'telegram' | 'chain' | 'worker' },
-): Promise<MandateRow> {
+export async function applyMandate(db: Db, deskId: string, mandate: Mandate, by: By): Promise<MandateRow> {
   return db.transaction(async (tx) => {
     const now = new Date()
     const [last] = await tx
