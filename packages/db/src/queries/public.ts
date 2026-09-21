@@ -6,9 +6,9 @@
  * The hashed `record` body is public by design: it is the thing whose fingerprint is written on-chain, and a
  * record nobody can read proves nothing.
  */
-import { and, asc, desc, eq, gte, lt } from 'drizzle-orm'
+import { and, asc, desc, eq, gte, lt, sql } from 'drizzle-orm'
 import type { DbOrTx } from '../client'
-import { actions, decisions, desks, deskValueSnapshots, grades, owners } from '../schema'
+import { actions, decisions, deferrals, desks, deskValueSnapshots, grades, owners } from '../schema'
 
 /** The public face of a desk. No owner address, no Telegram, no invite code. */
 export const publicDeskColumns = {
@@ -248,4 +248,40 @@ export async function recordWithGrades(db: DbOrTx, deskId: string, from: Date, t
     .leftJoin(grades, eq(grades.decisionId, decisions.id))
     .where(and(eq(decisions.deskId, deskId), gte(decisions.decidedAt, from), lt(decisions.decidedAt, to)))
     .orderBy(asc(decisions.seq))
+}
+
+/**
+ * "Timing": what the desk's timing calls earned or cost, in USDG, against the one alternative each really had,
+ * graded at the reopen. Positive means its choices beat the alternatives. It can be negative, and says so.
+ *
+ * Counted: the desk's own trades, and only the decision that STARTED each wait (a wait's later hourly "still
+ * waiting" rows are graded too, and counting them would multiply one call). Left out: replays of past weekends,
+ * refusals forced by a hard rule, and the owner's own "do it anyway", which is graded as the owner's call.
+ * Practice decisions are summed apart, because no money moved.
+ */
+export async function timingSummary(
+  db: DbOrTx,
+  deskId: string,
+): Promise<{ live: { usdg: bigint; decisions: number }; practice: { usdg: bigint; decisions: number } }> {
+  const result = await db.execute<{ shadow: boolean; usdg: string | null; decisions: string }>(sql`
+    select d.shadow,
+           sum(d.amount_usdg * g.difference_bps / 10000)::numeric(78, 0) as usdg,
+           count(*) as decisions
+    from ${grades} g
+    join ${decisions} d on d.id = g.decision_id
+    where g.desk_id = ${deskId}
+      and g.replay = false
+      and g.difference_bps is not null
+      and d.amount_usdg is not null
+      and (
+        d.outcome in ('acted', 'acted_in_part', 'would_have_acted')
+        or (d.outcome = 'waited' and exists (select 1 from ${deferrals} f where f.decision_id = d.id))
+      )
+    group by d.shadow
+  `)
+  const pick = (shadow: boolean) => {
+    const row = result.rows.find((r) => r.shadow === shadow)
+    return { usdg: BigInt(row?.usdg ?? '0'), decisions: Number(row?.decisions ?? '0') }
+  }
+  return { live: pick(false), practice: pick(true) }
 }
