@@ -1,6 +1,8 @@
 import { deskRecord, desksOfOwner, GO_LIVE_CHECKS, pendingApprovals } from '@desk/db'
 import { ago, engineCopy, money, percent } from '@desk/shared'
+import type { Route } from 'next'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { Answer } from '@/components/answer'
 import { Outcome } from '@/components/outcome'
 import { Pause } from '@/components/pause'
@@ -42,6 +44,10 @@ export default async function MyDesks() {
       </div>
     )
   }
+
+  // One desk: go straight to it, where the chat is first. The list is for owners of more than one.
+  const [only] = desks
+  if (only && desks.length === 1) redirect(`/desk/${only.shareSlug ?? only.id}` as Route)
 
   const now = new Date()
   const loaded = await Promise.all(

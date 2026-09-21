@@ -172,6 +172,9 @@ export const marketsCopy = {
   referenceClose: (when: string) => `The pool at the last regular close, ${when}`,
   referenceOfficial: (age: string) => `Last official update, ${age}`,
   halted: 'trading halted',
+  watch: 'Desks you can watch',
+  noneShared: 'No desk has been shared yet.',
+  running: (age: string) => `running since ${age}`,
   footnote:
     'The reference is what this same pool traded at when the US market last closed; while the market is open, it is the last official update. A gap under half a percent is noise.',
 } as const

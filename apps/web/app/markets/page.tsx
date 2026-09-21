@@ -1,6 +1,8 @@
 import { APPROVED_TOKENS } from '@desk/chain'
-import { latestPricePoints } from '@desk/db'
-import { ago, marketsCopy, newYorkTime } from '@desk/shared'
+import { latestPricePoints, sharedDesks } from '@desk/db'
+import { ago, deskCopy, marketsCopy, newYorkTime } from '@desk/shared'
+import type { Route } from 'next'
+import Link from 'next/link'
 import { ErrorState } from '@/components/states'
 import { db } from '@/lib/db'
 import { err, ok, type Reading } from '@/lib/kit'
@@ -55,7 +57,7 @@ async function readRows(): Promise<Reading<Row[]>> {
  * figure is a row the price logger wrote. The charts and the strategies arrive on this page next.
  */
 export default async function Markets() {
-  const reading = await readRows()
+  const [reading, desks] = await Promise.all([readRows(), sharedDesks(db()).catch(() => [])])
   return (
     <div className="container py-8">
       <header className="mb-8 flex flex-col gap-2">
@@ -134,6 +136,33 @@ export default async function Markets() {
           <p className="mt-4 max-w-2xl type-caption text-ink-muted">{marketsCopy.footnote}</p>
         </>
       )}
+      <section className="mt-12 flex flex-col gap-3">
+        <h2 className="type-label-micro text-ink-muted">{marketsCopy.watch}</h2>
+        {desks.length === 0 ? (
+          <p className="type-body text-ink-secondary">{marketsCopy.noneShared}</p>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {desks.map((d) => (
+              <Link
+                key={d.id}
+                href={`/desk/${d.shareSlug}` as Route}
+                className="desk-entry"
+                data-cursor="hover"
+              >
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="type-body-strong text-ink">{d.name ?? 'A desk'}</span>
+                  <span className="type-caption text-ink-muted">
+                    {d.startedAt ? marketsCopy.running(ago(d.startedAt)) : ''}
+                  </span>
+                </div>
+                <p className="type-caption text-ink-secondary">
+                  {deskCopy.modes[d.mode]}: {deskCopy.modeNote[d.mode]}
+                </p>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   )
 }
