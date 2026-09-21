@@ -85,11 +85,16 @@ export interface FeedReading {
   price: bigint
   updatedAt: number
 }
-export async function readFeed(client: PublicClient, feed: Address): Promise<FeedReading> {
+export async function readFeed(
+  client: PublicClient,
+  feed: Address,
+  blockNumber?: bigint,
+): Promise<FeedReading> {
   const [, answer, , updatedAt] = await client.readContract({
     address: feed,
     abi: aggregatorV3Abi,
     functionName: 'latestRoundData',
+    ...(blockNumber === undefined ? {} : { blockNumber }),
   })
   return { price: answer, updatedAt: Number(updatedAt) }
 }
@@ -100,6 +105,8 @@ export async function quotePinned(
   token: ApprovedToken,
   side: 'buy' | 'sell',
   amountIn: bigint,
+  /** Quote against the pool as it was at this block, for history. Omitted: now. */
+  blockNumber?: bigint,
 ) {
   const [tokenIn, tokenOut] = side === 'buy' ? [USDG, token.address] : [token.address, USDG]
   const [amountOut] = await client.readContract({
@@ -107,6 +114,7 @@ export async function quotePinned(
     abi: quoterV2Abi,
     functionName: 'quoteExactInputSingle',
     args: [{ tokenIn, tokenOut, amountIn, fee: token.pinnedFee, sqrtPriceLimitX96: 0n }],
+    ...(blockNumber === undefined ? {} : { blockNumber }),
   })
   return amountOut
 }

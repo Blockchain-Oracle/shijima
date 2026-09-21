@@ -67,6 +67,35 @@ export interface MarketRead {
 
 const bpsBetween = (a: bigint, b: bigint) => (b === 0n ? 0 : Number(((a - b) * 10_000n) / b))
 
+/**
+ * Which price the gap is measured against. While the market is shut and the pool traded before the close, it is
+ * what the pool traded at the close, restated for any dividend or split since. Otherwise it is the last official
+ * update. The charts use this same function, so a chart can never show a different reference from a decision.
+ */
+export function pickReference(
+  session: MarketClock['session'],
+  close: { priceE8: bigint; multiplierRaw: bigint; boundaryAt: Date } | undefined,
+  multiplierNow: bigint,
+  feed: FeedReading,
+): MarketRead['reference'] {
+  const feedAt = new Date(feed.updatedAt * 1000)
+  return session !== 'regular' && close
+    ? {
+        kind: 'last_regular_close',
+        priceE8: rescaleReference(close.priceE8, close.multiplierRaw, multiplierNow),
+        at: close.boundaryAt,
+      }
+    : { kind: 'last_official_update', priceE8: feed.price, at: feedAt }
+}
+
+/** What a trade of this size costs against the pool's own price, in basis points. Never negative. */
+export function costBpsFor(side: 'buy' | 'sell', amountIn: bigint, quoteOut: bigint, spotE8: bigint): number {
+  const executionE8 =
+    side === 'buy' ? (amountIn * PRICE_SCALE) / quoteOut : (quoteOut * PRICE_SCALE) / amountIn
+  const against = side === 'buy' ? bpsBetween(executionE8, spotE8) : bpsBetween(spotE8, executionE8)
+  return Math.max(against, 0)
+}
+
 export async function readMarket(
   pub: PublicClient,
   candidate: Candidate,
@@ -91,22 +120,9 @@ export async function readMarket(
   ])
 
   const feedAt = new Date(feed.updatedAt * 1000)
-  const reference: MarketRead['reference'] =
-    clock.session !== 'regular' && close
-      ? {
-          kind: 'last_regular_close',
-          // A dividend or split since the close changes what one token stands for, so the reference is restated.
-          priceE8: rescaleReference(close.priceE8, close.multiplierRaw, multiplierNow),
-          at: close.boundaryAt,
-        }
-      : // Either the market is open, or this pool did not trade before the close and there is no honest
-        // reference from it. Both fall back to the last official update, and the record says which it is.
-        { kind: 'last_official_update', priceE8: feed.price, at: feedAt }
-
-  // The price this trade would actually get, against the pool's own price. A buy pays above it, a sell gets below.
-  const executionE8 =
-    side === 'buy' ? (amountIn * PRICE_SCALE) / quoteOut : (quoteOut * PRICE_SCALE) / amountIn
-  const against = side === 'buy' ? bpsBetween(executionE8, pool.spotE8) : bpsBetween(pool.spotE8, executionE8)
+  // A dividend or split since the close changes what one token stands for, so the reference is restated. With no
+  // honest close from this pool, or with the market open, it falls back to the last official update.
+  const reference = pickReference(clock.session, close, multiplierNow, feed)
   const gapBps = bpsBetween(pool.spotE8, reference.priceE8)
 
   return {
@@ -121,7 +137,7 @@ export async function readMarket(
     feedAgeMarketSeconds: marketAgeSeconds(feedAt, now),
     feedGapBps: bpsBetween(pool.spotE8, feed.price),
     quoteOut,
-    costBps: Math.max(against, 0),
+    costBps: costBpsFor(side, amountIn, quoteOut, pool.spotE8),
     movingBps: Math.abs(bpsBetween(pool.spotE8, pool.twapE8)),
     oraclePaused,
     halt,

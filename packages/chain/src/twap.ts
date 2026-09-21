@@ -67,10 +67,13 @@ export async function readPoolPrice(
   pub: PublicClient,
   token: ApprovedToken,
   seconds = TWAP_SECONDS,
+  /** Read the pool as it was at this block, for history. Omitted: now. */
+  blockNumber?: bigint,
 ): Promise<PoolPrice> {
   const pool = { address: token.pool, abi: v3PoolAbi } as const
   const [observed, slot0] = await pub.multicall({
     allowFailure: false,
+    ...(blockNumber === undefined ? {} : { blockNumber }),
     contracts: [
       { ...pool, functionName: 'observe', args: [[seconds, 0]] },
       { ...pool, functionName: 'slot0' },

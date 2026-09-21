@@ -1,5 +1,6 @@
 export * from './jobs/grade'
 export * from './jobs/grade-at-reopen'
+export * from './jobs/prices'
 export * from './jobs/report'
 export * from './news/finnhub'
 export * from './serv/client'

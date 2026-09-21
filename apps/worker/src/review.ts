@@ -9,7 +9,7 @@
  * Desks are done one after another, never in parallel: there is one operator key, so there is one sender.
  */
 import { APPROVED_TOKENS, type DeskCall } from '@desk/chain'
-import { chainReferenceSource, gradeAtReopen, type SendReport, wakeDesk } from '@desk/core'
+import { chainReferenceSource, gradeAtReopen, logPrices, type SendReport, wakeDesk } from '@desk/core'
 import {
   type ActionRow,
   finishCheckRequest,
@@ -20,6 +20,7 @@ import {
   runningDesks,
   type WakeTrigger,
 } from '@desk/db'
+import { errorText } from '@desk/shared'
 import type { Address, Hex } from 'viem'
 import type { openCli } from './cli/context'
 import { implementationsByVersion } from './cli/context'
@@ -185,6 +186,23 @@ export async function reviewAllDesks(
       }
     }
   }
+  // The price logger: one row per Stock Token every five minutes, for the charts. Reads only, never trades.
+  try {
+    const priced = await logPrices(
+      {
+        db: cli.db,
+        pub: cli.pub,
+        approved: APPROVED_TOKENS,
+        reference: chainReferenceSource(cli.db, cli.pub),
+        log,
+      },
+      now,
+    )
+    if (priced > 0) log('prices', { rows: priced })
+  } catch (e) {
+    log('prices_failed', { error: errorText(e) })
+  }
+
   if (!mayCheck) summary.waitingForPrimaryClock = true
   return summary
 }

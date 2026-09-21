@@ -7,6 +7,7 @@ import { sql } from 'drizzle-orm'
 import {
   bigint,
   boolean,
+  check,
   date,
   index,
   integer,
@@ -65,10 +66,19 @@ export const pricePoints = pgTable(
     costBps1000: integer('cost_bps_1000'),
     halted: boolean('halted'),
     oraclePaused: boolean('oracle_paused'),
+    /** The price the gap is measured against (added 21 Sep), so a chart can draw the line and say how old it is. */
+    referenceE8: uint('reference_e8'),
+    /** `last_regular_close` while the market is shut, else `last_official_update`. Never called "last close". */
+    referenceKind: text('reference_kind'),
+    referenceAt: timestamptz('reference_at'),
   },
   (t) => [
     uniqueIndex('price_points_token_at_key').on(t.token, t.at),
     isAddress('price_points_token_format', t.token),
+    check(
+      'price_points_reference_kind',
+      sql`${t.referenceKind} IS NULL OR ${t.referenceKind} IN ('last_regular_close', 'last_official_update')`,
+    ),
   ],
 )
 
