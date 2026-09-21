@@ -1,3 +1,4 @@
+export * from './chat'
 export * from './columns'
 export * from './decisions'
 export * from './desks'

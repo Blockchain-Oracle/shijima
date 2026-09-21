@@ -1,9 +1,10 @@
 import type { PublicDecision } from '@desk/db'
 
-/** The nine outcomes of the record, in the owner's words. One place, so a colour and a word never disagree. */
+/** Every outcome of the record, in the owner's words. One place, so a colour and a word never disagree. */
 const OUTCOMES = {
   acted: { label: 'Acted', tone: 'acted' },
   acted_in_part: { label: 'Acted in part', tone: 'acted' },
+  acted_by_override: { label: 'Acted on your call', tone: 'acted' },
   waited: { label: 'Waited', tone: 'waited' },
   declined: { label: 'Declined', tone: 'waited' },
   nothing_to_do: { label: 'Nothing to do', tone: 'quiet' },

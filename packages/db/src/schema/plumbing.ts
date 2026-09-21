@@ -28,6 +28,8 @@ export const notifications = pgTable(
     sendAfter: timestamptz('send_after').notNull().defaultNow(),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
     sentAt: timestamptz('sent_at'),
+    /** When the owner saw it in the web inbox. Telegram delivery is `status`; this is separate. */
+    readAt: timestamptz('read_at'),
   },
   (t) => [
     uniqueIndex('notifications_dedupe_key').on(t.deskId, t.dedupeKey),

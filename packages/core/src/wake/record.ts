@@ -31,9 +31,9 @@ export function mandateFingerprint(m: Mandate): Hex {
 
 export interface ApprovalOf {
   decisionSeq: number
-  askedBecause: 'ask_first' | 'large_action'
+  askedBecause: 'ask_first' | 'large_action' | 'owner_override'
   answeredAt: string
-  answeredVia: 'telegram' | 'web'
+  answeredVia: 'telegram' | 'web' | 'chat'
   movedBps: number
 }
 

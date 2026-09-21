@@ -280,6 +280,14 @@ gap, cost at $100 and $1,000, halt), `multiplier_events`, `company_events`, `des
 (alerts fire on change, not hourly), `news_cache` (per ticker, deduplicated by URL hash).
 Plumbing: `desk_events` (who paused, resumed, changed mode, from where), `telegram_links` (with status
 message id), `notifications` (outbox, kind enum), `serv_calls`, `invite_codes`.
+Chat (added 21 Sep, migration 0001):
+- `ask_requests`: one message; the web writes it, and the worker claims and answers it.
+- `ask_proposals`: what the model proposed after plain code checked it, with an expiry, a confirm path
+  (sign-in, session key or wallet) and the view the owner was shown.
+- `check_requests`: "check now", run at the request's own time so it never takes the hourly slot.
+- `price_alerts`.
+
+`notifications` gained `read_at` for the web inbox.
 Web uses the pooled URL with `attachDatabasePool`. The worker uses the direct URL. Migrations are
 additive and run as the worker's pre-deploy step. The worker deploys before the web.
 

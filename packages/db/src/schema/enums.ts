@@ -39,6 +39,8 @@ export const decisionOutcome = pgEnum('decision_outcome', [
   'failed',
   'would_have_acted',
   'not_executed',
+  // The owner told the desk to act when it had chosen to wait. Every limit still held. Graded as the owner's call.
+  'acted_by_override',
 ])
 export const tradeSide = pgEnum('trade_side', ['buy', 'sell', 'sweep', 'redeem'])
 
@@ -69,8 +71,8 @@ export const approvalStatus = pgEnum('approval_status', [
   'expired',
   'cancelled',
 ])
-export const approvalReason = pgEnum('approval_reason', ['ask_first', 'large_action'])
-export const answerChannel = pgEnum('answer_channel', ['telegram', 'web'])
+export const approvalReason = pgEnum('approval_reason', ['ask_first', 'large_action', 'owner_override'])
+export const answerChannel = pgEnum('answer_channel', ['telegram', 'web', 'chat'])
 export const gradeVerdict = pgEnum('grade_verdict', ['better', 'worse', 'no_real_difference', 'ungradable'])
 
 // Money over time.
@@ -110,9 +112,13 @@ export const deskEventKind = pgEnum('desk_event_kind', [
   'share_changed',
   'holdings_changed_outside',
   'closed',
+  // The owner, or the owner's session key, made a recorded on-chain call: a sale, a vault move or a checkpoint.
+  'owner_action',
+  'session_granted',
+  'session_revoked',
 ])
 export const eventActor = pgEnum('event_actor', ['owner', 'desk', 'system'])
-export const eventVia = pgEnum('event_via', ['web', 'telegram', 'chain', 'worker'])
+export const eventVia = pgEnum('event_via', ['web', 'telegram', 'chain', 'worker', 'chat'])
 export const telegramLinkStatus = pgEnum('telegram_link_status', ['pending', 'linked', 'revoked'])
 /** The message types of design brief section 9. Command replies are direct, so they are not in the outbox. */
 export const notificationKind = pgEnum('notification_kind', [
@@ -125,6 +131,24 @@ export const notificationKind = pgEnum('notification_kind', [
   'alert',
   'monday_report',
   'first_contact',
+  'price_alert',
 ])
 export const notificationStatus = pgEnum('notification_status', ['pending', 'sent', 'failed', 'skipped'])
 export const servMode = pgEnum('serv_mode', ['serv', 'raw'])
+
+// The chat. The model only PROPOSES; the owner confirms; the saved proposal is what runs.
+export const askRequestKind = pgEnum('ask_request_kind', ['ask', 'readback'])
+export const askRequestStatus = pgEnum('ask_request_status', ['pending', 'claimed', 'answered', 'failed'])
+/** Who confirms a proposal: the sign-in session, the owner's session key, or the owner's wallet. */
+export const askPath = pgEnum('ask_path', ['signin', 'session', 'wallet'])
+export const askProposalStatus = pgEnum('ask_proposal_status', [
+  'open',
+  'confirmed',
+  'done',
+  'refused',
+  'expired',
+  'failed',
+])
+export const checkRequestStatus = pgEnum('check_request_status', ['pending', 'done', 'refused'])
+export const priceAlertKind = pgEnum('price_alert_kind', ['above_reference', 'below_reference', 'either_way'])
+export const priceAlertStatus = pgEnum('price_alert_status', ['active', 'fired', 'cancelled'])

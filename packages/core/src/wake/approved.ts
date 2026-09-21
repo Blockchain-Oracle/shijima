@@ -33,9 +33,9 @@ export const APPROVAL_DRIFT_BPS = 50
 export interface ApprovedRequest {
   /** The record that asked. Its candidate and preview are what the owner agreed to. */
   decisionSeq: number
-  askedBecause: 'ask_first' | 'large_action'
+  askedBecause: 'ask_first' | 'large_action' | 'owner_override'
   answeredAt: Date
-  answeredVia: 'telegram' | 'web'
+  answeredVia: 'telegram' | 'web' | 'chat'
   need: Need
   /** The amount and expected output the owner was shown. */
   shown: { amountIn: bigint; expectedOut: bigint }

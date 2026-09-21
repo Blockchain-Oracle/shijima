@@ -30,6 +30,10 @@ const ARCHITECTURE_TABLES = [
   'notifications',
   'serv_calls',
   'invite_codes',
+  'ask_requests',
+  'ask_proposals',
+  'check_requests',
+  'price_alerts',
 ]
 
 const UINT256_MAX = 2n ** 256n - 1n

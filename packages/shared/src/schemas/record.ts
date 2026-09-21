@@ -289,9 +289,10 @@ export const DecisionRecordV2 = DecisionRecordV1.extend({
   approvalOf: z
     .strictObject({
       decisionSeq: Int,
-      askedBecause: z.enum(['ask_first', 'large_action']),
+      /** Widened 21 Sep: `owner_override` is "do it anyway" from the chat. Every older record still parses. */
+      askedBecause: z.enum(['ask_first', 'large_action', 'owner_override']),
       answeredAt: Iso,
-      answeredVia: z.enum(['telegram', 'web']),
+      answeredVia: z.enum(['telegram', 'web', 'chat']),
       /** How far the fresh quote moved from what the owner was shown. */
       movedBps: Int,
     })
