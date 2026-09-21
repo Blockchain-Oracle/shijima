@@ -402,17 +402,12 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
     }
 
     if (wake) {
-      const last = records.at(-1)
       await enqueueNotification(db, {
         deskId: desk.id,
         kind: 'status',
-        payload: {
-          lastCheck: now.toISOString(),
-          mode: desk.mode,
-          state: deskState,
-          summary: last?.summary ?? '',
-          totalUsdg: valuation.totalUsdg.toString(),
-        },
+        // No wording here on purpose. The pinned message is built from the desk's CURRENT state when it is
+        // sent, so it can never be a stale sentence written an hour before anyone read it.
+        payload: { lastCheck: now.toISOString() },
       })
       // Going live is earned: 24 completed checks in shadow mode, and the report opened.
       if (desk.mode === 'shadow') await bumpShadowChecks(db, desk.id)

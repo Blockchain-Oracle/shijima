@@ -43,6 +43,7 @@ export function snapshotOf(deskId: string, v: Valuation, now: Date) {
       amountRaw: h.balance.toString(),
       priceE8: h.twapE8.toString(),
       valueUsdg: h.valueUsdg.toString(),
+      gapToFeedBps: h.gapToFeedBps,
     })),
   }
 }

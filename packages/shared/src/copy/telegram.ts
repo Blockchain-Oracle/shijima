@@ -21,14 +21,11 @@ export const telegramCopy = {
       '',
       `I look after ${esc(deskName)} while the US market is shut.`,
       '',
-      'I check every hour. Most of the time there is nothing to do, and I will not tell you about those: they',
-      'go in the pinned message above, which I edit quietly.',
+      'I check every hour. Most of the time there is nothing to do, and I will not tell you about those. They go in the pinned message, which I edit quietly.',
       '',
-      'I will send you a message when something needs you, when I have done something, or when something has',
-      'gone wrong. Nothing else.',
+      'I will message you when something needs you, when I have done something, or when something has gone wrong. Nothing else.',
       '',
-      'Your money stays in your own account. I can trade inside the limits you set, and I can never send it',
-      'anywhere but back to you.',
+      'Your money stays in your own account. I can trade inside the limits you set, and I can never send it anywhere but back to you.',
     ].join('\n'),
 
   /** 9.1 The pinned status message. Edited in place at every check. Never notifies. */
@@ -39,18 +36,23 @@ export const telegramCopy = {
     lastResult: string
     holdings: string[]
     value: string
+    cash: string
     spentToday: string
     dailyCap: string
     nextCheck: string
-    marketOpens: string
+    market: string
   }) =>
     [
       b(`${s.mode} · ${s.state}`),
       `Last check ${esc(s.lastCheck)}. ${esc(s.lastResult)}`,
       ...(s.holdings.length > 0 ? [esc(s.holdings.join('. '))] : []),
-      `Value ${esc(s.value)}. Spent today ${esc(s.spentToday)} of ${esc(s.dailyCap)}.`,
-      `Next check ${esc(s.nextCheck)}. ${esc(s.marketOpens)}`,
+      `Value ${esc(s.value)}. Cash ${esc(s.cash)}.`,
+      `Spent today ${esc(s.spentToday)} of ${esc(s.dailyCap)}.`,
+      `Next check ${esc(s.nextCheck)}. ${esc(s.market)}`,
     ].join('\n'),
+
+  /** Said when a chat links before the desk has ever checked. */
+  notCheckedYet: 'It has not checked yet. The pinned message appears after its first check.',
 
   /** 9.2 and 9.4. What it wants to do, why, what it turned down, and when the request dies. */
   approvalRequest: (a: {

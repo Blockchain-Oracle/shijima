@@ -36,6 +36,8 @@ export interface HoldingValue {
   targetBps: number
   /** weight minus target. Positive means over target. */
   driftBps: number
+  /** How far the valuation price sits from the last official update, in basis points. */
+  gapToFeedBps: number
   /** True while the average is within the contract's 8% band of the feed. */
   insideBand: boolean
 }
@@ -147,6 +149,7 @@ export async function readValuation(
         weightBps,
         targetBps,
         driftBps: weightBps - targetBps,
+        gapToFeedBps: offFeed,
         insideBand: Math.abs(offFeed) < BAND_BPS,
       }
     }),

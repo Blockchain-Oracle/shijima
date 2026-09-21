@@ -472,8 +472,20 @@ while committing. Ten were real and are now fixed:
   - Linking is a one-time code that dies in ten minutes: `pnpm desk:link`.
   - **Without a token the desk runs exactly as before, with no voice.** Telegram is how the owner hears about
     it, never how anything is decided, so it can never stop the desk working.
-- **Not yet verified:** the bot connects and polls, and its identity checks out as @ShijimaBot, but the round
-  trip through a real chat needs Abu to message it. Everything up to the send is exercised.
+- **VERIFIED in a real chat.** Abu linked it, got the first contact, ran /help and /status. Three things the
+  live run showed, all fixed:
+  - The copy had hard line breaks mid-sentence, because the source was wrapped for reading and Telegram
+    renders those literally. Sentences now break where sentences end.
+  - `/status` said "it has not checked yet" to a desk that had checked thirty times. The cause was real: the
+    status messages queued before the chat existed were correctly marked skipped, so the pinned message would
+    not have appeared for another hour. Linking now pins it immediately.
+  - The pinned message was being written at DECIDE time and sent later, so it could carry a sentence that was
+    true an hour earlier. It is now built from the desk's current state at SEND time, by one builder shared by
+    the check, the link and /status, so the three can never disagree.
+  The pinned message now reads: "Practice · active / Last check 08:03. Still waiting for the market to reopen
+  (decided 15:49 UTC). / Nvidia in line. / Value $5.78. Cash $5.21. / Spent today $1.44 of $15.00. / Next check
+  09:00. The US market reopens Mon 09:30 New York." Snapshots taken before the price gap was recorded fall back
+  to showing the value instead, which is the honest thing to do rather than inventing a comparison.
 
 ## 6. Schedule
 

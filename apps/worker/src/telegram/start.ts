@@ -9,7 +9,7 @@ import { errorText } from '@desk/shared'
 import type { Bot } from 'grammy'
 import type { Cli, Log } from '../review'
 import { createBot } from './bot'
-import { drainOutbox } from './outbox'
+import { drainOutbox, refreshStatus } from './outbox'
 
 export interface Telegram {
   bot: Bot
@@ -24,8 +24,16 @@ export function startTelegram(cli: Cli, log: Log): Telegram | undefined {
     return undefined
   }
   const siteUrl = cli.env.SITE_URL ?? 'http://localhost:3007'
-  const bot = createBot(token, { db: cli.db, log, siteUrl })
-  const deps = { db: cli.db, bot, log, siteUrl }
+  // The bot and the outbox need each other: the bot asks for the pinned message, the outbox writes it.
+  // eslint-disable-next-line prefer-const
+  let deps: Parameters<typeof drainOutbox>[0]
+  const bot = createBot(token, {
+    db: cli.db,
+    log,
+    siteUrl,
+    refreshStatus: (deskId) => refreshStatus(deps, deskId),
+  })
+  deps = { db: cli.db, bot, log, siteUrl }
 
   // Long polling, started in the background. It must never hold up the clock.
   void bot

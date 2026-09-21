@@ -29,6 +29,8 @@ export interface TelegramDeps {
   log: Log
   /** Where the decision pages live, for the "see the full decision" button. */
   siteUrl: string
+  /** Puts the pinned message up, or brings it up to date. Returns false if the desk has never checked. */
+  refreshStatus: (deskId: string) => Promise<boolean>
 }
 
 export function createBot(token: string, deps: TelegramDeps): Bot {
@@ -59,11 +61,11 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
   bot.command('status', async (ctx) => {
     const linked = await deskOf(ctx.from?.id)
     if (!linked) return ctx.reply(telegramCopy.notLinked)
-    // The pinned message already holds the answer, so point at it rather than send a second copy.
-    if (linked.link.statusMessageId) {
-      return ctx.reply('It is in the pinned message above, kept up to date at every check.')
-    }
-    return ctx.reply('It has not checked yet. The pinned message appears after the first check.')
+    // Bring the pinned message up to date and point at it, rather than send a second copy that then goes stale.
+    const shown = await deps.refreshStatus(linked.desk.id)
+    return ctx.reply(
+      shown ? 'It is in the pinned message, brought up to date just now.' : telegramCopy.notCheckedYet,
+    )
   })
 
   for (const [command, run] of [
@@ -147,6 +149,9 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
     const linked = await deskOf(from.id)
     log('telegram_linked', { desk: linked?.desk.address, user: from.id })
     await ctx.reply(telegramCopy.firstContact(linked?.desk.name ?? 'your desk'), { parse_mode: 'HTML' })
+    // Pin the status straight away. A desk that has been checking for hours should not greet its owner with
+    // "it has not checked yet" and then say nothing until the next hour turns.
+    if (linked) await deps.refreshStatus(linked.desk.id)
   }
 
   return bot

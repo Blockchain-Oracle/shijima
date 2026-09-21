@@ -21,6 +21,7 @@ import { errorText, telegramCopy } from '@desk/shared'
 import type { Bot } from 'grammy'
 import type { Log } from '../review'
 import { approvalKeyboard } from './bot'
+import { buildStatus } from './status'
 
 export interface OutboxDeps {
   db: Db
@@ -50,9 +51,12 @@ export async function drainOutbox(deps: OutboxDeps): Promise<number> {
       const why = text(payload, 'summary')
 
       if (row.kind === 'status') {
-        await updateStatus(deps, row.deskId, chatId, link.id, link.statusMessageId, payload)
-        await markNotificationSent(db, row.id, { status: 'sent' })
-        sent++
+        const shown = await updateStatus(deps, row.deskId, chatId, link.id, link.statusMessageId)
+        await markNotificationSent(db, row.id, {
+          status: shown ? 'sent' : 'skipped',
+          ...(shown ? {} : { error: 'the desk has not checked yet' }),
+        })
+        if (shown) sent++
         continue
       }
 
@@ -111,29 +115,19 @@ async function updateStatus(
   chatId: number,
   linkId: string,
   messageId: number | null,
-  payload: Payload,
-): Promise<void> {
+): Promise<boolean> {
   const { bot, db } = deps
-  const body = telegramCopy.status({
-    mode: text(payload, 'modeLabel', 'Desk'),
-    state: text(payload, 'stateLabel', 'active'),
-    lastCheck: text(payload, 'lastCheckLabel', text(payload, 'lastCheck').slice(11, 16)),
-    lastResult: text(payload, 'summary', 'Nothing to report.'),
-    holdings: Array.isArray(payload.holdings) ? (payload.holdings as string[]) : [],
-    value: text(payload, 'valueLabel', '—'),
-    spentToday: text(payload, 'spentTodayLabel', '—'),
-    dailyCap: text(payload, 'dailyCapLabel', '—'),
-    nextCheck: text(payload, 'nextCheckLabel', 'the top of the hour'),
-    marketOpens: text(payload, 'marketLabel', ''),
-  })
+  const status = await buildStatus(db, deskId)
+  if (!status) return false
+  const body = telegramCopy.status(status)
 
   if (messageId) {
     try {
       await bot.api.editMessageText(chatId, messageId, body, { parse_mode: 'HTML' })
-      return
+      return true
     } catch (e) {
-      if (errorText(e).includes('message is not modified')) return
-      // The message was deleted, or is too old to edit. Send a fresh one and pin that instead.
+      if (errorText(e).includes('message is not modified')) return true
+      // The message was deleted, or is too old to change. Send a fresh one and pin that instead.
       deps.log('telegram_status_resend', { desk: deskId, why: errorText(e) })
     }
   }
@@ -145,6 +139,14 @@ async function updateStatus(
     .pinChatMessage(chatId, message.message_id, { disable_notification: true })
     .catch(() => undefined)
   await setStatusMessageId(db, linkId, message.message_id)
+  return true
+}
+
+/** Puts the pinned message up, or brings it up to date. Used on linking and by /status. */
+export async function refreshStatus(deps: OutboxDeps, deskId: string): Promise<boolean> {
+  const link = await linkForDesk(deps.db, deskId)
+  if (!link?.telegramChatId) return false
+  return updateStatus(deps, deskId, link.telegramChatId, link.id, link.statusMessageId)
 }
 
 /**

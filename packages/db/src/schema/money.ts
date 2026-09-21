@@ -22,6 +22,8 @@ export interface SnapshotHolding {
   amountRaw: string
   priceE8: string
   valueUsdg: string
+  /** How far that price sat from the last official update. Absent on snapshots taken before this existed. */
+  gapToFeedBps?: number
 }
 
 /**
