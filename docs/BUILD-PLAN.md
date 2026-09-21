@@ -645,6 +645,34 @@ Read-only against mainnet; nothing was sent to the chain.
   one slot on demand.
 - **Next:** step 10, the strategies studio and the first run. Vault sweeps are still owed from step 3.
 
+**Tue 22 Sep, early. STEP 10 BUILT: THE STRATEGIES STUDIO, FIRST STEPS AND THE FIRST-RUN TUTORIAL.** Proven on the
+anvil fork in headless Chrome, with a fresh wallet. Nothing was sent to mainnet.
+- **`/strategies` is Agari's studio around a basket**: New desk, Start from a strategy, Your desks. Four steps with the
+  desk card at the side: the basket (a preset or your own weights, with the total as you type), behaviour and limits
+  (the two the contract holds are set apart), the test read, and create. `/start` redirects here.
+- **Create is one wallet confirmation.** The server writes the desk's row first, with its own salt and the address the
+  factory will give it, and builds the transaction with the owner's limits in it. After the receipt it checks the
+  chain itself (our clone, this owner, our operator) before applying the basket and starting the desk in practice.
+- **Owner with no ETH:** the page offers Relay straight to the desk's address, with about $1 of ETH to the wallet,
+  then create. Judged against the real fee estimate.
+- **After create, the first steps:** add money (the desk page's own card), give this browser a key, and Telegram
+  with a skip.
+- **Proven on the fork**, checked with `cast` and the database, not our own reads:
+  - a fresh wallet with 0 ETH saw the no-ETH path; with ETH, one signature created the desk. Owner, our operator,
+    $10 and $50 were in the contract, and the Mag Seven mandate v1 was applied, running, in practice;
+  - a second desk from "Start from a strategy" (AI Builders). The page was reloaded before signing; it resumed the
+    same address, with no duplicate;
+  - $2 added through the wallet card, which the desk then held, and a 7-day key granted;
+  - Your desks listed both; the disclosure was not asked a second time.
+- **The test read** goes through the worker like the chat. SERV credit is still $0.02, so it answered "I could not
+  read that back just now", and the studio showed that and let the owner continue. A React double-mount bug that
+  hid every answer was found and fixed on the way.
+- **The first-run tutorial** on /markets: five steps, ending on Connect. The weekend number is real, from the price
+  log: "On the weekend of 19–20 Sep, Meta's token moved as far as 0.9% above its Friday reference."
+- **Checked** at 390, 768, 1024 and 1440 in both themes, signed in and out: no sideways scroll, no console errors.
+  Lint clean, typecheck clean, 93 checks pass, production build passes.
+- **Next:** step 11, How it works and the status page. Vault sweeps are still owed from step 3.
+
 ## 6. Schedule
 
 | Day | Work | Must be true by end of day |

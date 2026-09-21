@@ -303,6 +303,41 @@ Made 2026-09-21 by Claude, in step 9 of the chat-first plan. Abu can overrule an
 
 ---
 
+## Decisions made while building the strategies studio
+
+Made 2026-09-22 by Claude, in step 10 of the chat-first plan. Abu can overrule any of these.
+
+1. **A desk exists as a row before it exists on the chain.** At the last step the server picks a random salt, asks
+   the factory for the address that salt will give, and writes the desk's row with no deploy date. Money can be sent
+   to that address first (brief 8.4, "owner has no ETH"). An owner has at most one such unfinished desk per factory,
+   and the studio resumes it rather than making another, so money already sent there is never stranded. Checked on
+   the fork: a page closed before signing came back to the same address.
+2. **The limits the owner sets in the studio are written into the contract at creation.** Before, every desk got
+   $5 per action and $15 a day whatever the owner said. Now the studio's per-action and daily figures go into
+   `createDesk`. Defaults are $10 and $50.
+3. **The test read is offered, not required.** Brief 8.7 says the desk will not start until the read-back is
+   answered. It starts in practice anyway, where it spends nothing, and SERV credit is empty today, so a required
+   read-back would block every new desk. The read is kept as the mandate's `read_back` only when the model answered
+   and the read was of exactly the draft being created. Otherwise the side card says "Not yet" and the chat can read
+   it back later.
+4. **The disclosure is accepted before the desk's row is written**, because that is the moment an address money
+   can be sent to first exists. It carries the "I am not in a restricted place" declaration. Once accepted, it is
+   not asked again.
+5. **The draft lives in the owner's browser**, as Masayume keeps an unfinished setup. The server sees it only when it
+   is checked, read back or created, and checks it again each time. A preset in the address (Start a desk with this)
+   wins over a saved draft.
+6. **Whether the wallet can pay is judged against the real estimated fee**, with half again as margin. Creating a
+   desk cost about $0.30 on mainnet; the fork's gas price is ten times that, so costs are never read off the fork.
+7. **Start from a strategy copies the mix only**: a preset, or what a shared desk holds now. Never its trades, notes
+   or limits.
+8. **The first-run tutorial shows only to a signed-out first visit on /markets.** Its weekend number is the largest
+   distance any Stock Token's pool moved from its Friday reference on the latest weekend in the price log (live:
+   Meta, 0.9% above, 19–20 Sep). The region declaration itself is made at the disclosure, where it is recorded.
+9. **`/start` now redirects to `/strategies`**, keeping a chosen preset. The old one-page start and its form are
+   removed.
+
+---
+
 ## The name
 
 Abu names his projects in Japanese, as he did with Baku (獏). **Shijima (しじま)**, chosen by him on
