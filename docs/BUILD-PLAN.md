@@ -558,6 +558,36 @@ All proven on the anvil fork. Nothing is deployed to mainnet yet.
   answer. Abu tops it up. Calls were already made cheaper: the chat reserves $0.03 a call, not $0.07.
 - **Next:** step 6, Masayume's look (foundation). Vault sweeps are still owed from step 3.
 
+**Mon 21 Sep, evening. STEPS 6 AND 7 BUILT: MASAYUME'S LOOK, AND THE DESK PAGE WITH THE CHAT FIRST.**
+- **The look:** Yosuku's styles copied verbatim, plus Agari's sheets for the surfaces we keep. The shell is Agari's:
+  - the ticker, fed by our price log and showing the US session;
+  - the header with four destinations, the session chip, the theme, the money pill and the account menu;
+  - the phone's pill nav and drawer;
+  - the wrong-network banner.
+
+  Also: the Base UI primitives, the `Reading<T>` states, and every word in `shared/copy/web.ts`. A real
+  `/markets` page reads the price log. Checked at 390, 768, 1024 and 1440 in both themes: no sideways scroll and
+  no console errors.
+- **The desk page:** `/` sends each person where they belong. An owner lands on the desk with the chat first: the
+  thread, the typewriter, cited records, a price chart when an answer is about one stock, and the proposal card.
+  Beside it:
+  - needs you;
+  - what it holds;
+  - next check and practice progress;
+  - holdings against targets;
+  - the value chart with decisions marked;
+  - limits, the mandate and the fee line;
+  - the record, with quiet runs folded.
+
+  On a phone these are tabs. A visitor with the share link sees the desk read-only.
+- **The session key:** made in the browser, granted by the owner's wallet for up to seven days, and funded for its
+  own fees. It confirms withdraw and remove-the-assistant in one click. The server builds the one transaction and
+  marks the card done only after reading the receipt from the chain. **Proven on the fork in Chrome:** a $2
+  withdraw sent by the key moved the owner from $10.00 to $12.00.
+- `next dev` writes a CLAUDE.md when it detects an agent. The dev server is started without those environment
+  variables, so it no longer does.
+- **Next:** step 8, the owner controls and settings.
+
 ## 6. Schedule
 
 | Day | Work | Must be true by end of day |
