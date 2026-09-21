@@ -1,8 +1,10 @@
 'use client'
 
-import { until } from '@desk/shared'
+import { deskCopy, until } from '@desk/shared'
+import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { type ActionResult, answerApprovalAction } from '@/app/actions'
+import { Button } from '@/components/ui/button'
 
 /** Approve or reject one request. Answering records an answer. It does not send anything. */
 export function Answer({
@@ -14,6 +16,7 @@ export function Answer({
   approvalId: string
   expiresAt: string
 }) {
+  const router = useRouter()
   const [pending, start] = useTransition()
   const [result, setResult] = useState<ActionResult>()
 
@@ -22,32 +25,26 @@ export function Answer({
     data.set('deskId', deskId)
     data.set('approvalId', approvalId)
     data.set('answer', choice)
-    start(async () => setResult(await answerApprovalAction(data)))
+    start(async () => {
+      setResult(await answerApprovalAction(data))
+      router.refresh()
+    })
   }
 
   if (result) {
-    return <p className={`text-sm ${result.ok ? 'text-acted' : 'text-blocked'}`}>{result.message}</p>
+    return <p className={`type-caption ${result.ok ? 'text-profit' : 'text-loss'}`}>{result.message}</p>
   }
-
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <button
-        type="button"
-        disabled={pending}
-        onClick={() => answer('approve')}
-        className="rounded-md border border-acted px-3 py-1.5 font-medium text-acted text-sm hover:bg-acted hover:text-surface disabled:opacity-50"
-      >
-        Approve
-      </button>
-      <button
-        type="button"
-        disabled={pending}
-        onClick={() => answer('reject')}
-        className="rounded-md border border-line px-3 py-1.5 text-ink-soft text-sm hover:border-ink-soft disabled:opacity-50"
-      >
-        Reject
-      </button>
-      <span className="text-ink-faint text-xs">expires {until(new Date(expiresAt))}</span>
+      <Button size="sm" disabled={pending} onClick={() => answer('approve')}>
+        {deskCopy.needsYou.approve}
+      </Button>
+      <Button size="sm" variant="secondary" disabled={pending} onClick={() => answer('reject')}>
+        {deskCopy.needsYou.reject}
+      </Button>
+      <span className="type-caption text-ink-muted">
+        {deskCopy.needsYou.expires(until(new Date(expiresAt)))}
+      </span>
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { askRequestForOwner } from '@desk/db'
+import { toChatTurn } from '@/features/desk/chat-model'
 import { db } from '@/lib/db'
 import { signedInAddress } from '@/lib/session'
 
@@ -15,25 +16,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   if (!UUID.test(id)) return Response.json({ error: 'No such message.' }, { status: 404 })
   const row = await askRequestForOwner(db(), id, address)
   if (!row) return Response.json({ error: 'No such message.' }, { status: 404 })
-  return Response.json(
-    {
-      id: row.id,
-      status: row.status,
-      question: row.question,
-      reply: row.reply,
-      error: row.error,
-      proposal: row.proposal
-        ? {
-            id: row.proposal.id,
-            kind: row.proposal.kind,
-            path: row.proposal.path,
-            status: row.proposal.status,
-            card: row.proposal.deskView.card ?? null,
-            expiresAt: row.proposal.expiresAt,
-            result: row.proposal.result,
-          }
-        : null,
-    },
-    { headers: { 'cache-control': 'no-store' } },
-  )
+  const turn = toChatTurn(row, row.proposal ? { ...row.proposal, result: row.proposal.result ?? null } : null)
+  return Response.json({ turn }, { headers: { 'cache-control': 'no-store' } })
 }

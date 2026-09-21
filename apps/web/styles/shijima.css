@@ -47,3 +47,282 @@
   max-width: 72ch;
   margin-bottom: 16px;
 }
+
+/* ─────────── One desk: the chat first ───────────
+ * Masayume's surfaces (surface-1 panels, hairline borders, 12px radius, mono micro labels) arranged for the
+ * desk: the chat is the main left column on a desktop, and on a phone the page becomes three tabs. */
+.desk-page {
+  padding-top: 24px;
+  padding-bottom: 48px;
+}
+
+.desk-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.desk-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--ms-hairline);
+  color: var(--gray-400);
+}
+.desk-badge[data-mode="on_its_own"],
+.desk-badge[data-mode="ask_first"] {
+  color: var(--vermilion);
+  border-color: color-mix(in srgb, var(--vermilion) 45%, transparent);
+}
+.desk-badge[data-state] {
+  color: var(--color-warning);
+  border-color: color-mix(in srgb, var(--color-warning) 45%, transparent);
+}
+
+.desk-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.desk-tab {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--ms-hairline);
+  color: var(--gray-400);
+  font-size: 13px;
+  font-weight: 600;
+}
+.desk-tab.active {
+  color: var(--white);
+  border-color: color-mix(in srgb, var(--vermilion) 60%, transparent);
+  background: color-mix(in srgb, var(--vermilion) 12%, transparent);
+}
+
+.desk-grid {
+  display: grid;
+  gap: 20px;
+}
+
+/* A phone shows one tab at a time. */
+@media (max-width: 1023px) {
+  .desk-frame[data-tab="chat"] [data-panel="desk"],
+  .desk-frame[data-tab="chat"] [data-panel="record"],
+  .desk-frame[data-tab="desk"] [data-panel="chat"],
+  .desk-frame[data-tab="desk"] [data-panel="record"],
+  .desk-frame[data-tab="record"] [data-panel="chat"],
+  .desk-frame[data-tab="record"] [data-panel="desk"] {
+    display: none;
+  }
+  .desk-chat {
+    height: calc(100dvh - var(--appstrip) - 66px - 250px);
+    min-height: 420px;
+  }
+}
+
+/* A desktop shows everything: the chat on the left, held in view while the desk scrolls beside it. */
+@media (min-width: 1024px) {
+  .desk-tabs {
+    display: none;
+  }
+  .desk-grid {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  .desk-frame.is-visitor .desk-grid {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 760px;
+  }
+  .desk-col-chat {
+    position: sticky;
+    top: calc(var(--appstrip) + 108px);
+  }
+  .desk-chat {
+    height: calc(100vh - var(--appstrip) - 132px);
+  }
+  .desk-col-side {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+.desk-chat {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--ms-hairline);
+  border-radius: 16px;
+  background: var(--ms-surface-1);
+  overflow: hidden;
+}
+.desk-chat-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--ms-hairline);
+}
+.desk-chat-msgs {
+  flex: 1;
+  min-height: 0;
+}
+.desk-chat-starters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+}
+.desk-chat-extras {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-left: 30px;
+  max-width: calc(82% + 0px);
+}
+.desk-chat .sd-ava svg {
+  width: 13px;
+  height: 13px;
+  color: var(--vermilion);
+}
+.desk-chat .sd-ava svg .dot {
+  fill: var(--vermilion);
+}
+.sd-msg.is-failed {
+  color: var(--gray-400);
+}
+
+.desk-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+  border: 1px solid var(--ms-hairline);
+  border-radius: 12px;
+  background: var(--ms-surface-1);
+}
+.desk-panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.desk-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--ms-hairline);
+  border-radius: 12px;
+  background: var(--ms-surface-2);
+}
+.desk-card.is-done {
+  border-color: color-mix(in srgb, var(--profit) 45%, transparent);
+}
+.desk-card.is-quiet {
+  opacity: 0.72;
+}
+.desk-card-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.desk-card-diff {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--gray-400);
+}
+.desk-card-diff dt {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+  margin-bottom: 4px;
+}
+
+.desk-rows {
+  display: flex;
+  flex-direction: column;
+}
+.desk-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ms-hairline);
+  font-size: 14px;
+  color: var(--gray-400);
+}
+.desk-row:last-child {
+  border-bottom: 0;
+}
+.desk-row .type-data {
+  color: var(--white);
+}
+
+.desk-holding {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--ms-hairline);
+}
+.desk-holding:last-child {
+  border-bottom: 0;
+}
+.desk-bar {
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--ms-surface-2);
+  overflow: visible;
+}
+.desk-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: var(--vermilion);
+}
+.desk-bar-target {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 12px;
+  border-radius: 1px;
+  background: var(--white);
+  transform: translateX(-1px);
+}
+.desk-practice {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.desk-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--ms-hairline);
+  border-radius: 10px;
+  transition: border-color 160ms var(--ease);
+}
+.desk-entry:hover {
+  border-color: var(--ms-border-strong);
+}
+.desk-quiet {
+  padding: 8px 12px;
+  border: 1px dashed var(--ms-hairline);
+  border-radius: 10px;
+}
+.desk-quiet summary {
+  cursor: pointer;
+}

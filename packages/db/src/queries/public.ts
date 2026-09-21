@@ -285,3 +285,9 @@ export async function timingSummary(
   }
   return { live: pick(false), practice: pick(true) }
 }
+
+/** The desk a slug names, shared or not. Only the caller's own ownership check decides who may see it. */
+export async function deskIdBySlug(db: DbOrTx, slug: string): Promise<string | undefined> {
+  const [row] = await db.select({ id: desks.id }).from(desks).where(eq(desks.shareSlug, slug))
+  return row?.id
+}

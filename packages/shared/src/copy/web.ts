@@ -175,3 +175,146 @@ export const marketsCopy = {
   footnote:
     'The reference is what this same pool traded at when the US market last closed; while the market is open, it is the last official update. A gap under half a percent is noise.',
 } as const
+
+/** One desk's page: the chat first, then everything the desk holds and has done. */
+export const deskCopy = {
+  modes: { shadow: 'Practice', ask_first: 'Ask me first', on_its_own: 'On its own' },
+  modeNote: {
+    shadow: 'It decides for real and spends nothing.',
+    ask_first: 'It asks you before every action.',
+    on_its_own: 'It acts inside your limits, and asks for large actions.',
+  },
+  visitor: 'Someone else’s desk. You are watching it read-only.',
+  tabs: { chat: 'Chat', desk: 'Desk', record: 'Record' },
+
+  chat: {
+    title: 'Your desk',
+    eyebrow: 'Talk to it',
+    intro:
+      'Ask what it holds and why it waited, or tell it what to change. It shows you a card, and nothing changes until you confirm.',
+    placeholder: 'Ask your desk, or tell it what to change…',
+    send: 'Send',
+    starters: ['How is my desk doing?', 'Why did you wait?', 'Move me into The Mag Seven', 'Check now'],
+    thinking: 'Thinking…',
+    slow: 'Still thinking. The desk answers in about ten seconds.',
+    failed: 'I could not answer just now. Nothing was changed.',
+    signedOut: 'Sign in to talk to your desk. Signing costs nothing and moves nothing.',
+    notAdvice: 'The desk explains and proposes. Nothing it says is advice, and it never forecasts a price.',
+    relies: 'Relies on',
+    cite: {
+      record: (n: string) => `record ${n}`,
+      approval: 'a waiting request',
+      wait: 'a standing wait',
+      note: (n: string) => `your note ${n}`,
+      price: (symbol: string) => `${symbol} price`,
+    },
+  },
+
+  card: {
+    who: { signin: 'You confirm here', session: 'Your session key signs', wallet: 'Your wallet signs' },
+    before: 'Now',
+    after: 'After',
+    confirm: 'Confirm',
+    notNow: 'Not now',
+    confirming: 'Confirming…',
+    left: 'Left alone. Nothing was changed.',
+    expires: (when: string) => `This card expires ${when}.`,
+    expired: 'This card has expired. Ask again if you still want it.',
+    done: 'Done',
+    refused: 'Not done',
+    needsKey: 'Confirming this needs your session key or your wallet. That arrives with the owner controls.',
+    viewTx: 'See the transaction',
+  },
+
+  needsYou: {
+    title: 'Needs you',
+    nothing: 'Nothing needs you.',
+    asking: {
+      ask_first: 'Asking because you asked to be asked first.',
+      large_action: 'Asking because this one is large.',
+      owner_override: 'Your own call.',
+    },
+    trade: (side: string, amountIn: string, expectedOut: string) =>
+      `${side === 'sell' ? 'Sell' : 'Buy'} ${amountIn} for about ${expectedOut}`,
+    approve: 'Approve',
+    reject: 'Reject',
+    expires: (when: string) => `expires ${when}`,
+  },
+
+  plate: {
+    title: 'What it holds',
+    total: 'Total value',
+    sinceStart: 'Since your money went in',
+    cash: 'Cash',
+    vault: 'earning in the vault',
+    valued: (age: string) =>
+      `Valued ${age} on the trading pools’ half-hour average, never on the frozen official price.`,
+    notYet: 'Not valued yet. The desk values itself at its first check.',
+    timing: 'Timing',
+    timingNote:
+      'What the desk’s timing calls earned or cost against acting at once, graded after the market reopened. It can be negative.',
+    timingNone: 'Nothing graded yet. Grading happens after the US market reopens.',
+    practice: (amount: string, n: number) => `In practice: ${amount} over ${n} graded decisions.`,
+  },
+
+  holdings: {
+    title: 'Holdings',
+    target: (pct: string) => `target ${pct}`,
+    inLine: 'in line',
+    over: (pct: string) => `${pct} over`,
+    under: (pct: string) => `${pct} under`,
+  },
+
+  nextCheck: {
+    title: 'Next check',
+    at: (when: string) => `At the top of the hour, ${when} New York.`,
+    stopped: 'The desk is not acting until you resume it.',
+  },
+
+  practice: {
+    title: 'Practice',
+    progress: (done: number, needed: number) =>
+      `${Math.min(done, needed)} of ${needed} practice checks done.`,
+    report: { read: 'Report read.', unread: 'Report not read yet.' },
+    ready: 'It can go live when you choose.',
+    readReport: 'Read the practice report',
+  },
+
+  limits: {
+    title: 'Limits in use',
+    drift: 'May wander before it acts',
+    position: 'Largest share of one stock',
+    loss: 'Stops after a fall of',
+    perAction: 'Most in one action',
+    daily: 'Most in a day',
+    large: 'Asks first at',
+  },
+
+  mandate: {
+    title: 'What you told it',
+    strategy: 'Strategy',
+    own: 'Your own basket',
+    cashTarget: 'Cash kept aside',
+    notes: 'Your notes',
+    noNotes: 'No notes.',
+    version: (n: number) => `version ${n}`,
+  },
+
+  fee: (amount: string) => `Fee so far: ${amount}, waived.`,
+  feeNote: '0.5% a year of what the desk holds, nothing in practice. Waived during the beta.',
+
+  record: {
+    title: 'The record',
+    empty: 'The desk has not checked yet.',
+    quiet: (n: number) => `${n} quiet checks`,
+    whole: 'The whole record',
+    report: 'How it did',
+  },
+
+  chart: {
+    title: 'Value',
+    empty: 'The chart starts at the desk’s second check.',
+    acted: 'acted',
+    waited: 'waited',
+  },
+} as const

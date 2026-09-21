@@ -423,3 +423,38 @@ export async function overrideWait(
     return { ok: true, approvalId: approval.id }
   })
 }
+
+/** The owner's conversation with one desk, oldest first, each message with the card it produced. */
+export async function askHistory(db: DbOrTx, deskId: string, ownerAddress: string, limit = 30) {
+  const rows = await db
+    .select({
+      id: askRequests.id,
+      status: askRequests.status,
+      question: askRequests.question,
+      reply: askRequests.reply,
+      error: askRequests.error,
+      createdAt: askRequests.createdAt,
+      proposalId: askProposals.id,
+      proposalKind: askProposals.kind,
+      proposalPath: askProposals.path,
+      proposalStatus: askProposals.status,
+      proposalView: askProposals.deskView,
+      proposalExpiresAt: askProposals.expiresAt,
+      proposalResult: askProposals.result,
+      proposalTxHash: askProposals.txHash,
+    })
+    .from(askRequests)
+    .leftJoin(askProposals, eq(askProposals.requestId, askRequests.id))
+    .where(
+      and(
+        eq(askRequests.deskId, deskId),
+        eq(askRequests.ownerAddress, ownerAddress.toLowerCase()),
+        eq(askRequests.kind, 'ask'),
+      ),
+    )
+    .orderBy(desc(askRequests.createdAt), desc(askProposals.createdAt))
+    .limit(limit)
+  // One turn per message, with its newest card, even if a message was ever answered twice.
+  const seen = new Set<string>()
+  return rows.filter((r) => !seen.has(r.id) && seen.add(r.id)).reverse()
+}
