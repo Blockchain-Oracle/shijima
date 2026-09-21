@@ -53,6 +53,8 @@ export interface ApprovedContext {
   deskStateText: string
   holdingUsdg: bigint
   totalUsdg: bigint
+  /** What the desk has already spent in the last 24 hours, for the owner's own daily limit. */
+  spentTodayUsdg: bigint
   now: Date
 }
 
@@ -82,6 +84,11 @@ export async function considerApproved(
     feedPrice: market.feed.price,
     slippageBps: SLIPPAGE_BPS,
     desk: { ...ctx.state, tokenBalance: held },
+    mandate: {
+      perActionCapUsdg: ctx.mandate.perActionCapUsdg,
+      dailyCapUsdg: ctx.mandate.dailyCapUsdg,
+      spentTodayUsdg: ctx.spentTodayUsdg,
+    },
     gapBps: market.gapBps,
     costBps: market.costBps,
     protective: false,
@@ -212,6 +219,7 @@ function approvedRequest(
 
 export interface RunApprovedContext {
   mandate: Mandate
+  spentTodayUsdg: bigint
   mandateLine: string
   deskState: 'active' | 'paused_by_owner' | 'stopped_by_loss_limit' | 'needs_attention'
   stateText: string
@@ -249,6 +257,7 @@ export async function runApprovedRequests(
         deskStateText: run.stateText,
         holdingUsdg: held?.valueUsdg ?? 0n,
         totalUsdg: run.valuation.totalUsdg,
+        spentTodayUsdg: run.spentTodayUsdg,
         now: run.now,
       },
       request,

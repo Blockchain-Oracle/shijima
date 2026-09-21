@@ -99,7 +99,9 @@ export async function readMarket(
           priceE8: rescaleReference(close.priceE8, close.multiplierRaw, multiplierNow),
           at: close.boundaryAt,
         }
-      : { kind: 'last_official_update', priceE8: feed.price, at: feedAt }
+      : // Either the market is open, or this pool did not trade before the close and there is no honest
+        // reference from it. Both fall back to the last official update, and the record says which it is.
+        { kind: 'last_official_update', priceE8: feed.price, at: feedAt }
 
   // The price this trade would actually get, against the pool's own price. A buy pays above it, a sell gets below.
   const executionE8 =

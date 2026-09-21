@@ -10,6 +10,22 @@ import type { Pool, PoolClient } from 'pg'
 /** Any fixed number. Every worker of this product asks for the same one. */
 const LEADER_LOCK_KEY = 4663_001
 
+/**
+ * Takes the lock, or explains who has it. Any command that can SEND must hold this, not just the worker: a
+ * command run by hand while the worker is up would be a second sender on one key, and both could act on the
+ * same need.
+ */
+export async function requireLeader(pool: Pool, what: string) {
+  const lock = await tryBecomeLeader(pool)
+  if (!lock) {
+    throw new Error(
+      `The worker is running and holds the operator key, so ${what} would be a second sender on one key. ` +
+        'Stop the worker first, or let it do this on its next check.',
+    )
+  }
+  return lock
+}
+
 export async function tryBecomeLeader(pool: Pool): Promise<{ release: () => Promise<void> } | undefined> {
   const client: PoolClient = await pool.connect()
   const { rows } = await client.query<{ locked: boolean }>('select pg_try_advisory_lock($1) as locked', [

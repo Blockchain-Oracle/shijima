@@ -35,6 +35,11 @@ export interface GateInput {
   /** The feed price, 8 decimals. */
   feedPrice: bigint
   slippageBps: bigint
+  /**
+   * The owner's own limits, which may be TIGHTER than the ones on-chain. The chain enforces what it was told
+   * at creation; a mandate written later can ask for less, and the smaller of the two is what binds.
+   */
+  mandate?: { perActionCapUsdg: bigint; dailyCapUsdg: bigint; spentTodayUsdg: bigint } | undefined
   desk: {
     paused: boolean
     perActionCapUsdg: bigint
@@ -67,6 +72,8 @@ export interface GateResult {
   minOut: bigint
 }
 
+const min = (a: bigint, b: bigint) => (a < b ? a : b)
+
 export function gate(g: GateInput): GateResult {
   if (g.amountIn <= 0n || g.feedPrice <= 0n) {
     return {
@@ -96,8 +103,16 @@ export function gate(g: GateInput): GateResult {
     reasons.push(engineCopy.gate.farFromReference)
   }
   if (!g.protective && g.costBps > MAX_COST_BPS) reasons.push(engineCopy.gate.tooCostly)
-  if (countedUsdg > g.desk.perActionCapUsdg) reasons.push(engineCopy.gate.overPerAction)
-  if (countedUsdg > g.desk.remainingDailyCap) reasons.push(engineCopy.gate.overDaily)
+  // The smaller of what the chain allows and what the owner wrote.
+  const perAction =
+    g.mandate && g.mandate.perActionCapUsdg < g.desk.perActionCapUsdg
+      ? g.mandate.perActionCapUsdg
+      : g.desk.perActionCapUsdg
+  const leftToday = g.mandate
+    ? min(g.desk.remainingDailyCap, g.mandate.dailyCapUsdg - g.mandate.spentTodayUsdg)
+    : g.desk.remainingDailyCap
+  if (countedUsdg > perAction) reasons.push(engineCopy.gate.overPerAction)
+  if (countedUsdg > leftToday) reasons.push(engineCopy.gate.overDaily)
   if (g.side === 'buy' && g.position && g.position.totalUsdg > 0n) {
     const afterBps = ((g.position.holdingUsdg + g.amountIn) * 10_000n) / g.position.totalUsdg
     if (afterBps > BigInt(g.position.maxPositionBps)) reasons.push(engineCopy.gate.holdingTooLarge)

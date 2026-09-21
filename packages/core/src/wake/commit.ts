@@ -11,13 +11,11 @@ import {
   appendRecord,
   createApproval,
   createDeferral,
-  type Db,
   type deskById,
   endDeferral,
   enqueueNotification,
   logServCall,
   markApprovalExecuted,
-  saveValueSnapshot,
   setDeskState,
 } from '@desk/db'
 import { engineCopy, nextRegularOpen } from '@desk/shared'
@@ -30,10 +28,11 @@ import type { WakeDeps, WakeInput } from './wake'
 
 const REVISIT_AFTER_OPEN_MS = 30 * 60 * 1000
 
-export async function saveSnapshot(db: Db, deskId: string, v: Valuation, now: Date): Promise<void> {
-  await saveValueSnapshot(db, {
+/** The value snapshot row for this moment. Pure, so it can be written inside someone else's transaction. */
+export function snapshotOf(deskId: string, v: Valuation, now: Date) {
+  return {
     deskId,
-    kind: 'hourly',
+    kind: 'hourly' as const,
     takenAt: now,
     totalUsdg: v.totalUsdg,
     cashUsdg: v.cashUsdg,
@@ -45,7 +44,7 @@ export async function saveSnapshot(db: Db, deskId: string, v: Valuation, now: Da
       priceE8: h.twapE8.toString(),
       valueUsdg: h.valueUsdg.toString(),
     })),
-  })
+  }
 }
 
 export interface CommitContext {

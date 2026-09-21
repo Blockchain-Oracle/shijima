@@ -126,7 +126,11 @@ export async function signDeskCall(
     })
   }
   const data = encodeFunctionData({ abi: deskAbi, ...callArgs(call) })
-  const request = await wallet.prepareTransactionRequest({ to: call.desk, data })
+  // Pin the nonce to what is MINED, not to what is pending. If an earlier transaction is stuck, the next one
+  // must REPLACE it rather than queue behind it: two desk actions from one decision must never both land.
+  // It is also what makes "it never landed" safe to act on, because reusing its nonce is what voids it.
+  const nonce = await pub.getTransactionCount({ address: wallet.account.address, blockTag: 'latest' })
+  const request = await wallet.prepareTransactionRequest({ to: call.desk, data, nonce })
   // Only gas actually used is charged, so headroom is free. It guards against state moving under the estimate.
   const gas = (request.gas * 12n) / 10n
   // A node rejects a transaction the sender cannot pay for. Checking BEFORE signing turns that into an instant,

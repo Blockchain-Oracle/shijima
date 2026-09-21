@@ -30,6 +30,12 @@ export interface OutsideChange {
   delta: bigint
   /** The same change in USDG, at the valuation price. This is what moves the loss-limit baseline. */
   usdgValue: bigint
+  /**
+   * False when this asset had no price this time, so `usdgValue` is not a real number. It happens when a
+   * token the mandate no longer names is withdrawn to zero: nothing values it any more. A change we cannot
+   * price must never be treated as worth nothing, because that reads as a loss the owner did not take.
+   */
+  priced: boolean
 }
 
 export function findOutsideChanges(
@@ -52,13 +58,41 @@ export function findOutsideChanges(
   }
   const changes: OutsideChange[] = []
   const cashDelta = current.cashUsdg - expected.cashUsdg
-  if (cashDelta !== 0n) changes.push({ asset: 'USDG', delta: cashDelta, usdgValue: cashDelta })
+  // USDG is the unit of account, so its own value never needs a price.
+  if (cashDelta !== 0n) changes.push({ asset: 'USDG', delta: cashDelta, usdgValue: cashDelta, priced: true })
   for (const token of new Set([...Object.keys(expected.tokens), ...Object.keys(current.tokens)])) {
     const delta = (current.tokens[token] ?? 0n) - (expected.tokens[token] ?? 0n)
-    if (delta !== 0n)
-      changes.push({ asset: token, delta, usdgValue: (delta * (priceE8[token] ?? 0n)) / PRICE_SCALE })
+    if (delta === 0n) continue
+    const price = priceE8[token]
+    changes.push({
+      asset: token,
+      delta,
+      usdgValue: price ? (delta * price) / PRICE_SCALE : 0n,
+      priced: Boolean(price),
+    })
   }
   return changes
 }
 
 export const netFlowUsdg = (changes: OutsideChange[]) => changes.reduce((sum, c) => sum + c.usdgValue, 0n)
+
+/** True when every change could be valued. If not, the desk's worth is not fully known this check. */
+export const allPriced = (changes: OutsideChange[]) => changes.every((c) => c.priced)
+
+/**
+ * Where the loss-limit baseline moves to after money has come in or gone out.
+ *
+ * It SCALES, it does not add. Adding was wrong in both directions: withdrawing while the desk was down made
+ * the remaining loss look bigger and could stop the desk over the owner's own withdrawal, and withdrawing
+ * after gains could push the baseline to zero and switch the limit off entirely. Scaling keeps the loss
+ * exactly where it was, which is the only thing a deposit or a withdrawal should do to it.
+ */
+export function scaledBaseline(baseline: bigint, totalNow: bigint, netFlow: bigint): bigint {
+  if (netFlow === 0n) return baseline
+  const before = totalNow - netFlow
+  // A first deposit: there is no ratio to keep, so the baseline is what the desk is worth now.
+  // Withdrawing everything leaves a baseline of nothing, which is right: an empty desk has nothing left to
+  // lose and must not be stopped by a loss limit. A later deposit sets a fresh baseline here.
+  if (before <= 0n || baseline <= 0n) return totalNow
+  return (baseline * totalNow) / before
+}

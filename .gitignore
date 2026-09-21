@@ -23,3 +23,6 @@ contracts/broadcast/
 
 # local runtime data: decision records written before the database exists
 var/
+
+# Claude Code's own working state. Useful locally, not part of the product.
+.claude/

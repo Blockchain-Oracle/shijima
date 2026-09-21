@@ -77,6 +77,8 @@ export interface ConsiderContext {
   /** What this holding and the whole desk are worth now, for the largest-holding limit. */
   holdingUsdg: bigint
   totalUsdg: bigint
+  /** What the desk has already spent in the last 24 hours, for the owner's own daily limit. */
+  spentTodayUsdg: bigint
   /** The desk did this same thing to this token within the last few minutes. */
   repeatedWithinMinutes: boolean
   /** DEVELOPER ONLY. Act even when the model says wait, recorded in the record as an override. */
@@ -102,6 +104,11 @@ export async function considerCandidate(ctx: ConsiderContext, need: Need): Promi
       feedPrice: market.feed.price,
       slippageBps: SLIPPAGE_BPS,
       desk: { ...state, tokenBalance: held },
+      mandate: {
+        perActionCapUsdg: mandate.perActionCapUsdg,
+        dailyCapUsdg: mandate.dailyCapUsdg,
+        spentTodayUsdg: ctx.spentTodayUsdg,
+      },
       gapBps: market.gapBps,
       costBps: market.costBps,
       protective: false,

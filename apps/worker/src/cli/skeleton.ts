@@ -43,6 +43,7 @@ import {
 import { appendRecord, appendResult, finishWake, logServCall, startWake } from '@desk/db'
 import { chainHead, errorText, verifyRecord } from '@desk/shared'
 import { formatUnits, parseUnits } from 'viem'
+import { requireLeader } from '../leader'
 import { resolveUnsettled, sendAction } from '../sender'
 import { assertChainSeqAgrees, openCli, printSettlements, readDevDesk, registerDevDesk } from './context'
 
@@ -63,6 +64,8 @@ function dieHere(when: string): never {
 async function main() {
   const cli = await openCli()
   const { env, db, pub, deps } = cli
+  // One operator key means one sender. The worker holds this lock while it runs.
+  const leader = await requireLeader(cli.pool, 'the skeleton')
 
   // 0. Boot rule: settle what an earlier run left behind BEFORE sending anything new.
   const settled = await resolveUnsettled(deps)
@@ -298,6 +301,7 @@ async function main() {
   }
   console.log(`  ${EXPLORER}/tx/${landed.txHash}`)
   for (const [name, ok] of Object.entries(checks)) console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${name}`)
+  await leader.release()
   await cli.close()
   if (Object.values(checks).some((ok) => !ok)) throw new Error('a verification check failed')
 }

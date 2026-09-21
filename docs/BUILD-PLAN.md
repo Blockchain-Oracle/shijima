@@ -423,6 +423,34 @@ before "USDG".
 - New: `pnpm openserv:fire`. The worker starts the agent on boot and carries on regardless if the platform is
   unreachable, which is what the timer is for.
 
+**Mon 21 Sep, 02:30 UTC. The correctness review's findings were recovered, and ten of twelve are fixed.**
+The reviewer that hit its usage limit had saved its findings to its own memory before dying. They were found
+while committing. Ten were real and are now fixed:
+- **Two senders on one key.** `desk:wake`, `desk:skeleton` and `desk:resolve` could trade while the worker was
+  running. They now take the same Postgres lock the worker holds and refuse with an explanation. Proven: a
+  command run against the live worker is turned away.
+- **A stuck transaction could be queued behind rather than replaced.** The nonce is now pinned to the MINED
+  count, not the pending one, so the next send reuses a stuck nonce. That is also what makes "it never landed"
+  safe to act on, which the landing rule already claimed.
+- **The loss limit could fire on the owner's own withdrawal.** The baseline was additive: taking money out
+  while down made the remaining loss look bigger, and taking it out after gains could clamp the baseline to
+  zero and switch the limit off. It now SCALES, so a deposit or withdrawal leaves the loss exactly where it
+  was. Checked across five cases. An emptied desk gets a baseline of nothing, which is right, and a later
+  deposit sets a fresh one.
+- **A withdrawal we could not price read as a loss.** Changes now carry whether they were priced, and the loss
+  limit is not judged at all while anything is unpriced.
+- **A cap-sized sell could be impossible.** Sells were sized on the pool's average, but the contract counts
+  them at the larger of USDG received and oracle value, so whenever the oracle sat above the average a sell
+  sized to the cap was refused on-chain. Sells now carry 200 bps of headroom against the higher of the two.
+  Checked with the oracle above, level and below: $4.90 against a $5.00 cap in all three.
+- Also: a refused daily seal no longer makes a new row every 15 seconds; the baseline, the event and the
+  snapshot now commit in one transaction, so a crash cannot count one deposit twice; one candidate's read
+  error no longer drops the others; the mandate's own caps now bind off-chain over a rolling 24 hours; and
+  the fallback reference no longer claims the market is open when it is not.
+- **Still open, both small:** `insideBand` is computed and unused, and buys ignore the cash target, which is
+  mostly redundant since cash and the token weights sum to 100%.
+- `.claude/` is now gitignored: it is Claude Code's own working state, not part of the product.
+
 ## 6. Schedule
 
 | Day | Work | Must be true by end of day |

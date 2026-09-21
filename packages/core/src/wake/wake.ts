@@ -26,10 +26,12 @@ import {
   finishWake,
   latestValueSnapshot,
   mandateFromRow,
-  moveDrawdownBaseline,
   pendingApprovalSince,
   recordDrawdownBreach,
+  recordOutsideChanges,
+  saveValueSnapshot,
   setDeskState,
+  spentSince,
   standingDeferral,
   startWake,
   type WakeTrigger,
@@ -37,11 +39,11 @@ import {
 import { engineCopy, errorText, type Mandate } from '@desk/shared'
 import { type Address, formatUnits, type Hex, type PublicClient } from 'viem'
 import { runApprovedRequests } from './approved'
-import { commit, saveSnapshot } from './commit'
+import { commit, snapshotOf } from './commit'
 import { considerCandidate } from './consider'
 import { findNeeds } from './needs'
 import type { PlannedOutcome } from './plan'
-import { findOutsideChanges, netFlowUsdg } from './reconcile'
+import { allPriced, findOutsideChanges, netFlowUsdg, scaledBaseline } from './reconcile'
 import { buildDecisionBody, mandateFingerprint, RECORD_SCHEMA_VERSION } from './record'
 import { chainReferenceSource } from './reference'
 import { USDG_DECIMALS } from './types'
@@ -145,42 +147,54 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
     for (const u of valuation.unpriced) say(`NOT VALUED: ${u.why}`)
 
     // Money that arrived or left without the desk doing it moves the loss-limit baseline, not the loss.
+    // True when something moved that could not be valued, so the desk's worth is not fully known.
+    let unpricedFlow = false
     const previous = await latestValueSnapshot(db, desk.id)
-    if (previous) {
-      const changes = findOutsideChanges(
-        {
-          cashUsdg: previous.cashUsdg,
-          tokens: Object.fromEntries(
-            previous.holdings.map((h) => [h.token.toLowerCase(), BigInt(h.amountRaw)]),
-          ),
-        },
-        await confirmedTradesSince(db, desk.id, previous.takenAt),
-        { cashUsdg: state.usdg, tokens: state.holdings },
-        Object.fromEntries(valuation.holdings.map((h) => [h.token.address.toLowerCase(), h.twapE8])),
-      )
-      if (changes.length > 0) {
-        say(
-          `balances changed outside the desk: ${changes.map((c) => `${c.asset} ${c.delta > 0n ? '+' : ''}${c.delta}`).join(', ')}`,
+    const changes = previous
+      ? findOutsideChanges(
+          {
+            cashUsdg: previous.cashUsdg,
+            tokens: Object.fromEntries(
+              previous.holdings.map((h) => [h.token.toLowerCase(), BigInt(h.amountRaw)]),
+            ),
+          },
+          await confirmedTradesSince(db, desk.id, previous.takenAt),
+          { cashUsdg: state.usdg, tokens: state.holdings },
+          Object.fromEntries(valuation.holdings.map((h) => [h.token.address.toLowerCase(), h.twapE8])),
         )
-        if (!dry) {
-          await moveDrawdownBaseline(db, desk.id, netFlowUsdg(changes))
-          await addDeskEvent(db, {
-            deskId: desk.id,
-            kind: 'holdings_changed_outside',
-            actor: 'system',
-            via: 'chain',
-            detail: {
-              changes: changes.map((c) => ({
-                asset: c.asset,
-                delta: c.delta.toString(),
-                usdgValue: c.usdgValue.toString(),
-              })),
-            },
-          })
-        }
+      : []
+    if (changes.length > 0) {
+      unpricedFlow = !allPriced(changes)
+      say(
+        `balances changed outside the desk: ${changes.map((c) => `${c.asset} ${c.delta > 0n ? '+' : ''}${c.delta}`).join(', ')}`,
+      )
+    }
+    if (!dry) {
+      const snapshot = snapshotOf(desk.id, valuation, now)
+      if (changes.length > 0) {
+        // The baseline, the note of what happened, and the snapshot that stops it being counted again, all
+        // in one transaction. Scaled, not added, so the owner's own money moving never changes how far down
+        // the desk is.
+        await recordOutsideChanges(db, {
+          deskId: desk.id,
+          baselineUsdg: scaledBaseline(
+            desk.drawdownBaselineUsdg ?? valuation.totalUsdg,
+            valuation.totalUsdg,
+            netFlowUsdg(changes),
+          ),
+          event: {
+            changes: changes.map((c) => ({
+              asset: c.asset,
+              delta: c.delta.toString(),
+              usdgValue: c.priced ? c.usdgValue.toString() : null,
+            })),
+          },
+          snapshot,
+        })
+      } else {
+        await saveValueSnapshot(db, snapshot)
       }
     }
-    if (!dry) await saveSnapshot(db, desk.id, valuation, now)
 
     // The loss limit. A breach stops the desk from acting. The owner restarts it.
     const baseline = dry
@@ -190,7 +204,7 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
       baseline > valuation.totalUsdg ? Number(((baseline - valuation.totalUsdg) * 10_000n) / baseline) : 0
     // A price we could not read is not a loss. Judging the limit on a partial valuation could stop the desk
     // over an RPC failure, so while anything is unpriced the limit is not evaluated and the record says so.
-    const canJudgeLoss = valuation.unpriced.length === 0
+    const canJudgeLoss = valuation.unpriced.length === 0 && !unpricedFlow
     const breached = canJudgeLoss && lossBps >= mandate.lossStopBps
     let deskState = desk.state
     if (!dry) await recordDrawdownBreach(db, desk.id, breached)
@@ -222,6 +236,8 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
     }
 
     const stateText = engineCopy.deskState[deskState]
+    // The owner's own daily limit is counted over a rolling 24 hours, which is stricter than the chain's window.
+    const spentTodayUsdg = await spentSince(db, desk.id, new Date(now.getTime() - 24 * 60 * 60 * 1000))
     const common = {
       chainId: CHAIN_ID,
       desk: desk.address,
@@ -240,6 +256,7 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
         { desk, wakeId: wake?.id, common, state, input },
         {
           mandate,
+          spentTodayUsdg,
           mandateLine: mandateLine(mandate, mandateRow.version, deps.approved),
           deskState,
           stateText,
@@ -340,6 +357,7 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
           deskAddress: desk.address as Address,
           holdingUsdg: held?.valueUsdg ?? 0n,
           totalUsdg: valuation.totalUsdg,
+          spentTodayUsdg,
           repeatedWithinMinutes,
           ...(input.force ? { force: true } : {}),
           now,

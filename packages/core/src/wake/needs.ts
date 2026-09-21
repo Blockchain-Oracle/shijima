@@ -17,6 +17,11 @@ export const MIN_TRADE_USDG = 1_000_000n
  * tolerance on an expensive token would have the desk trading away the owner's money in fees.
  */
 export const COST_MULTIPLE = 5
+/**
+ * How far under the per-action cap a sell is sized. The contract values a sell at the larger of what came
+ * back and what the oracle says, and both move between sizing and sending.
+ */
+export const SELL_HEADROOM_BPS = 200
 const PRICE_SCALE = 10n ** 20n
 
 export interface Need {
@@ -55,7 +60,20 @@ export function findNeeds(v: Valuation, mandate: Mandate, perActionCapUsdg: bigi
 
     // Selling a token the mandate dropped sells the balance itself, so no dust is left behind.
     const sellAll = side === 'sell' && notInMandate && fullUsdg <= cap
-    const amountIn = side === 'buy' ? usdg : sellAll ? h.balance : (usdg * PRICE_SCALE) / h.twapE8
+    /**
+     * A sell is sized off the 30 minute average, but the CONTRACT counts it at the larger of the USDG
+     * received and its oracle value. Whenever the oracle sits above that average, a sell sized to exactly the
+     * cap is counted as more than the cap and refused on-chain. So a sell leaves headroom, measured against
+     * the highest price the contract might use. Without this the desk could propose a sale it can never make,
+     * which matters most in a protective one.
+     */
+    const highest = h.feedE8 > h.twapE8 ? h.feedE8 : h.twapE8
+    const amountIn =
+      side === 'buy'
+        ? usdg
+        : sellAll
+          ? h.balance
+          : (usdg * PRICE_SCALE * BigInt(10_000 - SELL_HEADROOM_BPS)) / (highest * 10_000n)
     if (amountIn === 0n) continue
 
     needs.push({

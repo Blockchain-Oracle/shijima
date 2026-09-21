@@ -15,6 +15,7 @@ import { APPROVED_TOKENS } from '@desk/chain'
 import { type SendReport, wakeDesk } from '@desk/core'
 import { pauseDesk, resumeDesk, setDeskMode, setDeskShare } from '@desk/db'
 import { errorText } from '@desk/shared'
+import { requireLeader } from '../leader'
 import { resolveUnsettled, sendAction } from '../sender'
 import {
   assertChainSeqAgrees,
@@ -32,6 +33,8 @@ const modeIndex = process.argv.indexOf('--set-mode')
 const newMode = modeIndex === -1 ? undefined : MODES.find((m) => m === process.argv[modeIndex + 1])
 
 const cli = await openCli()
+// One operator key means one sender. The worker holds this lock while it runs.
+const leader = await requireLeader(cli.pool, 'a check by hand')
 try {
   const { deployment, state } = await readDevDesk(cli.deps)
   const desk = await registerDevDesk(cli.db, deployment, state)
@@ -105,5 +108,6 @@ try {
   console.error(errorText(e))
   process.exitCode = 1
 } finally {
+  await leader.release()
   await cli.close()
 }

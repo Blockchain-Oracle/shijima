@@ -115,7 +115,7 @@ export function buildEvidence(
   const referenceWords =
     m.reference.kind === 'last_regular_close'
       ? `the reference, which is what this same pool traded at when the US market last closed (${formatUnits(m.reference.priceE8, 8)} at ${m.reference.at.toISOString()})`
-      : `the reference, which is the last official update because the US market is open (${formatUnits(m.reference.priceE8, 8)})`
+      : `the reference, which is the last official update (${formatUnits(m.reference.priceE8, 8)})`
   const halt = m.halt ? (m.halt.isTradingHalt ? 'YES' : 'no') : 'UNKNOWN (API unreachable)'
   const oracle = m.oraclePaused === undefined ? 'UNKNOWN' : m.oraclePaused ? 'YES' : 'no'
   const news =

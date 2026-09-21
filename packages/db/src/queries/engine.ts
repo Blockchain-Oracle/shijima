@@ -201,14 +201,9 @@ export async function confirmedTradesSince(db: DbOrTx, deskId: string, since: Da
   )
 }
 
-/** Money that came in or went out moves the loss-limit baseline by the same amount. It never goes below zero. */
-export async function moveDrawdownBaseline(db: DbOrTx, deskId: string, byUsdg: bigint): Promise<void> {
-  await db
-    .update(desks)
-    .set({
-      drawdownBaselineUsdg: sql`greatest(coalesce(${desks.drawdownBaselineUsdg}, 0) + ${byUsdg.toString()}::numeric, 0)`,
-    })
-    .where(eq(desks.id, deskId))
+/** Sets the loss-limit baseline. What it should become after money moved is worked out in the engine. */
+export async function setDrawdownBaseline(db: DbOrTx, deskId: string, baselineUsdg: bigint): Promise<void> {
+  await db.update(desks).set({ drawdownBaselineUsdg: baselineUsdg }).where(eq(desks.id, deskId))
 }
 
 export async function addDeskEvent(db: DbOrTx, event: typeof deskEvents.$inferInsert): Promise<void> {
@@ -298,6 +293,9 @@ export async function hasWake(db: DbOrTx, deskId: string, scheduledFor: Date): P
   return Boolean(row)
 }
 
+/** How long to wait before trying a refused daily seal again. */
+const SEAL_RETRY_MS = 60 * 60 * 1000
+
 /**
  * Plans the daily seal. A desk's newest record commits to every record before it, so sealing that ONE hash
  * on-chain seals them all. Returns undefined when there is nothing unsealed, or when the newest record already
@@ -312,11 +310,17 @@ export async function planCheckpoint(db: DbOrTx, deskId: string, operator: strin
     .limit(1)
   if (!latest || latest.sealedByTx) return undefined
   const legs = await db
-    .select({ status: actions.status })
+    .select({ status: actions.status, kind: actions.kind, plannedAt: actions.plannedAt })
     .from(actions)
     .where(eq(actions.decisionId, latest.id))
   if (legs.some((l) => l.status === 'planned' || l.status === 'prepared' || l.status === 'sent'))
     return undefined
+  // A seal that was refused, usually for want of gas, must not be retried every tick: that would leave a new
+  // row every 15 seconds for as long as the cause lasts. One attempt an hour is enough for a DAILY seal.
+  const lastTry = legs
+    .filter((l) => l.kind === 'checkpoint')
+    .reduce<Date | undefined>((a, l) => (!a || l.plannedAt > a ? l.plannedAt : a), undefined)
+  if (lastTry && Date.now() - lastTry.getTime() < SEAL_RETRY_MS) return undefined
   const [action] = await db
     .insert(actions)
     .values({
@@ -571,4 +575,55 @@ export async function ungradedDecisions(db: DbOrTx, deskId: string, before: Date
 
 export async function saveGrade(db: DbOrTx, row: typeof grades.$inferInsert): Promise<void> {
   await db.insert(grades).values(row).onConflictDoNothing({ target: grades.decisionId })
+}
+
+/**
+ * What the desk has spent in the last 24 hours, counted the way the CONTRACT counts it.
+ *
+ * The chain keeps its own window and its own total, which is what it enforces. This is for the owner's own
+ * daily limit, which a mandate may set tighter than the one the desk was created with. A rolling 24 hours is
+ * used rather than the chain's fixed window, because it is the stricter of the two and never lets a spend
+ * slip through the boundary between windows.
+ */
+export async function spentSince(db: DbOrTx, deskId: string, since: Date): Promise<bigint> {
+  const [row] = await db
+    .select({ total: sql<string>`coalesce(sum(${decisions.amountUsdg}), 0)::text` })
+    .from(decisions)
+    .where(
+      and(
+        eq(decisions.deskId, deskId),
+        gt(decisions.decidedAt, since),
+        inArray(decisions.outcome, ['acted', 'acted_in_part']),
+      ),
+    )
+  return BigInt(row?.total ?? '0')
+}
+
+/**
+ * Everything that follows from money moving in or out of a desk, in ONE transaction.
+ *
+ * The snapshot is what stops the NEXT check seeing the same movement again. If the baseline moved but the
+ * snapshot was never written, a crash in between would have the desk scale its baseline twice for one
+ * deposit. So the three writes commit together or not at all.
+ */
+export async function recordOutsideChanges(
+  db: Db,
+  input: {
+    deskId: string
+    baselineUsdg: bigint
+    event: Record<string, unknown>
+    snapshot: Parameters<typeof saveValueSnapshot>[1]
+  },
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    await setDrawdownBaseline(tx, input.deskId, input.baselineUsdg)
+    await tx.insert(deskEvents).values({
+      deskId: input.deskId,
+      kind: 'holdings_changed_outside',
+      actor: 'system',
+      via: 'chain',
+      detail: input.event,
+    })
+    await saveValueSnapshot(tx, input.snapshot)
+  })
 }
