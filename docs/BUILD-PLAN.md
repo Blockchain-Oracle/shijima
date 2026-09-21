@@ -588,6 +588,31 @@ All proven on the anvil fork. Nothing is deployed to mainnet yet.
   variables, so it no longer does.
 - **Next:** step 8, the owner controls and settings.
 
+**Mon 21 Sep, night. STEP 8 BUILT: THE OWNER'S CONTROLS, SETTINGS AND THE INBOX.** Proven on the anvil fork, in
+code and in headless Chrome. Nothing is deployed to mainnet.
+- **Controls beside the chat:** add money, withdraw, sell everything, pause or resume, mode, the limits on the chain,
+  check now, and remove the assistant or restart the desk. Each opens one small form and makes the same card the chat
+  would, with no model call. The press lands in the chat thread too.
+- **Costs first:** every chain card shows what the owner gets, what each sale fetches against the price feed, and the
+  network fee in dollars, from a simulation, before anything is signed.
+- **Desk v1 change:** `withdraw` with the maximum means the whole balance, so closing the desk is one signature. 42
+  fork tests pass. Redeployed on the fork only.
+- **Proven on the fork, server path:** add $2, lower and raise the limits, withdraw $1, a $500 withdraw refused with
+  the real numbers, sell everything, remove the assistant (the desk waits quietly), restart it (the assistant comes
+  back), and close the desk: $4 of Nvidia sold, $10.95 sent home, assistant removed, desk marked closed.
+- **Proven in the browser:** the $1 withdraw and the lower limits signed by the session key with no pop-up; pause and
+  resume; wallet-only cards asking for the owner's wallet; a live Relay quote ($25 USDC on Base, $24.91 into the
+  desk, 0.37%). Every page fits at 390, 768, 1024 and 1440 in both themes, with no console errors.
+- **Add money from another network** goes through Relay straight into the desk, with an optional $1 of ETH to the
+  owner's own wallet for fees. Not yet sent with real money.
+- **Settings** (`/desk/[slug]/settings`): Telegram with a QR code and a one-time code, watched until the bot claims
+  it, and disconnect; the share link on or off; the disclosure with its acceptance; appearance; close the desk.
+- **The bell:** the owner's messages across their desks, linked to each decision, with mark-all-read.
+- **The chat prompt is `ask.v2`**, which knows add money, the limits on the chain and closing. Not yet run: SERV
+  credit is still $0.02.
+- **Still owed:** vault sweeps (step 3), and a Relay deposit with real money.
+- **Next:** step 9, the markets page and one stock, with charts that talk.
+
 ## 6. Schedule
 
 | Day | Work | Must be true by end of day |

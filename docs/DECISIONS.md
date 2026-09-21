@@ -240,6 +240,36 @@ Made 2026-09-20 by Claude. Abu can overrule any of these. Each is a constant in 
 
 ---
 
+## Decisions made while building the owner controls
+
+Made 2026-09-21 by Claude, in step 8 of the chat-first plan. Abu can overrule any of these.
+
+1. **A button makes the same card the chat makes.** Each control runs the chat's own plain-code checks and saves the
+   same proposal, with no model call, so the buttons keep working when SERV cannot answer. The press is written
+   into the chat thread as an exchange ("Withdraw $20", then the card), so the thread stays the one history.
+2. **`withdraw(token, type(uint256).max)` means the whole balance** (Desk v1, still undeployed). Without it, "sell
+   everything and send it to me" and "close the desk" cannot fit one signature, because a sale's exact proceeds
+   are unknown when the transaction is signed. A v0 desk gets the exact amount instead. Fork test added: 42 pass.
+3. **Costs first, from a simulation.** Before any chain card is signed, the server builds its transaction from the
+   chain as it is, simulates it, and shows what the owner gets, what each sale fetches against the price feed, and
+   the network fee in dollars from the chain's own ETH / USD Chainlink feed. A simulation that fails is refused in
+   words before anything is signed.
+4. **The live chain is the check for amounts, not the hourly valuation.** Withdrawing more than the desk holds is
+   refused when the transaction is built, with the real numbers. The valuation can be an hour old and money may
+   have arrived since.
+5. **Removing the assistant stops the checks quietly.** The desk waits in "needs attention" with the owner's own
+   reason, and the hourly check skips it rather than recording a failure every hour. Restarting the desk with the
+   wallet brings the assistant back and restarts it in one signature.
+6. **Money from another network goes straight into the desk through Relay**, USDC on Base, Arbitrum, Ethereum or BNB
+   Chain. A quote shows what is sent, what arrives, the cost and the time before anything is signed. The desk never
+   receives ETH, so the optional gas top-up goes to the owner's own wallet as a separate transfer.
+7. **Closing lives in settings**, away from the everyday buttons, and can still be asked for in the chat.
+8. **The chat prompt is now `ask.v2`**: v1 with add money, the limits on the chain, and closing the desk. It is
+   derived from the frozen v1 text so both stay byte-stable.
+9. **The disclosure is `disclosure.v1`**, the brief's 8.3 text, accepted with a separate region declaration.
+
+---
+
 ## The name
 
 Abu names his projects in Japanese, as he did with Baku (獏). **Shijima (しじま)**, chosen by him on
