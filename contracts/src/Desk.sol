@@ -350,7 +350,10 @@ contract Desk is Initializable, ReentrancyGuardTransient {
     ///         including vault shares and anything sent here by mistake. One token per call, so a frozen
     ///         token can never trap the others.
     ///         The session key may call it too: it still pays only `owner`.
+    ///         `type(uint256).max` means the whole balance at that moment, so "sell everything, then send me
+    ///         all of it" fits in one `batch` even though the sale's exact proceeds are not known in advance.
     function withdraw(address token, uint256 amount) external onlyOwnerOrSession nonReentrant {
+        if (amount == type(uint256).max) amount = IERC20(token).balanceOf(address(this));
         IERC20(token).safeTransfer(owner, amount);
         emit Withdrawn(token, amount);
     }

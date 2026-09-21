@@ -139,6 +139,30 @@ contract DeskOwnerForkTest is ForkBase {
         assertGt(_bal(USDG, owner), 990e6, "about $1,000 came back, minus pool fees");
     }
 
+    /// Closing a desk: every holding sold, all cash sent home and the assistant removed, in ONE confirmation.
+    function test_batch_closesTheDesk_inOneCall_withWithdrawAll() public {
+        vm.startPrank(owner);
+        uint256 nvda = desk.buy(NVDA, 200e6, 0, _deadline(), H1);
+        uint256 shares = desk.sweepToVault(100e6, _deadline(), H1);
+        uint256 ownerBefore = _bal(USDG, owner);
+
+        bytes[] memory calls = new bytes[](5);
+        calls[0] = abi.encodeCall(Desk.sell, (NVDA, nvda, 0, _deadline(), H2));
+        calls[1] = abi.encodeCall(Desk.redeemFromVault, (shares, _deadline(), H2));
+        calls[2] = abi.encodeCall(Desk.withdraw, (USDG, type(uint256).max));
+        calls[3] = abi.encodeCall(Desk.withdraw, (NVDA, type(uint256).max)); // nothing left: a no-op
+        calls[4] = abi.encodeCall(Desk.revokeOperator, ());
+        desk.batch(calls);
+        vm.stopPrank();
+
+        assertEq(_bal(NVDA, address(desk)), 0);
+        assertEq(_bal(VAULT, address(desk)), 0);
+        assertEq(_bal(USDG, address(desk)), 0, "not a cent left behind");
+        assertGt(_bal(USDG, owner) - ownerBefore, 990e6, "about $1,000 came home, minus pool fees");
+        assertEq(desk.operator(), address(0));
+        assertTrue(desk.paused());
+    }
+
     function test_batch_bubblesTheInnerError() public {
         bytes[] memory calls = new bytes[](1);
         calls[0] = abi.encodeCall(Desk.disallowToken, (address(0xBEEF)));
