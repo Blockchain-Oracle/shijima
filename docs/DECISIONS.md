@@ -260,6 +260,43 @@ protective shrine charm, rejected on purpose: it promises protection, which this
 
 ---
 
+## The design reference
+
+**Settled 2026-09-21, evening: the interface follows Masayume**, Abu's own app from the Somnia hackathon
+(`/Users/abu/dev/hackathon/sommina-events`, masayume.app). It is ported from **Agari**
+(`agari-wt/w1`), which had already moved Masayume onto US stocks.
+
+How it got here, the same day:
+- Abu rejected a survey of eight products (`research/ux/`).
+- He chose Glider, which was fully researched (`research/glider/`).
+- He then preferred Masayume: he has used it, enjoys its feel, and it is his code.
+
+Claude agreed. Masayume's strategy studio already reads like the desk: *"set the limits before it can trade.
+Hard limits still decide what it may trade."* Its charts draw a reference line, which is what our price gap
+needs. It is on our exact stack, and the dark design suits a product named for deep night.
+
+**What does not come across: anything that is a bet.** Abu: "not a betting place, not a trading place." That
+removes calls, tickets, odds, leverage, games, leaderboards and trading from X. Referrals, points and rewards
+are also out. Withdraw always exists. An AI you can chat with is in, built from Masayume's Sensei dock.
+
+**Fonts are Masayume's:** Sora, Inter, JetBrains Mono, and Noto Serif JP for しじま. This replaces the Inter
+Tight pick from the Glider pass.
+
+`docs/FIDELITY.md` holds the full contract.
+
+**Settled at plan approval, 21 Sep** (`/Users/abu/.claude/plans/typed-enchanting-simon.md`):
+- **Chat-first:** the owner lands on their desk, chat first.
+- **The chat's model calls run in the worker through Postgres**, so the web stays keyless.
+- **Masayume's session key goes into Desk v1**, scoped to withdraw (to the owner only), pause, remove the
+  assistant, lower limits, capped sells, and a batch of those.
+- **Check now and do it anyway:** do it anyway runs on a second confirmation and is recorded as the owner's call.
+- **Price history:** a logger writes `price_points` for the talking charts.
+- **Vault sweeps** make idle cash actually earn.
+- **Extras kept:** share cards, price alerts, Rooms, Reels, Takes. **Dropped:** AgentKit, the pitch folio.
+- **Commits** are allowed as slices land. The weekend worker runs from a tagged commit.
+
+---
+
 ## Still open
 
 | Question | Status |
@@ -270,5 +307,5 @@ protective shrine charm, rejected on purpose: it promises protection, which this
 | SERV tool calls with `reasoning_effort` | Tested Sunday with one call. |
 | Where the news comes from | **Settled.** Finnhub, with Tavily as fallback. Weekend coverage tested Sunday. |
 | How much real money goes in | About $100 of USDG: a $20 test desk, a $50 demo desk, and the main desk. Abu decides. |
-| Does a build with no MCP qualify for the "Mainnet & MCP" track | **Abu asks in the OpenServ Telegram on day one.** |
+| Does a build with no MCP qualify for the "Mainnet & MCP" track | **Settled 2026-09-21: yes.** The track is for agents that act on Robinhood Chain *or* use Robinhood MCP. We also fit the Open track. `research/2026-09-21-tracks.md`. |
 | The product's name | **Settled 2026-09-21: Shijima (しじま).** Abu chose it. Reasoning below. |

@@ -35,7 +35,9 @@ before the first deadline: 26 to 27 Sep. **The desk must trade live by Fri 25 Se
   code runs directly with no platform model in between.
 - The desk account is a small custom contract per owner, proven on a fork. Smart-account kits cannot
   cap sells in dollars, bound price, or force the decision hash into the trade.
-- No wallet kit. wagmi 3 broke all of them.
+- No wallet kit. wagmi 3 broke all of them. *(21 Sep: Privy's current release now compiles against our wagmi
+  3.7.7 and shares its context. That was checked at compile time only, and whether to adopt it is open. See
+  `FIDELITY.md` section 7.)*
 - The halt flag exists only in Robinhood's REST API. Its weekend quotes are frozen while its timestamp
   refreshes. The Chainlink feed is "last 0.5% move", not "Friday's close", and is frozen all weekend,
   so **holdings are valued on the pool's 30-minute average, never on the feed.**
@@ -253,6 +255,10 @@ rerun is rate limited. Raw mode uses `x-openserv-disable-braid: true`.
   sealing record or shows "not yet sealed, next seal HH:MM". The go-live lock is enforced server-side.
 - **A states gallery at `/dev/states`** renders every row of brief table 8.16 and every record outcome
   from fixtures. It makes the awkward states reviewable in one place, for us and for the designer.
+- **21 Sep: the design is Masayume's** (Abu's own app, `sommina-events`), ported from **Agari**
+  (`agari-wt/w1`), which already gave it US-stock semantics. `docs/FIDELITY.md` is the contract for the
+  re-skin: what is copied, what is adapted, what is excluded (every betting surface), the conflicts with the
+  brief, and the open decisions.
 - **Built functional-first with shadcn defaults and semantic tokens only.** Components are grouped by
   brief screen and every user-facing word comes from `shared/copy`. When Abu's design arrives, the
   design pass is a re-skin run with the `reference-product-fidelity` approach against that design. If no

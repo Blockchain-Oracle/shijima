@@ -17,10 +17,13 @@ Vercel is needed now.
       eligibility rule.
 
 ## Hackathon admin, whenever you have five minutes
-- [ ] Pre-register: https://form.typeform.com/to/A475N331
-- [ ] Ask in the OpenServ Telegram (https://t.me/openservai) whether a Robinhood Chain build with no MCP
-      qualifies for the "Mainnet & MCP" track.
-- [ ] Register for Arbitrum Open House: https://openhouse.arbitrum.io
+- [x] ~~Ask whether a build with no MCP qualifies.~~ **Answered 21 Sep:** the official page says the track is
+      for agents that "act on Robinhood Chain **or** operate funds via Robinhood MCP". We qualify.
+- [ ] **Submit on https://form.typeform.com/to/A475N331** ("SERV Hackathon #1 submission", open). GyPxGqRn is
+      the old pre-registration form and is closed. The hackathon page's FAQ still links the closed one, so a
+      one-line check in the OpenServ Telegram is worth it. Tick every track that applies: Mainnet & MCP and Open.
+- [ ] **Register for the Arbitrum buildathon on HackQuest by 2 Oct**, submit by 3 Oct. We fit both prize pools,
+      and each keeps a place for a Robinhood Chain project: https://openhouse.arbitrum.io
 - [ ] Take `docs/DESIGN-BRIEF.md` to your designer.
 
 ## Later, only when we deploy

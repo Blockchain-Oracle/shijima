@@ -26,3 +26,10 @@ var/
 
 # Claude Code's own working state. Useful locally, not part of the product.
 .claude/
+.firecrawl/
+
+# Screenshots of third-party products, kept local: evidence for docs/research, not ours to publish.
+docs/research/glider/shots/
+docs/research/ux/shots/
+docs/research/masayume/shots/
+docs/research/glider/font-specimen.png

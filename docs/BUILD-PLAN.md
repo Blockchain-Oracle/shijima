@@ -487,6 +487,46 @@ while committing. Ten were real and are now fixed:
   09:00. The US market reopens Mon 09:30 New York." Snapshots taken before the price gap was recorded fall back
   to showing the value instead, which is the honest thing to do rather than inventing a comparison.
 
+**Mon 21 Sep, afternoon. THE DESIGN IS DECIDED: GLIDER. Research only, no code changed.**
+- Abu rejected a survey of eight products and chose **Glider (glider.fi)** as the only reference, to be followed
+  with the `reference-product-fidelity` method. It is automated portfolios with themed strategies, and it already
+  holds tokenised US stocks. Firecrawl captured its public pages, and Chrome captured everything signed in with
+  Abu's account, including the full onboarding, dashboard, deposit and withdraw. Abu approved pressing
+  Initialize, so an empty Mag7 portfolio now exists in his Glider account. No money was moved.
+- **Glider is shadcn + Tailwind**, so its exact palette, light and dark, is saved in `research/glider/tokens.json`
+  and becomes our theme. **Font: Inter Tight**, chosen against a real Glider screen.
+- **Glider lists Robinhood Chain as a supported chain.** What it lacks is the timing judgment, the record and an
+  assistant that explains.
+- Abu's exclusions: referrals, points, rewards, and the trading side. Withdraw must always exist. Add a chat.
+- **Privy compiles with our wagmi 3.7.7** and shares its context (a throwaway spike). The sign-in choice is left
+  open for plan mode.
+- **Everything is in `docs/FIDELITY.md`**: routes, every screen, the brief conflicts and how each is settled,
+  what is excluded or blocked, and the pending work. It was audited by script against all 22 brief screens, all
+  20 awkward states and every Glider surface. **NEXT: plan mode with Abu, covering this and the pending work together.**
+
+**Mon 21 Sep, evening. DESIGN MOVED TO MASAYUME; THE PRODUCT IS CHAT-FIRST. Research only, no code changed.**
+- Abu preferred **Masayume**, his own Somnia app, over Glider. The port starts from **Agari** (`agari-wt/w1`),
+  which already moved Masayume onto US stocks. Work came from code and existing docs, not screenshots.
+  `docs/FIDELITY.md` is rewritten: every Masayume surface is classified, all betting is excluded, and the brief
+  and all 20 awkward states are covered (audited by script).
+- **Direction:** you talk to your AI and it gets things done. A **strategy is a basket of stocks**. The chat
+  proposes; the owner confirms on a card; the saved proposal runs through existing guarded paths, or through the
+  owner's wallet for anything touching their money. Trades still come only from the worker through `gate()`.
+- **Found:** mandate **notes never reach the model**. Masayume's Sensei **cannot call tools**, so the acting chat
+  is new code. The Mag Seven preset does not exist yet.
+- **Tracks:** we qualify for Mainnet & MCP (no MCP needed) and Open. **The Typeforms were swapped in our docs:
+  submit on A475N331.** Arbitrum buildathon: register on HackQuest by 2 Oct.
+- **Coinbase:** not now for keys, sign-in or x402. The AgentKit track is an open trade-off.
+- Research: `research/2026-09-21-{masayume-port-map,chat-actions,tracks,coinbase-agent-wallet}.md`.
+- **Plan approved the same night** (`~/.claude/plans/typed-enchanting-simon.md`): 12 steps in dependency order,
+  with the money path first on the anvil fork. Two reviews against the code shaped it. They found:
+  - an owner's sell halts the next check;
+  - checks are keyed by the hour;
+  - the override path is new code;
+  - vault sweeps were never built.
+
+  Building now.
+
 ## 6. Schedule
 
 | Day | Work | Must be true by end of day |
@@ -499,7 +539,7 @@ while committing. Ten were real and are now fixed:
 | **Thu 24** | Sign-in, disclosure, onboarding, mandate and read-back. Showcase desk to Ask-first. Replay weekends. Video script. **Product name decided.** | A stranger can create a Shadow desk |
 | **Fri 25** | Safety, withdraw, close, warnings. Relay bridging. Drills on v1: kill and restart, caps hold. **On its own by 16:00 ET** with one tight real rule on a $50 demo desk. Deploy freeze from 20:00 ET. | **Desk is live for the weekend** |
 | **Sat 26** | Comparison page, home page, how-it-works, weekend report, holding detail, settings. Capture footage. Design pass. | |
-| **Sun 27** | README, `docs/ARCHITECTURE.md`, video cut by 14:00 UTC, X post and Typeform GyPxGqRn by 20:00 UTC. | **Submitted** |
+| **Sun 27** | README, `docs/ARCHITECTURE.md`, video cut by 14:00 UTC, X post and Typeform **A475N331** by 20:00 UTC (corrected 21 Sep: GyPxGqRn was pre-registration and is closed). | **Submitted** |
 | **28 Sep to 4 Oct** | Full weekend report with Monday grades, on-chain TWAP guard, per-desk operator keys, remaining design pass. Arbitrum submission. Keep the desk running for the early-October finalist demo. | |
 
 **Sunday spikes, an hour each, to close every unverified item before building on it.**
@@ -549,7 +589,9 @@ template later. Real transaction hashes throughout.
 
 ## 8. Risks
 
-- **Track eligibility.** The track is named "Mainnet & MCP" and we use no MCP. Asked on day one. Every
+- **Track eligibility. SETTLED 21 Sep:** the official page defines the track as agents that act on Robinhood
+  Chain *or* use Robinhood MCP, so we qualify without MCP. We also qualify for the Open track. See
+  `research/2026-09-21-tracks.md`. *(Original note:)* The track is named "Mainnet & MCP" and we use no MCP. Asked on day one. Every
   visible entry in the track uses the chain, not MCP, and "best overall" is open regardless.
 - **Unaudited contract with real money.** Small amounts, two deployments, invariant tests, two review
   passes, no upgrade path, and the honest sentence on the disclosure screen.

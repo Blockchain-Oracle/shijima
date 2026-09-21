@@ -7,6 +7,14 @@ Those are yours to decide.
 Name: **Shijima** (しじま), decided 2026-09-21. The reasoning is in `DECISIONS.md`. In the product's own copy
 the common noun stays lower case: "your desk", "the desk waited". Shijima is the product; a desk is what you own.
 
+> **21 September: the visual design is decided.** It follows **Masayume**, Abu's own app (Glider was
+> considered first and set aside the same day). Layout, navigation, flows and style now come from it, and
+> `docs/FIDELITY.md` maps every screen below onto it.
+> Everything in this brief about *content* still holds: the promises, the modes, the words, every item under
+> each screen, the states in 8.16, Telegram, and section 10. Two things changed: chat with the desk (section
+> 11) is now in, and section 12's "yours" list is answered by Masayume. Its home page gives way to Masayume's
+> markets-first opening, with 8.1's content carried by the first-run tutorial and How it works.
+
 *Revised 19 September after the technical research. Changes: the honest worst-case wording in 8.3, the
 "money first" order in 8.4, the headline rule in 8.11, one new awkward state in 8.16, "close the desk" in
 8.18, and two new public pages, 8.21 and 8.22.*
