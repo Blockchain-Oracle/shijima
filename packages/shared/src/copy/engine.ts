@@ -40,6 +40,9 @@ export const engineCopy = {
     refusedNow: (why: string) =>
       `You approved this, but ${why.charAt(0).toLowerCase()}${why.slice(1)} Nothing was done.`,
     carriedOut: (name: string) => `You approved this, so the desk went ahead with ${name}.`,
+    overrideReason: 'The owner chose to act now, in the chat, after the desk chose to wait.',
+    overrideCarriedOut: (name: string) =>
+      `The desk had chosen to wait. You said do it anyway, so it went ahead with ${name} on your call.`,
   },
 
   need: {

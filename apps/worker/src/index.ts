@@ -3,12 +3,14 @@
  *
  *   boot      become the leader, then settle every transaction an earlier run left unfinished
  *   each tick  do the work in review.ts, which is the same work OpenServ's cron asks for
+ *   the chat   answered as it arrives, in ask.ts, beside the clock
  *
  * This timer is the SAFETY NET, not the clock. OpenServ's hourly cron is the primary trigger. A check is keyed
  * on (desk, the top of the hour), so whichever arrives first does the work and the other finds it already done.
  */
 import { sweepInterruptedWakes } from '@desk/db'
 import { errorText } from '@desk/shared'
+import { startAskLoop } from './ask'
 import { openCli } from './cli/context'
 import { tryBecomeLeader } from './leader'
 import { startAgentIfProvisioned } from './openserv/serve'
@@ -47,6 +49,7 @@ const stop = async (signal: string) => {
   stopping = true
   log('stopping', { signal, note: 'finishing the check in progress first' })
   await running
+  await ask.stop()
   await agent?.stop()
   await telegram?.stop()
   await leader.release()
@@ -58,7 +61,9 @@ process.on('SIGTERM', () => void stop('SIGTERM'))
 
 log('leader', { operator: cli.wallet.account.address, rehearsal: cli.env.isRehearsal })
 const agent = await startAgentIfProvisioned(cli, log)
-const telegram = startTelegram(cli, log)
+// The chat answers beside the clock, never inside it: a person typing should not wait for a check.
+const ask = await startAskLoop(cli, log)
+const telegram = startTelegram(cli, log, ask)
 for (const stuck of await sweepInterruptedWakes(cli.db, new Date(Date.now() - STUCK_WAKE_MS))) {
   log('interrupted_check', { desk: stuck.deskId, hour: stuck.scheduledFor.toISOString() })
 }

@@ -27,6 +27,7 @@
     "desk:mandate": "pnpm --filter @desk/worker mandate",
     "desk:wake": "pnpm --filter @desk/worker wake",
     "desk:review": "pnpm --filter @desk/worker review",
+    "desk:ask": "pnpm --filter @desk/worker ask",
     "prices:log": "tsx --env-file-if-exists=.env scripts/prices.ts",
     "prices:backfill": "tsx --env-file-if-exists=.env scripts/prices.ts backfill",
     "desk:mode": "pnpm --filter @desk/worker wake --set-mode",

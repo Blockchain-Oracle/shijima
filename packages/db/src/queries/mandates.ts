@@ -21,7 +21,17 @@ export async function currentMandate(db: DbOrTx, deskId: string): Promise<Mandat
   return row
 }
 
-export async function applyMandate(db: Db, deskId: string, mandate: Mandate, by: By): Promise<MandateRow> {
+/**
+ * `readBack` is the desk's restatement the owner read before confirming. A change made through the chat or the
+ * studio always carries one; the command line does not.
+ */
+export async function applyMandate(
+  db: Db,
+  deskId: string,
+  mandate: Mandate,
+  by: By,
+  readBack?: Record<string, unknown>,
+): Promise<MandateRow> {
   return db.transaction(async (tx) => {
     const now = new Date()
     const [last] = await tx
@@ -55,6 +65,7 @@ export async function applyMandate(db: Db, deskId: string, mandate: Mandate, by:
         lossStopBps: mandate.lossStopBps,
         largeActionUsdg: mandate.largeActionUsdg,
         notes: mandate.notes,
+        ...(readBack ? { readBack } : {}),
         appliedAt: now,
       })
       .returning()

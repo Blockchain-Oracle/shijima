@@ -70,7 +70,7 @@ export function planOutcome(p: {
 export const OUTCOME_COLUMN = {
   ACTED: 'acted',
   ACTED_IN_PART: 'acted_in_part',
-  ACTED_BY_OVERRIDE: 'acted',
+  ACTED_BY_OVERRIDE: 'acted_by_override',
   WOULD_HAVE_ACTED: 'would_have_acted',
   ASKED: 'asked',
   NOTHING_TO_DO: 'nothing_to_do',

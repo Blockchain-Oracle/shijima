@@ -13,6 +13,7 @@ import { type ApprovedToken, type DeskState, deadlineIn, readTokenConfig } from 
 import { answeredApprovals } from '@desk/db'
 import { DecisionRecordV2, engineCopy, type Mandate } from '@desk/shared'
 import { type Address, type PublicClient, parseUnits } from 'viem'
+import { z } from 'zod'
 import { type CommitContext, commit } from './commit'
 import { type Considered, DEADLINE_SECONDS, SLIPPAGE_BPS } from './consider'
 import { buildEvidence, ownerRules } from './evidence'
@@ -129,6 +130,7 @@ export async function considerApproved(
   // to refuse, so only a worse price counts.
   const shown = request.shown.expectedOut
   const movedBps = shown === 0n ? 0 : Number(((shown - market.quoteOut) * 10_000n) / shown)
+  const override = request.askedBecause === 'owner_override'
   const approvalOf: ApprovalOf = {
     decisionSeq: request.decisionSeq,
     askedBecause: request.askedBecause,
@@ -147,6 +149,9 @@ export async function considerApproved(
     deferral: null,
     newDeferralBaseline: null,
     approvalOf,
+    // "Do it anyway" is the owner's call, not the desk's. It is written into the hashed record as such, and the
+    // desk's own Timing sum leaves it out.
+    override: override ? { by: 'owner', reason: engineCopy.approved.overrideReason } : null,
   }
   const stop = (summary: string) => ({
     ...base,
@@ -165,9 +170,11 @@ export async function considerApproved(
 
   return {
     ...base,
-    outcome: need.limitedByPerAction ? 'ACTED_IN_PART' : 'ACTED',
+    outcome: override ? 'ACTED_BY_OVERRIDE' : need.limitedByPerAction ? 'ACTED_IN_PART' : 'ACTED',
     willAct: true,
-    summary: engineCopy.approved.carriedOut(c.token.displayName),
+    summary: override
+      ? engineCopy.approved.overrideCarriedOut(c.token.displayName)
+      : engineCopy.approved.carriedOut(c.token.displayName),
     preview: {
       amountIn: request.shown.amountIn,
       expectedOut: market.quoteOut,
@@ -177,19 +184,33 @@ export async function considerApproved(
   }
 }
 
+/** The quote the owner was shown for "do it anyway", saved on the approval because a wait has no preview. */
+const OverridePreview = z.object({ amountIn: z.string(), expectedOut: z.string() })
+
 /**
  * Rebuilds what the owner approved from the record that asked. Everything comes from the stored body, so an
  * approval can never be carried out as something other than what was shown. A body that no longer makes sense,
  * such as a token that has left the approved list, simply yields nothing and the approval is left alone.
+ *
+ * "Do it anyway" asks about a record that waited, which has no preview. Its approval carries the fresh quote the
+ * owner confirmed instead, and that quote is what the price is held to.
  */
 function approvedRequest(
   answered: Awaited<ReturnType<typeof answeredApprovals>>[number],
   approved: ApprovedToken[],
 ): ApprovedRequest | undefined {
   const body = DecisionRecordV2.safeParse(answered.record)
-  if (!body.success || !body.data.candidate || !body.data.preview || !body.data.need) return undefined
+  if (!body.success || !body.data.candidate || !body.data.need) return undefined
   if (!answered.answeredAt || !answered.answeredVia) return undefined
-  const { candidate, preview, need } = body.data
+  const { candidate, need } = body.data
+  const shownOverride = OverridePreview.safeParse(answered.preview)
+  const preview =
+    answered.reason === 'owner_override'
+      ? shownOverride.success
+        ? shownOverride.data
+        : undefined
+      : body.data.preview
+  if (!preview) return undefined
   const token = approved.find((t) => t.address.toLowerCase() === candidate.token.toLowerCase())
   if (!token) return undefined
   const inDecimals = candidate.side === 'sell' ? TOKEN_DECIMALS : USDG_DECIMALS

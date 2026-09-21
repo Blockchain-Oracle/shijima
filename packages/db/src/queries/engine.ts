@@ -485,6 +485,7 @@ export async function answeredApprovals(db: DbOrTx, deskId: string) {
       reason: approvals.reason,
       answeredAt: approvals.answeredAt,
       answeredVia: approvals.answeredVia,
+      preview: approvals.preview,
       decisionSeq: decisions.seq,
       record: decisions.record,
     })
@@ -522,7 +523,7 @@ export async function answerApproval(
     approvalId: string
     answer: 'approved' | 'rejected'
     ownerId: string
-    via: 'telegram' | 'web'
+    via: 'telegram' | 'web' | 'chat'
     now?: Date
   },
 ): Promise<ApprovalRow | undefined> {
@@ -602,7 +603,14 @@ export async function ungradedDecisions(db: DbOrTx, deskId: string, before: Date
         lt(decisions.decidedAt, before),
         isNull(grades.id),
         isNotNull(decisions.token),
-        inArray(decisions.outcome, ['acted', 'acted_in_part', 'would_have_acted', 'waited', 'declined']),
+        inArray(decisions.outcome, [
+          'acted',
+          'acted_in_part',
+          'acted_by_override',
+          'would_have_acted',
+          'waited',
+          'declined',
+        ]),
       ),
     )
     .orderBy(asc(decisions.seq))
@@ -629,7 +637,8 @@ export async function spentSince(db: DbOrTx, deskId: string, since: Date): Promi
       and(
         eq(decisions.deskId, deskId),
         gt(decisions.decidedAt, since),
-        inArray(decisions.outcome, ['acted', 'acted_in_part']),
+        // "Do it anyway" spends the same money, so it counts against the same limit.
+        inArray(decisions.outcome, ['acted', 'acted_in_part', 'acted_by_override']),
       ),
     )
   return BigInt(row?.total ?? '0')

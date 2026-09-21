@@ -35,6 +35,12 @@ export interface Grade {
 const COMPARISONS: Record<string, { chosen: string; alternative: string; acted: boolean } | undefined> = {
   acted: { chosen: 'acted then', alternative: 'waiting for the reopen', acted: true },
   acted_in_part: { chosen: 'acted in part then', alternative: 'waiting for the reopen', acted: true },
+  // The owner's own call. Graded so the owner can see how it went, and left out of the desk's Timing sum.
+  acted_by_override: {
+    chosen: 'acting then, on your call',
+    alternative: 'waiting for the reopen',
+    acted: true,
+  },
   would_have_acted: { chosen: 'would have acted then', alternative: 'waiting for the reopen', acted: true },
   waited: { chosen: 'waiting for the reopen', alternative: 'acting then', acted: false },
   declined: { chosen: 'not acting', alternative: 'acting then', acted: false },

@@ -7,6 +7,7 @@
  */
 import { errorText } from '@desk/shared'
 import type { Bot } from 'grammy'
+import type { AskLoop } from '../ask'
 import type { Cli, Log } from '../review'
 import { createBot } from './bot'
 import { drainOutbox, refreshStatus } from './outbox'
@@ -17,7 +18,7 @@ export interface Telegram {
   stop: () => Promise<void>
 }
 
-export function startTelegram(cli: Cli, log: Log): Telegram | undefined {
+export function startTelegram(cli: Cli, log: Log, ask?: AskLoop): Telegram | undefined {
   const token = cli.env.TELEGRAM_BOT_TOKEN
   if (!token) {
     log('telegram_not_configured', { note: 'no TELEGRAM_BOT_TOKEN, so the desk runs without a voice' })
@@ -32,6 +33,7 @@ export function startTelegram(cli: Cli, log: Log): Telegram | undefined {
     log,
     siteUrl,
     refreshStatus: (deskId) => refreshStatus(deps, deskId),
+    ...(ask ? { kickAsk: ask.kick } : {}),
   })
   deps = { db: cli.db, bot, log, siteUrl }
 

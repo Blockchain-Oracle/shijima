@@ -104,6 +104,8 @@ export const telegramCopy = {
     '/resume  start acting again',
     '/help  this',
     '',
+    'Or just write to me. Ask what the desk is doing and why, or tell me what you want changed. I show you a card before anything changes.',
+    '',
     'Approving and rejecting happen on the buttons, or on the website. Either works.',
   ].join('\n'),
 
@@ -115,4 +117,17 @@ export const telegramCopy = {
   linkUsed: 'That code has already been used, or it has expired. Ask the website for a new one.',
   notYourDesk: 'This desk is linked to someone else. I will not answer about it here.',
   seeDetails: 'See the full decision',
+
+  /** The chat, in Telegram. The desk's words are sent as plain text, never as HTML. */
+  askSlowDown: {
+    minute: 'That is a lot of messages at once. Give me a minute.',
+    day: 'That is today’s allowance of messages. I will answer again tomorrow. The desk keeps checking as usual.',
+  },
+  askStillThinking: 'I am still working on that one. Ask again in a minute if no answer comes.',
+  askFailed: 'I could not answer just now. Nothing was changed.',
+  confirm: 'Confirm',
+  notNow: 'Not now',
+  leftAlone: 'Left alone. Nothing was changed.',
+  confirmOnSite: 'Confirm on the website',
+  confirmOnSiteNote: 'This one needs your wallet or your session key, so it is confirmed on the website.',
 } as const
