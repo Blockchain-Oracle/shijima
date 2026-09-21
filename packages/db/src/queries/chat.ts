@@ -467,3 +467,27 @@ export async function proposalForOwner(db: DbOrTx, id: string, ownerAddress: str
     .where(and(eq(askProposals.id, id), eq(askProposals.ownerAddress, ownerAddress.toLowerCase())))
   return row
 }
+
+/**
+ * A studio test read, for the one who asked it: the draft it read and what the desk said. The studio stores the
+ * reply as the mandate's `read_back` only if this draft is exactly the one being created.
+ */
+export async function readBackForOwner(db: DbOrTx, id: string, ownerAddress: string) {
+  const [row] = await db
+    .select({
+      id: askRequests.id,
+      payload: askRequests.payload,
+      reply: askRequests.reply,
+      answeredAt: askRequests.answeredAt,
+    })
+    .from(askRequests)
+    .where(
+      and(
+        eq(askRequests.id, id),
+        eq(askRequests.ownerAddress, ownerAddress.toLowerCase()),
+        eq(askRequests.kind, 'readback'),
+        eq(askRequests.status, 'answered'),
+      ),
+    )
+  return row
+}

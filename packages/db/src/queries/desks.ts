@@ -1,5 +1,5 @@
 /** Registering and finding desks. Only a desk with a row here is ever woken or served. */
-import { and, eq } from 'drizzle-orm'
+import { and, eq, isNull } from 'drizzle-orm'
 import type { DbOrTx } from '../client'
 import { desks, owners } from '../schema'
 
@@ -64,4 +64,56 @@ export async function findDeskByAddress(
     .from(desks)
     .where(and(eq(desks.chainId, chainId), eq(desks.address, address.toLowerCase())))
   return row
+}
+
+/**
+ * The owner's unfinished desk from the studio: a row written at Publish with its own salt and the address the
+ * factory will give it, before the contract exists. There is at most one per owner and factory; the studio resumes
+ * it rather than making another, so money already sent to that address is never stranded.
+ */
+export async function draftDeskOf(
+  db: DbOrTx,
+  ownerAddress: string,
+  factory: string,
+): Promise<DeskRow | undefined> {
+  const [row] = await db
+    .select({ desk: desks })
+    .from(desks)
+    .innerJoin(owners, eq(desks.ownerId, owners.id))
+    .where(
+      and(
+        eq(owners.address, ownerAddress.toLowerCase()),
+        eq(desks.factory, factory.toLowerCase()),
+        eq(desks.lifecycle, 'onboarding'),
+        isNull(desks.deployedAt),
+      ),
+    )
+    .orderBy(desks.createdAt)
+    .limit(1)
+  return row?.desk
+}
+
+/** Names a draft desk. Only a draft: a desk that exists keeps the name it was created with here. */
+export async function nameDraftDesk(db: DbOrTx, deskId: string, name: string): Promise<void> {
+  await db
+    .update(desks)
+    .set({ name, updatedAt: new Date() })
+    .where(and(eq(desks.id, deskId), eq(desks.lifecycle, 'onboarding'), isNull(desks.deployedAt)))
+}
+
+/** The chain confirmed the desk. From here it is served and, once its mandate is applied, woken. */
+export async function markDeskDeployed(db: DbOrTx, deskId: string, deployTx: string | null): Promise<void> {
+  const now = new Date()
+  await db
+    .update(desks)
+    .set({ deployedAt: now, deployTx: deployTx?.toLowerCase() ?? null, updatedAt: now })
+    .where(and(eq(desks.id, deskId), isNull(desks.deployedAt)))
+}
+
+/** The owner chose to go on without Telegram (design brief 8.8). Remembered, so the studio stops asking. */
+export async function skipTelegram(db: DbOrTx, deskId: string): Promise<void> {
+  await db
+    .update(desks)
+    .set({ telegramSkippedAt: new Date(), updatedAt: new Date() })
+    .where(and(eq(desks.id, deskId), isNull(desks.telegramSkippedAt)))
 }

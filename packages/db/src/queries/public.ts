@@ -8,7 +8,7 @@
  */
 import { and, asc, desc, eq, gte, lt, sql } from 'drizzle-orm'
 import type { DbOrTx } from '../client'
-import { actions, decisions, deferrals, desks, deskValueSnapshots, grades, owners } from '../schema'
+import { actions, decisions, deferrals, desks, deskValueSnapshots, grades, mandates, owners } from '../schema'
 
 /** The public face of a desk. No owner address, no Telegram, no invite code. */
 export const publicDeskColumns = {
@@ -199,12 +199,40 @@ export function groupQuietRuns(newestFirst: PublicDecision[], minRun = 3): Recor
 }
 
 /** Every desk belonging to one signed-in address. The only query keyed on a person. */
+/**
+ * The owner's desks. A studio draft whose contract does not exist yet is left out: it is not a desk until the
+ * chain says so, and the studio shows it on its own as "finish creating it".
+ */
 export async function desksOfOwner(db: DbOrTx, ownerAddress: string) {
   return db
     .select(publicDeskColumns)
     .from(desks)
     .innerJoin(owners, eq(desks.ownerId, owners.id))
-    .where(eq(owners.address, ownerAddress.toLowerCase()))
+    .where(
+      and(
+        eq(owners.address, ownerAddress.toLowerCase()),
+        sql`not (${desks.lifecycle} = 'onboarding' and ${desks.deployedAt} is null)`,
+      ),
+    )
+    .orderBy(desks.createdAt)
+}
+
+/**
+ * What each shared desk holds, for "Start from a strategy": the mix only, never its trades, its notes or its
+ * limits. Only desks whose owner turned sharing on.
+ */
+export async function sharedMixes(db: DbOrTx) {
+  return db
+    .select({
+      name: desks.name,
+      shareSlug: desks.shareSlug,
+      mode: desks.mode,
+      preset: mandates.preset,
+      targets: mandates.targets,
+    })
+    .from(desks)
+    .innerJoin(mandates, and(eq(mandates.deskId, desks.id), eq(mandates.status, 'applied')))
+    .where(and(eq(desks.shareEnabled, true), sql`${desks.lifecycle} <> 'closed'`))
     .orderBy(desks.createdAt)
 }
 

@@ -217,3 +217,30 @@ export async function sharedDecisionsOn(db: DbOrTx, tokens: string[], from: Date
     .orderBy(asc(decisions.decidedAt))
     .limit(limit)
 }
+
+/**
+ * The weekend fact for the first-run tutorial: on the latest weekend in the price log, while the US market was
+ * shut, the largest distance any Stock Token's pool moved from its Friday reference. Measured on the logged gap
+ * against `last_regular_close`, so it is the engine's own reference and never a claim about Monday.
+ */
+export async function latestWeekendMove(
+  db: DbOrTx,
+): Promise<{ token: string; gapBps: number; saturday: string } | undefined> {
+  const rows = await db.execute<{ token: string; gap_bps: number; saturday: string }>(sql`
+    with weekend as (
+      select token, gap_bps, (${pricePoints.at} at time zone 'America/New_York')::date as day
+      from ${pricePoints}
+      where extract(isodow from (${pricePoints.at} at time zone 'America/New_York')) in (6, 7)
+        and ${pricePoints.referenceKind} = 'last_regular_close'
+        and ${pricePoints.gapBps} is not null
+        and ${pricePoints.at} > now() - interval '21 days'
+    ),
+    latest as (select max(day) - (extract(isodow from max(day))::int - 6) as saturday from weekend)
+    select w.token, w.gap_bps, l.saturday::text as saturday
+    from weekend w, latest l
+    where w.day between l.saturday and l.saturday + 1
+    order by abs(w.gap_bps) desc
+    limit 1`)
+  const row = rows.rows[0]
+  return row ? { token: row.token, gapBps: Number(row.gap_bps), saturday: row.saturday } : undefined
+}
