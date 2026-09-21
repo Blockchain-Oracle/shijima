@@ -154,6 +154,8 @@ export interface InboxItem {
   kind: string
   text: string
   decisionSeq: number | null
+  /** A price alert names its stock, and opens that stock's page. */
+  symbol: string | null
   at: string
   read: boolean
 }
@@ -172,6 +174,7 @@ export async function inboxAction(): Promise<InboxItem[]> {
     kind: r.kind,
     text: words(r.payload),
     decisionSeq: r.decisionSeq,
+    symbol: r.kind === 'price_alert' && typeof r.payload.symbol === 'string' ? r.payload.symbol : null,
     at: r.createdAt.toISOString(),
     read: r.readAt !== null,
   }))

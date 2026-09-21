@@ -17,7 +17,8 @@ export const metadata = { title: 'Open a desk' }
  * It is deliberately short. The disclosure is not buried, and the desk starts in practice mode whatever the
  * owner chooses, so the first thing anyone sees it do costs them nothing.
  */
-export default async function Start() {
+export default async function Start({ searchParams }: { searchParams: Promise<{ preset?: string }> }) {
+  const { preset } = await searchParams
   const address = await signedInAddress()
   const desks = address ? await desksOfOwner(db(), address) : []
   const existing = desks[0]
@@ -68,6 +69,7 @@ export default async function Start() {
           <MandateForm
             deskId={existing.id}
             presets={PRESETS}
+            initialPreset={preset}
             tokens={APPROVED_TOKENS.map((t) => ({ symbol: t.symbol, name: t.displayName }))}
           />
           <section className="space-y-2 rounded-lg border border-line p-4">

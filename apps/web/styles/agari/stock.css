@@ -1,0 +1,334 @@
+/* Copied from Agari for the markets hero and the stock page. Each block names its source file; the rules are
+ * verbatim unless a comment says otherwise. */
+
+/* ── features/markets/hero/asset-hero.css ── */
+/* The ticker picker under the head, at the head's own inset (part-04 `.hero-chart-head` pads 24px). */
+.mh-asset-pick {
+  flex-shrink: 0;
+  padding: 0 24px 14px;
+}
+
+/* The foot's left cell carries the phrase and the source as one line; the source is the quieter half. */
+.mh-foot-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.mh-foot-soft {
+  color: var(--gray-600);
+}
+/* A phone keeps the phrase and the last close; the source is the line Masayume also drops at this width (part-16
+   hides its own foot note under 480px). */
+@media (max-width: 480px) {
+  .mh-foot-source {
+    display: none;
+  }
+}
+
+/* The change pill and its "since" word share the distance row; the word is the quiet half. The figure never breaks
+   mid-line: on a phone's narrow head the word drops under it instead. */
+[data-asset] .mh-distance {
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+[data-asset] .mh-distance-value {
+  white-space: nowrap;
+}
+.mh-distance .mh-since {
+  color: var(--gray-500);
+  font-size: 12px;
+}
+@media (min-width: 640px) {
+  .mh-distance .mh-since {
+    font-size: 13px;
+  }
+}
+
+/* The selected listed Window's line under the price (D-088): the reference's `.pair-meta`, on its own line. */
+.mh-window-line {
+  display: block;
+  margin-top: 2px;
+}
+
+/* ── styles/ticket-composer.css: the ticket's panel, as the hero's right rail ── */
+.tk-ticket {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tk-ticket--rail {
+  border: 1px solid var(--ticket-border);
+  border-radius: var(--ticket-radius);
+  background: var(--ticket-surface);
+  padding: 20px;
+}
+.tk-amount-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.45);
+}
+[data-theme="light"] .tk-amount-label {
+  color: rgba(20, 18, 16, 0.62);
+}
+
+/* ── features/markets/lanes/ticker-picker.css: a row of tabs that scrolls on a phone ── */
+.tkp {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tkp::-webkit-scrollbar {
+  display: none;
+}
+
+/* A thumb-sized target; the underline stays on the tab's own bottom edge. */
+.tkp .asset-tab {
+  flex: none;
+  min-height: 32px;
+}
+
+
+/* ── styles/alerts.css: the hero foot's left group ── */
+.mh-foot-actions {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+/* ── styles/news.css: the page frame the ticker hub uses ── */
+.news-page {
+  --news-hairline: rgba(255, 255, 255, 0.12);
+  --news-rule: rgba(255, 255, 255, 0.06);
+  --news-hover: rgba(255, 255, 255, 0.02);
+  --news-bone: rgba(255, 255, 255, 0.05);
+  /* pt-[140px] pb-24 — the shell already clears the 92px chrome; the sides stay .container's */
+  padding-top: 48px;
+  padding-bottom: 96px;
+}
+
+[data-theme="light"] .news-page {
+  --news-hairline: rgba(20, 18, 16, 0.12);
+  --news-rule: rgba(20, 18, 16, 0.08);
+  --news-hover: rgba(20, 18, 16, 0.03);
+  --news-bone: rgba(20, 18, 16, 0.06);
+}
+
+/* max-w-5xl mx-auto */
+.news-inner {
+  max-width: 64rem;
+  margin: 0 auto;
+}
+
+/* flex items-center gap-2 mb-3 */
+.news-live {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+/* w-1.5 h-1.5 rounded-full bg-vermilion animate-pulse + boxShadow: 0 0 12px var(--vermilion) */
+.news-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--vermilion);
+  box-shadow: 0 0 12px var(--vermilion);
+  animation: newsPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes newsPulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* font-mono text-[10px] uppercase tracking-[0.22em] text-gray-500 */
+.news-live-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+}
+
+/* font-display text-4xl md:text-5xl font-extrabold tracking-tight mb-2 */
+.news-title {
+  margin-bottom: 8px;
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  color: var(--white);
+}
+
+.news-title .vermilion {
+  color: var(--vermilion);
+}
+
+@media (min-width: 768px) {
+  .news-title {
+    font-size: 48px;
+  }
+}
+
+/* The reference's own .page-title-jp (globals.css at 93d09c1^), not in the pinned system. */
+.news-page .page-title-jp {
+  margin-top: 14px;
+  margin-bottom: 8px;
+  font-family: var(--font-jp);
+  font-weight: 700;
+  font-size: clamp(1rem, 1.6vw, 1.4rem);
+  letter-spacing: 0.04em;
+  color: var(--gray-500);
+}
+
+/* text-sm text-gray-400 max-w-xl */
+.news-intro {
+  max-width: 36rem;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--gray-400);
+}
+
+/* mt-12 */
+.news-feed {
+  margin-top: 48px;
+}
+
+/* mt-16 font-mono text-xs text-gray-600 */
+.news-quiet {
+  margin-top: 64px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--gray-600);
+}
+
+/* The tone: a dot in the sentiment's ink and its word (D-082 replaces the reference's bordered pill;
+   the mono face, size and tracking are the pill's own: font-mono text-[9px] uppercase tracking-[0.14em]
+   positive: text-profit · negative: text-loss · neutral: text-gray-500). The activity feed names an
+
+/* ── features/profile/profile.css: the figure bar ── */
+
+.prf-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--news-hairline);
+}
+
+.prf-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+}
+
+.prf-stat dd {
+  margin: 8px 0 0;
+}
+
+.prf-stat .big {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  color: var(--white);
+}
+
+.prf-stat .big a:hover {
+  color: var(--vermilion);
+}
+
+.prf-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+}
+
+.prf-section .lb-section-head .type-title {
+  text-transform: none;
+}
+
+@media (max-width: 640px) {
+  .prf-stats {
+    gap: 24px;
+  }
+}
+
+/* ── features/ticker-hub/ticker-hub.css ── */
+.tkh-live {
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+/* The asset's mark leads the title (S18c, D-085): 48 px beside the display face, 40 px on a phone. */
+.tkh-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.tkh-mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 9999px;
+}
+
+.tkh-mark.generic {
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 24px;
+}
+
+[data-theme="light"] .tkh-mark.generic {
+  background: rgba(20, 18, 16, 0.1);
+}
+
+@media (max-width: 767px) {
+  .tkh-mark {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+.tkh-page .prf-actions .mh-room {
+  margin: 0;
+}
+
+.tkh-pending {
+  margin-top: 0;
+  line-height: 1.7;
+}
+
+.tkh-link {
+  color: var(--vermilion);
+  white-space: nowrap;
+}
+
+/* The headlines list takes the activity list's rhythm under its section head. */
+.tkh-headlines {
+  margin-top: 24px;
+}

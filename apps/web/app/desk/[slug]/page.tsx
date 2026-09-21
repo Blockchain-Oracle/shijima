@@ -28,8 +28,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
  * One desk. Its owner lands here, and the chat comes first: you talk to your desk and it gets things done. A
  * visitor with the share link sees the same page read-only, without the chat.
  */
-export default async function DeskPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function DeskPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ ask?: string }>
+}) {
   const view = await loadDesk((await params).slug)
+  const { ask } = await searchParams
   if (!view) notFound()
   const d = view.desk
   return (
@@ -54,7 +61,11 @@ export default async function DeskPage({ params }: { params: Promise<{ slug: str
         contractVersion={d.contractVersion}
       >
         <DeskTabs
-          chat={view.isOwner ? <DeskChat deskId={d.id} slug={view.slug} initial={view.turns} /> : null}
+          chat={
+            view.isOwner ? (
+              <DeskChat deskId={d.id} slug={view.slug} initial={view.turns} prefill={ask} />
+            ) : null
+          }
           desk={
             <>
               <NeedsYou view={view} />

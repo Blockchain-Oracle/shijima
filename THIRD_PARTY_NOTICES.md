@@ -44,3 +44,17 @@ Packaged libraries keep their own notices. Among them:
 
 This list is a guide to attribution. It does not replace the lockfile or the full licence text shipped with
 each dependency.
+
+## Asset marks
+
+The discs that name a Stock Token (`apps/web/features/markets/mark-paths.ts`, copied from Agari) carry the issuer's
+mark as inline SVG path data, so nothing is fetched at runtime. The marks and names are trademarks of their owners;
+they identify the underlying assets and imply no endorsement of, or affiliation with, Shijima. A CC0 grant below
+covers the vectorization, not the trademark.
+
+| Mark | Source | Terms |
+| --- | --- | --- |
+| Tesla, NVIDIA, Apple, Meta, Google | [simple-icons](https://github.com/simple-icons/simple-icons) **16.31.0** (`icons/<slug>.svg`) | CC0 1.0 Universal |
+| Amazon | simple-icons **14.15.0**, the last release to carry `amazon.svg` | CC0 1.0 at publication. Removed in 15.0.0 pending permission, not on a request from Amazon. |
+| Microsoft | Own geometry: four rectangles, no third-party artwork | simple-icons removed its Microsoft icons on Microsoft's trademark terms, so none is vendored. |
+| SPDR S&P 500, Invesco QQQ, iShares 0-3 Month Treasury Bond | None: a monogram typed on the fund house's colour | — |

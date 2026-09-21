@@ -1,6 +1,8 @@
 'use client'
 
 import { webCopy } from '@desk/shared'
+import type { Route } from 'next'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { sessionLine } from './MarketSessionChip'
 
@@ -59,11 +61,17 @@ export default function Marquee({ initial }: { initial: TickerCell[] }) {
         </span>
       ) : (
         items.map((item) => (
-          <span key={`${prefix}-${item.key}`} className="marquee-cell">
+          <Link
+            key={`${prefix}-${item.key}`}
+            href={`/stock/${item.key}` as Route}
+            className="marquee-cell"
+            // The strip is hidden from screen readers and moves, so its cells are a shortcut for a pointer only.
+            tabIndex={-1}
+          >
             <span className="lbl">{item.label}</span>
             <span className="val">{item.value}</span>
             {item.gap && <span className={item.gap.dir}>{item.gap.text}</span>}
-          </span>
+          </Link>
         ))
       )}
       {session && (

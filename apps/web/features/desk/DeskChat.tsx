@@ -59,10 +59,21 @@ function Cites({ ids, slug }: { ids: string[]; slug: string }) {
  * starters) as a full-height panel, on a brain that can propose. A message is written as a row for the worker,
  * which holds the model key; this page polls for the answer.
  */
-export function DeskChat({ deskId, slug, initial }: { deskId: string; slug: string; initial: ChatTurn[] }) {
+export function DeskChat({
+  deskId,
+  slug,
+  initial,
+  prefill = '',
+}: {
+  deskId: string
+  slug: string
+  initial: ChatTurn[]
+  /** A question brought from elsewhere, such as "Ask about this" on a chart. Typed in, never sent for them. */
+  prefill?: string | undefined
+}) {
   const router = useRouter()
   const [turns, setTurns] = useState(initial)
-  const [input, setInput] = useState('')
+  const [input, setInput] = useState(prefill.slice(0, 500))
   const [typingId, setTypingId] = useState<string | null>(null)
   const [slow, setSlow] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)

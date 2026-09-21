@@ -63,9 +63,11 @@ export function HeaderInbox({ unread }: { unread: number }) {
             <ul className="inbox-list">
               {items.map((item) => {
                 const href = (
-                  item.decisionSeq === null
-                    ? `/desk/${item.deskId}`
-                    : `/desk/${item.deskId}/decision/${item.decisionSeq}`
+                  item.symbol
+                    ? `/stock/${item.symbol}`
+                    : item.decisionSeq === null
+                      ? `/desk/${item.deskId}`
+                      : `/desk/${item.deskId}/decision/${item.decisionSeq}`
                 ) as Route
                 return (
                   <li key={item.id}>

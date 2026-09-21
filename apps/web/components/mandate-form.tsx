@@ -22,14 +22,18 @@ export function MandateForm({
   deskId,
   presets,
   tokens,
+  initialPreset,
 }: {
   deskId: string
   presets: Preset[]
   tokens: { symbol: string; name: string }[]
+  /** A strategy chosen elsewhere, such as "Start a desk with this" on the markets page. */
+  initialPreset?: string | undefined
 }) {
-  const [preset, setPreset] = useState<Preset | undefined>(presets[0])
-  const [weights, setWeights] = useState<Record<string, number>>(presets[0]?.weights ?? {})
-  const [cashBps, setCashBps] = useState(presets[0]?.cashBps ?? 10_000)
+  const first = presets.find((p) => p.id === initialPreset) ?? presets[0]
+  const [preset, setPreset] = useState<Preset | undefined>(first)
+  const [weights, setWeights] = useState<Record<string, number>>(first?.weights ?? {})
+  const [cashBps, setCashBps] = useState(first?.cashBps ?? 10_000)
   const [pending, start] = useTransition()
   const [result, setResult] = useState<ActionResult>()
 
