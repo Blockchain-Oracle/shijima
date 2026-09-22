@@ -12,6 +12,7 @@ import { PriceAlerts } from '@/features/markets/PriceAlerts'
 import { PriceChart } from '@/features/markets/PriceChart'
 import { SessionClock } from '@/features/markets/SessionClock'
 import { AskAbout } from '@/features/markets/StrategyHero'
+import { RoomButton } from '@/features/room/RoomButton'
 import { bySymbol, loadStock, parseRange, RANGES, type Range } from '@/lib/markets.server'
 import { cn } from '@/lib/utils'
 
@@ -123,6 +124,7 @@ export default async function StockPage({ params, searchParams }: Props) {
             </div>
           </dl>
           <div className="prf-actions">
+            <RoomButton symbol={token.symbol} name={token.displayName} />
             <AskAbout viewer={view.viewer} question={stockCopy.askQuestion(token.displayName)} />
             <Link href="/strategies" className="tkh-link type-caption" data-cursor="hover">
               {stockCopy.startWith} →

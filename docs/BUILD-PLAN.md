@@ -715,6 +715,43 @@ Proven on the anvil fork and against the live database in headless Chrome. Nothi
 - **Next:** step 12 (share cards, Rooms, Takes, Reels). Vault sweeps are still owed from step 3. Waiting on Abu: SERV
   top-up (then `pnpm compare:run`), the go for v1 (about $1) with Blockscout verification.
 
+**Tue 22 Sep, midday. VAULT SWEEPS AND STEP 12 BUILT: IDLE CASH EARNS; SHARE CARDS, ROOMS, TAKES, REELS.** Proven on
+the anvil fork and the rehearsal database in headless Chrome. Nothing was sent to mainnet.
+- **Savings-vault sweeps (owed since step 3).** After the trades, a desk acting on its own parks the idle part of
+  its cash target in Steakhouse USDG (Morpho), keeping three per-action limits loose, when 30 days of interest at
+  Morpho's live rate beat three times the round trip's network fee (base fee × measured gas × Chainlink ETH).
+  Before the trades, any desk not in practice redeems when its buys need the cash. No model call; each move is its
+  own record (v2 widened: `sweep`, `redeem`, a `vault` evidence item) with its hash on-chain. Reconcile compares
+  vault shares (migration 0004), so a sweep is never read as a withdrawal. v1 desks only.
+- **Proven on the fork, checked with `cast` and an independent Python re-hash:** a $5,000 desk swept **$792.12**
+  (its idle cash target) at 4.00%, fee bar $0.11; the `Swept` event's hash equalled record 8's. The next check saw
+  no outside change. The owner withdrew $4,211.88; the next check read that as money leaving, scaled the baseline to
+  $795.12, and **redeemed $8** because the buys wanted $9 with $1 loose; `Redeemed` matched record 12. The check
+  after saw no outside change. `findOutcome` reads both receipts, so crash recovery settles vault moves.
+- **Found by the first run:** my first rule swept cash the mandate was about to spend on stocks, which would have
+  meant a redeem and a fee every hour while the desk bought. Only the cash target is swept now. And anvil's
+  `eth_gasPrice` includes a 1 gwei tip this chain ignores, so the fee uses the block's base fee.
+- **The desk page** shows the vault's live rate beside the parked amount, with the brief's small print. A withdrawal
+  the vault cannot pay now says so and offers what can be taken now (brief 8.15). Not built: interest earned so far.
+- **Share cards** (`features/share/`): Agari's canvas kit verbatim, a decision card built on the server from the
+  record alone and drawn in the browser, on every shared decision page; `/dev/share` draws the latest of each kind.
+- **Rooms** (one per Stock Token, on its page) and **Takes** (`room_posts`, `takes`, migration 0005; routes under
+  `/api/room/[symbol]` and `/api/takes`). The gate is our sign-in plus owning a desk. Proven on the rehearsal
+  database: signed out, "The Room is for people with a desk" with Connect; no desk, "You need a desk to join" with
+  a link to the studio; owner, a line posted with **holds it** (the desk holds Nvidia); a second line at once was
+  refused by the rate limit and never stored; a take about Apple naming `$NVDA` was filed under `{AAPL, NVDA}` with
+  no badge (no Apple held).
+- **Reels** (`/reels`, in the nav after Markets): the ten Stock Tokens, the latest shared decisions with their marker
+  on the stock's line, and takes, snap-scrolled; the Take pill opens the composer on the card's stock.
+- **Fixed on the way:** script-registered desks (the live dev desk included) have no `deployed_at`, so the first gate
+  locked their owner out; it now keys on lifecycle. A fired price alert's time rendered differently on the server
+  and in the browser (a hydration error on the stock page since step 9); it now uses New York time. `next-env.d.ts`,
+  rewritten by every build, is left out of the formatter.
+- **Checked** at 390, 768, 1024 and 1440 in both themes, signed in and out: no sideways scroll, every sheet on
+  screen, no console errors. Lint clean, typecheck clean, 93 checks pass, production build passes.
+- **Next:** the live weekend. Waiting on Abu: SERV top-up (then `pnpm compare:run`), the go for v1 (about $1) with
+  Blockscout verification, then the demo desk with $50.
+
 ## 6. Schedule
 
 | Day | Work | Must be true by end of day |

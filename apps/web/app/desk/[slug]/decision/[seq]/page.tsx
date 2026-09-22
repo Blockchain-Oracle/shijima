@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { CheckIt } from '@/components/check-it'
 import { Outcome, outcomeLabel } from '@/components/outcome'
+import { decisionCard } from '@/features/share/card-data'
+import { ShareDecisionButton } from '@/features/share/ShareDecisionButton'
 import { db } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
@@ -60,8 +62,11 @@ export default async function DecisionPage({ params }: { params: Promise<{ slug:
               </span>
             ) : null}
           </h1>
-          <span className="tabular text-ink-faint text-sm">
-            #{decision.seq} · {localTime(decision.decidedAt)}
+          <span className="tabular flex items-baseline gap-3 text-ink-faint text-sm">
+            <span>
+              #{decision.seq} · {localTime(decision.decidedAt)}
+            </span>
+            <ShareDecisionButton card={decisionCard(desk, full, body)} />
           </span>
         </div>
         <p className="text-ink-soft">{decision.summary}</p>

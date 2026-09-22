@@ -24,6 +24,15 @@
 @import "./agari/error.css";
 @import "./agari/stock.css";
 @import "./agari/strategies.css";
+@import "./agari/share-card.css";
+@import "./agari/room.css";
+@import "./agari/room-thread.css";
+@import "./agari/reel.css";
+@import "./agari/reel-chrome.css";
+@import "./agari/reel-theme.css";
+@import "./agari/take.css";
+@import "./agari/take-cashtag.css";
+@import "./agari/take-composer.css";
 @import "./markets.css";
 @import "./shijima.css";
 @import "./agari/base.css";

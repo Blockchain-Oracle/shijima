@@ -1,10 +1,17 @@
 import { webCopy } from '@desk/shared'
-import { BookOpen, ChartLine, Layers3, type LucideIcon, MessageSquare } from 'lucide-react'
+import {
+  BookOpen,
+  ChartLine,
+  GalleryVerticalEnd,
+  Layers3,
+  type LucideIcon,
+  MessageSquare,
+} from 'lucide-react'
 import type { Route } from 'next'
 
 /**
- * Every destination in one registry, as in Agari (`components/shell/header/nav-items.ts`), with our four:
- * Your desk (it is the chat), Markets, Strategies and How it works. There is no separate Ask item.
+ * Every destination in one registry, as in Agari (`components/shell/header/nav-items.ts`), with ours: Your desk
+ * (it is the chat), Markets, Reels (after Markets, where Agari puts it), Strategies and How it works.
  */
 export type NavItem = {
   id: string
@@ -34,6 +41,13 @@ export const NAV_ITEMS = {
     icon: ChartLine,
     match: { paths: ['/markets', '/stock'] },
   },
+  reels: {
+    id: 'reels',
+    name: webCopy.nav.reels.name,
+    href: '/reels',
+    description: webCopy.nav.reels.description,
+    icon: GalleryVerticalEnd,
+  },
   strategies: {
     id: 'strategies',
     name: webCopy.nav.strategies.name,
@@ -54,15 +68,25 @@ export const NAV_ITEMS = {
 export const DESKTOP_NAV: readonly NavItem[] = [
   NAV_ITEMS.desk,
   NAV_ITEMS.markets,
+  NAV_ITEMS.reels,
   NAV_ITEMS.strategies,
   NAV_ITEMS.howItWorks,
 ]
 
-export const MOBILE_NAV: readonly NavItem[] = [NAV_ITEMS.desk, NAV_ITEMS.markets, NAV_ITEMS.strategies]
+export const MOBILE_NAV: readonly NavItem[] = [
+  NAV_ITEMS.desk,
+  NAV_ITEMS.markets,
+  NAV_ITEMS.reels,
+  NAV_ITEMS.strategies,
+]
 
 export const MOBILE_DRAWER_SECTIONS: readonly NavSection[] = [
   { id: 'yours', ...webCopy.nav.sections.yours, items: [NAV_ITEMS.desk] },
-  { id: 'explore', ...webCopy.nav.sections.explore, items: [NAV_ITEMS.markets, NAV_ITEMS.strategies] },
+  {
+    id: 'explore',
+    ...webCopy.nav.sections.explore,
+    items: [NAV_ITEMS.markets, NAV_ITEMS.reels, NAV_ITEMS.strategies],
+  },
   { id: 'learn', ...webCopy.nav.sections.learn, items: [NAV_ITEMS.howItWorks] },
 ]
 

@@ -369,6 +369,34 @@ Made 2026-09-22 by Claude, finishing what step 3 of the chat-first plan owed. Ab
 
 ---
 
+## Decisions made while building share cards, Rooms, Takes and Reels
+
+Made 2026-09-22 by Claude, in step 12 of the chat-first plan. Abu can overrule any of these.
+
+1. **The share card is for one decision on a shared desk**, from its decision page (a private desk has no public
+   page for the QR to open). It is Agari's 1600×900 ticket: the outcome in words is the focal line, then the size,
+   the gap to the reference and how sure the model was, then the grade after the reopen. Vermilion appears only
+   when that grade came out better than acting at once; a worse one is ash, never red. No headline text, ever.
+   The QR and the post open the decision's own page on whatever site the reader is on.
+2. **The Room's gate is our sign-in plus owning a desk.** Agari asks for a join signature because its session
+   cannot prove a wallet; ours already does. A desk counts once it has left `onboarding` (its contract exists).
+   A desk in practice counts: the Room says "start a desk, even in practice, and it opens."
+3. **Reading a Room is for members too**, as in Agari. Takes are public, like a shared desk.
+4. **"Holds it" is opt-in and checked by the server** against the author's desks' latest valuation at the moment
+   of posting, so no client can claim it. The Room remembers the choice in the browser.
+5. **A take has no call.** Agari's takes are UP or DOWN on a Window. Ours are 240 characters about one Stock Token,
+   filed under it and every approved `$TICKER` the words name (at most four). No sides, no "take the other side".
+6. **Reels are the markets page's own reads**: the ten Stock Tokens (furthest from their reference first), what
+   shared desks decided (the latest twelve, first of each run), and takes, woven stock, take, decision. The call
+   row opens the stock, the decision's reasons, or the take composer. Nothing to bet on.
+7. **Rate limits are counted in the tables themselves**: a Room line every 3 seconds and 20 in 10 minutes, 3 takes
+   a minute and 30 a day (Agari's numbers), so they hold across restarts.
+8. **The words are shown as the author's short wallet address**, as in Masayume and Agari. Posting says so, and
+   says the desk's assistant never reads the Room or takes. The chat's context never loads either table.
+9. **Reels sits after Markets in the nav**, where Agari puts it, on the desktop bar and the phone's pill.
+
+---
+
 ## The name
 
 Abu names his projects in Japanese, as he did with Baku (獏). **Shijima (しじま)**, chosen by him on

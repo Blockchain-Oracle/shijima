@@ -1,0 +1,43 @@
+/* The share card, from Agari (web/src/styles/share-card.css): the tokens the PNG draws its palette from
+ * (features/share/canvas.ts reads them, so no colour lives in code) and the share link.
+ * The exported card has one design, whatever the page theme. */
+
+:root {
+  /* Agari's --share-ground-trade: the warmer near-black */
+  --share-ground: #070505;
+  --share-ash: #8f8a82;
+  /* the QR tile on the stub: Yosuku's light-card paper and its ink */
+  --share-paper: #fdf8ef;
+  --share-qr-ink: #141210;
+}
+
+.share-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-ink-secondary);
+  outline: none;
+  transition: color 150ms var(--ease);
+}
+
+.share-link:hover:not(:disabled) { color: var(--vermilion); }
+.share-link:focus-visible { color: var(--vermilion); text-decoration: underline; }
+.share-link:disabled { opacity: 0.5; cursor: wait; }
+
+/* /dev/share: the 1600×900 exports at a quarter of their width */
+.dev-share-png {
+  width: 400px;
+  max-width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 20px 50px -30px rgba(0, 0, 0, 0.8);
+}
+
+.dev-share-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}

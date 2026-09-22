@@ -5,7 +5,7 @@ import { glyphTransform, MARK_GLYPHS } from './mark-paths'
  * Agari's asset disc (`features/markets/hero/asset-mark.tsx` and `AssetMarkSvg.tsx`), for our ten Stock Tokens:
  * the brand's colour with its white glyph, or a typed monogram for a fund. The fills live in `icons.css`.
  */
-const BRANDS: Record<string, { slug: string; monogram: string }> = {
+export const BRANDS: Record<string, { slug: string; monogram: string }> = {
   NVDA: { slug: 'nvidia', monogram: 'N' },
   AAPL: { slug: 'apple', monogram: 'A' },
   MSFT: { slug: 'microsoft', monogram: 'M' },

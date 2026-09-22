@@ -1,6 +1,6 @@
 'use client'
 
-import { alertsCopy } from '@desk/shared'
+import { alertsCopy, newYorkTime } from '@desk/shared'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { cancelAlertAction, setAlertAction } from '@/app/alert-actions'
@@ -131,11 +131,8 @@ export function PriceAlerts({
                     ? alertsCopy.waiting(pct(a.thresholdBps), alertsCopy.directions[a.direction])
                     : a.status === 'fired' && a.firedAt
                       ? alertsCopy.fired(
-                          new Date(a.firedAt).toLocaleString(undefined, {
-                            weekday: 'short',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          }),
+                          // New York time, with its zone and clock fixed, so the server and the browser agree.
+                          newYorkTime(new Date(a.firedAt)),
                           `${pct(Math.abs(a.firedGapBps ?? 0))} ${(a.firedGapBps ?? 0) >= 0 ? 'above' : 'below'}`,
                         )
                       : alertsCopy.cancelled}

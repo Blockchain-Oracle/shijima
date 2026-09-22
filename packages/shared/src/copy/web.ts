@@ -24,6 +24,10 @@ export const webCopy = {
       name: 'Markets',
       description: 'The ten Stock Tokens, with each price, its source and its age.',
     },
+    reels: {
+      name: 'Reels',
+      description: 'The Stock Tokens, what shared desks decided, and takes, one card at a time.',
+    },
     strategies: { name: 'Strategies', description: 'Start a desk from a basket of stocks.' },
     howItWorks: { name: 'How it works', description: 'What the desk decides, and what it never can.' },
     more: 'More',
@@ -33,7 +37,7 @@ export const webCopy = {
     drawerDescription: 'Your desk, the markets, and how it all works.',
     sections: {
       yours: { name: 'Yours', description: 'Your money and your desk' },
-      explore: { name: 'Explore', description: 'Prices and baskets' },
+      explore: { name: 'Explore', description: 'Prices, takes and baskets' },
       learn: { name: 'Learn', description: 'How the desk decides' },
     },
     primaryAria: 'Primary navigation',
@@ -882,4 +886,163 @@ export const ogCopy = {
     priced: (ago: string) => `Pool price, logged ${ago}`,
     noPrice: 'No price logged yet',
   },
+} as const
+
+/**
+ * The share card for one decision (FIDELITY L-22), drawn in the browser on Agari's ticket. Every word is built
+ * from the record. No headline text ever reaches a card: the news licence forbids passing it on.
+ */
+export const shareCopy = {
+  brand: 'SHIJIMA',
+  recordType: 'DECISION RECORD · ROBINHOOD CHAIN',
+  scan: 'SCAN TO CHECK THE RECORD',
+  handle: 'TELEGRAM @SHIJIMABOT',
+  verifyOn: 'CHECK IT ON ROBINHOOD CHAIN',
+  shareCard: 'Share card',
+  rendering: 'Drawing…',
+  savedAttach: 'Card saved. Attach it to your post on X.',
+  renderFailed: 'The share card could not be drawn.',
+  vault: 'THE SAVINGS VAULT',
+  hero: {
+    acted: { buy: 'Bought.', sell: 'Sold.', sweep: 'Parked cash.', redeem: 'Took cash back.' },
+    acted_in_part: 'Acted in part.',
+    acted_by_override: 'Acted on your call.',
+    would_have_acted: { buy: 'Would have bought.', sell: 'Would have sold.' },
+    waited: 'Waited.',
+    declined: 'Declined.',
+    asked: 'Asked first.',
+    blocked_by_limit: 'Blocked by a limit.',
+    nothing_to_do: 'Nothing to do.',
+    failed: 'No decision.',
+    not_executed: 'Not carried out.',
+  },
+  size: (amount: string, side: string) => `${amount} ${side.toUpperCase()}`,
+  intoVault: (amount: string, rate: string | null) =>
+    `${amount} INTO THE SAVINGS VAULT${rate ? ` AT ${rate} A YEAR` : ''}`,
+  outOfVault: (amount: string) => `${amount} BACK OUT OF THE SAVINGS VAULT`,
+  gap: (compared: string) =>
+    compared === 'in line' ? 'IN LINE WITH ITS REFERENCE' : `${compared.toUpperCase()} ITS REFERENCE`,
+  sure: (pct: number) => `${pct}% SURE`,
+  graded: {
+    better: (pct: string) => `GRADED AT THE REOPEN: ${pct} BETTER THAN ACTING AT ONCE`,
+    worse: (pct: string) => `GRADED AT THE REOPEN: ${pct} WORSE THAN ACTING AT ONCE`,
+    no_real_difference: 'GRADED AT THE REOPEN: NO REAL DIFFERENCE EITHER WAY',
+    ungradable: 'THIS ONE CANNOT BE GRADED',
+    pending: 'NOT GRADED YET · GRADED AFTER THE US MARKET REOPENS',
+    never: 'NOT A TIMING CALL, SO NEVER GRADED',
+  },
+  proof: {
+    record: (hash: string) => `RECORD ${hash}`,
+    tx: (hash: string) => `TX ${hash}`,
+    sealedLater: 'SEALED BY THE NEXT ACTION OR THE DAILY SEAL',
+  },
+  mode: { shadow: 'PRACTICE', ask_first: 'ASKS FIRST', on_its_own: 'ON ITS OWN' },
+  withinRange: 'EVERY HOLDING WITHIN ITS ALLOWED RANGE',
+  /** The pre-filled post: real fields only, never a claim of an edge. */
+  tweet: (parts: string[], grade: string | null, url: string) =>
+    `${parts.join(' · ')}.${grade ? ` ${grade}.` : ''} Every decision is fingerprinted on Robinhood Chain. ${url}`,
+  tweetGrade: {
+    better: (pct: string) => `Graded at the reopen: ${pct} better than acting at once`,
+    worse: (pct: string) => `Graded at the reopen: ${pct} worse than acting at once`,
+    no_real_difference: 'Graded at the reopen: no real difference either way',
+  },
+} as const
+
+/**
+ * A Stock Token's Room, from Masayume and Agari (`features/room/copy.ts`), for desk owners instead of bettors. The
+ * onboarding states each say what this is, why you cannot speak yet, and what would change that.
+ */
+export const roomCopy = {
+  open: (symbol: string) => `${symbol} Room`,
+  qualifier: 'desk owners only',
+  title: (name: string) => `${name} · the Room`,
+  close: 'Close',
+  compose: 'Say something',
+  send: 'Send',
+  sending: 'Sending…',
+  holds: (symbol: string) => `Show that my desk holds ${symbol}`,
+  holdsBadge: 'holds it',
+  you: 'you',
+  empty: 'No one has said anything yet. Go first.',
+  where: 'Plain text, kept by Shijima, shown with your wallet. Your desk’s assistant never reads the Room.',
+  start: 'Start a desk',
+  states: {
+    unavailable: {
+      title: 'The Room is not reachable right now.',
+      body: 'Its store did not answer. Everything else on this stock works.',
+    },
+    connect: {
+      title: 'The Room is for people with a desk.',
+      body: 'Connect your wallet and sign in, and the Room checks whether you own one.',
+    },
+    locked: {
+      title: 'You need a desk to join.',
+      body: 'The Room is for desk owners, so everyone here has put money behind their own mix. Start a desk, even in practice, and it opens.',
+    },
+  },
+  errors: {
+    badRequest: 'That did not make sense. Nothing was posted.',
+    notMember: 'The Room is for desk owners. Sign in with the wallet that owns your desk.',
+    rateLimited: 'That is a lot at once. Give it a few seconds and try again.',
+    postFailed: 'That did not post. Try again.',
+  },
+} as const
+
+/** Takes, from Agari (`features/takes/copy.ts`): one short post about a Stock Token. No calls, no sides, no bets. */
+export const takesCopy = {
+  pill: 'Take',
+  postAria: 'Post a take',
+  holdsBadge: '✓ desk holds it',
+  noBadge: 'desk owner',
+  seeStock: (name: string) => `See ${name} →`,
+  room: 'the Room ↗',
+  startDesk: 'Start a desk',
+  composer: {
+    title: 'Post a take',
+    close: 'Close',
+    where:
+      'Your words are kept by Shijima and shown with your wallet. Your desk’s assistant never reads them.',
+    stock: 'About',
+    placeholder: 'What do you make of it? Name another with $TICKER.',
+    holds: (symbol: string) => `Show that my desk holds ${symbol}`,
+    post: 'Post take',
+    posting: 'Posting…',
+    posted: 'Take posted',
+    permanence: 'A take is public and stays up.',
+    connect: 'Sign in with the wallet that owns your desk to post.',
+    noDesk: 'Takes are for desk owners. Start a desk, even in practice, and you can post.',
+  },
+  errors: {
+    badRequest: 'That did not make sense. Nothing was posted.',
+    notMember: 'Takes are for desk owners. Sign in with the wallet that owns your desk.',
+    rateLimited: 'That is a lot of takes at once. Give it a minute.',
+    postFailed: 'That did not post. Try again.',
+  },
+} as const
+
+/**
+ * Reels, from Agari (`app/reels`): a vertical feed of the Stock Tokens, what shared desks decided, and takes.
+ * There is nothing to bet on. Every card leads to a page where its numbers come from.
+ */
+export const reelsCopy = {
+  title: 'Reels',
+  stockMeta: (name: string) => `${name} · Stock Token`,
+  poolPrice: 'pool price',
+  priced: (ago: string) => `logged ${ago}`,
+  versusReference: 'vs its reference',
+  gapHead: (name: string, compared: string) =>
+    compared === 'in line' ? `${name} is in line with its reference` : `${name} is ${compared} its reference`,
+  noPrice: 'No price logged yet',
+  referenceRule:
+    'The reference is the pool at the last regular close, or the price feed while the market is open.',
+  seeStock: 'See the stock →',
+  cost: (amount: string, bps: string) => `$1,000 in costs about ${amount} (${bps})`,
+  decisionMeta: (desk: string) => `${desk} · a shared desk`,
+  readDecision: 'Read why →',
+  sure: (pct: number) => `${pct}% sure`,
+  swipeHint: 'Swipe up for the next card',
+  reading: 'Reading the market…',
+  nothing: 'Nothing to show yet.',
+  take: 'Take',
+  postTake: 'Post a take',
 } as const

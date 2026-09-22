@@ -292,6 +292,14 @@ Chat (added 21 Sep, migration 0001):
 Status (added 22 Sep, migration 0003): `worker_beats`, one row per worker, written at start and after every
 pass. With the leader lock seen in `pg_locks`, `/status` can tell a dead worker from a stuck one.
 
+Savings vault (added 22 Sep, migration 0004): `desk_value_snapshots.vault_shares`, so reconcile compares the
+vault in shares and never reads its interest as money arriving.
+
+Rooms and Takes (added 22 Sep, migration 0005): `room_posts` (one Room per Stock Token, 280 characters) and
+`takes` (240 characters, filed under the stock and every approved `$TICKER` it names). Only a signed-in wallet
+that owns a desk writes; the author is the session's wallet; "holds it" is checked against the author's own
+latest valuation. Rate limits are counted in these tables. The chat never reads either.
+
 How the chat runs (`packages/core/src/ask/`, `apps/worker/src/ask.ts`):
 1. The web writes an `ask_requests` row and sends `pg_notify('ask_requests', id)`.
 2. The worker LISTENs on one held connection and sweeps every second. It claims rows with `FOR UPDATE SKIP LOCKED`,

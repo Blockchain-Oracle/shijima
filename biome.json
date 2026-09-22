@@ -17,6 +17,7 @@
       "!**/feeds.snapshot.json",
       "!**/tokens.scan.json",
       "!**/generated",
+      "!**/next-env.d.ts",
       "!packages/db/drizzle",
       "!**/deployments.json",
       "!apps/web/styles/yosuku",

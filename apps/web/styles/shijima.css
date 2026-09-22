@@ -564,3 +564,79 @@
     height: 14px;
   }
 }
+
+/* The Room: what Agari's sheet does not have. The head row under the title, the opt-in "holds it" toggle and
+ * badge, and the line that says where the words go. Tokens are the sheet's own (room.css). */
+.room-head-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.room-author {
+  color: rgb(var(--room-ink-rgb) / 0.8);
+}
+
+.room-holds-badge {
+  border: 1px solid color-mix(in srgb, var(--vermilion) 35%, transparent);
+  border-radius: 9999px;
+  padding: 0 6px;
+  color: var(--vermilion);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.room-holds-toggle {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px 0;
+  color: rgb(var(--room-ink-rgb) / 0.6);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  /* inherited by the checkbox */
+  accent-color: var(--vermilion);
+}
+
+.room-where {
+  position: relative;
+  z-index: 10;
+  padding: 0 20px 14px;
+  color: rgb(var(--room-ink-rgb) / 0.4);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+/* The take composer's opt-in "desk holds it" toggle, in the sheet's own mono voice (take-composer.css). */
+.take-holds-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  color: var(--color-ink-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  /* inherited by the checkbox */
+  accent-color: var(--vermilion);
+}
+
+/* Reels: a desk's summary is a sentence, not Agari's short question, so it sits a step smaller; and the outcome
+ * word takes the clock's place in the head. */
+.reel-question.sj-reel-summary {
+  font-size: 19px;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.reel-clock-value.sj-reel-outcome {
+  font-size: 16px;
+}

@@ -382,6 +382,8 @@ submission is due Sun 27 Sep 20:00 UTC: video, X post, Typeform.
 - Build Markets, the stock page, the Strategies studio, Your desks, the desk page, Ask, Status and the
   tutorial.
 - Two new presets: The Mag Seven and AI Builders.
+- ~~Share cards, Rooms, Takes, Reels (L-22, L-42 to L-45).~~ Built 22 Sep: the decision page's share card on
+  Agari's ticket, a Room per Stock Token on its page, takes, and `/reels`. See `DECISIONS.md`.
 
 ---
 
