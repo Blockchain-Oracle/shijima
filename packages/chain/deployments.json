@@ -6,5 +6,12 @@
     "deployedAt": "2026-09-20T14:24:31+00:00",
     "devDesk": "0x51ce92E1319918Fe3d46Ee0dF09af1a9FB14461D"
   },
-  "current": "v0"
+  "current": "v1",
+  "v1": {
+    "chainId": 4663,
+    "factory": "0xB0Df8d1ca6eDA2700a2D145bab2675109A2e89f1",
+    "implementation": "0x90ff69C78014d06e3f09DC0985E83Cd8338aFe0F",
+    "deployedAt": "2026-09-22T19:15:45+00:00",
+    "devDesk": "0xC61DDE99B72add803E47B1bcA17B4bf8819618B1"
+  }
 }
