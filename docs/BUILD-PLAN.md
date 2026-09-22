@@ -673,6 +673,48 @@ anvil fork in headless Chrome, with a fresh wallet. Nothing was sent to mainnet.
   Lint clean, typecheck clean, 93 checks pass, production build passes.
 - **Next:** step 11, How it works and the status page. Vault sweeps are still owed from step 3.
 
+**Tue 22 Sep, morning. STEP 11 BUILT: HOW IT WORKS, STATUS, WITH AND WITHOUT REASONING, THE STATES GALLERY, PREVIEWS.**
+Proven on the anvil fork and against the live database in headless Chrome. Nothing was sent to mainnet. Five commits.
+- **`/how-it-works`** is Agari's page, section for section, with the brief's content [8.21, 8.22]: getting started, a
+  $10,000 worked example, the market clock (open, before and after hours, weekends; five session words), what you
+  decide and what it decides, the three modes, the eight steps in order with each one marked arithmetic, fixed rule
+  or AI judgment, where AI is used, when the desk will not act, what the network enforces, **withdraw without our
+  website** (four steps, every token address, a signed-in owner's own desk linked), the fee, and eight questions.
+  Numbers come from the code (limits from the studio, 24 checks, the cost multiple, $1 minimum). Linked from the
+  footer, the disclosure and settings.
+- **`/status`** is Agari's screen: a banner, nine parts with the dot ladder, the desks and honest counts (L-15 folded
+  in). It reads, live: the worker's **heartbeat** (new `worker_beats` table, migration 0003, written at start and after
+  every pass) together with the **leader lock in `pg_locks`**, so a dead worker and a stuck one read differently; what
+  started the last hourly check (OpenServ or the timer); SERV's last answer; one chain read with its latency; the
+  price log; feeds (a closed session reads "expected"); halt flags; Telegram; the chat queue. Each shared desk, and
+  the viewer's own, shows its last check or **"has not checked in"** [8.16]. On the fork it showed SERV's real error:
+  "402 Insufficient credits ... your balance is $0.02".
+- **`/compare`, with and without reasoning [8.20].** Three saved situations built with the live check's own
+  `buildEvidence`: a report coming (the brief's example), a weekend drop with no news, headlines that explain
+  nothing. `pnpm compare:run` asks the same model twice, raw (`x-openserv-disable-braid`, tools off) and through SERV,
+  applies the desk's own checks to both, logs each call, and saves the answers to `apps/web/data/compare.json`. The
+  page never calls a model. **First raw answer, real:** on a 2.6% Saturday drop with no news, the model on its own
+  said "Do it now" at 89%. The SERV side waits on credit.
+- **`/dev/states`** draws all twenty 8.16 rows and every record outcome with the real components from typed fixtures.
+  Building it exposed states the desk page never showed, now built: a holding's **flags** (trading paused, status
+  unreadable, beyond 8% of the last official update, no feed, a report within a week), **"has not checked in"**
+  after two hours, and record **notes** for money moved outside the desk, the owner's own calls and multiplier
+  changes. The vault row says honestly it is not reachable until sweeps exist.
+- **Fixed, a real bug:** resuming after a loss stop never reset the baseline (no caller passed the current value), so
+  the next check would stop the desk again. `resumeDesk` now restarts the limit from the latest valuation. Proven on
+  the rehearsal database: a stale $999 baseline became the latest snapshot.
+- **Link previews:** the site, a shared desk (a private desk gets the site card), one Stock Token (gap and price age).
+  Sora SemiBold vendored with its licence, as Agari does.
+- **Found, not fixed: the escape hatch needs one more step.** Blockscout shows a desk as an EIP-1167 proxy, but
+  offers only "Custom ABI": the implementation is verified on Sourcify, and Blockscout did not import it (checked in
+  a real browser, 22 Sep). "Write proxy" appears once the implementation is verified on Blockscout itself. Do it for
+  v1 at deploy; publishing source is outward-facing, so it waits for Abu's OK.
+- **Checked** at 390, 768, 1024 and 1440 in both themes, signed in and out: no sideways scroll, no console errors (one
+  hydration mismatch on Status's clock line was found and fixed). Lint clean, typecheck clean, 93 checks pass,
+  production build passes.
+- **Next:** step 12 (share cards, Rooms, Takes, Reels). Vault sweeps are still owed from step 3. Waiting on Abu: SERV
+  top-up (then `pnpm compare:run`), the go for v1 (about $1) with Blockscout verification.
+
 ## 6. Schedule
 
 | Day | Work | Must be true by end of day |

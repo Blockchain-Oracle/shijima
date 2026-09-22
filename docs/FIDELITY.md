@@ -350,8 +350,8 @@ From `BUILD-PLAN.md` and the brief, still to do. The redesign gives it a home.
 - Test read [8.7].
 - Add money in the page, through Relay [8.5].
 - Go-live control and progress [7].
-- States page [8.16].
-- Comparison page [8.20].
+- ~~States page [8.16].~~ Built 22 Sep: `/dev/states`.
+- ~~Comparison page [8.20].~~ Built 22 Sep: `/compare`; the SERV side waits on credit.
 
 **Engine and data:**
 - **Mandate notes never reach the model.** They are stored but nothing in `packages/core` reads them (chat

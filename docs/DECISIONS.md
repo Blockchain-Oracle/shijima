@@ -393,6 +393,21 @@ Tight pick from the Glider pass.
 - **Extras kept:** share cards, price alerts, Rooms, Reels, Takes. **Dropped:** AgentKit, the pitch folio.
 - **Commits** are allowed as slices land. The weekend worker runs from a tagged commit.
 
+**Step 11, 22 Sep. Calls Claude made building How it works and Status (Abu may overrule):**
+- **The worker gets a heartbeat row, and Status also looks for its lock.** The lock alone says a process is alive, not
+  that its loop turns; the row alone cannot tell a crash from a long check. Together they can. One additive table.
+- **Stats (L-15) are four counts on Status, not a page of their own.** Desks running, checks, records, fingerprints on
+  the chain. A separate page would repeat them.
+- **With and without reasoning is asked ahead of time and saved with the site.** The website holds no key, a visitor
+  should see the same answers as a judge, and a model call per visit costs money. "A plain model" is the same model
+  through SERV with SERV's reasoning layer switched off (`x-openserv-disable-braid`), so the only difference is SERV.
+  A call that gets no answer never replaces a saved one; the page says "Not run yet" instead.
+- **A holding's status is shown only from a price-log row under an hour old.** An older row would be a guess.
+- **Resuming after a loss stop restarts the limit from the latest valuation.** Otherwise the desk stops again at the
+  next check, which is what the code did before this fix.
+- **The escape hatch page names Blockscout's "Write proxy".** That tab needs the implementation verified on Blockscout,
+  which Sourcify did not give us. Verifying v1 there is part of its deploy.
+
 ---
 
 ## Still open

@@ -8,11 +8,11 @@ Vercel is needed now.
 - [x] Finnhub key
 - [x] SERV Reasoning key
 
-## Needed for the first real trade
-- [ ] **Send about $5 of ETH and $25 of USDG on Robinhood Chain to the dev wallet:**
-      `0xB5D47f376c59c975F931000FAdD787abaEB91cf6`
-      Relay can send straight to it from Base or Arbitrum: https://relay.link/bridge/robinhood
-      Claude moves part of the ETH to the agent's wallet and creates the test desk.
+## Needed now
+- [ ] **Top up SERV credit** (it is $0.02). Every hourly check, the chat and the comparison page wait on it.
+- [ ] **Say go for contract v1 on mainnet** (about $1 of gas). With it, Claude also publishes v1's source on
+      Blockscout, so "Write proxy" appears for the withdraw-without-our-website steps.
+- [x] ~~Fund the dev wallet for the first real trade.~~ Done 20 Sep.
 - [ ] **Turn on data collection** at https://console.openserv.ai/settings/organization . This is a hackathon
       eligibility rule.
 
