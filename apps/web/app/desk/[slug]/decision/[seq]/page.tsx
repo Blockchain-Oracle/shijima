@@ -40,6 +40,7 @@ export default async function DecisionPage({ params }: { params: Promise<{ slug:
   const body = viewRecord(decision.record)
   const now = new Date()
   const model = body?.serv?.decision
+  const vaultMove = body?.candidate?.side === 'sweep' || body?.candidate?.side === 'redeem'
   const sealTx = decision.sealedByTx ?? undefined
   const onChainHash = (decision.result as { checks?: unknown } | null) ? decision.recordHash : undefined
 
@@ -52,7 +53,12 @@ export default async function DecisionPage({ params }: { params: Promise<{ slug:
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <h1 className="font-semibold text-2xl tracking-tight">
             {outcomeLabel(decision.outcome)}
-            {body?.candidate ? <span className="text-ink-soft"> · {body.candidate.symbol}</span> : null}
+            {body?.candidate ? (
+              <span className="text-ink-soft">
+                {' '}
+                · {vaultMove ? 'the savings vault' : body.candidate.symbol}
+              </span>
+            ) : null}
           </h1>
           <span className="tabular text-ink-faint text-sm">
             #{decision.seq} · {localTime(decision.decidedAt)}
@@ -102,7 +108,7 @@ export default async function DecisionPage({ params }: { params: Promise<{ slug:
       </Section>
 
       <Section n={2} title="Why it looked">
-        {body?.need && body.candidate ? (
+        {body?.candidate && (body.need || vaultMove) ? (
           <p>{body.candidate.why}</p>
         ) : (
           <p className="text-ink-soft">A routine hourly check.</p>
@@ -200,6 +206,23 @@ export default async function DecisionPage({ params }: { params: Promise<{ slug:
               </dd>
             </div>
           ) : null}
+          {body?.vault ? (
+            <div>
+              <dt className="text-ink-faint text-xs">The savings vault (Steakhouse USDG, on Morpho)</dt>
+              <dd className="tabular">
+                {body.vault.netApyBps === null
+                  ? 'its rate could not be read'
+                  : `pays ${percent(body.vault.netApyBps, 2)} a year after its fees`}
+                {body.vault.liquidityUsdg
+                  ? ` · ${money(body.vault.liquidityUsdg)} could be taken out right then`
+                  : ''}
+                {body.vault.roundTripFeeUsdg
+                  ? ` · a deposit and a later withdrawal cost ${money(body.vault.roundTripFeeUsdg)} in network fees`
+                  : ''}
+                {` · the desk keeps ${money(body.vault.keepUsdg)} in cash for its own buys`}
+              </dd>
+            </div>
+          ) : null}
           {body?.limits ? (
             <div>
               <dt className="text-ink-faint text-xs">Your limits at that moment</dt>
@@ -262,7 +285,12 @@ export default async function DecisionPage({ params }: { params: Promise<{ slug:
             ))}
           </ul>
         ) : (
-          <p className="text-ink-soft">No model was asked. {body?.blockers?.[0]?.text ?? decision.summary}</p>
+          <p className="text-ink-soft">
+            No model was asked.{' '}
+            {vaultMove
+              ? 'Moving cash into or out of the savings vault is arithmetic, not a question of timing, and the money never leaves the desk.'
+              : (body?.blockers?.[0]?.text ?? decision.summary)}
+          </p>
         )}
         {model?.warnings.length ? (
           <ul className="space-y-1 pt-1">
@@ -282,7 +310,9 @@ export default async function DecisionPage({ params }: { params: Promise<{ slug:
         {body?.gate ? (
           <p className={body.gate.result === 'allow' ? 'text-acted' : 'text-blocked'}>
             {body.gate.result === 'allow'
-              ? 'Every limit passed.'
+              ? vaultMove
+                ? 'Nothing counts against your limits: the money stays in the desk, as the contract counts it.'
+                : 'Every limit passed.'
               : `Refused: ${body.gate.reasons.join('; ')}.`}
           </p>
         ) : (
@@ -310,15 +340,24 @@ export default async function DecisionPage({ params }: { params: Promise<{ slug:
             </div>
             <div>
               <dt className="text-ink-faint text-xs">It should receive</dt>
-              <dd>{body.preview.expectedOut}</dd>
+              <dd>
+                {body.preview.expectedOut}
+                {vaultMove ? (body.candidate?.side === 'sweep' ? ' vault shares' : ' USDG') : ''}
+              </dd>
             </div>
             <div>
               <dt className="text-ink-faint text-xs">The least it would accept</dt>
-              <dd>{body.preview.minOut}</dd>
+              <dd>
+                {vaultMove ? 'more than zero, the contract’s only rule for the vault' : body.preview.minOut}
+              </dd>
             </div>
             <div>
               <dt className="text-ink-faint text-xs">Slippage allowed</dt>
-              <dd>{percent(body.preview.slippageBps, 2)}</dd>
+              <dd>
+                {vaultMove
+                  ? 'none: the vault sets its own share price'
+                  : percent(body.preview.slippageBps, 2)}
+              </dd>
             </div>
           </dl>
         </Section>
@@ -388,7 +427,11 @@ export default async function DecisionPage({ params }: { params: Promise<{ slug:
             {grade.replay ? <span className="text-ink-faint"> · from a replay of a past weekend</span> : null}
           </p>
         ) : (
-          <p className="text-ink-soft">Not yet. Each decision is graded once the US market has reopened.</p>
+          <p className="text-ink-soft">
+            {vaultMove
+              ? 'Never graded: a savings-vault move is not a timing call, so there is no other moment to compare it with.'
+              : 'Not yet. Each decision is graded once the US market has reopened.'}
+          </p>
         )}
       </Section>
     </div>

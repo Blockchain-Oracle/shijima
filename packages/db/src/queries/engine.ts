@@ -99,6 +99,7 @@ export async function saveValueSnapshot(
     totalUsdg: bigint
     cashUsdg: bigint
     vaultUsdg: bigint
+    vaultShares: bigint
     holdings: SnapshotHolding[]
     priceSource: string
     blockNumber?: number
@@ -177,7 +178,10 @@ export async function latestValueSnapshot(db: DbOrTx, deskId: string) {
   return row
 }
 
-/** Our own confirmed buys and sells since a moment. Reconcile subtracts these before blaming the outside world. */
+/**
+ * Our own confirmed buys, sells and vault moves since a moment. Reconcile subtracts these before blaming the
+ * outside world.
+ */
 export async function confirmedTradesSince(db: DbOrTx, deskId: string, since: Date) {
   const rows = await db
     .select({
@@ -191,12 +195,12 @@ export async function confirmedTradesSince(db: DbOrTx, deskId: string, since: Da
       and(
         eq(actions.deskId, deskId),
         eq(actions.status, 'confirmed'),
-        inArray(actions.kind, ['buy', 'sell']),
+        inArray(actions.kind, ['buy', 'sell', 'sweep', 'redeem']),
         gt(actions.resolvedAt, since),
       ),
     )
   return rows.flatMap((r) =>
-    (r.kind === 'buy' || r.kind === 'sell') && r.token && r.amountIn !== null && r.actualOut !== null
+    r.kind !== 'checkpoint' && r.kind !== 'pause' && r.token && r.amountIn !== null && r.actualOut !== null
       ? [{ kind: r.kind, token: r.token, amountIn: r.amountIn, actualOut: r.actualOut }]
       : [],
   )

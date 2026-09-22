@@ -3,7 +3,7 @@
  * chat. A visitor gets the same page read-only, and only when the owner turned sharing on. Nothing here reads
  * the chain or holds a key.
  */
-import { APPROVED_TOKENS } from '@desk/chain'
+import { APPROVED_TOKENS, fetchVaultRate } from '@desk/chain'
 import {
   ASSISTANT_REMOVED,
   askHistory,
@@ -41,6 +41,18 @@ const BAND_BPS = 800
 
 const nameOf = (address: string) =>
   APPROVED_TOKENS.find((t) => t.address.toLowerCase() === address.toLowerCase())
+
+/**
+ * The savings vault's rate, from Morpho's public API, read at most every ten minutes and only for a desk with
+ * money in the vault. One attempt: a page never waits on a slow API, it simply shows no rate.
+ */
+let vaultRate: { at: number; bps: number | null } | undefined
+async function currentVaultRateBps(): Promise<number | null> {
+  if (vaultRate && Date.now() - vaultRate.at < 10 * 60 * 1000) return vaultRate.bps
+  const rate = await fetchVaultRate(1)
+  vaultRate = { at: Date.now(), bps: rate?.netApyBps ?? null }
+  return vaultRate.bps
+}
 
 export async function loadDesk(slug: string) {
   const viewer = await signedInAddress().catch(() => undefined)
@@ -162,6 +174,7 @@ export async function loadDesk(slug: string) {
           totalUsdg: snapshot.totalUsdg.toString(),
           cashUsdg: snapshot.cashUsdg.toString(),
           vaultUsdg: snapshot.vaultUsdg.toString(),
+          vaultRateBps: snapshot.vaultUsdg > 0n ? await currentVaultRateBps() : null,
           cashBps: share(snapshot.cashUsdg + snapshot.vaultUsdg),
           takenAt: snapshot.takenAt.toISOString(),
           priceSource: snapshot.priceSource,

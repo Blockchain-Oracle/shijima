@@ -15,6 +15,8 @@
  *                          instead of read from a table, and a record can be an `execution`: what the desk did
  *                          when the owner approved a request, carrying `approvalOf`. Widened once on the same
  *                          day, before any real desk had made a version 2 record. Nothing was rewritten.
+ *                          Widened 22 Sep for the savings vault: a candidate can be a `sweep` or a `redeem`, and
+ *                          the evidence can hold a `vault` item. Every earlier record still parses.
  *
  * A field that does not apply is null, never absent, so its absence is visible. Amounts are decimal strings.
  * Basis points, counts and seconds are integers. There are no floats anywhere in a record.
@@ -143,6 +145,25 @@ export const EvidenceItemV1 = z.discriminatedUnion('kind', [
   Limits,
   Position,
 ])
+/**
+ * What a vault move was decided on: the rate and the cash that can be taken out, both from Morpho's API, the
+ * network fee a round trip costs, and the cash the desk keeps loose for its own buys. Added 22 Sep.
+ */
+const Vault = z.strictObject({
+  id: z.string(),
+  kind: z.literal('vault'),
+  vault: Address,
+  /** What the vault pays a year after its fees. null when Morpho's API could not be read. */
+  netApyBps: Int.nullable(),
+  liquidityUsdg: Decimal.nullable(),
+  /** One deposit and one later redeem, in network fees, at today's gas price. */
+  roundTripFeeUsdg: Decimal.nullable(),
+  deskCashUsdg: Decimal,
+  deskVaultUsdg: Decimal,
+  /** Cash kept outside the vault so the desk's own buys never wait on it. */
+  keepUsdg: Decimal,
+})
+
 export const EvidenceItemV2 = z.discriminatedUnion('kind', [
   Session,
   PriceV2,
@@ -151,6 +172,7 @@ export const EvidenceItemV2 = z.discriminatedUnion('kind', [
   News,
   Limits,
   Position,
+  Vault,
 ])
 
 /**
@@ -285,6 +307,18 @@ export const DecisionRecordV2 = DecisionRecordV1.extend({
   /** `execution` is what the desk did after the owner approved a request. It carries `approvalOf`. */
   kind: z.enum(['decision', 'execution']),
   evidence: z.array(EvidenceItemV2),
+  /** Widened 22 Sep: `sweep` parks idle cash in the savings vault and `redeem` takes it back out. */
+  candidate: z
+    .strictObject({
+      id: z.string(),
+      side: z.enum(['buy', 'sell', 'sweep', 'redeem']),
+      token: Address,
+      symbol: z.string(),
+      amountIn: Decimal,
+      amountInUnit: z.string(),
+      why: z.string(),
+    })
+    .nullable(),
   /** Set only on an execution: the request being carried out, and who answered it, when and where. */
   approvalOf: z
     .strictObject({

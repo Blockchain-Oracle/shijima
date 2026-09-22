@@ -167,7 +167,7 @@ export async function resolveUnsettled(deps: SenderDeps, now = new Date()): Prom
     }
     const kind = action.kind
     const outcome =
-      action.txHash && (kind === 'buy' || kind === 'sell' || kind === 'checkpoint')
+      action.txHash && kind !== 'pause'
         ? await findOutcome(deps.pub, { kind, txHash: action.txHash as Hex })
         : undefined
 

@@ -338,6 +338,37 @@ Made 2026-09-22 by Claude, in step 10 of the chat-first plan. Abu can overrule a
 
 ---
 
+## Decisions made while building the savings-vault sweeps
+
+Made 2026-09-22 by Claude, finishing what step 3 of the chat-first plan owed. Abu can overrule any of these.
+
+1. **Only the idle part of the cash target is swept.** Cash above the target is on its way into Stock Tokens;
+   parking it would mean a redeem, and a fee, every time the desk buys. So the vault holds at most the cash target
+   minus what the desk keeps loose. In a $10,000 desk with 30% cash and a $50 per-action limit, the desk keeps $150
+   loose and up to $2,850 goes to the vault.
+2. **The desk keeps three per-action limits loose**, the most one check can buy. Its own buys never wait on the
+   vault in an ordinary check.
+3. **A sweep must earn, over 30 days at the live rate, three times what a deposit and its later withdrawal cost in
+   network fees, and at least $10.** Rate and liquidity come from Morpho's API; the fee is measured gas units times
+   the block's base fee (this chain ignores tips) times the Chainlink ETH price. Today that bar is about $0.11, so a
+   sweep starts at roughly $140 of idle cash. The $50 demo desk will not sweep, and it should not.
+4. **No model is asked.** A vault move is not a timing call and its value never leaves the desk. It is its own
+   record (version 2, widened for `sweep`, `redeem` and a `vault` evidence item), with its own hash on-chain, and
+   counts nothing against the owner's limits, as the contract counts nothing.
+5. **Only a desk acting on its own sweeps.** Practice spends nothing. A desk that asks first is not made to approve
+   housekeeping. Any desk not in practice may redeem, because its buys need the cash.
+6. **v1 desks only.** v0's vault calls have no deadline, so a lost one could never be declared dead.
+7. **Reconcile compares vault shares, not dollars** (new `vault_shares` on value snapshots, migration 0004), so the
+   vault's own interest is never read as money arriving, and a remembered wait counts cash in and out of the vault
+   together, so moving the desk's own cash is never "new cash arrived".
+8. **A withdrawal the vault cannot pay now is said plainly, with what can be taken now** (brief 8.15): "The savings
+   vault can pay out only $120 right now ... You can withdraw $170 now, and the rest once the vault has the cash."
+   Withdrawing everything as it is always works: the vault shares go to the owner's wallet.
+9. **Not built: interest earned so far** (brief 8.9). The owner can move shares with their own wallet, which a
+   running total from our actions would miscount. The cash panel shows the amount and the live rate instead.
+
+---
+
 ## The name
 
 Abu names his projects in Japanese, as he did with Baku (獏). **Shijima (しじま)**, chosen by him on

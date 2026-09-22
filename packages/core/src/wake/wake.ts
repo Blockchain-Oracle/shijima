@@ -1,7 +1,8 @@
 /**
  * One check of one desk. Only the worker calls this.
  *
- *   reconcile -> valuation (and the loss limit) -> needs -> for each candidate: consider, record, act
+ *   reconcile -> valuation (and the loss limit) -> approved requests -> cash out of the savings vault if the
+ *   buys need it -> needs -> for each candidate: consider, record, act -> idle cash into the savings vault
  *
  * With `dry` set it reads, values and asks the model exactly as a real check would, then commits NOTHING and
  * sends NOTHING. It prints what it would have recorded.
@@ -16,6 +17,7 @@ import {
   isCloneOf,
   readDeskState,
   recordedCallsBetween,
+  vaultAssetsOf,
 } from '@desk/chain'
 import {
   type ActionRow,
@@ -51,15 +53,15 @@ import { type Address, formatUnits, type Hex, type PublicClient } from 'viem'
 import { runApprovedRequests } from './approved'
 import { commit, snapshotOf } from './commit'
 import { considerCandidate } from './consider'
-import { findNeeds } from './needs'
+import { findNeeds, MAX_CANDIDATES_PER_WAKE } from './needs'
 import type { PlannedOutcome } from './plan'
 import { allPriced, findOutsideChanges, netFlowUsdg, scaledBaseline } from './reconcile'
 import { buildDecisionBody, mandateFingerprint, RECORD_SCHEMA_VERSION } from './record'
 import { chainReferenceSource } from './reference'
 import { USDG_DECIMALS } from './types'
 import { readValuation } from './valuation'
+import { redeemForBuys, sweepIdleCash, type VaultStepContext } from './vault'
 
-export const MAX_CANDIDATES_PER_WAKE = 3
 /** The desk will not repeat the same trade on the same token inside this window. A stale read is the usual cause. */
 const REPEAT_WINDOW_MS = 10 * 60 * 1000
 
@@ -206,7 +208,7 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
     }
 
     // 2. valuation, on the pool's 30 minute average
-    const valuation = await readValuation(pub, state, mandate, deps.approved, now)
+    let valuation = await readValuation(pub, state, mandate, deps.approved, now)
     say(
       `worth ${usd(valuation.totalUsdg)}: cash ${usd(valuation.cashUsdg)} (${pct(valuation.cashWeightBps)})${valuation.holdings.map((h) => `, ${h.token.symbol} ${usd(h.valueUsdg)} (${pct(h.weightBps)} of target ${pct(h.targetBps)})`).join('')}`,
     )
@@ -217,6 +219,11 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
     // True when something moved that could not be valued, so the desk's worth is not fully known.
     let unpricedFlow = false
     const previous = await latestValueSnapshot(db, desk.id)
+    // Priced only when some vault shares are involved, then or now: it is one more read.
+    const usdgPerShareE18 =
+      previous && (previous.vaultShares > 0n || state.vaultShares > 0n)
+        ? await vaultAssetsOf(pub, 10n ** 18n)
+        : 0n
     const changes = previous
       ? findOutsideChanges(
           {
@@ -224,10 +231,12 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
             tokens: Object.fromEntries(
               previous.holdings.map((h) => [h.token.toLowerCase(), BigInt(h.amountRaw)]),
             ),
+            vaultShares: previous.vaultShares,
           },
           await confirmedTradesSince(db, desk.id, previous.takenAt),
-          { cashUsdg: state.usdg, tokens: state.holdings },
+          { cashUsdg: state.usdg, tokens: state.holdings, vaultShares: state.vaultShares },
           Object.fromEntries(valuation.holdings.map((h) => [h.token.address.toLowerCase(), h.twapE8])),
+          usdgPerShareE18,
         )
       : []
     if (changes.length > 0) {
@@ -237,7 +246,7 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
       )
     }
     if (!dry) {
-      const snapshot = snapshotOf(desk.id, valuation, now)
+      const snapshot = snapshotOf(desk.id, valuation, now, state.vaultShares)
       if (changes.length > 0) {
         // The baseline, the note of what happened, and the snapshot that stops it being counted again, all
         // in one transaction. Scaled, not added, so the owner's own money moving never changes how far down
@@ -305,7 +314,7 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
     const stateText = engineCopy.deskState[deskState]
     // The owner's own daily limit is counted over a rolling 24 hours, which is stricter than the chain's window.
     const spentTodayUsdg = await spentSince(db, desk.id, new Date(now.getTime() - 24 * 60 * 60 * 1000))
-    const common = {
+    let common = {
       chainId: CHAIN_ID,
       desk: desk.address,
       decidedAt: now,
@@ -351,6 +360,28 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
           payload: { alert: 'approval_expired', text: engineCopy.approvalExpired },
         })
       }
+    }
+
+    // Cash out of the savings vault, when the buys arithmetic wants need more than the desk holds outside it.
+    const vaultStep = (): VaultStepContext => ({
+      desk,
+      common,
+      wakeId: wake?.id,
+      state,
+      mandate,
+      valuation,
+      dry,
+      say,
+    })
+    if (await redeemForBuys(deps, vaultStep(), deskState)) {
+      state = await readDeskState(pub, desk.address as Address)
+      // Only cash moved between the desk and the vault, so the valuation is the same apart from where it sits.
+      valuation = {
+        ...valuation,
+        cashUsdg: state.usdg,
+        vaultUsdg: await vaultAssetsOf(pub, state.vaultShares),
+      }
+      common = { ...common, valuation }
     }
 
     // 3. needs. Arithmetic only. A desk that is not active looks, values, and proposes nothing.
@@ -425,6 +456,7 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
           holdingUsdg: held?.valueUsdg ?? 0n,
           totalUsdg: valuation.totalUsdg,
           spentTodayUsdg,
+          cashUsdg: valuation.cashUsdg + valuation.vaultUsdg,
           repeatedWithinMinutes,
           ...(input.force ? { force: true } : {}),
           now,
@@ -467,6 +499,11 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
       )
       if (acted.moved) state = await readDeskState(pub, desk.address as Address)
     }
+
+    // Idle cash into the savings vault, after the trades have taken what they need. Read the state again first:
+    // the owner may have paused while the model was thinking.
+    const fresh = dry ? desk : await deskById(db, desk.id)
+    await sweepIdleCash(deps, vaultStep(), fresh ? (dry ? deskState : fresh.state) : 'needs_attention')
 
     if (wake) {
       await enqueueNotification(db, {

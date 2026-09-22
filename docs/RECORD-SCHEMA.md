@@ -16,7 +16,8 @@ After that nobody can change the record without the change being visible, includ
 2. Serialise it as canonical JSON (RFC 8785): keys sorted, no whitespace. There are no floats in a record, so
    Python's `json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False)` gives the same bytes.
 3. Hash those bytes with keccak256. With Foundry: `cast keccak "$(cat canonical.json)"`.
-4. Compare with the `decisionHash` in the desk contract's `Bought`, `Sold` or `Checkpoint` event.
+4. Compare with the `decisionHash` in the desk contract's `Bought`, `Sold`, `Swept`, `Redeemed` or `Checkpoint`
+   event.
 
 A record that was not an action has no transaction of its own. Each record holds `prevHash`, the fingerprint of
 the record before it, so the records form a chain. Walk forward from your record to the next one that IS on-chain.
@@ -47,6 +48,15 @@ That fingerprint commits to every record behind it, yours included.
 
 A field that does not apply is `null`, never missing. Amounts are decimal strings. Basis points, counts and
 seconds are integers.
+
+## Savings-vault moves (version 2, widened 22 Sep)
+
+A record whose `candidate.side` is `sweep` or `redeem` moved cash into or out of the savings vault (Steakhouse
+USDG on Morpho). No model is asked, so `serv` is `null` and `need` is `null`. `evidence` holds one `vault` item:
+the rate and the cash that could be taken out (both from Morpho's API), what a deposit and a later withdrawal cost
+in network fees, and the cash the desk keeps for its own buys. `gate.countedUsdg` is `0`, because a vault move
+does not count against the owner's limits, exactly as the contract does not count it. A sweep's `amountIn` is
+USDG and its `expectedOut` is vault shares; a redeem is the other way round.
 
 ## Not in the hash
 

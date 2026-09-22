@@ -36,11 +36,17 @@ export interface CostView {
 }
 
 /** Everything both versions record the same way. The evidence and the extras are normalised below. */
-type RecordCommon = Omit<DecisionRecordV1, 'evidence' | 'schemaVersion' | 'kind'>
+type RecordCommon = Omit<DecisionRecordV1, 'evidence' | 'schemaVersion' | 'kind' | 'candidate'>
+
+type VaultEvidence = Extract<DecisionRecordV2['evidence'][number], { kind: 'vault' }>
 
 export type RecordView = RecordCommon & {
   version: number
   kind: 'decision' | 'execution'
+  /** Version 2 widened the side to the savings vault's `sweep` and `redeem`. */
+  candidate: DecisionRecordV2['candidate']
+  /** What a vault move was decided on. Only vault moves carry it. */
+  vault: Omit<VaultEvidence, 'id' | 'kind'> | undefined
   price: PriceView | undefined
   cost: CostView | undefined
   session: { session: string; anchored: boolean; nextRegularOpen: string } | undefined
@@ -76,6 +82,7 @@ interface NormalisedEvidence {
   limits: RecordView['limits']
   news: RecordView['news']
   position: RecordView['position']
+  vault: RecordView['vault']
 }
 
 /** Every version's evidence, read the same way. Where a version recorded less, the field is simply missing. */
@@ -85,6 +92,7 @@ function normaliseEvidence(evidence: Evidence): NormalisedEvidence {
   const priceItem = find('price')
   const costItem = find('cost')
   const news = find('news')
+  const vault = evidence.find((e) => e.kind === 'vault') as VaultEvidence | undefined
 
   const price: PriceView | undefined = !priceItem
     ? undefined
@@ -154,6 +162,17 @@ function normaliseEvidence(evidence: Evidence): NormalisedEvidence {
         }
       : undefined,
     position: find('position'),
+    vault: vault
+      ? {
+          vault: vault.vault,
+          netApyBps: vault.netApyBps,
+          liquidityUsdg: vault.liquidityUsdg,
+          roundTripFeeUsdg: vault.roundTripFeeUsdg,
+          deskCashUsdg: vault.deskCashUsdg,
+          deskVaultUsdg: vault.deskVaultUsdg,
+          keepUsdg: vault.keepUsdg,
+        }
+      : undefined,
   }
 }
 

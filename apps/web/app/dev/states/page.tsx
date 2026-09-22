@@ -148,8 +148,8 @@ export default function StatesPage() {
           </Fixture>
           <Fixture label="Savings vault short of cash">
             <Note
-              title="Not reachable yet"
-              body="Nothing is moved to the savings vault until sweeps are built, so a withdrawal never waits on it. The partial offer comes with sweeps."
+              title="Withdraw $250"
+              body="The savings vault can pay out only $120.00 right now, less than the $200.00 this needs from it. You can withdraw $170.00 now, and the rest once the vault has the cash."
             />
           </Fixture>
           <Fixture label="Network or data trouble on our side">

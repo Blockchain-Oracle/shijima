@@ -10,6 +10,7 @@ import {
   deskAbi,
   ETH_USD_FEED,
   erc20Abi,
+  fetchVaultRate,
   makePublicClient,
   quotePinned,
   readDeskState,
@@ -106,6 +107,14 @@ async function sellEverything(holdings: Record<string, bigint>, reason: Hex) {
   }
 }
 
+/**
+ * What the savings vault can pay out right now, from Morpho's API. Most of it is lent out, so a redeem beyond this
+ * reverts. undefined when the API cannot be read: the fee simulation then says whether the chain would refuse.
+ */
+async function vaultPayable(): Promise<bigint | undefined> {
+  return (await fetchVaultRate(1))?.liquidityUsdg
+}
+
 /** The desk's savings-vault shares back to USDG inside the desk. Only the owner's wallet may redeem. */
 async function redeemAll(shares: bigint, reason: Hex) {
   const [block, assets] = await Promise.all([
@@ -161,6 +170,9 @@ export async function build(proposal: AskProposalRow, desk: DeskForBuild): Promi
             ? await sellEverything(state.holdings, reason)
             : { calls: [], lines: [], minOut: 0n }
         const redeemed = state.vaultShares > 0n ? await redeemAll(state.vaultShares, reason) : null
+        const payable = redeemed ? await vaultPayable() : undefined
+        if (redeemed && payable !== undefined && payable < redeemed.assets)
+          return `The savings vault can pay out only ${dollars(payable)} right now, less than the ${dollars(redeemed.assets)} the desk has in it. Withdraw everything as it is instead: the vault shares come to your wallet and you can redeem them yourself later.`
         const cashAfter = state.usdg + sold.minOut + (redeemed?.assets ?? 0n)
         if (cashAfter === 0n) return 'The desk holds nothing to withdraw.'
         const calls = [
@@ -202,6 +214,9 @@ export async function build(proposal: AskProposalRow, desk: DeskForBuild): Promi
       })
       if (shares > state.vaultShares)
         return `The desk has ${dollars(state.usdg)} in cash and less than that in the savings vault. Withdraw everything to sell the holdings first.`
+      const payable = await vaultPayable()
+      if (payable !== undefined && payable < short_)
+        return `The savings vault can pay out only ${dollars(payable)} right now, less than the ${dollars(short_)} this needs from it. You can withdraw ${dollars(state.usdg + payable)} now, and the rest once the vault has the cash.`
       const block = await pub().getBlock()
       return {
         ...base,

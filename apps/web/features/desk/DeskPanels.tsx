@@ -92,7 +92,10 @@ export function Plate({ view }: { view: DeskView }) {
             {BigInt(p.vaultUsdg) > 0n && (
               <div className="desk-row">
                 <span className="text-ink-muted">{deskCopy.plate.vault}</span>
-                <span className="type-data">{usd(BigInt(p.vaultUsdg))}</span>
+                <span className="type-data">
+                  {usd(BigInt(p.vaultUsdg))}
+                  {p.vaultRateBps !== null && ` · ${deskCopy.plate.vaultRate(pct(p.vaultRateBps))}`}
+                </span>
               </div>
             )}
             <div className="desk-row">
@@ -100,6 +103,9 @@ export function Plate({ view }: { view: DeskView }) {
               <span className="type-data">{view.timing.live.decisions === 0 ? '—' : signedUsd(live)}</span>
             </div>
           </div>
+          {BigInt(p.vaultUsdg) > 0n && (
+            <p className="type-caption text-ink-muted">{deskCopy.plate.vaultNote}</p>
+          )}
           <p className="type-caption text-ink-muted">
             {view.timing.live.decisions === 0 && view.timing.practice.decisions === 0
               ? deskCopy.plate.timingNone

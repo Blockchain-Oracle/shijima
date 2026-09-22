@@ -52,6 +52,18 @@ export type DeskCall =
       decisionHash: Hex
     }
   | { kind: 'checkpoint'; desk: Address; version: string; decisionHash: Hex }
+  /**
+   * Idle cash into the savings vault (`amountIn` is USDG), or shares back out of it (`amountIn` is shares).
+   * v1 and later only: v0's vault calls carry no deadline, so a lost one could never be declared dead.
+   */
+  | {
+      kind: 'sweep' | 'redeem'
+      desk: Address
+      version: string
+      amountIn: bigint
+      deadline: number
+      decisionHash: Hex
+    }
 
 export interface SignedDeskCall {
   kind: DeskCall['kind']
@@ -62,7 +74,7 @@ export interface SignedDeskCall {
   txHash: Hex
   nonce: number
   calldataHash: Hex
-  /** The contract's own deadline. Buy and sell always have one; so does a checkpoint on v1 and later. */
+  /** The contract's own deadline. Buy, sell and the vault calls always have one; so does a v1 checkpoint. */
   deadlineUnix?: number
 }
 
@@ -123,7 +135,14 @@ export async function signDeskCall(
   // Separate call sites, because viem types each contract function separately and cannot take a union of them.
   let data: Hex
   let deadlineUnix: number | undefined
-  if (call.kind !== 'checkpoint') {
+  if (call.kind === 'sweep' || call.kind === 'redeem') {
+    if (isV0Desk(call.version)) throw new Error('a v0 desk does not use the savings vault')
+    const functionName = call.kind === 'sweep' ? 'sweepToVault' : 'redeemFromVault'
+    const args = [call.amountIn, call.deadline, call.decisionHash] as const
+    await pub.simulateContract({ account, address: call.desk, abi: deskAbi, functionName, args })
+    data = encodeFunctionData({ abi: deskAbi, functionName, args })
+    deadlineUnix = call.deadline
+  } else if (call.kind === 'buy' || call.kind === 'sell') {
     const args = [call.token, call.amountIn, call.minOut, call.deadline, call.decisionHash] as const
     // buy and sell are the same shape in every version.
     await pub.simulateContract({ account, address: call.desk, abi: deskAbi, functionName: call.kind, args })
@@ -225,6 +244,18 @@ function readReceipt(kind: DeskCall['kind'], receipt: TransactionReceipt): DeskO
       amountOut: usdgOut,
       feedPrice,
     }
+  }
+  if (kind === 'sweep') {
+    const [log] = parseEventLogs({ abi: deskAbi, eventName: 'Swept', logs: receipt.logs })
+    if (!log) throw new Error(`no Swept event in tx ${receipt.transactionHash}`)
+    const { seq, shares, decisionHash } = log.args
+    return { status: 'confirmed', ...base, chainSeq: seq, eventHash: decisionHash, amountOut: shares }
+  }
+  if (kind === 'redeem') {
+    const [log] = parseEventLogs({ abi: deskAbi, eventName: 'Redeemed', logs: receipt.logs })
+    if (!log) throw new Error(`no Redeemed event in tx ${receipt.transactionHash}`)
+    const { seq, usdgOut, decisionHash } = log.args
+    return { status: 'confirmed', ...base, chainSeq: seq, eventHash: decisionHash, amountOut: usdgOut }
   }
   const [log] = parseEventLogs({ abi: deskAbi, eventName: 'Checkpoint', logs: receipt.logs })
   if (!log) throw new Error(`no Checkpoint event in tx ${receipt.transactionHash}`)

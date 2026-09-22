@@ -51,6 +51,19 @@ export const engineCopy = {
     dropped: (name: string) => `${name} is no longer in the mandate, so the desk would sell it.`,
   },
 
+  /** The savings vault. Plain arithmetic; no model is asked. */
+  vault: {
+    sweepWhy: (idle: string, keep: string, rate: string, interest: string, fee: string) =>
+      `${idle} of your cash target was sitting idle, beyond the ${keep} the desk keeps for its own buys. At the vault's ${rate} a year that earns about ${interest} in 30 days, well over the ${fee} a deposit and a later withdrawal cost in network fees.`,
+    swept: (amount: string, rate: string, keep: string) =>
+      `Moved ${amount} of idle cash into the savings vault, at ${rate} a year. ${keep} stays in cash for the desk's own buys.`,
+    redeemWhy: (wanted: string, loose: string) =>
+      `The desk's buys want ${wanted}, and it had ${loose} in cash outside the savings vault.`,
+    redeemed: (amount: string) =>
+      `Took ${amount} back out of the savings vault, so the desk has cash for its buys.`,
+    failed: (cause: string) => `The savings-vault move did not go through: ${cause}. Nothing moved.`,
+  },
+
   remembered: {
     stillWaitingForReopen: (at: string) => `Still waiting for the market to reopen (decided ${at} UTC).`,
     stillWaitingForAnswer: (at: string) => `Still waiting for your answer (asked ${at} UTC).`,

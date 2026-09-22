@@ -11,6 +11,8 @@ import type { HoldingValue, Valuation } from './valuation'
 
 /** Below this an action is not worth its network fee, which the operator pays. About 4 cents a trade. */
 export const MIN_TRADE_USDG = 1_000_000n
+/** At most this many trades are considered in one check. */
+export const MAX_CANDIDATES_PER_WAKE = 3
 /**
  * A trade must correct a drift worth several times what it costs. Six of the approved tokens cost about 10 bps
  * for a round trip and four cost about 60, because their liquidity sits in the 0.3% tier. Without this, a tight

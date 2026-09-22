@@ -97,8 +97,9 @@ export function desk(overrides: {
       overrides.plate === undefined
         ? {
             totalUsdg: '10000000',
-            cashUsdg: '2980000',
-            vaultUsdg: '0',
+            cashUsdg: '980000',
+            vaultUsdg: '2000000',
+            vaultRateBps: 400,
             cashBps: 2980,
             takenAt: iso(0.3),
             priceSource: 'pool_twap_30m',

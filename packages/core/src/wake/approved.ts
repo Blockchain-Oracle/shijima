@@ -203,6 +203,9 @@ function approvedRequest(
   if (!body.success || !body.data.candidate || !body.data.need) return undefined
   if (!answered.answeredAt || !answered.answeredVia) return undefined
   const { candidate, need } = body.data
+  // Only a trade is ever asked about. A vault move is housekeeping and never waits on the owner.
+  if (candidate.side !== 'buy' && candidate.side !== 'sell') return undefined
+  const side = candidate.side
   const shownOverride = OverridePreview.safeParse(answered.preview)
   const preview =
     answered.reason === 'owner_override'
@@ -213,8 +216,8 @@ function approvedRequest(
   if (!preview) return undefined
   const token = approved.find((t) => t.address.toLowerCase() === candidate.token.toLowerCase())
   if (!token) return undefined
-  const inDecimals = candidate.side === 'sell' ? TOKEN_DECIMALS : USDG_DECIMALS
-  const outDecimals = candidate.side === 'sell' ? USDG_DECIMALS : TOKEN_DECIMALS
+  const inDecimals = side === 'sell' ? TOKEN_DECIMALS : USDG_DECIMALS
+  const outDecimals = side === 'sell' ? USDG_DECIMALS : TOKEN_DECIMALS
   return {
     decisionSeq: answered.decisionSeq,
     askedBecause: answered.reason,
@@ -223,7 +226,7 @@ function approvedRequest(
     need: {
       candidate: {
         id: candidate.id,
-        side: candidate.side,
+        side,
         token,
         amountIn: parseUnits(preview.amountIn, inDecimals),
         why: candidate.why,

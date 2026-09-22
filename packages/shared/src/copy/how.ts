@@ -260,6 +260,7 @@ export const howCopy = {
     yourDesk: 'Your desk on the explorer',
     tokensTitle: 'Token addresses',
     usdg: 'USDG · the desk’s cash',
+    vault: 'steakUSDG · savings-vault shares, to redeem at the vault yourself',
   },
 
   fee: {
@@ -303,6 +304,10 @@ export const howCopy = {
       q: 'Why does it start in practice?',
       a: (checks: number) =>
         `So you can see how it decides before it spends anything. After ${checks} practice checks, and once you have read its report, you can let it ask first or act on its own.`,
+    },
+    vault: {
+      q: 'Does idle cash earn anything?',
+      a: 'When the desk acts on its own, the part of your cash target it does not need for its own buys goes to a savings vault: Steakhouse USDG on Morpho, the vault behind Robinhood Earn. Only when a month of interest is well over the network fees, and never cash that is on its way into a stock. The rate varies, about 4% a year lately, and your desk shows it live. Taking cash out depends on how much the vault has available at that moment.',
     },
     override: {
       q: 'Can I make it trade now?',

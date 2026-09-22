@@ -453,6 +453,8 @@ export const deskCopy = {
     sinceStart: 'Since your money went in',
     cash: 'Cash',
     vault: 'earning in the vault',
+    vaultRate: (rate: string) => `${rate} a year, variable`,
+    vaultNote: 'Taking cash out of the savings vault depends on how much it has available at that moment.',
     valued: (age: string) =>
       `Valued ${age} on the trading pools’ half-hour average, never on the frozen official price.`,
     notYet: 'Not valued yet. The desk values itself at its first check.',

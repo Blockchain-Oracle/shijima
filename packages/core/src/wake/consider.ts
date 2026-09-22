@@ -79,6 +79,11 @@ export interface ConsiderContext {
   totalUsdg: bigint
   /** What the desk has already spent in the last 24 hours, for the owner's own daily limit. */
   spentTodayUsdg: bigint
+  /**
+   * All the desk's cash, loose and in the savings vault. A remembered wait ends when cash ARRIVES; the desk
+   * moving its own cash out of the vault is not cash arriving, so the two are counted together.
+   */
+  cashUsdg: bigint
   /** The desk did this same thing to this token within the last few minutes. */
   repeatedWithinMinutes: boolean
   /** DEVELOPER ONLY. Act even when the model says wait, recorded in the record as an override. */
@@ -180,7 +185,7 @@ export async function considerCandidate(ctx: ConsiderContext, need: Need): Promi
     const baseline = ctx.standing.baseline as unknown as DeferralBaseline
     const ended = whyDeferralEnds(
       baseline,
-      { at: ctx.now, gapBps: market.gapBps, driftBps: need.driftBps, cashUsdg: state.usdg, headlineHashes },
+      { at: ctx.now, gapBps: market.gapBps, driftBps: need.driftBps, cashUsdg: ctx.cashUsdg, headlineHashes },
       ctx.standing.revisitAt,
       need.thresholdBps,
     )
@@ -241,7 +246,7 @@ export async function considerCandidate(ctx: ConsiderContext, need: Need): Promi
     decidedAt: ctx.now.toISOString(),
     gapBps: market.gapBps,
     driftBps: need.driftBps,
-    cashUsdg: state.usdg.toString(),
+    cashUsdg: ctx.cashUsdg.toString(),
     headlineHashes,
   }
 

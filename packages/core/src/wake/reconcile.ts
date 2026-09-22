@@ -6,7 +6,10 @@
  * measured against "start value plus net cash flows", so these must move the baseline. Without that, an owner
  * withdrawing half their money would look like a 50% loss and stop the desk.
  *
- * Pure arithmetic over rows. The vault is not compared yet: no desk holds vault shares until sweeps exist.
+ * The savings vault is compared in SHARES, never dollars: shares only move when something moves them, while
+ * their dollar value grows with interest, and interest is not money arriving from outside.
+ *
+ * Pure arithmetic over rows.
  */
 const PRICE_SCALE = 10n ** 20n
 
@@ -14,17 +17,22 @@ export interface KnownBalances {
   cashUsdg: bigint
   /** Raw token units by lowercase token address. */
   tokens: Record<string, bigint>
+  vaultShares: bigint
 }
 
+/** One of our own confirmed actions. A sweep's `actualOut` is shares; a redeem's `amountIn` is shares. */
 export interface ConfirmedTrade {
-  kind: 'buy' | 'sell'
+  kind: 'buy' | 'sell' | 'sweep' | 'redeem'
   token: string
   amountIn: bigint
   actualOut: bigint
 }
 
+/** The name an outside change of vault shares is reported under. */
+export const VAULT_ASSET = 'VAULT'
+
 export interface OutsideChange {
-  /** 'USDG' or a lowercase token address. */
+  /** 'USDG', 'VAULT' for savings-vault shares, or a lowercase token address. */
   asset: string
   /** Positive arrived, negative left. Raw units of that asset. */
   delta: bigint
@@ -43,12 +51,24 @@ export function findOutsideChanges(
   tradesSince: ConfirmedTrade[],
   current: KnownBalances,
   priceE8: Record<string, bigint>,
+  /** What 10^18 vault shares redeem for now, in USDG. Values an outside move of shares. */
+  vaultUsdgPerShareE18: bigint,
 ): OutsideChange[] {
-  const expected: KnownBalances = { cashUsdg: previous.cashUsdg, tokens: { ...previous.tokens } }
+  const expected: KnownBalances = {
+    cashUsdg: previous.cashUsdg,
+    tokens: { ...previous.tokens },
+    vaultShares: previous.vaultShares,
+  }
   for (const t of tradesSince) {
     const token = t.token.toLowerCase()
     const held = expected.tokens[token] ?? 0n
-    if (t.kind === 'buy') {
+    if (t.kind === 'sweep') {
+      expected.cashUsdg -= t.amountIn
+      expected.vaultShares += t.actualOut
+    } else if (t.kind === 'redeem') {
+      expected.vaultShares -= t.amountIn
+      expected.cashUsdg += t.actualOut
+    } else if (t.kind === 'buy') {
       expected.cashUsdg -= t.amountIn
       expected.tokens[token] = held + t.actualOut
     } else {
@@ -60,6 +80,15 @@ export function findOutsideChanges(
   const cashDelta = current.cashUsdg - expected.cashUsdg
   // USDG is the unit of account, so its own value never needs a price.
   if (cashDelta !== 0n) changes.push({ asset: 'USDG', delta: cashDelta, usdgValue: cashDelta, priced: true })
+  const sharesDelta = current.vaultShares - expected.vaultShares
+  if (sharesDelta !== 0n) {
+    changes.push({
+      asset: VAULT_ASSET,
+      delta: sharesDelta,
+      usdgValue: (sharesDelta * vaultUsdgPerShareE18) / 10n ** 18n,
+      priced: vaultUsdgPerShareE18 > 0n,
+    })
+  }
   for (const token of new Set([...Object.keys(expected.tokens), ...Object.keys(current.tokens)])) {
     const delta = (current.tokens[token] ?? 0n) - (expected.tokens[token] ?? 0n)
     if (delta === 0n) continue

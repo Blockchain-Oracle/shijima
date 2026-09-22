@@ -1,4 +1,4 @@
-import { APPROVED_TOKENS, EXPLORER, USDG } from '@desk/chain'
+import { APPROVED_TOKENS, EXPLORER, USDG, VAULT } from '@desk/chain'
 import { COST_MULTIPLE, MIN_TRADE_USDG } from '@desk/core'
 import { GO_LIVE_CHECKS } from '@desk/db'
 import { howCopy, type Session, usd, webCopy } from '@desk/shared'
@@ -128,6 +128,7 @@ export const WITHDRAW_STEPS: readonly { label: string; desc: string }[] = [
 /** Every address the withdraw call can take: the desk's cash first, then the Stock Tokens it may hold. */
 export const TOKEN_ADDRESSES: readonly [string, string][] = [
   [howCopy.withdraw.usdg, USDG],
+  [howCopy.withdraw.vault, VAULT],
   ...APPROVED_TOKENS.map((t): [string, string] => [`${t.symbol} · ${t.displayName}`, t.address]),
 ]
 
@@ -146,5 +147,6 @@ export const FAQS: readonly { question: string; answer: string }[] = [
   f.sees,
   f.awake,
   { q: f.practice.q, a: f.practice.a(GO_LIVE_CHECKS) },
+  f.vault,
   f.override,
 ].map(({ q, a }) => ({ question: q, answer: a }))

@@ -42,6 +42,12 @@ export const deskValueSnapshots = pgTable(
     totalUsdg: uint('total_usdg').notNull(),
     cashUsdg: uint('cash_usdg').notNull(),
     vaultUsdg: uint('vault_usdg').notNull(),
+    /**
+     * The vault's SHARES, which is what reconcile compares: their dollar value grows with interest, so comparing
+     * dollars would read the vault's own interest as money arriving from outside. Added 22 Sep; older rows are 0,
+     * which is true, because no desk held shares before sweeps.
+     */
+    vaultShares: uint('vault_shares').notNull().default(sql`0`),
     holdings: jsonb('holdings').$type<SnapshotHolding[]>().notNull(),
     priceSource: text('price_source').notNull(),
     blockNumber: bigint('block_number', { mode: 'number' }),
@@ -52,6 +58,7 @@ export const deskValueSnapshots = pgTable(
     nonNegative('desk_value_snapshots_total_nonneg', t.totalUsdg),
     nonNegative('desk_value_snapshots_cash_nonneg', t.cashUsdg),
     nonNegative('desk_value_snapshots_vault_nonneg', t.vaultUsdg),
+    nonNegative('desk_value_snapshots_vault_shares_nonneg', t.vaultShares),
   ],
 )
 

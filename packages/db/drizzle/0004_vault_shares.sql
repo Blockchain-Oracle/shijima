@@ -1,0 +1,2 @@
+ALTER TABLE "desk_value_snapshots" ADD COLUMN "vault_shares" numeric(78, 0) DEFAULT 0 NOT NULL;--> statement-breakpoint
+ALTER TABLE "desk_value_snapshots" ADD CONSTRAINT "desk_value_snapshots_vault_shares_nonneg" CHECK ("desk_value_snapshots"."vault_shares" >= 0);

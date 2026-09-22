@@ -22,6 +22,8 @@ export const stockTokenAbi = parseAbi([
 export const vaultAbi = parseAbi([
   'function convertToAssets(uint256 shares) view returns (uint256)',
   'function previewWithdraw(uint256 assets) view returns (uint256 shares)',
+  'function previewDeposit(uint256 assets) view returns (uint256 shares)',
+  'function previewRedeem(uint256 shares) view returns (uint256 assets)',
 ])
 
 export const v3FactoryAbi = parseAbi(['function getPool(address, address, uint24) view returns (address)'])

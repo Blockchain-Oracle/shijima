@@ -29,7 +29,7 @@ import type { WakeDeps, WakeInput } from './wake'
 const REVISIT_AFTER_OPEN_MS = 30 * 60 * 1000
 
 /** The value snapshot row for this moment. Pure, so it can be written inside someone else's transaction. */
-export function snapshotOf(deskId: string, v: Valuation, now: Date) {
+export function snapshotOf(deskId: string, v: Valuation, now: Date, vaultShares: bigint) {
   return {
     deskId,
     kind: 'hourly' as const,
@@ -37,6 +37,7 @@ export function snapshotOf(deskId: string, v: Valuation, now: Date) {
     totalUsdg: v.totalUsdg,
     cashUsdg: v.cashUsdg,
     vaultUsdg: v.vaultUsdg,
+    vaultShares,
     priceSource: PRICE_SOURCE,
     holdings: v.holdings.map((h) => ({
       token: h.token.address,
