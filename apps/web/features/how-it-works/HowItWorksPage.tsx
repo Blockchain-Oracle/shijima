@@ -343,6 +343,11 @@ function Judgment() {
           ))}
         </dl>
         <p className="hiw-foot">{j.foot}</p>
+        <p className="hiw-foot" style={{ marginTop: 12 }}>
+          <Link href="/compare" className="text-accent hover:underline" data-cursor="hover">
+            {j.compareLink}
+          </Link>
+        </p>
       </div>
     </section>
   )

@@ -1,5 +1,6 @@
 export * from './alerts'
 export * from './ask'
+export * from './compare'
 export * from './jobs/grade'
 export * from './jobs/grade-at-reopen'
 export * from './jobs/market-facts'

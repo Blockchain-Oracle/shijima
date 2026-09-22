@@ -1,0 +1,57 @@
+{
+  "runs": [
+    {
+      "situation": "gap-no-news",
+      "mode": "raw",
+      "ranAt": "2026-09-22T06:49:51.099Z",
+      "model": "gpt-5.4-mini",
+      "promptVersion": "timing.v2",
+      "latencyMs": 5178,
+      "totalTokens": 2406,
+      "error": null,
+      "decision": {
+        "option": "ACT_NOW",
+        "partPercent": null,
+        "headline": "Buy now, because Tesla is 259 basis points below the reference and no news explains it.",
+        "confidencePercent": 89,
+        "reasons": [
+          {
+            "text": "The pool price is 259 bps below the reference, which favors buying now by more than the 50 bp threshold.",
+            "evidenceIds": ["e2"]
+          },
+          {
+            "text": "The session is weekend and not anchored, but the gap is large and no material news explains it.",
+            "evidenceIds": ["e1", "e5"]
+          },
+          {
+            "text": "The trade cost is 31 bps, which is smaller than the current gap against the reference.",
+            "evidenceIds": ["e3"]
+          },
+          {
+            "text": "The desk is below the Tesla target, so this buy moves the holding toward the mandate.",
+            "evidenceIds": ["e7", "e6"]
+          }
+        ],
+        "rejected": [
+          {
+            "option": "WAIT_REOPEN",
+            "reason": "The market is thin on the weekend, but the price is already far below the reference and there is no news reason to expect a better reset at the reopen."
+          },
+          {
+            "option": "ACT_PART",
+            "reason": "A partial buy is not needed here because the gap already favors buying now and the trade size is small."
+          },
+          {
+            "option": "DECLINE",
+            "reason": "The buy does not break the mandate and the current price gap favors acting now."
+          }
+        ],
+        "newsExplainsGap": "no",
+        "warnings": [],
+        "ruleIds": []
+      },
+      "problems": [],
+      "styleWords": []
+    }
+  ]
+}

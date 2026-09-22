@@ -44,7 +44,8 @@
     "desk:grade": "pnpm --filter @desk/worker grade",
     "openserv:provision": "pnpm --filter @desk/worker openserv:provision",
     "openserv:fire": "pnpm --filter @desk/worker openserv:fire",
-    "desk:link": "pnpm --filter @desk/worker telegram-link"
+    "desk:link": "pnpm --filter @desk/worker telegram-link",
+    "compare:run": "tsx --env-file-if-exists=.env scripts/compare.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.14",

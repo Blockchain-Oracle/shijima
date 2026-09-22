@@ -100,7 +100,7 @@ export interface WakeReport {
 const usd = (v: bigint) => `$${Number(formatUnits(v, USDG_DECIMALS)).toFixed(2)}`
 const pct = (bps: number) => `${(bps / 100).toFixed(1)}%`
 
-function mandateLine(m: Mandate, version: number, approved: ApprovedToken[]): string {
+export function mandateLine(m: Mandate, version: number, approved: ApprovedToken[]): string {
   const name = (a: string) =>
     approved.find((t) => t.address.toLowerCase() === a.toLowerCase())?.displayName ?? a
   const targets = m.targets.tokens.map((t) => `${name(t.token)} ${pct(t.weightBps)}`).join(', ')

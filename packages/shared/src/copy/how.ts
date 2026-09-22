@@ -196,6 +196,7 @@ export const howCopy = {
       gives: ['Also gives', 'its confidence, its reasons, and why it turned down each other option'],
       never: ['Never decides', 'what to hold, how much of it, or whether a limit applies'],
     } satisfies Record<string, [string, string]>,
+    compareLink: 'See the same question asked with and without SERV',
     foot: 'The engine is SERV Reasoning, from OpenServ. Its answer must fit a strict format, and our own checks reject an answer that cites a rule or a fact it was not given. A rejected answer means the desk does nothing that hour, and the record says so.',
   },
 
