@@ -812,6 +812,17 @@ as success; on restart the log shows `openserv_trigger_active`. The dev wallet i
 20 Sep is on the dev desk (5.21 USDG and 0.0025 NVDA). **Next:** the demo desk's $50 needs a new deposit on Base, and
 the go for v1.
 
+**Tue 22 Sep, 19:20 UTC. CONTRACT v1 IS LIVE AND THE DESK MOVED ONTO IT. Abu: $5 is enough for all development.**
+No $50 demo desk: the dev desk is the demo desk. Every v1 freeze box ticked first: 42 fork tests at block 69893208;
+on a fresh fork, v1 deployed, a desk created and funded from v0, and all 11 limit cases held (the session withdraw case
+had first read BROKEN only because the fork desk was empty); a second reader found nothing fund-affecting in
+`Desk.sol`; the header's worst-case wording now matches the README and the disclosure. The whole move was rehearsed on
+the fork and the rehearsal database, ending in a real shadow check on v1. Then on mainnet: factory
+`0xB0Df8d1c…89f1`, desk `0xC61DDE99…18B1` holding 5.21 USDG and 0.0025 NVDA, v0's operator revoked, and
+`scripts/move-desk.sql` carried the mandate, Shadow mode and its 21 checks, the `showcase` link, the linked Telegram and
+price alerts across; v0 is closed and its 44 records stay in the database. Worker restarted from tag `v1`.
+**Owed:** Blockscout verification by hand (Sourcify is done), so the "Write proxy" steps work.
+
 ## 6. Schedule
 
 | Day | Work | Must be true by end of day |
