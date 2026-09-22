@@ -12,8 +12,12 @@ import { cn } from '@/lib/utils'
 import '@/styles/index.css'
 
 export const metadata: Metadata = {
+  // Previews need absolute image addresses. SITE_URL is set where the site is hosted; locally it is this server.
+  metadataBase: new URL(process.env.SITE_URL ?? 'http://localhost:3007'),
   title: { default: webCopy.brand.name, template: `%s · ${webCopy.brand.name}` },
   description: webCopy.brand.description,
+  openGraph: { siteName: webCopy.brand.name, type: 'website' },
+  twitter: { card: 'summary_large_image' },
 }
 
 /** Masayume's root, as Agari has it: the faces, the theme painted before the first frame, and the shell. */

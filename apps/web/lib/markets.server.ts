@@ -56,7 +56,7 @@ export interface TokenNow {
   at: Date
 }
 
-async function tokensNow(): Promise<TokenNow[]> {
+export async function tokensNow(): Promise<TokenNow[]> {
   const rows = await latestPricePoints(db())
   return APPROVED_TOKENS.flatMap((t) => {
     const p = rows.find((r) => r.token === t.address.toLowerCase())

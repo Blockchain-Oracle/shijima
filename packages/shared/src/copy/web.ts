@@ -851,3 +851,33 @@ export const disclosureCopy = {
     },
   ],
 } as const
+
+/**
+ * Link previews (FIDELITY L-23): the words on the images a link shows in X, Telegram or a chat. The face is Sora
+ * SemiBold, which has the middle dot and the dash but no kanji and no arrows, so none reach a card.
+ */
+export const ogCopy = {
+  site: {
+    alt: 'Shijima: an AI desk for your Stock Tokens. You choose what to hold; it decides only when, inside hard limits.',
+    eyebrow: 'Stock Tokens on Robinhood Chain',
+    lead: 'You choose what to hold.',
+    em: 'It decides only when.',
+    line: 'Inside limits the network enforces. Every decision on the record.',
+  },
+  honesty: 'Stock Tokens are not shares · nothing here is advice',
+  desk: {
+    alt: 'A shared Shijima desk: its name, its mode and its last check.',
+    eyebrow: 'A shared desk',
+    checks: (n: number) => `${n.toLocaleString('en-US')} ${n === 1 ? 'check' : 'checks'} on the record`,
+    lastCheck: (ago: string) => `Last check ${ago}`,
+    noCheck: 'No check yet',
+  },
+  stock: {
+    alt: 'A Stock Token on Shijima: its pool price against its reference, and how old that is.',
+    eyebrow: 'Stock Token',
+    gap: (pct: string, side: 'above' | 'below') => `${pct} ${side} its reference`,
+    inLine: 'In line with its reference',
+    priced: (ago: string) => `Pool price, logged ${ago}`,
+    noPrice: 'No price logged yet',
+  },
+} as const

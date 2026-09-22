@@ -28,7 +28,7 @@ the same author's own projects. Masayume's interface is itself a source-led port
 
 | Font | Terms | Where |
 | --- | --- | --- |
-| Sora | Copyright 2019 The Sora Project Authors. SIL Open Font License 1.1. | `apps/web/lib/fonts.ts`, through `next/font/google` |
+| Sora | Copyright 2019 The Sora Project Authors. SIL Open Font License 1.1. | `apps/web/lib/fonts.ts`, through `next/font/google`; the SemiBold TTF is vendored with its licence in `apps/web/features/og/fonts/` for link previews, as Agari does |
 | Inter | Copyright 2020 The Inter Project Authors. SIL Open Font License 1.1. | the same |
 | JetBrains Mono | Copyright 2020 The JetBrains Mono Project Authors. SIL Open Font License 1.1. | the same |
 | Noto Serif JP | Copyright 2012 Google Inc. SIL Open Font License 1.1. It sets しじま in the wordmark. | the same |
