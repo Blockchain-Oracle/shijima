@@ -437,14 +437,20 @@ export async function resumeDesk(
     const now = new Date()
     const [before] = await tx.select({ state: desks.state }).from(desks).where(eq(desks.id, deskId))
     if (!before || before.state === 'active' || before.state === 'needs_attention') return false
-    const resetBaseline = before.state === 'stopped_by_loss_limit' && currentValueUsdg !== undefined
+    // Restarting after the loss limit means counting from what the desk is worth now. Without this the next
+    // check would measure the same loss against the old baseline and stop the desk again at once. With no value
+    // given, the latest valuation is the one the owner saw.
+    const resetTo =
+      before.state === 'stopped_by_loss_limit'
+        ? (currentValueUsdg ?? (await latestValueSnapshot(tx, deskId))?.totalUsdg)
+        : undefined
     await tx
       .update(desks)
       .set({
         state: 'active',
         stateReason: null,
         drawdownBreaches: 0,
-        ...(resetBaseline ? { drawdownBaselineUsdg: currentValueUsdg } : {}),
+        ...(resetTo !== undefined ? { drawdownBaselineUsdg: resetTo } : {}),
         updatedAt: now,
       })
       .where(eq(desks.id, deskId))
@@ -453,7 +459,7 @@ export async function resumeDesk(
       kind: 'resumed',
       actor: by.actor,
       via: by.via,
-      detail: { from: before.state, baselineReset: resetBaseline },
+      detail: { from: before.state, baselineReset: resetTo !== undefined },
       at: now,
     })
     return true

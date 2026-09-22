@@ -7,12 +7,16 @@ import { APPROVED_TOKENS } from '@desk/chain'
 import {
   ASSISTANT_REMOVED,
   askHistory,
+  companyEventsFrom,
   currentMandate,
   deskById,
   deskIdBySlug,
+  deskNotes,
   deskRecord,
   GO_LIVE_CHECKS,
   groupQuietRuns,
+  lastCheckOf,
+  latestPricePoints,
   latestValueSnapshot,
   mandateFromRow,
   pendingApprovals,
@@ -27,6 +31,13 @@ import { signedInAddress } from './session'
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 /** The desk's fee, from the design brief: 0.5% a year of what it holds, shown accruing, waived in the beta. */
 const FEE_BPS_A_YEAR = 50n
+
+/** A token's status is shown only from a price-log row this fresh; an older one would be a guess. */
+const FLAGS_FRESH_MS = 60 * 60 * 1000
+/** A report this close is worth a line on the holding. */
+const REPORT_DAYS = 7
+/** Desk.sol refuses the assistant's trades beyond this distance from the last official update. */
+const BAND_BPS = 800
 
 const nameOf = (address: string) =>
   APPROVED_TOKENS.find((t) => t.address.toLowerCase() === address.toLowerCase())
@@ -51,6 +62,21 @@ export async function loadDesk(slug: string) {
     isOwner ? askHistory(db(), desk.id, desk.ownerAddress) : Promise.resolve([]),
   ])
   const mandate = mandateRow ? mandateFromRow(mandateRow) : null
+  const tokens = mandate?.targets.tokens.map((t) => t.token) ?? []
+  const today = new Date().toISOString().slice(0, 10)
+  const [lastCheck, notes, prices, events] = await Promise.all([
+    lastCheckOf(db(), desk.id),
+    deskNotes(db(), desk.id, desk.startedAt ?? desk.createdAt, tokens),
+    latestPricePoints(db()),
+    tokens.length > 0 ? companyEventsFrom(db(), today, tokens) : Promise.resolve([]),
+  ])
+  const priceOf = new Map(prices.map((p) => [p.token.toLowerCase(), p]))
+  const reportOf = (token: string) => {
+    const e = events.find((x) => x.token.toLowerCase() === token.toLowerCase() && x.kind === 'earnings')
+    if (!e) return null
+    const days = (new Date(`${e.eventDate}T12:00:00Z`).getTime() - Date.now()) / 86_400_000
+    return days <= REPORT_DAYS ? { date: e.eventDate, timing: e.timing } : null
+  }
 
   const total = snapshot?.totalUsdg ?? null
   const share = (v: bigint) => (total && total > 0n ? Number((v * 10_000n) / total) : 0)
@@ -59,6 +85,14 @@ export async function loadDesk(slug: string) {
         const held = snapshot?.holdings.find((h) => h.token.toLowerCase() === t.token.toLowerCase())
         const token = nameOf(t.token)
         const value = held ? BigInt(held.valueUsdg) : 0n
+        const p = priceOf.get(t.token.toLowerCase())
+        const fresh = p !== undefined && Date.now() - p.at.getTime() < FLAGS_FRESH_MS
+        // The contract's band is measured against the feed: the snapshot's own gap if it has one, else the log's.
+        const bandBps =
+          held?.gapToFeedBps ??
+          (fresh && p.twap30E8 && p.feedPriceE8 && p.feedPriceE8 > 0n
+            ? Number(((p.twap30E8 - p.feedPriceE8) * 10_000n) / p.feedPriceE8)
+            : null)
         return {
           symbol: token?.symbol ?? t.token,
           name: token?.displayName ?? t.token,
@@ -66,6 +100,12 @@ export async function loadDesk(slug: string) {
           weightBps: share(value),
           targetBps: t.weightBps,
           gapToFeedBps: held?.gapToFeedBps ?? null,
+          flags: {
+            halted: fresh ? p.halted : false,
+            feedMissing: fresh ? p.feedPriceE8 === null || p.oraclePaused === true : false,
+            beyondBandBps: bandBps !== null && Math.abs(bandBps) >= BAND_BPS ? bandBps : null,
+            report: reportOf(t.token),
+          },
         }
       })
     : []
@@ -115,6 +155,7 @@ export async function loadDesk(slug: string) {
       goLiveChecks: GO_LIVE_CHECKS,
       reportOpened: desk.shadowReportOpenedAt !== null,
       startedAt: desk.startedAt?.toISOString() ?? null,
+      lastCheckAt: lastCheck?.at.toISOString() ?? null,
     },
     plate: snapshot
       ? {
@@ -151,6 +192,7 @@ export async function loadDesk(slug: string) {
       preview: a.preview as { amountIn?: string; expectedOut?: string },
     })),
     record: groupQuietRuns(record),
+    notes: notes.map((n) => ({ at: n.at.toISOString(), kind: n.kind, detail: n.detail ?? {} })),
     history: history.map((h) => ({ at: h.takenAt.toISOString(), totalUsdg: h.totalUsdg.toString() })),
     markers: record
       .filter(

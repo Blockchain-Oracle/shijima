@@ -469,12 +469,32 @@ export const deskCopy = {
     inLine: 'in line',
     over: (pct: string) => `${pct} over`,
     under: (pct: string) => `${pct} under`,
+    flags: {
+      halted: 'Trading is paused in this token. The desk will not touch it until it resumes.',
+      haltUnknown: 'Its trading status cannot be read right now, so the desk will not touch it.',
+      band: (pct: string) =>
+        `${pct} from its last official update. The assistant cannot trade it right now; only you can sell.`,
+      feed: 'No price feed right now. The assistant cannot trade it; only you can sell.',
+      report: (when: string) =>
+        `Reports ${when}. The price can move sharply around then, and a weekend price even more.`,
+      timing: { bmo: 'before the open', amc: 'after the close', dmh: 'during the day' } as Record<
+        string,
+        string
+      >,
+      sellYourself: 'Sell it yourself from Controls',
+    },
   },
 
   nextCheck: {
     title: 'Next check',
     at: (when: string) => `At the top of the hour, ${when} New York.`,
     stopped: 'The desk is not acting until you resume it.',
+    late: (ago: string) =>
+      `Has not checked in. Last check was ${ago}. Your money is safe in your account and cannot move without the assistant.`,
+    first: 'No check yet. The first one happens at the top of the next hour.',
+    paused: 'Paused by you. Nothing will happen until you resume.',
+    lossStop:
+      'It stopped itself because of your loss limit. To restart, press Resume in Controls; the limit then counts from what the desk is worth at that moment.',
   },
 
   practice: {
@@ -513,6 +533,26 @@ export const deskCopy = {
     title: 'The record',
     empty: 'The desk has not checked yet.',
     quiet: (n: number) => `${n} quiet checks`,
+    notes: {
+      outside: (what: string) =>
+        `Your balance is different from what the desk expected: ${what}. It has updated its picture, and your loss limit counts from the new amount.`,
+      owner: (what: string) => `You ${what} yourself, from your wallet.`,
+      ownerLabel: 'Your own call',
+      outsideLabel: 'Changed outside the desk',
+      multiplierLabel: 'Value changed with no trade',
+      multiplier: (name: string, pct: string) =>
+        `${name}’s multiplier rose ${pct}: a dividend paid as more token, not as cash. The holding is worth more with no trade.`,
+      added: (amount: string) => `${amount} came in`,
+      removed: (amount: string) => `${amount} went out`,
+      calls: {
+        Sold: 'sold',
+        Bought: 'bought',
+        Swept: 'moved cash to savings',
+        Redeemed: 'took cash out of savings',
+        Checkpoint: 'sealed the record',
+      } as Record<string, string>,
+      call: 'made a recorded call',
+    },
     whole: 'The whole record',
     report: 'How it did',
   },

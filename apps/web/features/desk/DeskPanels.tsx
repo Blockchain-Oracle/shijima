@@ -6,6 +6,7 @@ import { Answer } from '@/components/answer'
 import { Outcome } from '@/components/outcome'
 import type { DeskView } from '@/lib/desk.server'
 import { DeskValueChart } from './DeskValueChart'
+import { type DeskNote, noteLabel, noteText } from './notes'
 
 const pct = (bps: number) => `${(bps / 100).toFixed(bps % 100 === 0 ? 0 : 1)}%`
 const signedUsd = (raw: bigint) => `${raw < 0n ? '−' : '+'}${usd(raw < 0n ? -raw : raw)}`
@@ -35,24 +36,24 @@ export function NeedsYou({ view }: { view: DeskView }) {
   return (
     <Panel title={deskCopy.needsYou.title}>
       {view.desk.stateReason && <p className="text-warning type-caption">{view.desk.stateReason}</p>}
-      {view.approvals.length === 0 ? (
-        <p className="type-body text-ink-secondary">{deskCopy.needsYou.nothing}</p>
-      ) : (
-        view.approvals.map((a) => (
-          <div key={a.id} className="desk-card">
-            <p className="type-body text-ink">{a.summary}</p>
-            <p className="type-data text-ink-secondary">
-              {deskCopy.needsYou.trade(
-                a.side ?? 'buy',
-                a.preview.amountIn ?? '?',
-                a.preview.expectedOut ?? '?',
-              )}
-            </p>
-            <p className="type-caption text-ink-muted">{deskCopy.needsYou.asking[a.reason]}</p>
-            <Answer deskId={view.desk.id} approvalId={a.id} expiresAt={a.expiresAt} />
-          </div>
-        ))
-      )}
+      {view.approvals.length === 0
+        ? !view.desk.stateReason && (
+            <p className="type-body text-ink-secondary">{deskCopy.needsYou.nothing}</p>
+          )
+        : view.approvals.map((a) => (
+            <div key={a.id} className="desk-card">
+              <p className="type-body text-ink">{a.summary}</p>
+              <p className="type-data text-ink-secondary">
+                {deskCopy.needsYou.trade(
+                  a.side ?? 'buy',
+                  a.preview.amountIn ?? '?',
+                  a.preview.expectedOut ?? '?',
+                )}
+              </p>
+              <p className="type-caption text-ink-muted">{deskCopy.needsYou.asking[a.reason]}</p>
+              <Answer deskId={view.desk.id} approvalId={a.id} expiresAt={a.expiresAt} />
+            </div>
+          ))}
     </Panel>
   )
 }
@@ -143,6 +144,7 @@ export function Holdings({ view }: { view: DeskView }) {
                 </span>
                 <span>{tone}</span>
               </div>
+              <HoldingFlags flags={h.flags} owner={view.isOwner} />
             </div>
           )
         })}
@@ -150,6 +152,45 @@ export function Holdings({ view }: { view: DeskView }) {
     </Panel>
   )
 }
+
+/**
+ * What stops the assistant touching one holding, and what is coming for it [8.16]. The assistant's limits are
+ * the contract's; where it cannot act, the owner still can, and the line says so.
+ */
+function HoldingFlags({ flags, owner }: { flags: DeskView['holdings'][number]['flags']; owner: boolean }) {
+  const f = deskCopy.holdings.flags
+  const lines: { text: string; warn: boolean }[] = []
+  if (flags.halted === true) lines.push({ text: f.halted, warn: true })
+  if (flags.halted === null) lines.push({ text: f.haltUnknown, warn: true })
+  if (flags.beyondBandBps !== null)
+    lines.push({ text: f.band(pct(Math.abs(flags.beyondBandBps))), warn: true })
+  if (flags.feedMissing) lines.push({ text: f.feed, warn: true })
+  if (flags.report) {
+    const day = new Date(`${flags.report.date}T12:00:00Z`).toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    })
+    const when = flags.report.timing ? f.timing[flags.report.timing] : undefined
+    lines.push({ text: f.report(when ? `${day}, ${when}` : day), warn: false })
+  }
+  if (lines.length === 0) return null
+  const ownerCanSell = owner && (flags.beyondBandBps !== null || flags.feedMissing)
+  return (
+    <ul className="mt-1 flex flex-col gap-1">
+      {lines.map((l) => (
+        <li key={l.text} className={l.warn ? 'type-caption text-warning' : 'type-caption text-ink-secondary'}>
+          {l.text}
+        </li>
+      ))}
+      {ownerCanSell && <li className="type-caption text-ink-muted">{f.sellYourself}</li>}
+    </ul>
+  )
+}
+
+/** Hourly checks run at the top of the hour; past two hours without one, the desk has not checked in [8.16]. */
+const LATE_MS = 2 * 60 * 60 * 1000
 
 export function NextCheck({ view }: { view: DeskView }) {
   const now = new Date()
@@ -165,9 +206,16 @@ export function NextCheck({ view }: { view: DeskView }) {
   const d = view.desk
   return (
     <Panel title={deskCopy.nextCheck.title}>
-      <p className="type-body text-ink">
-        {d.state === 'active' ? deskCopy.nextCheck.at(time) : deskCopy.nextCheck.stopped}
+      <p className={d.state === 'active' ? 'type-body text-ink' : 'type-body text-warning'}>
+        {d.state === 'active'
+          ? deskCopy.nextCheck.at(time)
+          : d.state === 'paused_by_owner'
+            ? deskCopy.nextCheck.paused
+            : d.state === 'stopped_by_loss_limit'
+              ? deskCopy.nextCheck.lossStop
+              : deskCopy.nextCheck.stopped}
       </p>
+      <CheckState view={view} now={now} />
       <p className="type-caption text-ink-muted">
         {deskCopy.modes[d.mode]}: {deskCopy.modeNote[d.mode]} · {engineCopy.deskState[d.state]}
       </p>
@@ -264,6 +312,18 @@ export function Mandate({ view }: { view: DeskView }) {
   )
 }
 
+/** For an active desk, the one line about its clock: late [8.16], or not yet checked. */
+function CheckState({ view, now }: { view: DeskView; now: Date }) {
+  const d = view.desk
+  const c = deskCopy.nextCheck
+  if (d.state !== 'active' || d.lifecycle !== 'running') return null
+  if (!d.lastCheckAt) return <p className="type-caption text-ink-secondary">{c.first}</p>
+  const last = new Date(d.lastCheckAt)
+  if (now.getTime() - last.getTime() > LATE_MS)
+    return <p className="type-caption text-warning">{c.late(ago(last, now))}</p>
+  return null
+}
+
 function Entry({ d, slug }: { d: PublicDecision; slug: string }) {
   return (
     <Link href={`/desk/${slug}/decision/${d.seq}` as Route} className="desk-entry" data-cursor="hover">
@@ -276,8 +336,28 @@ function Entry({ d, slug }: { d: PublicDecision; slug: string }) {
   )
 }
 
+function Note({ note }: { note: DeskNote }) {
+  return (
+    <div className="desk-entry">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="font-medium text-ink-secondary text-sm">{noteLabel(note)}</span>
+        <span className="type-caption text-ink-muted">{ago(new Date(note.at))}</span>
+      </div>
+      <p className="type-body text-ink-secondary">{noteText(note)}</p>
+    </div>
+  )
+}
+
+const rowAt = (row: RecordRow) => (row.kind === 'entry' ? row.decision.decidedAt : row.to).getTime()
+
 export function Record({ view, limit = 12 }: { view: DeskView; limit?: number }) {
-  const rows: RecordRow[] = view.record.slice(0, limit)
+  // Decisions and notes in one list, newest first: a deposit belongs between the checks around it.
+  const merged = [
+    ...view.record.map((row) => ({ at: rowAt(row), row, note: undefined })),
+    ...view.notes.map((note) => ({ at: new Date(note.at).getTime(), row: undefined, note })),
+  ]
+    .sort((a, b) => b.at - a.at)
+    .slice(0, limit)
   return (
     <Panel
       title={deskCopy.record.title}
@@ -292,12 +372,14 @@ export function Record({ view, limit = 12 }: { view: DeskView; limit?: number })
         </span>
       }
     >
-      {rows.length === 0 ? (
+      {merged.length === 0 ? (
         <p className="type-body text-ink-secondary">{deskCopy.record.empty}</p>
       ) : (
         <div className="flex flex-col gap-2">
-          {rows.map((row) =>
-            row.kind === 'entry' ? (
+          {merged.map(({ row, note, at }) =>
+            note ? (
+              <Note key={`n-${at}-${note.kind}`} note={note} />
+            ) : !row ? null : row.kind === 'entry' ? (
               <Entry key={row.decision.id} d={row.decision} slug={view.slug} />
             ) : (
               <details key={`q-${row.from.toISOString()}`} className="desk-quiet">

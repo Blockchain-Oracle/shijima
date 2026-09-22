@@ -289,6 +289,9 @@ Chat (added 21 Sep, migration 0001):
 
 `notifications` gained `read_at` for the web inbox.
 
+Status (added 22 Sep, migration 0003): `worker_beats`, one row per worker, written at start and after every
+pass. With the leader lock seen in `pg_locks`, `/status` can tell a dead worker from a stuck one.
+
 How the chat runs (`packages/core/src/ask/`, `apps/worker/src/ask.ts`):
 1. The web writes an `ask_requests` row and sends `pg_notify('ask_requests', id)`.
 2. The worker LISTENs on one held connection and sweeps every second. It claims rows with `FOR UPDATE SKIP LOCKED`,

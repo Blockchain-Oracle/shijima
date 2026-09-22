@@ -6,9 +6,21 @@
  * The hashed `record` body is public by design: it is the thing whose fingerprint is written on-chain, and a
  * record nobody can read proves nothing.
  */
-import { and, asc, desc, eq, gte, lt, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm'
 import type { DbOrTx } from '../client'
-import { actions, decisions, deferrals, desks, deskValueSnapshots, grades, mandates, owners } from '../schema'
+import {
+  actions,
+  decisions,
+  deferrals,
+  deskEvents,
+  desks,
+  deskValueSnapshots,
+  grades,
+  mandates,
+  multiplierEvents,
+  owners,
+  wakes,
+} from '../schema'
 
 /** The public face of a desk. No owner address, no Telegram, no invite code. */
 export const publicDeskColumns = {
@@ -318,4 +330,70 @@ export async function timingSummary(
 export async function deskIdBySlug(db: DbOrTx, slug: string): Promise<string | undefined> {
   const [row] = await db.select({ id: desks.id }).from(desks).where(eq(desks.shareSlug, slug))
   return row?.id
+}
+
+/** The desk's most recent check of any kind, for "has not checked in" [8.16]. */
+export async function lastCheckOf(db: DbOrTx, deskId: string) {
+  const [row] = await db
+    .select({ at: wakes.startedAt, status: wakes.status })
+    .from(wakes)
+    .where(eq(wakes.deskId, deskId))
+    .orderBy(desc(wakes.startedAt))
+    .limit(1)
+  return row
+}
+
+/**
+ * What changed a desk without a decision of its own, for the record [8.16]: money or tokens that moved outside
+ * the desk, the owner's own on-chain calls, and multiplier changes on the tokens its mandate names. Newest first.
+ */
+export async function deskNotes(db: DbOrTx, deskId: string, since: Date, tokens: string[], limit = 30) {
+  const [events, multipliers] = await Promise.all([
+    db
+      .select({ at: deskEvents.at, kind: deskEvents.kind, detail: deskEvents.detail })
+      .from(deskEvents)
+      .where(
+        and(
+          eq(deskEvents.deskId, deskId),
+          inArray(deskEvents.kind, ['holdings_changed_outside', 'owner_action']),
+        ),
+      )
+      .orderBy(desc(deskEvents.at))
+      .limit(limit),
+    tokens.length === 0
+      ? Promise.resolve([])
+      : db
+          .select({
+            at: multiplierEvents.at,
+            token: multiplierEvents.token,
+            oldRaw: multiplierEvents.oldMultiplierRaw,
+            newRaw: multiplierEvents.newMultiplierRaw,
+          })
+          .from(multiplierEvents)
+          .where(
+            and(
+              gte(multiplierEvents.at, since),
+              inArray(
+                multiplierEvents.token,
+                tokens.map((t) => t.toLowerCase()),
+              ),
+            ),
+          )
+          .orderBy(desc(multiplierEvents.at))
+          .limit(limit),
+  ])
+  return [
+    ...events.map((e) => ({
+      at: e.at,
+      kind: e.kind as 'holdings_changed_outside' | 'owner_action',
+      detail: e.detail,
+    })),
+    ...multipliers.map((m) => ({
+      at: m.at,
+      kind: 'multiplier' as const,
+      detail: { token: m.token, oldRaw: m.oldRaw.toString(), newRaw: m.newRaw.toString() },
+    })),
+  ]
+    .sort((a, b) => b.at.getTime() - a.at.getTime())
+    .slice(0, limit)
 }

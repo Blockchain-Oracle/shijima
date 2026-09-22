@@ -34,6 +34,7 @@ const ARCHITECTURE_TABLES = [
   'ask_proposals',
   'check_requests',
   'price_alerts',
+  'worker_beats',
 ]
 
 const UINT256_MAX = 2n ** 256n - 1n

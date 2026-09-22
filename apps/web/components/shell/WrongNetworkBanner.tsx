@@ -10,10 +10,11 @@ import { Button } from '@/components/ui/button'
  * Above the content, never a modal, from Agari (`components/chrome/WrongNetworkBanner.tsx`). It shows only while
  * a connected wallet sits on another network, and offers the one fix.
  */
-export function WrongNetworkBanner() {
+export function WrongNetworkBanner({ preview = false }: { preview?: boolean }) {
   const { isConnected, chainId } = useAccount()
   const { switchChain, isPending } = useSwitchChain()
-  if (!isConnected || chainId === undefined || chainId === robinhood.id) return null
+  // `preview` draws it regardless, for the states gallery only.
+  if (!preview && (!isConnected || chainId === undefined || chainId === robinhood.id)) return null
   return (
     <div
       role="alert"
