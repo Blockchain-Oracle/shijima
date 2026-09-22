@@ -62,6 +62,7 @@ try {
     withdrawAs: null,
     perActionCapUsdg: null,
     dailyCapUsdg: null,
+    rules: null,
   }
   const check = checkProposal(
     { ...nulls, kind: 'price_alert', symbol: 'nvda', alertDirection: 'either', thresholdBps: 50 },

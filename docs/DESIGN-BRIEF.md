@@ -186,7 +186,9 @@ Plain language, short sections, one acceptance at the end. It must cover:
   decides.
 - **The honest worst case, in these words or close to them:** "The assistant cannot send your funds to
   anyone. If its key were ever stolen, the thief could only make bad trades, costing at most 8% of your
-  daily limit per day, until you remove the assistant. You are told about every trade."
+  daily limit in each 24-hour spending window, so at most twice that across a window boundary, until you
+  remove the assistant. You are told about every trade." *(Reworded 22 Sep: the contract's window is fixed, not
+  rolling, so "per day" overstated it.)*
 - If a weekend price moves more than 8% away from the last official update, the assistant's trades are
   refused by your account. You can still sell yourself.
 - The company that issues Stock Tokens can pause a token, block an address, or cancel tokens. No product

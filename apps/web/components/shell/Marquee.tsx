@@ -4,6 +4,8 @@ import { webCopy } from '@desk/shared'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { useViewerZone } from '@/components/when'
+import { whenFor } from '@/lib/when'
 import { sessionLine } from './MarketSessionChip'
 
 export interface TickerCell {
@@ -21,6 +23,7 @@ const POLL_MS = 60_000
  * and the US market's session. Every figure is a row from the price log; with none yet, it says so.
  */
 export default function Marquee({ initial }: { initial: TickerCell[] }) {
+  const zone = useViewerZone()
   const [cells, setCells] = useState(initial)
   const [now, setNow] = useState<Date | null>(null)
 
@@ -50,7 +53,7 @@ export default function Marquee({ initial }: { initial: TickerCell[] }) {
             }
     return { key: c.symbol, label: c.symbol, value: c.price, gap }
   })
-  const session = now ? sessionLine(now) : null
+  const session = now ? sessionLine(now, whenFor(zone)) : null
 
   const render = (prefix: string) => (
     <>

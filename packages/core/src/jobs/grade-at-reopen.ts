@@ -6,10 +6,18 @@
  * logs and kept, so a grade can be recomputed by anyone later and cannot drift.
  */
 import type { ApprovedToken } from '@desk/chain'
-import { type Db, saveGrade, ungradedDecisions } from '@desk/db'
+import {
+  type Db,
+  deskById,
+  enqueueNotification,
+  recordWithGrades,
+  saveGrade,
+  ungradedDecisions,
+} from '@desk/db'
 import { nextRegularOpen, viewRecord } from '@desk/shared'
 import type { ReferenceSource } from '../wake/reference'
 import { gradeDecision } from './grade'
+import { reportWindow, summarise } from './report'
 
 /** Half an hour after the bell, the same moment a remembered wait says it will look again. */
 export const AFTER_OPEN_MS = 30 * 60 * 1000
@@ -79,7 +87,32 @@ export async function gradeAtReopen(deps: GradeDeps, deskId: string, now = new D
     report.graded.push({ seq: row.seq, verdict: grade.verdict, differenceBps: grade.differenceBps })
     deps.log?.(`record ${row.seq}: ${grade.verdict}. ${grade.why}`)
   }
+  if (report.graded.length > 0) await announceReport(deps.db, deskId, settled)
   return report
+}
+
+/**
+ * The Monday report, in one Telegram message with a link to the page (brief 9.8). Sent once per reopen per
+ * desk: the first grading pass after the bell queues it, and the dedupe key stops any later pass repeating it.
+ */
+async function announceReport(db: Db, deskId: string, settled: Date): Promise<void> {
+  const [desk, window] = [await deskById(db, deskId), reportWindow(settled)]
+  if (!desk) return
+  const rows = await recordWithGrades(db, deskId, window.from, window.to)
+  const summary = summarise(
+    rows.map((r) => ({ outcome: r.outcome, verdict: r.verdict, differenceBps: r.differenceBps })),
+  )
+  const slug = desk.shareEnabled && desk.shareSlug ? desk.shareSlug : desk.id
+  await enqueueNotification(db, {
+    deskId,
+    kind: 'monday_report',
+    payload: {
+      text: summary.sentence,
+      path: `/desk/${slug}/report?at=${encodeURIComponent(window.from.toISOString())}`,
+      windowFrom: window.from.toISOString(),
+    },
+    dedupeKey: `report:${window.from.toISOString()}`,
+  })
 }
 
 const E8 = 10n ** 8n

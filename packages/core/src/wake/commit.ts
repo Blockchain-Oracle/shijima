@@ -27,6 +27,8 @@ import { PRICE_SOURCE, type Valuation } from './valuation'
 import type { WakeDeps, WakeInput } from './wake'
 
 const REVISIT_AFTER_OPEN_MS = 30 * 60 * 1000
+/** The refusals worth a message when they stop the desk touching a token it holds. */
+const NOTABLE_BLOCKERS = new Set(['TRADING_HALTED', 'ORACLE_PAUSED', 'FEED_UNAVAILABLE', 'BEYOND_PRICE_BAND'])
 
 /** The value snapshot row for this moment. Pure, so it can be written inside someone else's transaction. */
 export function snapshotOf(deskId: string, v: Valuation, now: Date, vaultShares: bigint) {
@@ -171,10 +173,13 @@ export async function commit(
           payload: message,
         })
       }
-      // A notable non-action: waiting while a holding is well off target, or refusing to touch a held token.
+      // A notable non-action (brief 9.6): waiting while a holding is well off target, or declining because
+      // trading is paused or the price cannot be trusted in a token the desk HOLDS. Routine refusals, such as
+      // news being unavailable or having done this minutes ago, stay in the pinned message.
+      const held = (ctx.state.holdings[c.token.address.toLowerCase()] ?? 0n) > 0n
       const notable =
         (k.outcome === 'WAITED' && !k.deferral && Math.abs(k.need.driftBps) >= 2 * k.need.thresholdBps) ||
-        (k.outcome === 'DECLINED' && k.blockers.length > 0)
+        (k.outcome === 'DECLINED' && held && k.blockers.some((b) => NOTABLE_BLOCKERS.has(b.rule)))
       if (notable) {
         const cause = k.blockers[0]?.rule ?? 'WAIT'
         await enqueueNotification(tx, {

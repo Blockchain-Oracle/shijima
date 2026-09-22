@@ -1,11 +1,46 @@
 import type { NextConfig } from 'next'
 
+const dev = process.env.NODE_ENV !== 'production'
+
+/**
+ * A content security policy for a page that shows a model's words and other people's posts. Scripts run only
+ * from this site (Next's own inline bootstrap needs `unsafe-inline`; the dev server needs `eval`), nothing may
+ * frame the site, forms post only here, and the browser may reach only this site, the public RPC and the
+ * services the page really calls. Model text is rendered as text; this is the lock behind that.
+ */
+const csp = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${dev ? " 'unsafe-eval'" : ''}`,
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "img-src 'self' data: blob:",
+  "connect-src 'self' https: wss:",
+  "worker-src 'self' blob:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join('; ')
+
 const config: NextConfig = {
   // The shared packages are source-only, so Next compiles them itself.
   transpilePackages: ['@desk/shared', '@desk/chain', '@desk/core', '@desk/db'],
   // The app is live and authenticated. Nothing here may be served from a build-time cache.
   cacheComponents: false,
   typedRoutes: true,
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'Content-Security-Policy', value: csp },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+        ],
+      },
+    ]
+  },
 }
 
 export default config

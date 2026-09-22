@@ -27,7 +27,7 @@ That fingerprint commits to every record behind it, yours included.
 
 | Field | Meaning |
 |---|---|
-| `schemaVersion` | Always `1`. |
+| `schemaVersion` | `1` for this shape. Version 2 records say `2`; see below. |
 | `chainId`, `desk` | Which desk this belongs to. They are inside the hash, so a fingerprint fits exactly one desk. |
 | `seq`, `prevHash` | Position in this desk's record, gap free from 1, and the fingerprint of the record before. |
 | `chain` | The contract's own counter and head when this was decided. The contract counts on-chain actions only. |
@@ -42,12 +42,29 @@ That fingerprint commits to every record behind it, yours included.
 | `evidence` | Exactly what the model was shown. It may cite only these ids. Headlines appear as hashes, never text. |
 | `serv` | The model call: prompt version, model, latency, and its answer word for word. `null` if it was not asked. |
 | `gate` | The limits check. Plain arithmetic. What would count against the limits, and the contract's own floor. |
-| `override` | Set only when a developer forced a test trade. Never set on a real owner's desk. |
+| `override` | A developer's forced test trade (`by: 'developer'`), or the owner's own "do it anyway" from the chat (`by: 'owner'`, version 2). |
 | `outcome` | What the desk decided. `ask` says why it asked, when it did. |
 | `preview` | What would be sent: amount in, expected out, the least it would accept, and the deadline. |
 
 A field that does not apply is `null`, never missing. Amounts are decimal strings. Basis points, counts and
 seconds are integers.
+
+## Version 2 (20 to 22 Sep), beside version 1
+
+Version 2 keeps every version 1 field and changes these. Every widening is optional or additive, so every
+record already fixed on-chain still parses.
+
+- `kind` may be `execution`: what the desk did after the owner approved a request. It carries `approvalOf`
+  (`decisionSeq`, `askedBecause`, `answeredAt`, `answeredVia`, `movedBps`). `approvalOf` is optional: sixteen
+  real records were written before it existed.
+- The `price` evidence item records the pool's own price and half-hour average, the reference (`last_regular_close`
+  or `last_official_update`) with its price and time, the gap to it, and the last official update separately.
+  The `cost` item is measured for the exact trade (`costBps`), not a table figure.
+- `candidate.side` may be `sweep` or `redeem` (savings-vault moves, below).
+- An `event` evidence item (22 Sep) names a company event near the token: `eventKind`, `eventDate`, `timing`,
+  `daysAway`. Only the date, never the news text.
+- `need.rule` (22 Sep) names the owner's standing rule that raised a protective need, when one did.
+- `override.by` may be `owner`.
 
 ## Savings-vault moves (version 2, widened 22 Sep)
 

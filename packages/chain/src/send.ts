@@ -53,6 +53,12 @@ export type DeskCall =
     }
   | { kind: 'checkpoint'; desk: Address; version: string; decisionHash: Hex }
   /**
+   * The desk pausing ITSELF, on the second consecutive check below the owner's loss limit. `pause()` takes no
+   * arguments and no deadline on purpose, so the owner can call it from an explorer too. It carries no decision
+   * hash and advances nothing, so it seals no record.
+   */
+  | { kind: 'pause'; desk: Address; version: string }
+  /**
    * Idle cash into the savings vault (`amountIn` is USDG), or shares back out of it (`amountIn` is shares).
    * v1 and later only: v0's vault calls carry no deadline, so a lost one could never be declared dead.
    */
@@ -135,7 +141,11 @@ export async function signDeskCall(
   // Separate call sites, because viem types each contract function separately and cannot take a union of them.
   let data: Hex
   let deadlineUnix: number | undefined
-  if (call.kind === 'sweep' || call.kind === 'redeem') {
+  if (call.kind === 'pause') {
+    // The same in every version.
+    await pub.simulateContract({ account, address: call.desk, abi: deskAbi, functionName: 'pause' })
+    data = encodeFunctionData({ abi: deskAbi, functionName: 'pause' })
+  } else if (call.kind === 'sweep' || call.kind === 'redeem') {
     if (isV0Desk(call.version)) throw new Error('a v0 desk does not use the savings vault')
     const functionName = call.kind === 'sweep' ? 'sweepToVault' : 'redeemFromVault'
     const args = [call.amountIn, call.deadline, call.decisionHash] as const
@@ -211,6 +221,9 @@ export async function broadcast(pub: PublicClient, signed: SignedDeskCall): Prom
   }
 }
 
+/** A pause carries no decision hash. Its outcome says so with the zero hash and a chain seq of nothing. */
+const NO_HASH: Hex = `0x${'0'.repeat(64)}`
+
 function readReceipt(kind: DeskCall['kind'], receipt: TransactionReceipt): DeskOutcome {
   const base = {
     txHash: receipt.transactionHash,
@@ -219,6 +232,11 @@ function readReceipt(kind: DeskCall['kind'], receipt: TransactionReceipt): DeskO
     effectiveGasPrice: receipt.effectiveGasPrice,
   }
   if (receipt.status !== 'success') return { status: 'reverted', ...base }
+  if (kind === 'pause') {
+    const [log] = parseEventLogs({ abi: deskAbi, eventName: 'Paused', logs: receipt.logs })
+    if (!log) throw new Error(`no Paused event in tx ${receipt.transactionHash}`)
+    return { status: 'confirmed', ...base, chainSeq: 0n, eventHash: NO_HASH }
+  }
   if (kind === 'buy') {
     const [log] = parseEventLogs({ abi: deskAbi, eventName: 'Bought', logs: receipt.logs })
     if (!log) throw new Error(`no Bought event in tx ${receipt.transactionHash}`)

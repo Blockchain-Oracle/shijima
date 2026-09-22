@@ -12,6 +12,7 @@ import { BridgeIn } from './BridgeIn'
 import { ControlFields, type ControlForm, type FormState } from './ControlForms'
 import type { ChatCard } from './chat-model'
 import { ProposalCard } from './ProposalCard'
+import { encodeRules } from './RulesEditor'
 
 export interface ControlsView {
   deskId: string
@@ -28,6 +29,19 @@ export interface ControlsView {
   cashUsdg: string | null
   perActionCapUsdg: string | null
   dailyCapUsdg: string | null
+  /** What the desk was told, for editing with no model call [8.9, 8.14]. Null before a mandate exists. */
+  mandate: {
+    presetId: string | null
+    targets: { symbol: string; weightBps: number }[]
+    cashBps: number
+    driftToleranceBps: number
+    maxPositionBps: number
+    lossStopBps: number
+    notes: string
+    rules: { symbol: string; fallBps: number; cutBps: number }[]
+  } | null
+  tokens: { symbol: string; name: string }[]
+  presets: { id: string; name: string }[]
 }
 
 /** Which card each form asks for, the owner's words for the thread, and the fields the checks read. */
@@ -76,6 +90,52 @@ function request(
         words: c.words.closeDesk(f.asStocks),
         fields: { withdrawAs: f.asStocks ? 'stocks' : 'usdg' },
       }
+    case 'editMandate':
+      return mandateRequest(f)
+  }
+}
+
+const pctToBps = (s: string) => String(Math.round(Number(s) * 100))
+
+/** The mandate kinds take the same fields the chat's checks read, as strings. One part at a time. */
+function mandateRequest(f: FormState): {
+  kind: ButtonKind
+  words: string
+  fields: Record<string, string | null>
+} {
+  switch (f.part) {
+    case 'strategy':
+      return {
+        kind: 'switch_strategy',
+        words: c.words.switchStrategy(f.presetName),
+        fields: { presetId: f.preset },
+      }
+    case 'weights':
+      return {
+        kind: 'set_weights',
+        words: c.words.setWeights,
+        fields: {
+          targets: Object.entries(f.weights)
+            .filter(([, pct]) => Number(pct) > 0)
+            .map(([symbol, pct]) => `${symbol}=${pctToBps(pct)}`)
+            .join(','),
+          cashBps: pctToBps(f.cashPct),
+        },
+      }
+    case 'limits':
+      return {
+        kind: 'set_limits',
+        words: c.words.setLimits,
+        fields: {
+          driftToleranceBps: pctToBps(f.driftPct),
+          maxPositionBps: pctToBps(f.positionPct),
+          lossStopBps: pctToBps(f.lossPct),
+        },
+      }
+    case 'notes':
+      return { kind: 'set_notes', words: c.words.setNotes, fields: { notes: f.notes } }
+    case 'rules':
+      return { kind: 'set_rules', words: c.words.setRules, fields: { rules: encodeRules(f.rules) } }
   }
 }
 
@@ -91,6 +151,7 @@ const HEADINGS: Record<ControlForm, { eyebrow: string; title: string; body: stri
   remove: c.remove,
   restart: c.restart,
   closeDesk: c.closeDesk,
+  editMandate: c.editMandate,
 }
 
 /** One control's dialog: its form, then the card it made, confirmed right there. */
@@ -103,6 +164,8 @@ export function ControlDialog({
   form: ControlForm | null
   onClose: () => void
 }) {
+  const m = view.mandate
+  const pct = (bps: number) => String(bps / 100)
   const [state, setState] = useState<FormState>({
     amount: '',
     everything: false,
@@ -110,6 +173,20 @@ export function ControlDialog({
     mode: view.mode,
     perAction: '',
     daily: '',
+    part: 'strategy',
+    preset: m?.presetId ?? view.presets[0]?.id ?? '',
+    presetName: view.presets.find((p) => p.id === m?.presetId)?.name ?? view.presets[0]?.name ?? '',
+    weights: Object.fromEntries((m?.targets ?? []).map((t) => [t.symbol, pct(t.weightBps)])),
+    cashPct: pct(m?.cashBps ?? 0),
+    driftPct: pct(m?.driftToleranceBps ?? 300),
+    positionPct: pct(m?.maxPositionBps ?? 5000),
+    lossPct: pct(m?.lossStopBps ?? 1500),
+    notes: m?.notes ?? '',
+    rules: (m?.rules ?? []).map((r) => ({
+      symbol: r.symbol,
+      fallPct: pct(r.fallBps),
+      cutPct: pct(r.cutBps),
+    })),
   })
   const [card, setCard] = useState<ChatCard | null>(null)
   const [why, setWhy] = useState<string | null>(null)
@@ -179,6 +256,7 @@ export function DeskControls({ view }: { view: ControlsView }) {
     ['mode', c.actions.mode],
     ['limits', c.actions.limits],
     ['checkNow', c.actions.checkNow],
+    ...(view.mandate ? [['editMandate', c.actions.editMandate] as [ControlForm, string]] : []),
     view.assistantRemoved ? ['restart', c.actions.restart] : ['remove', c.actions.removeAssistant],
   ]
   return (

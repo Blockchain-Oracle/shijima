@@ -3,6 +3,7 @@
 import { controlsCopy as c, deskCopy, usd } from '@desk/shared'
 import { cn } from '@/lib/utils'
 import type { ControlsView } from './DeskControls'
+import { type DraftRule, RulesEditor } from './RulesEditor'
 
 export type ControlForm =
   | 'addMoney'
@@ -16,6 +17,9 @@ export type ControlForm =
   | 'remove'
   | 'restart'
   | 'closeDesk'
+  | 'editMandate'
+
+export type MandatePart = 'strategy' | 'weights' | 'limits' | 'notes' | 'rules'
 
 export interface FormState {
   amount: string
@@ -24,6 +28,17 @@ export interface FormState {
   mode: 'shadow' | 'ask_first' | 'on_its_own'
   perAction: string
   daily: string
+  /** Editing the mandate, one part at a time. Percentages as typed; the request turns them into basis points. */
+  part: MandatePart
+  preset: string
+  presetName: string
+  weights: Record<string, string>
+  cashPct: string
+  driftPct: string
+  positionPct: string
+  lossPct: string
+  notes: string
+  rules: DraftRule[]
 }
 
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`
@@ -182,7 +197,112 @@ export function ControlFields({
           onChange={(asStocks) => set({ asStocks })}
         />
       )
+    case 'editMandate':
+      return <MandateFields view={view} state={state} set={set} />
     default:
       return null
   }
+}
+
+const PARTS: MandatePart[] = ['strategy', 'weights', 'limits', 'notes', 'rules']
+
+function Pct({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <label className="desk-field">
+      <span className="type-label-micro text-ink-muted">{label}</span>
+      <span className="desk-input">
+        <input
+          inputMode="decimal"
+          value={value}
+          onChange={(e) => onChange(e.target.value.replace(/[^0-9.]/g, ''))}
+        />
+        <span aria-hidden>%</span>
+      </span>
+    </label>
+  )
+}
+
+/** Edit what the desk was told, one part at a time, with no model call. The card shows before and after. */
+function MandateFields({
+  view,
+  state,
+  set,
+}: {
+  view: ControlsView
+  state: FormState
+  set: (patch: Partial<FormState>) => void
+}) {
+  const e = c.editMandate
+  const total =
+    Number(state.cashPct || 0) + Object.values(state.weights).reduce((a, b) => a + Number(b || 0), 0)
+  return (
+    <>
+      <Choice
+        options={PARTS.map((p) => [p, e.parts[p]])}
+        value={state.part}
+        onChange={(part) => set({ part })}
+      />
+      {state.part === 'strategy' && (
+        <>
+          <p className="type-caption text-ink-secondary">{e.strategy}</p>
+          <Choice
+            options={view.presets.map((p) => [p.id, p.name])}
+            value={state.preset}
+            onChange={(preset) =>
+              set({ preset, presetName: view.presets.find((p) => p.id === preset)?.name ?? '' })
+            }
+          />
+        </>
+      )}
+      {state.part === 'weights' && (
+        <>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {view.tokens.map((t) => (
+              <Pct
+                key={t.symbol}
+                label={t.name}
+                value={state.weights[t.symbol] ?? ''}
+                onChange={(v) => set({ weights: { ...state.weights, [t.symbol]: v } })}
+              />
+            ))}
+            <Pct label={e.cash} value={state.cashPct} onChange={(cashPct) => set({ cashPct })} />
+          </div>
+          <p className={cn('type-caption', Math.abs(total - 100) < 0.01 ? 'text-ink-muted' : 'text-warning')}>
+            {e.total(`${total.toFixed(total % 1 === 0 ? 0 : 1)}%`)}
+          </p>
+        </>
+      )}
+      {state.part === 'limits' && (
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Pct label={e.drift} value={state.driftPct} onChange={(driftPct) => set({ driftPct })} />
+          <Pct
+            label={e.position}
+            value={state.positionPct}
+            onChange={(positionPct) => set({ positionPct })}
+          />
+          <Pct label={e.loss} value={state.lossPct} onChange={(lossPct) => set({ lossPct })} />
+        </div>
+      )}
+      {state.part === 'notes' && (
+        <label className="desk-field">
+          <span className="type-label-micro text-ink-muted">{e.notes}</span>
+          <textarea
+            className="desk-textarea"
+            rows={4}
+            maxLength={2000}
+            value={state.notes}
+            onChange={(ev) => set({ notes: ev.target.value })}
+          />
+          <span className="type-caption text-ink-muted">{e.notesHint}</span>
+        </label>
+      )}
+      {state.part === 'rules' && (
+        <RulesEditor
+          rules={state.rules}
+          tokens={view.tokens.filter((t) => (view.mandate?.targets ?? []).some((x) => x.symbol === t.symbol))}
+          onChange={(rules) => set({ rules })}
+        />
+      )}
+    </>
+  )
 }

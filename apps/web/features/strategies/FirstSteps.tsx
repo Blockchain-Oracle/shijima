@@ -27,6 +27,7 @@ export function FirstSteps({
   contractVersion,
   perActionUsdg,
   dailyUsdg,
+  goLiveChecks,
   onAnother,
 }: {
   created: Created
@@ -35,6 +36,7 @@ export function FirstSteps({
   contractVersion: string
   perActionUsdg: string
   dailyUsdg: string
+  goLiveChecks: number
   onAnother: () => void
 }) {
   const [adding, setAdding] = useState(false)
@@ -67,11 +69,15 @@ export function FirstSteps({
     lifecycle: 'running',
     assistantRemoved: false,
     shadowChecks: 0,
-    goLiveChecks: 24,
+    goLiveChecks,
     reportOpened: false,
     cashUsdg: cash?.toString() ?? null,
     perActionCapUsdg: perActionUsdg,
     dailyCapUsdg: dailyUsdg,
+    // Editing what the desk was told lives on the desk page; the first steps do not offer it.
+    mandate: null,
+    tokens: [],
+    presets: [],
   }
 
   return (

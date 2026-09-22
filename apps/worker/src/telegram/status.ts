@@ -9,6 +9,15 @@ import { APPROVED_TOKENS } from '@desk/chain'
 import { currentMandate, type Db, deskById, deskRecord, latestValueSnapshot, spentSince } from '@desk/db'
 import { comparedTo, engineCopy, marketClock, newYorkTime, nextRegularOpen, usd } from '@desk/shared'
 
+/** "09:03", in New York. The status message says once that every clock in it is New York time. */
+export const nyClock = (at: Date) =>
+  at.toLocaleTimeString('en-US', {
+    timeZone: 'America/New_York',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  })
+
 const MODES = { shadow: 'Practice', ask_first: 'Ask first', on_its_own: 'On its own' } as const
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -45,14 +54,14 @@ export async function buildStatus(db: Db, deskId: string, now = new Date()): Pro
   return {
     mode: MODES[desk.mode],
     state: engineCopy.deskState[desk.state],
-    lastCheck: last.decidedAt.toISOString().slice(11, 16),
+    lastCheck: nyClock(last.decidedAt),
     lastResult: last.summary,
     holdings,
     value: snapshot ? usd(snapshot.totalUsdg) : '—',
     cash: snapshot ? usd(snapshot.cashUsdg) : '—',
     spentToday: usd(spent),
     dailyCap: mandate ? usd(mandate.dailyCapUsdg) : '—',
-    nextCheck: nextCheck.toISOString().slice(11, 16),
+    nextCheck: nyClock(nextCheck),
     market:
       clock.session === 'regular'
         ? 'The US market is open.'

@@ -384,6 +384,9 @@ submission is due Sun 27 Sep 20:00 UTC: video, X post, Typeform.
 - Two new presets: The Mag Seven and AI Builders.
 - ~~Share cards, Rooms, Takes, Reels (L-22, L-42 to L-45).~~ Built 22 Sep: the decision page's share card on
   Agari's ticket, a Room per Stock Token on its page, takes, and `/reels`. See `DECISIONS.md`.
+- ~~Decision page on Agari's proof pattern; the record and the report restyled.~~ Done in the 22 Sep review pass:
+  the record (with its filters), one decision, the report (with past stretches) and Your desks left the pre-port
+  frame; "Check it" asks the network from the browser.
 
 ---
 
@@ -391,7 +394,9 @@ submission is due Sun 27 Sep 20:00 UTC: video, X post, Typeform.
 
 For each screen as it is built:
 1. Run Masayume's and Agari's matching screen from source beside ours, at 390, 768, 1024 and 1440 wide, in both
-   themes. That is the same browser pass Agari's stages used.
+   themes. That is the same browser pass Agari's stages used. *(22 Sep: Agari's stylesheets and canvas kit are
+   byte-identical to our pin; the two Agari changes since then that applied, the header chip and reader-zone
+   times, are adopted.)*
 2. Check every row of section 4 and every state in 5.6.
 3. Check the section 6 rules.
 

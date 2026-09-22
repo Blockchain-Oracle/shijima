@@ -49,6 +49,7 @@ export const telegramCopy = {
       `Value ${esc(s.value)}. Cash ${esc(s.cash)}.`,
       `Spent today ${esc(s.spentToday)} of ${esc(s.dailyCap)}.`,
       `Next check ${esc(s.nextCheck)}. ${esc(s.market)}`,
+      'Times are New York time.',
     ].join('\n'),
 
   /** Said when a chat links before the desk has ever checked. */
@@ -78,12 +79,24 @@ export const telegramCopy = {
     ].join('\n'),
 
   /** What the request becomes once it is answered, wherever it was answered. */
-  approvalAnswered: (answer: 'approved' | 'rejected' | 'expired', what: string, where?: string) =>
+  approvalAnswered: (
+    answer: 'approved' | 'rejected' | 'expired' | 'cancelled',
+    what: string,
+    where?: string,
+  ) =>
     ({
       approved: `${b('Approved')}\n${esc(what)}\nI will check the price again and act only if it is still close to what you were shown.${where ? `\nAnswered on the ${esc(where)}.` : ''}`,
       rejected: `${b('Rejected')}\n${esc(what)}\nNothing was done, and the refusal is recorded.${where ? `\nAnswered on the ${esc(where)}.` : ''}`,
       expired: `${b('Expired')}\n${esc(what)}\nYou did not answer in time, so nothing was done. It is recorded.`,
+      cancelled: `${b('Cancelled')}\n${esc(what)}\nYour settings or the desk changed, so this request no longer applies. Nothing was done.`,
     })[answer],
+  /** A button pressed after the request was answered elsewhere, or had lapsed. The message shows how. */
+  alreadyAnswered: 'This request was already answered, or has lapsed. The message shows how it ended.',
+  /** Where an answer came from, for the line under it. */
+  answeredWhere: { web: 'website', chat: 'chat', telegram: 'buttons here' } as const,
+
+  /** 9.8 The Monday report. One short message with a link to the full page. */
+  mondayReport: (text: string, url: string) => `${b('The report is ready')}\n${esc(text)}\n${esc(url)}`,
 
   /** 9.3 It acted. 9.5 It would have, in practice mode. */
   acted: (what: string, why: string) => `${b('I did this')}\n${esc(what)}\n${esc(why)}`,
@@ -124,6 +137,12 @@ export const telegramCopy = {
     day: 'That is today’s allowance of messages. I will answer again tomorrow. The desk keeps checking as usual.',
   },
   askStillThinking: 'I am still working on that one. Ask again in a minute if no answer comes.',
+  askThinking: 'Thinking. I will answer here in a moment.',
+  unknownCommand: 'I do not know that command. /help lists the ones I do.',
+  linkedElsewhere:
+    'This Telegram account already hears about another desk. Disconnect that one first, in its settings on the website, before linking this one.',
+  /** Every clock in these messages is New York time, where the market is. */
+  timesAreNewYork: 'New York time',
   askFailed: 'I could not answer just now. Nothing was changed.',
   confirm: 'Confirm',
   notNow: 'Not now',

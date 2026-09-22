@@ -69,12 +69,21 @@ export async function askAllowed(
   return { ok: true }
 }
 
-/** How many messages this owner has sent since a moment. The rate limits count these. */
+/**
+ * How many messages this owner has TYPED since a moment. The rate limits count these. A button press is saved
+ * in the same thread, already answered, and costs no model call, so it is not counted against the typing allowance.
+ */
 export async function askRequestsSince(db: DbOrTx, ownerAddress: string, since: Date): Promise<number> {
   const [row] = await db
     .select({ n: sql<number>`count(*)::int` })
     .from(askRequests)
-    .where(and(eq(askRequests.ownerAddress, ownerAddress.toLowerCase()), gt(askRequests.createdAt, since)))
+    .where(
+      and(
+        eq(askRequests.ownerAddress, ownerAddress.toLowerCase()),
+        gt(askRequests.createdAt, since),
+        sql`coalesce(${askRequests.payload}->>'source', '') <> 'button'`,
+      ),
+    )
   return row?.n ?? 0
 }
 

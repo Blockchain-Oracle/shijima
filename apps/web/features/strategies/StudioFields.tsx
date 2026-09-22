@@ -2,6 +2,7 @@
 
 import { type Preset, percent, studioCopy } from '@desk/shared'
 import type { ReactNode } from 'react'
+import { RulesEditor } from '@/features/desk/RulesEditor'
 import { cn } from '@/lib/utils'
 import { type DraftToken, draftTotalBps, NOTES_MAX, type StudioDraft, withPreset } from './draft'
 
@@ -145,7 +146,15 @@ export function BasketStep({
  * Step 2: how strict, the limits, and the owner's notes. The two limits the contract itself holds are set apart,
  * because changing those later needs the wallet; the rest save instantly (design brief 8.6).
  */
-export function LimitsStep({ draft, setDraft }: { draft: StudioDraft; setDraft: SetDraft }) {
+export function LimitsStep({
+  draft,
+  setDraft,
+  tokens,
+}: {
+  draft: StudioDraft
+  setDraft: SetDraft
+  tokens: DraftToken[]
+}) {
   const pct = (key: 'driftPct' | 'maxPositionPct' | 'lossStopPct', label: string, hint?: string) => (
     <Field label={label} {...(hint ? { hint } : {})}>
       <span className="studio-pct block">
@@ -213,6 +222,16 @@ export function LimitsStep({ draft, setDraft }: { draft: StudioDraft; setDraft: 
           onChange={(e) => setDraft((d) => ({ ...d, notes: e.target.value.slice(0, NOTES_MAX) }))}
         />
         <p className="studio-hint">{B.notesHint}</p>
+      </div>
+      <div>
+        <h3 className="strat-choice-title mb-2 text-ink">{B.rulesTitle}</h3>
+        <RulesEditor
+          rules={draft.rules ?? []}
+          tokens={tokens
+            .filter((t) => (draft.weights[t.symbol] ?? 0) > 0)
+            .map((t) => ({ symbol: t.symbol, name: t.name }))}
+          onChange={(rules) => setDraft((d) => ({ ...d, rules }))}
+        />
       </div>
     </div>
   )

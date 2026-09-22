@@ -46,6 +46,7 @@ export function StrategiesScreen({
   signedIn,
   disclosureOn,
   contractVersion,
+  goLiveChecks,
   requestedPreset,
   requestedView,
 }: {
@@ -57,6 +58,7 @@ export function StrategiesScreen({
   signedIn: string | null
   disclosureOn: string | null
   contractVersion: string
+  goLiveChecks: number
   requestedPreset: string | undefined
   requestedView: string | undefined
 }) {
@@ -117,6 +119,7 @@ export function StrategiesScreen({
           signedIn={signedIn}
           disclosureOn={disclosureOn}
           contractVersion={contractVersion}
+          goLiveChecks={goLiveChecks}
         />
       </div>
 

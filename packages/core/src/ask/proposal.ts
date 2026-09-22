@@ -13,7 +13,15 @@
  */
 import { APPROVED_TOKENS, type ApprovedToken } from '@desk/chain'
 import { GO_LIVE_CHECKS } from '@desk/db'
-import { alertsCopy, checkMandate, Mandate, presetById } from '@desk/shared'
+import {
+  alertsCopy,
+  checkMandate,
+  engineCopy,
+  MAX_RULES,
+  Mandate,
+  type MandateRule,
+  presetById,
+} from '@desk/shared'
 import { z } from 'zod'
 import { checkAlertInput, pctText } from '../alerts'
 
@@ -36,6 +44,7 @@ export const PROPOSAL_KINDS = [
   'set_chain_limits',
   'close_desk',
   'price_alert',
+  'set_rules',
 ] as const
 export type ProposalKind = (typeof PROPOSAL_KINDS)[number]
 
@@ -73,6 +82,10 @@ export const AskReply = z.object({
       symbol: z.string().nullable(),
       alertDirection: z.enum(['above', 'below', 'either']).nullable(),
       thresholdBps: z.number().int().nullable(),
+      /** The owner's standing rules, for set_rules: the whole list, replacing what was there. */
+      rules: z
+        .array(z.object({ symbol: z.string(), fallBps: z.number().int(), cutBps: z.number().int() }))
+        .nullable(),
     })
     .nullable(),
 })
@@ -175,6 +188,12 @@ function mandateProposal(
   }
 }
 
+/** A rule in the owner's words, for a card. */
+export function ruleLine(r: MandateRule, approved: ApprovedToken[]): string {
+  const name = approved.find((t) => t.address.toLowerCase() === r.token.toLowerCase())?.displayName ?? r.token
+  return engineCopy.ruleText(name, r.fallBps, r.cutBps)
+}
+
 /** Checks one proposal against the desk as it is now. */
 export function checkProposal(
   p: NonNullable<AskReply['proposal']>,
@@ -223,6 +242,35 @@ export function checkProposal(
           },
         },
       }
+    }
+    case 'set_rules': {
+      if (!p.rules)
+        return { ok: false, why: 'I need the rules: the stock, how far it must fall, and how much to sell.' }
+      if (p.rules.length > MAX_RULES) return { ok: false, why: `At most ${MAX_RULES} rules.` }
+      const rules: MandateRule[] = []
+      for (const r of p.rules) {
+        const token = approved.find((a) => a.symbol === r.symbol.toUpperCase())
+        if (!token)
+          return { ok: false, why: `${r.symbol} is not one of the Stock Tokens this desk can hold.` }
+        rules.push({
+          id: `rule${rules.length + 1}`,
+          kind: 'price_move_sell',
+          token: token.address,
+          fallBps: r.fallBps,
+          cutBps: r.cutBps,
+        })
+      }
+      const next: Mandate = { ...m, rules }
+      const check = mandateProposal(p.kind, next, facts, 'Change your rules', approved)
+      if (check.ok) {
+        check.proposal.card.before = (m.rules ?? []).map((r) => ruleLine(r, approved))
+        if (check.proposal.card.before.length === 0) check.proposal.card.before = ['No rules']
+        check.proposal.card.after =
+          rules.length === 0 ? ['No rules'] : rules.map((r) => ruleLine(r, approved))
+        check.proposal.card.note =
+          'The desk carries these out by arithmetic at every check: a fall is measured on the pool’s half-hour average against the reference. A sale a rule demands still passes every limit.'
+      }
+      return check
     }
     case 'set_limits': {
       const next: Mandate = {

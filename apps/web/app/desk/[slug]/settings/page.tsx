@@ -98,6 +98,9 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
                   cashUsdg: null,
                   perActionCapUsdg: null,
                   dailyCapUsdg: null,
+                  mandate: null,
+                  tokens: [],
+                  presets: [],
                 }}
               />
             </Section>

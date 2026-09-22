@@ -2,9 +2,13 @@
  * What, if anything, would move the desk back toward its mandate. Plain arithmetic, no AI. The model never
  * proposes a trade and never sets a size: it is only ever asked WHEN, about a candidate that came from here.
  *
+ * Two things produce a candidate: a holding that drifted past its tolerance, and a standing RULE the owner
+ * wrote in advance ("cut Nvidia by half if it falls 3%"). A rule's sale is protective: the owner asked for it,
+ * so it goes first and the gate holds it to fewer refusals.
+ *
  * No candidates means "nothing to do", with no model call at all. That is the common case.
  */
-import type { Mandate } from '@desk/shared'
+import type { Mandate, MandateRule } from '@desk/shared'
 import { engineCopy } from '@desk/shared'
 import type { Candidate } from './types'
 import type { HoldingValue, Valuation } from './valuation'
@@ -25,6 +29,7 @@ export const COST_MULTIPLE = 5
  */
 export const SELL_HEADROOM_BPS = 200
 const PRICE_SCALE = 10n ** 20n
+const BPS = 10_000n
 
 export interface Need {
   candidate: Candidate
@@ -33,6 +38,8 @@ export interface Need {
   thresholdBps: number
   /** True when the full correction was larger than the per-action limit and was cut down to fit. */
   limitedByPerAction: boolean
+  /** Set when a standing rule, not drift, produced this candidate. Goes into the record as `need.rule`. */
+  rule?: { id: string; kind: MandateRule['kind'] }
 }
 
 /** One way cost is half a round trip. The drift must be worth COST_MULTIPLE times that. */
@@ -41,12 +48,77 @@ export function thresholdBps(h: HoldingValue, mandate: Mandate): number {
   return Math.max(mandate.driftToleranceBps, Math.ceil(COST_MULTIPLE * oneWayCostBps))
 }
 
-export function findNeeds(v: Valuation, mandate: Mandate, perActionCapUsdg: bigint): Need[] {
+const min = (a: bigint, b: bigint) => (a < b ? a : b)
+
+/**
+ * A sell is sized off the 30 minute average, but the CONTRACT counts it at the larger of the USDG received and
+ * its oracle value. Whenever the oracle sits above that average, a sell sized to exactly the cap is counted as
+ * more than the cap and refused on-chain. So a sell leaves headroom, measured against the highest price the
+ * contract might use. Without this the desk could propose a sale it can never make, which matters most in a
+ * protective one.
+ */
+function sellAmountFor(h: HoldingValue, usdg: bigint): bigint {
+  const highest = h.feedE8 > h.twapE8 ? h.feedE8 : h.twapE8
+  const amount = (usdg * PRICE_SCALE * (BPS - BigInt(SELL_HEADROOM_BPS))) / (highest * BPS)
+  return amount > h.balance ? h.balance : amount
+}
+
+/**
+ * The owner's standing rules that have fired: the token is held, and the pool's 30 minute average sits at least
+ * `fallBps` below the reference. `references` holds the reference price per token, 8 decimals, from the same
+ * source every decision uses. A token with no reference cannot be judged, so its rule stays quiet.
+ */
+function ruleNeeds(v: Valuation, mandate: Mandate, cap: bigint, references: Record<string, bigint>): Need[] {
+  const needs: Need[] = []
+  for (const rule of mandate.rules ?? []) {
+    const h = v.holdings.find((x) => x.token.address.toLowerCase() === rule.token.toLowerCase())
+    const reference = references[rule.token.toLowerCase()]
+    if (!h || h.balance === 0n || h.twapE8 === 0n || !reference || reference <= 0n) continue
+    const gapBps = Number(((h.twapE8 - reference) * BPS) / reference)
+    if (gapBps > -rule.fallBps) continue
+    const fullUsdg = (h.valueUsdg * BigInt(rule.cutBps)) / BPS
+    const usdg = min(fullUsdg, cap)
+    if (usdg < MIN_TRADE_USDG) continue
+    const amountIn = fullUsdg <= cap ? (h.balance * BigInt(rule.cutBps)) / BPS : sellAmountFor(h, usdg)
+    if (amountIn === 0n) continue
+    needs.push({
+      candidate: {
+        id: 'c0',
+        side: 'sell',
+        token: h.token,
+        amountIn,
+        why: engineCopy.need.rule(rule.id, h.token.displayName, rule.cutBps, rule.fallBps, gapBps),
+        protective: true,
+        ruleId: rule.id,
+      },
+      driftBps: h.driftBps,
+      thresholdBps: thresholdBps(h, mandate),
+      limitedByPerAction: fullUsdg > cap,
+      rule: { id: rule.id, kind: rule.kind },
+    })
+  }
+  return needs
+}
+
+export function findNeeds(
+  v: Valuation,
+  mandate: Mandate,
+  perActionCapUsdg: bigint,
+  references: Record<string, bigint> = {},
+): Need[] {
   // The smaller of the owner's mandate and what the chain will actually allow.
   const cap = perActionCapUsdg < mandate.perActionCapUsdg ? perActionCapUsdg : mandate.perActionCapUsdg
-  const needs: Need[] = []
+  const needs: Need[] = ruleNeeds(v, mandate, cap, references)
+  const ruled = new Set(needs.map((n) => n.candidate.token.address.toLowerCase()))
+  // A buy never takes cash below the mandate's cash target. Cash in the vault counts as cash: a redeem is a
+  // later step. What a buy may spend is the cash above that floor, and no more than the loose cash it has.
+  const cashFloor = (v.totalUsdg * BigInt(v.cashTargetBps)) / BPS
+  const allCash = v.cashUsdg + v.vaultUsdg
+  const spendable = allCash > cashFloor ? min(allCash - cashFloor, v.cashUsdg) : 0n
 
   for (const h of v.holdings) {
+    // A rule already decided this token's sale. Drift on the same token would only argue about the size.
+    if (ruled.has(h.token.address.toLowerCase())) continue
     const notInMandate = h.targetBps === 0
     const threshold = thresholdBps(h, mandate)
     // A token the mandate no longer names is sold whatever its size. Anything else must be past its threshold.
@@ -54,36 +126,22 @@ export function findNeeds(v: Valuation, mandate: Mandate, perActionCapUsdg: bigi
     if (h.driftBps === 0 || h.twapE8 === 0n) continue
 
     const side = h.driftBps > 0 ? 'sell' : 'buy'
-    const fullUsdg = (v.totalUsdg * BigInt(Math.abs(h.driftBps))) / 10_000n
+    const fullUsdg = (v.totalUsdg * BigInt(Math.abs(h.driftBps))) / BPS
     let usdg = fullUsdg > cap ? cap : fullUsdg
-    // A buy can only spend cash the desk has outside the vault. Redeeming from the vault is a later step.
-    if (side === 'buy' && usdg > v.cashUsdg) usdg = v.cashUsdg
+    if (side === 'buy') usdg = min(usdg, spendable)
     if (usdg < MIN_TRADE_USDG) continue
 
     // Selling a token the mandate dropped sells the balance itself, so no dust is left behind.
     const sellAll = side === 'sell' && notInMandate && fullUsdg <= cap
-    /**
-     * A sell is sized off the 30 minute average, but the CONTRACT counts it at the larger of the USDG
-     * received and its oracle value. Whenever the oracle sits above that average, a sell sized to exactly the
-     * cap is counted as more than the cap and refused on-chain. So a sell leaves headroom, measured against
-     * the highest price the contract might use. Without this the desk could propose a sale it can never make,
-     * which matters most in a protective one.
-     */
-    const highest = h.feedE8 > h.twapE8 ? h.feedE8 : h.twapE8
-    const amountIn =
-      side === 'buy'
-        ? usdg
-        : sellAll
-          ? h.balance
-          : (usdg * PRICE_SCALE * BigInt(10_000 - SELL_HEADROOM_BPS)) / (highest * 10_000n)
+    const amountIn = side === 'buy' ? usdg : sellAll ? h.balance : sellAmountFor(h, usdg)
     if (amountIn === 0n) continue
 
     needs.push({
       candidate: {
-        id: `c${needs.length + 1}`,
+        id: 'c0',
         side,
         token: h.token,
-        amountIn: side === 'sell' && amountIn > h.balance ? h.balance : amountIn,
+        amountIn,
         why: notInMandate
           ? engineCopy.need.dropped(h.token.displayName)
           : engineCopy.need.drifted(h.token.displayName, h.weightBps, h.targetBps, threshold),
@@ -93,14 +151,10 @@ export function findNeeds(v: Valuation, mandate: Mandate, perActionCapUsdg: bigi
       limitedByPerAction: fullUsdg > cap,
     })
   }
-  // Sales first, because they free the cash that buys need. Within a side, the largest drift first.
+  // The owner's own rules first. Then sales, because they free the cash that buys need. Within a side, the
+  // largest drift first.
+  const rank = (n: Need) => (n.rule ? 0 : n.candidate.side === 'sell' ? 1 : 2)
   return needs
-    .sort((a, b) =>
-      a.candidate.side === b.candidate.side
-        ? Math.abs(b.driftBps) - Math.abs(a.driftBps)
-        : a.candidate.side === 'sell'
-          ? -1
-          : 1,
-    )
+    .sort((a, b) => rank(a) - rank(b) || Math.abs(b.driftBps) - Math.abs(a.driftBps))
     .map((n, i) => ({ ...n, candidate: { ...n.candidate, id: `c${i + 1}` } }))
 }

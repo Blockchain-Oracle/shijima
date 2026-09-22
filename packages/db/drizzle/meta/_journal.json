@@ -43,6 +43,13 @@
       "when": 1790063673055,
       "tag": "0005_rooms_takes",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790098235001,
+      "tag": "0006_approval_answered",
+      "breakpoints": true
     }
   ]
 }

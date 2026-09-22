@@ -13,6 +13,7 @@
  * size, so a fee is never mistaken for a discount.
  */
 import {
+  type ApprovedToken,
   type FeedReading,
   fetchHaltFlag,
   type HaltReading,
@@ -34,6 +35,21 @@ import type { PublicClient } from 'viem'
 import { fetchCompanyNews, type Headline } from '../news/finnhub'
 import type { ReferenceSource } from './reference'
 import type { Candidate } from './types'
+
+/** A company event near this token, from the calendar the worker keeps. The date and its kind, never any text. */
+export interface CompanyEventNear {
+  eventKind: 'earnings' | 'dividend' | 'split' | 'other'
+  /** YYYY-MM-DD. */
+  eventDate: string
+  timing: 'bmo' | 'amc' | null
+  /** Whole days from now. 0 is today. */
+  daysAway: number
+}
+/** The soonest event for a token on or after today, or nothing. Backed by Postgres in the worker. */
+export type EventSource = (
+  token: Pick<ApprovedToken, 'address'>,
+  now: Date,
+) => Promise<CompanyEventNear | undefined>
 
 /** Under this, the pool is "in line" with the reference and the gap is treated as noise. */
 export const IN_LINE_BPS = 50
@@ -63,6 +79,8 @@ export interface MarketRead {
   halt: HaltReading | undefined
   /** undefined means news was unavailable. An empty list means it was checked and nothing named the company. */
   headlines: Headline[] | undefined
+  /** The nearest company event, if the calendar knows one. */
+  event: CompanyEventNear | undefined
 }
 
 const bpsBetween = (a: bigint, b: bigint) => (b === 0n ? 0 : Number(((a - b) * 10_000n) / b))
@@ -100,24 +118,29 @@ export async function readMarket(
   pub: PublicClient,
   candidate: Candidate,
   now: Date,
-  sources: { finnhubKey?: string | undefined; reference: ReferenceSource },
+  sources: { finnhubKey?: string | undefined; reference: ReferenceSource; events?: EventSource | undefined },
 ): Promise<MarketRead> {
   const { token, side, amountIn } = candidate
   const clock = marketClock(now)
   const closeAt = lastRegularClose(now)
-  const [feed, pool, quoteOut, multiplierNow, close, oraclePaused, halt, headlines] = await Promise.all([
-    readFeed(pub, token.feed),
-    readPoolPrice(pub, token),
-    quotePinned(pub, token, side, amountIn),
-    pub.readContract({ address: token.address, abi: stockTokenAbi, functionName: 'uiMultiplier' }),
-    // A reference that cannot be computed is not fatal: the desk falls back to the last official update.
-    sources.reference(token, closeAt).catch(() => undefined),
-    pub
-      .readContract({ address: token.address, abi: stockTokenAbi, functionName: 'oraclePaused' })
-      .catch(() => undefined),
-    fetchHaltFlag(token.symbol),
-    sources.finnhubKey ? fetchCompanyNews(token.symbol, [token.displayName], sources.finnhubKey) : undefined,
-  ])
+  const [feed, pool, quoteOut, multiplierNow, close, oraclePaused, halt, headlines, event] =
+    await Promise.all([
+      readFeed(pub, token.feed),
+      readPoolPrice(pub, token),
+      quotePinned(pub, token, side, amountIn),
+      pub.readContract({ address: token.address, abi: stockTokenAbi, functionName: 'uiMultiplier' }),
+      // A reference that cannot be computed is not fatal: the desk falls back to the last official update.
+      sources.reference(token, closeAt).catch(() => undefined),
+      pub
+        .readContract({ address: token.address, abi: stockTokenAbi, functionName: 'oraclePaused' })
+        .catch(() => undefined),
+      fetchHaltFlag(token.symbol),
+      sources.finnhubKey
+        ? fetchCompanyNews(token.symbol, [token.displayName], sources.finnhubKey)
+        : undefined,
+      // The calendar is a convenience, never a reason to fail a check.
+      sources.events ? sources.events(token, now).catch(() => undefined) : undefined,
+    ])
 
   const feedAt = new Date(feed.updatedAt * 1000)
   // A dividend or split since the close changes what one token stands for, so the reference is restated. With no
@@ -142,5 +165,25 @@ export async function readMarket(
     oraclePaused,
     halt,
     headlines,
+    event,
   }
+}
+
+/**
+ * The reference for one held token, for the owner's standing rules: the same choice every decision makes. The
+ * feed comes from the valuation just made, so this costs the close lookup and one multiplier read.
+ */
+export async function referenceFor(
+  pub: PublicClient,
+  token: ApprovedToken,
+  feed: FeedReading,
+  now: Date,
+  reference: ReferenceSource,
+): Promise<bigint> {
+  const clock = marketClock(now)
+  const [multiplierNow, close] = await Promise.all([
+    pub.readContract({ address: token.address, abi: stockTokenAbi, functionName: 'uiMultiplier' }),
+    reference(token, lastRegularClose(now)).catch(() => undefined),
+  ])
+  return pickReference(clock.session, close, multiplierNow, feed).priceE8
 }

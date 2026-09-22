@@ -213,7 +213,7 @@ contract DeskTradeForkTest is ForkBase {
         vm.expectRevert(Desk.FeedUnhealthy.selector);
         desk.buy(NVDA, 10e6, 0, _deadline(), H1);
 
-        vm.mockCall(NVDA_FEED, call, abi.encode(uint80(1), int256(222e8), uint256(1), block.timestamp - 5 days, uint80(1)));
+        vm.mockCall(NVDA_FEED, call, abi.encode(uint80(1), int256(222e8), uint256(1), block.timestamp - 7 days, uint80(1)));
         vm.prank(operator);
         vm.expectRevert(Desk.FeedUnhealthy.selector);
         desk.buy(NVDA, 10e6, 0, _deadline(), H1);

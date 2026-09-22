@@ -48,13 +48,15 @@ timing and gives its reasons. Everything else is arithmetic and a contract.
   "nothing to do". Those are the proof it was awake and honest, so they are kept, hashed into the same chain,
   and folded into one openable line in the record rather than hidden.
 - **The record is checkable by a stranger.** Open any decision and press **Check it**: your own browser
-  rebuilds the canonical bytes, hashes them with keccak256, and compares against what is on-chain. Not our
-  word, your machine.
+  rebuilds the canonical bytes, hashes them with keccak256, asks the public RPC for the transaction and
+  compares the two fingerprints. A record that did nothing has no transaction, so the browser walks the chain
+  of records to the one that sealed it. Not our word, your machine.
 - **It marks its own homework.** When the market reopens, each decision is graded against the one alternative
   it really had, at the price each would have got. Under 25 basis points it says "no real difference", because
   that is inside the cost of trading. It grades the timing call, not whether the market happened to go up.
 - **The honest promise, exactly true:** the assistant cannot send your funds to anyone. A stolen operator key
-  can only make bad trades, costing at most 8% of your daily limit per day, until you remove it.
+  can only make bad trades, costing at most 8% of your daily limit in each 24-hour spending window, so at
+  most twice that across a window boundary, until you remove it.
 
 ## It is running
 
@@ -64,7 +66,7 @@ timing and gives its reasons. Everything else is arithmetic and a contract.
 | Desk factory | [`0x35A40883BAD8874F8fB5592c72c4385226070958`](https://robinhoodchain.blockscout.com/address/0x35A40883BAD8874F8fB5592c72c4385226070958) |
 | Desk implementation | [`0x99a3f0DD497d60308F138f420902BbB2b6406565`](https://robinhoodchain.blockscout.com/address/0x99a3f0DD497d60308F138f420902BbB2b6406565) |
 | The live desk | [`0x51ce92E1319918Fe3d46Ee0dF09af1a9FB14461D`](https://robinhoodchain.blockscout.com/address/0x51ce92E1319918Fe3d46Ee0dF09af1a9FB14461D) |
-| OpenServ agent | `after-hours-desk` (4513), workflow "Hourly desk review", hourly cron |
+| OpenServ agent | `shijima` (4513), workflow "Hourly desk review", hourly cron |
 
 Real transactions, all on mainnet:
 
@@ -83,7 +85,7 @@ Real transactions, all on mainnet:
 contracts/        Desk.sol and DeskFactory.sol. One EIP-1167 clone per owner, no upgrade path, no admin.
 packages/shared/  Canonical hashing, the frozen record schema, the market calendar, every user-facing word.
 packages/chain/   Reads and operator writes. Quotes, feeds, the pool's 30-minute average, the close reference.
-packages/db/      24 tables on Postgres. Records hash-chained under an advisory lock.
+packages/db/      31 tables on Postgres. Records hash-chained under an advisory lock.
 packages/core/    The engine: reconcile, value, find needs, refuse, decide, gate, act, record, grade.
 apps/worker/      The clock, the operator key, and the OpenServ agent. The only thing that sends a transaction.
 apps/web/         Next 16. Reads. It holds no key, so it cannot move money even if it is compromised.

@@ -53,8 +53,9 @@ export const webCopy = {
       weekend: 'Weekend',
       holiday: 'Holiday',
     } satisfies Record<Session, string>,
-    closes: (time: string) => `closes ${time} ET`,
-    reopens: (when: string) => `reopens ${when} ET`,
+    /** The time carries its own zone words: "16:00 ET", or "Mon 14:30 (09:30 ET)" for a reader elsewhere. */
+    closes: (time: string) => `closes ${time}`,
+    reopens: (when: string) => `reopens ${when}`,
     aria: (word: string, tail: string) => `US market: ${word}, ${tail}`,
   },
 
@@ -444,8 +445,11 @@ export const deskCopy = {
       large_action: 'Asking because this one is large.',
       owner_override: 'Your own call.',
     },
-    trade: (side: string, amountIn: string, expectedOut: string) =>
-      `${side === 'sell' ? 'Sell' : 'Buy'} ${amountIn} for about ${expectedOut}`,
+    /** "Buy $120 of Nvidia" or "Sell 0.02 Nvidia for about $4.90": amounts are decimal strings from the preview. */
+    trade: (side: string, amountIn: string, expectedOut: string, name: string) =>
+      side === 'sell'
+        ? `Sell ${amountIn} ${name} for about $${expectedOut}`
+        : `Buy $${amountIn} of ${name} (about ${expectedOut} tokens)`,
     approve: 'Approve',
     reject: 'Reject',
     expires: (when: string) => `expires ${when}`,
@@ -455,6 +459,7 @@ export const deskCopy = {
     title: 'What it holds',
     total: 'Total value',
     sinceStart: 'Since your money went in',
+    sinceReopen: 'Since the market reopened',
     cash: 'Cash',
     vault: 'earning in the vault',
     vaultRate: (rate: string) => `${rate} a year, variable`,
@@ -472,6 +477,15 @@ export const deskCopy = {
   holdings: {
     title: 'Holdings',
     target: (pct: string) => `target ${pct}`,
+    /** "$203.10 now (pool, 4 minutes ago)": the price with its source and age, never without [section 10]. */
+    priceNow: (value: string, age: string) => `${value} now (pool, ${age})`,
+    referenceIs: (value: string, kind: string) => `reference ${value} (${kind})`,
+    referenceKinds: {
+      last_regular_close: 'the pool at the last close',
+      last_official_update: 'the last official update',
+    } as Record<string, string>,
+    gap: (compared: string) => `${compared} the reference`,
+    noPrice: 'No price logged yet.',
     inLine: 'in line',
     over: (pct: string) => `${pct} over`,
     under: (pct: string) => `${pct} under`,
@@ -493,6 +507,7 @@ export const deskCopy = {
 
   nextCheck: {
     title: 'Next check',
+    lead: 'At the top of the hour,',
     at: (when: string) => `At the top of the hour, ${when} New York.`,
     stopped: 'The desk is not acting until you resume it.',
     late: (ago: string) =>
@@ -514,6 +529,11 @@ export const deskCopy = {
 
   limits: {
     title: 'Limits in use',
+    spentToday: 'Spent in the last 24 hours',
+    spentOf: (spent: string, cap: string) => `${spent} of ${cap}`,
+    lossRoom: 'Room before the loss stop',
+    lossRoomValue: (amount: string, pct: string) => `${amount} (${pct})`,
+    lossUnset: 'set at the first valuation',
     drift: 'May wander before it acts',
     position: 'Largest share of one stock',
     loss: 'Stops after a fall of',
@@ -532,6 +552,23 @@ export const deskCopy = {
     version: (n: number) => `version ${n}`,
   },
 
+  telegramOff:
+    'Telegram is not connected, so the desk can only ask you here and cannot tell you when something happens. Connect it in Settings.',
+
+  /** Protective rules [8.6]: carried out by arithmetic, never by reading prose. */
+  rules: {
+    title: 'Standing rules',
+    hint: 'A rule the desk carries out itself, by arithmetic: if a stock you hold falls this far below its reference, it sells this much of it. The assistant still picks the moment and can only wait with a reason.',
+    none: 'No standing rules.',
+    stock: 'Stock',
+    fall: 'Falls by',
+    cut: 'Sell',
+    sentence: (name: string, fall: string, cut: string) =>
+      `If ${name} falls more than ${fall}% below its reference, sell ${cut}% of it.`,
+    add: 'Add a rule',
+    remove: 'Remove this rule',
+    bounds: 'A fall of 1% to 20%, selling 10% to all of it.',
+  },
   fee: (amount: string) => `Fee so far: ${amount}, waived.`,
   feeNote: '0.5% a year of what the desk holds, nothing in practice. Waived during the beta.',
 
@@ -635,8 +672,14 @@ export const controlsCopy = {
     removeAssistant: 'Remove the assistant',
     restart: 'Restart the desk',
     closeDesk: 'Close the desk',
+    editMandate: 'Edit what you told it',
   },
   words: {
+    switchStrategy: (name: string) => `Move me into ${name}`,
+    setWeights: 'Change my targets',
+    setLimits: 'Change my settings',
+    setNotes: 'Change my notes',
+    setRules: 'Change my standing rules',
     addMoney: (amount: string) => `Add $${amount}`,
     withdraw: (amount: string) => `Withdraw $${amount}`,
     withdrawAll: (asStocks: boolean) =>
@@ -728,6 +771,27 @@ export const controlsCopy = {
     settings: (perAction: string, daily: string) =>
       `Your settings also say ${perAction} per action and ${daily} a day. The desk keeps to whichever is lower.`,
   },
+  editMandate: {
+    eyebrow: 'What you told it',
+    title: 'Change your instructions',
+    body: 'Pick what to change. The card shows before and after, and the change applies from the next check. No model is asked.',
+    parts: {
+      strategy: 'Strategy',
+      weights: 'Targets',
+      limits: 'Settings',
+      notes: 'Notes',
+      rules: 'Rules',
+    },
+    strategy: 'Move to a ready-made basket. Only the mix changes; your limits and notes stay.',
+    cash: 'Cash kept aside',
+    total: (pct: string) => `Total ${pct}. It must be 100%.`,
+    drift: 'May wander before it acts',
+    position: 'Largest share of one stock',
+    loss: 'Stops after a fall of',
+    notes: 'Your notes, in your own words',
+    notesHint:
+      'They reach the assistant as context for when to act, never as an instruction to size or hold.',
+  },
   check: {
     eyebrow: 'Check now',
     title: 'Look at everything now',
@@ -788,6 +852,8 @@ export const settingsCopy = {
     declare: 'I am not in a place where Stock Tokens are restricted.',
     accept: 'I have read this and accept it',
     read: 'Read it again',
+    signIn: 'Sign in first. Accepting is tied to your wallet.',
+    failed: 'Your acceptance could not be saved. Nothing else changed; try again in a moment.',
   },
   appearance: { title: 'Appearance', body: 'Dark or light. It is remembered in this browser.' },
   close: {
@@ -845,7 +911,7 @@ export const disclosureCopy = {
     },
     {
       heading: 'The honest worst case',
-      body: 'The assistant cannot send your funds to anyone. If its key were ever stolen, the thief could only make bad trades, costing at most 8% of your daily limit per day, until you remove the assistant. You are told about every trade.',
+      body: 'The assistant cannot send your funds to anyone. If its key were ever stolen, the thief could only make bad trades, costing at most 8% of your daily limit in each 24-hour spending window (so at most twice that across a window boundary), until you remove the assistant. You are told about every trade.',
     },
     {
       heading: 'When prices move far',

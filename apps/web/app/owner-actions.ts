@@ -7,8 +7,8 @@ import {
   acceptDisclosure,
   createTelegramLink,
   deskById,
+  ensureOwner,
   markInboxRead,
-  ownerIdOf,
   ownerInbox,
   ownsDesk,
   proposalForOwner,
@@ -16,7 +16,7 @@ import {
   telegramForDesk,
   unlinkTelegram,
 } from '@desk/db'
-import { DISCLOSURE_VERSION, errorText } from '@desk/shared'
+import { DISCLOSURE_VERSION, errorText, settingsCopy } from '@desk/shared'
 import { revalidatePath } from 'next/cache'
 import { type ChatCard, toChatCard } from '@/features/desk/chat-model'
 import { type Preview, previewChainProposal } from '@/lib/chain-proposals.server'
@@ -138,13 +138,17 @@ export async function shareAction(deskId: string, enabled: boolean): Promise<{ o
   return { ok: true, slug }
 }
 
-export async function acceptDisclosureAction(): Promise<{ ok: boolean }> {
+export async function acceptDisclosureAction(): Promise<{ ok: true } | { ok: false; why: string }> {
   const address = await signedInAddress()
-  if (!address) return { ok: false }
-  const ownerId = await ownerIdOf(db(), address)
-  if (!ownerId) return { ok: false }
-  await acceptDisclosure(db(), ownerId, DISCLOSURE_VERSION)
-  return { ok: true }
+  if (!address) return { ok: false, why: settingsCopy.disclosure.signIn }
+  try {
+    // A wallet that has never made a desk still has an owner's row: sign-in creates it, and this is the backstop.
+    const owner = await ensureOwner(db(), address)
+    await acceptDisclosure(db(), owner.id, DISCLOSURE_VERSION)
+    return { ok: true }
+  } catch (e) {
+    return { ok: false, why: `${settingsCopy.disclosure.failed} ${errorText(e)}` }
+  }
 }
 
 export interface InboxItem {

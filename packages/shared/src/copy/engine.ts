@@ -31,8 +31,15 @@ export const engineCopy = {
   lossLimitReached: (worth: string, lossBps: number, baseline: string, limitBps: number) =>
     `The desk is worth ${worth}, which is ${pct(lossBps)} below its baseline of ${baseline}. Your loss limit is ${pct(limitBps)}.`,
   approvalExpired: 'Your approval request expired. Nothing was done.',
+  /** The second consecutive check below the loss limit: the desk stops itself on the chain, not only in software. */
+  lossLimitPausedOnChain:
+    'The desk was still below your loss limit at its next check, so it paused itself on the chain. Nothing was sold. Only you can restart it, with your wallet.',
+  lossLimitPauseFailed: (cause: string) =>
+    `The desk tried to pause itself on the chain after a second check below your loss limit, and could not: ${cause}. It stays stopped in software.`,
 
   approved: {
+    tooLate:
+      'You approved this, but the request had already expired by the time the desk could act on it. Nothing was done.',
     conditionsChanged: (movedBps: number, limitBps: number) =>
       `You approved this, but the price has moved ${(movedBps / 100).toFixed(2)}% since you were shown it, which is more than the ${(limitBps / 100).toFixed(2)}% allowed. Nothing was done.`,
     blockedNow: (reasons: string[]) =>
@@ -49,6 +56,19 @@ export const engineCopy = {
     drifted: (name: string, weightBps: number, targetBps: number, thresholdBps: number) =>
       `${name} is ${pct(weightBps)} of the desk against a target of ${pct(targetBps)}. That is further than the ${pct(thresholdBps)} it may wander.`,
     dropped: (name: string) => `${name} is no longer in the mandate, so the desk would sell it.`,
+    /** A standing rule fired. The sale is the owner's own instruction, carried out by arithmetic. */
+    rule: (id: string, name: string, cutBps: number, fallBps: number, gapBps: number) =>
+      `Your rule ${id}: sell ${pct(cutBps)} of ${name} when its price is ${pct(fallBps)} or more below the reference. It is ${pct(Math.abs(gapBps))} below now.`,
+  },
+
+  /** A structured rule in words, for the model and for the owner. */
+  ruleText: (name: string, fallBps: number, cutBps: number) =>
+    `Sell ${pct(cutBps)} of ${name} if its price is ${pct(fallBps)} or more below the reference.`,
+
+  /** Why a model answer was refused by our own checks, beyond the schema. */
+  decide: {
+    quotedPrivateText:
+      'the answer repeats a headline or one of your notes word for word, which the public record may not carry',
   },
 
   /** The savings vault. Plain arithmetic; no model is asked. */
@@ -91,6 +111,9 @@ export const engineCopy = {
     movingFast: (name: string, bps: number) =>
       `The price of ${name} is ${pct(bps)} away from its own average of the last half hour. The desk waits for it to settle.`,
     newsUnavailable: (name: string) => `News about ${name} is unavailable, so the desk will not act.`,
+    eventWindow: (name: string, date: string) =>
+      `${name} reports on ${date}. The desk does not buy in the two days before a report.`,
+    lossLimit: (why: string) => `Stopped by your loss limit. ${why}`,
   },
 
   /** Reasons from the limits check. Lower case, because they are joined into one sentence. */

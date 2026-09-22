@@ -9,7 +9,7 @@ import { errorText } from '@desk/shared'
 import type { Bot } from 'grammy'
 import type { AskLoop } from '../ask'
 import type { Cli, Log } from '../review'
-import { createBot } from './bot'
+import { createBot, deliverAskReply } from './bot'
 import { drainOutbox, refreshStatus } from './outbox'
 
 export interface Telegram {
@@ -36,6 +36,16 @@ export function startTelegram(cli: Cli, log: Log, ask?: AskLoop): Telegram | und
     ...(ask ? { kickAsk: ask.kick } : {}),
   })
   deps = { db: cli.db, bot, log, siteUrl }
+  // A message typed in Telegram is answered here, when the chat's loop has the answer. The handler that took
+  // the message returned long ago, so no owner's question ever holds another owner's /pause.
+  ask?.onAnswered(async (row) => {
+    if (row.via !== 'telegram') return
+    await deliverAskReply(
+      bot,
+      { db: cli.db, log, siteUrl, refreshStatus: (id) => refreshStatus(deps, id) },
+      row,
+    ).catch((e) => log('telegram_reply_failed', { request: row.id, error: errorText(e) }))
+  })
 
   // Long polling, started in the background. It must never hold up the clock.
   void bot

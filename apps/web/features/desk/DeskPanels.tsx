@@ -4,9 +4,14 @@ import type { Route } from 'next'
 import Link from 'next/link'
 import { Answer } from '@/components/answer'
 import { Outcome } from '@/components/outcome'
+import { When } from '@/components/when'
 import type { DeskView } from '@/lib/desk.server'
 import { DeskValueChart } from './DeskValueChart'
 import { type DeskNote, noteLabel, noteText } from './notes'
+import { SessionLine } from './SessionLine'
+
+// Holdings moved to its own file on 22 Sep; the desk page still imports it from here.
+export { Holdings } from './HoldingsPanel'
 
 const pct = (bps: number) => `${(bps / 100).toFixed(bps % 100 === 0 ? 0 : 1)}%`
 const signedUsd = (raw: bigint) => `${raw < 0n ? '−' : '+'}${usd(raw < 0n ? -raw : raw)}`
@@ -48,12 +53,21 @@ export function NeedsYou({ view }: { view: DeskView }) {
                   a.side ?? 'buy',
                   a.preview.amountIn ?? '?',
                   a.preview.expectedOut ?? '?',
+                  a.name,
                 )}
               </p>
               <p className="type-caption text-ink-muted">{deskCopy.needsYou.asking[a.reason]}</p>
               <Answer deskId={view.desk.id} approvalId={a.id} expiresAt={a.expiresAt} />
             </div>
           ))}
+      {view.desk.telegramLinked === false && (
+        <p className="type-caption text-ink-muted">
+          {deskCopy.telegramOff}{' '}
+          <Link href={`/desk/${view.slug}/settings` as Route} className="text-accent hover:underline">
+            {deskCopy.settingsLink} →
+          </Link>
+        </p>
+      )}
     </Panel>
   )
 }
@@ -73,14 +87,22 @@ export function Plate({ view }: { view: DeskView }) {
               <div className="type-caption text-ink-muted">{deskCopy.plate.total}</div>
               <div className="type-data-hero text-ink">{usd(BigInt(p.totalUsdg))}</div>
             </div>
-            {p.baselineUsdg && (
-              <div className="text-right">
-                <div className="type-caption text-ink-muted">{deskCopy.plate.sinceStart}</div>
-                <div className="type-data-lg text-ink">
-                  {signedUsd(BigInt(p.totalUsdg) - BigInt(p.baselineUsdg))}
+            <div className="flex gap-6 text-right">
+              {p.baselineUsdg && (
+                <div>
+                  <div className="type-caption text-ink-muted">{deskCopy.plate.sinceStart}</div>
+                  <div className="type-data-lg text-ink">
+                    {signedUsd(BigInt(p.totalUsdg) - BigInt(p.baselineUsdg))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+              {p.sinceReopenUsdg !== null && (
+                <div>
+                  <div className="type-caption text-ink-muted">{deskCopy.plate.sinceReopen}</div>
+                  <div className="type-data-lg text-ink">{signedUsd(BigInt(p.sinceReopenUsdg))}</div>
+                </div>
+              )}
+            </div>
           </div>
           <div className="desk-rows">
             <div className="desk-row">
@@ -121,107 +143,29 @@ export function Plate({ view }: { view: DeskView }) {
   )
 }
 
-export function Holdings({ view }: { view: DeskView }) {
-  if (view.holdings.length === 0) return null
-  return (
-    <Panel title={deskCopy.holdings.title}>
-      <div className="desk-rows">
-        {view.holdings.map((h) => {
-          const off = h.weightBps - h.targetBps
-          const tone =
-            Math.abs(off) < (view.mandate?.driftToleranceBps ?? 300)
-              ? deskCopy.holdings.inLine
-              : off > 0
-                ? deskCopy.holdings.over(pct(off))
-                : deskCopy.holdings.under(pct(-off))
-          return (
-            <div key={h.symbol} className="desk-holding">
-              <div className="flex items-baseline justify-between gap-3">
-                <span className="type-body-strong text-ink">{h.name}</span>
-                <span className="type-data text-ink">{usd(BigInt(h.valueUsdg))}</span>
-              </div>
-              <div className="desk-bar" aria-hidden>
-                <span className="desk-bar-fill" style={{ width: `${Math.min(100, h.weightBps / 100)}%` }} />
-                <span className="desk-bar-target" style={{ left: `${Math.min(100, h.targetBps / 100)}%` }} />
-              </div>
-              <div className="flex items-baseline justify-between gap-3 type-caption text-ink-muted">
-                <span>
-                  {pct(h.weightBps)} · {deskCopy.holdings.target(pct(h.targetBps))}
-                </span>
-                <span>{tone}</span>
-              </div>
-              <HoldingFlags flags={h.flags} owner={view.isOwner} />
-            </div>
-          )
-        })}
-      </div>
-    </Panel>
-  )
-}
-
-/**
- * What stops the assistant touching one holding, and what is coming for it [8.16]. The assistant's limits are
- * the contract's; where it cannot act, the owner still can, and the line says so.
- */
-function HoldingFlags({ flags, owner }: { flags: DeskView['holdings'][number]['flags']; owner: boolean }) {
-  const f = deskCopy.holdings.flags
-  const lines: { text: string; warn: boolean }[] = []
-  if (flags.halted === true) lines.push({ text: f.halted, warn: true })
-  if (flags.halted === null) lines.push({ text: f.haltUnknown, warn: true })
-  if (flags.beyondBandBps !== null)
-    lines.push({ text: f.band(pct(Math.abs(flags.beyondBandBps))), warn: true })
-  if (flags.feedMissing) lines.push({ text: f.feed, warn: true })
-  if (flags.report) {
-    const day = new Date(`${flags.report.date}T12:00:00Z`).toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      timeZone: 'UTC',
-    })
-    const when = flags.report.timing ? f.timing[flags.report.timing] : undefined
-    lines.push({ text: f.report(when ? `${day}, ${when}` : day), warn: false })
-  }
-  if (lines.length === 0) return null
-  const ownerCanSell = owner && (flags.beyondBandBps !== null || flags.feedMissing)
-  return (
-    <ul className="mt-1 flex flex-col gap-1">
-      {lines.map((l) => (
-        <li key={l.text} className={l.warn ? 'type-caption text-warning' : 'type-caption text-ink-secondary'}>
-          {l.text}
-        </li>
-      ))}
-      {ownerCanSell && <li className="type-caption text-ink-muted">{f.sellYourself}</li>}
-    </ul>
-  )
-}
-
 /** Hourly checks run at the top of the hour; past two hours without one, the desk has not checked in [8.16]. */
 const LATE_MS = 2 * 60 * 60 * 1000
 
 export function NextCheck({ view }: { view: DeskView }) {
   const now = new Date()
-  const next = new Date(now)
-  next.setUTCMinutes(0, 0, 0)
-  next.setUTCHours(next.getUTCHours() + 1)
-  const time = next.toLocaleTimeString('en-US', {
-    timeZone: 'America/New_York',
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23',
-  })
   const d = view.desk
   return (
     <Panel title={deskCopy.nextCheck.title}>
       <p className={d.state === 'active' ? 'type-body text-ink' : 'type-body text-warning'}>
-        {d.state === 'active'
-          ? deskCopy.nextCheck.at(time)
-          : d.state === 'paused_by_owner'
-            ? deskCopy.nextCheck.paused
-            : d.state === 'stopped_by_loss_limit'
-              ? deskCopy.nextCheck.lossStop
-              : deskCopy.nextCheck.stopped}
+        {d.state === 'active' ? (
+          <>
+            {deskCopy.nextCheck.lead} <When at={d.nextCheckAt} clock />.
+          </>
+        ) : d.state === 'paused_by_owner' ? (
+          deskCopy.nextCheck.paused
+        ) : d.state === 'stopped_by_loss_limit' ? (
+          deskCopy.nextCheck.lossStop
+        ) : (
+          deskCopy.nextCheck.stopped
+        )}
       </p>
       <CheckState view={view} now={now} />
+      <SessionLine className="type-caption text-ink-secondary" />
       <p className="type-caption text-ink-muted">
         {deskCopy.modes[d.mode]}: {deskCopy.modeNote[d.mode]} · {engineCopy.deskState[d.state]}
       </p>
@@ -263,7 +207,11 @@ export function ValueChart({ view }: { view: DeskView }) {
 export function Limits({ view }: { view: DeskView }) {
   const m = view.mandate
   if (!m) return null
+  const l = deskCopy.limits
+  const stop = view.limitsInUse.lossStop
   const rows: [string, string][] = [
+    [l.spentToday, l.spentOf(usd(BigInt(view.limitsInUse.spentTodayUsdg)), usd(BigInt(m.dailyCapUsdg)))],
+    [l.lossRoom, stop ? l.lossRoomValue(usd(BigInt(stop.roomUsdg)), pct(stop.roomBps)) : l.lossUnset],
     [deskCopy.limits.drift, pct(m.driftToleranceBps)],
     [deskCopy.limits.position, pct(m.maxPositionBps)],
     [deskCopy.limits.loss, pct(m.lossStopBps)],

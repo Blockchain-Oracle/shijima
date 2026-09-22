@@ -36,7 +36,7 @@ export interface CostView {
 }
 
 /** Everything both versions record the same way. The evidence and the extras are normalised below. */
-type RecordCommon = Omit<DecisionRecordV1, 'evidence' | 'schemaVersion' | 'kind' | 'candidate'>
+type RecordCommon = Omit<DecisionRecordV1, 'evidence' | 'schemaVersion' | 'kind' | 'candidate' | 'need'>
 
 type VaultEvidence = Extract<DecisionRecordV2['evidence'][number], { kind: 'vault' }>
 
@@ -45,6 +45,8 @@ export type RecordView = RecordCommon & {
   kind: 'decision' | 'execution'
   /** Version 2 widened the side to the savings vault's `sweep` and `redeem`. */
   candidate: DecisionRecordV2['candidate']
+  /** Version 2 may name the owner's rule that raised the need. */
+  need: DecisionRecordV2['need']
   /** What a vault move was decided on. Only vault moves carry it. */
   vault: Omit<VaultEvidence, 'id' | 'kind'> | undefined
   price: PriceView | undefined
@@ -56,8 +58,18 @@ export type RecordView = RecordCommon & {
         perActionCapUsdg: string
         remainingTodayUsdg: string
         deskUsdg: string
-        deskHolds: string
-        countsAgainstLimitsUsdg: string
+        /** Version 0 recorded neither of these. */
+        deskHolds: string | undefined
+        countsAgainstLimitsUsdg: string | undefined
+      }
+    | undefined
+  /** A company event near the token. Added 22 Sep; older records have none. */
+  event:
+    | {
+        eventKind: 'earnings' | 'dividend' | 'split' | 'other'
+        eventDate: string
+        timing: 'bmo' | 'amc' | null
+        daysAway: number
       }
     | undefined
   news:
@@ -72,7 +84,15 @@ export type RecordView = RecordCommon & {
   approvalOf: NonNullable<DecisionRecordV2['approvalOf']> | undefined
 }
 
-type Evidence = DecisionRecordV1['evidence'] | DecisionRecordV2['evidence']
+/**
+ * Evidence is read loosely, field by field, whatever version wrote it. Version 0's cost item said
+ * `quoteTokenOut`, its limits item had three fields, and a future widening may add more. A field a version did
+ * not record comes out undefined; nothing is guessed.
+ */
+type LooseItem = { id: string; kind: string } & Record<string, unknown>
+const str = (v: unknown): string | undefined => (typeof v === 'string' ? v : undefined)
+const num = (v: unknown): number | undefined => (typeof v === 'number' ? v : undefined)
+const bool = (v: unknown): boolean | undefined => (typeof v === 'boolean' ? v : undefined)
 
 interface NormalisedEvidence {
   price: PriceView | undefined
@@ -83,96 +103,174 @@ interface NormalisedEvidence {
   news: RecordView['news']
   position: RecordView['position']
   vault: RecordView['vault']
+  event: RecordView['event']
+}
+
+function normalisePrice(item: LooseItem | undefined): PriceView | undefined {
+  if (!item) return undefined
+  const gapBps = num(item.gapBps)
+  const inLine = bool(item.inLine)
+  if (gapBps === undefined || inLine === undefined) return undefined
+  const poolPrice = str(item.poolPrice)
+  const referencePrice = str(item.referencePrice)
+  const referenceAt = str(item.referenceAt)
+  const lastOfficialUpdate = str(item.lastOfficialUpdate)
+  const lastOfficialUpdateAt = str(item.lastOfficialUpdateAt)
+  const gapToLast = num(item.gapToLastOfficialUpdateBps)
+  if (
+    poolPrice !== undefined &&
+    referencePrice !== undefined &&
+    referenceAt !== undefined &&
+    lastOfficialUpdate !== undefined &&
+    lastOfficialUpdateAt !== undefined &&
+    gapToLast !== undefined
+  ) {
+    return {
+      poolPrice,
+      referenceLabel:
+        item.reference === 'last_regular_close' ? 'this pool at the last close' : 'the last official update',
+      referencePrice,
+      referenceAt,
+      gapBps,
+      inLine,
+      lastOfficialUpdate,
+      lastOfficialUpdateAt,
+      gapToLastOfficialUpdateBps: gapToLast,
+    }
+  }
+  // Versions 0 and 1 measured the gap against the oracle price and recorded nothing else.
+  const feedPrice = str(item.feedPrice)
+  const feedUpdatedAt = str(item.feedUpdatedAt)
+  if (feedPrice === undefined || feedUpdatedAt === undefined) return undefined
+  return {
+    poolPrice: undefined,
+    referenceLabel: 'the last official update',
+    referencePrice: feedPrice,
+    referenceAt: feedUpdatedAt,
+    gapBps,
+    inLine,
+    lastOfficialUpdate: feedPrice,
+    lastOfficialUpdateAt: feedUpdatedAt,
+    gapToLastOfficialUpdateBps: gapBps,
+  }
+}
+
+function normaliseCost(item: LooseItem | undefined): CostView | undefined {
+  if (!item) return undefined
+  const feeTierBps = num(item.pinnedFeeTier)
+  // Version 0 named the quote by what came out: tokens for a buy, USDG for a sale.
+  const quoteOut = str(item.quoteOut) ?? str(item.quoteTokenOut) ?? str(item.quoteUsdgOut)
+  const quoteOutUnit =
+    str(item.quoteOutUnit) ??
+    (str(item.quoteTokenOut) !== undefined ? 'tokens' : str(item.quoteUsdgOut) !== undefined ? 'USDG' : '')
+  if (feeTierBps === undefined || quoteOut === undefined) return undefined
+  const costBps = num(item.costBps)
+  if (costBps !== undefined) return { feeTierBps, costBps, measured: true, quoteOut, quoteOutUnit }
+  const roundTrip = num(item.roundTripBpsAt100)
+  if (roundTrip === undefined) return undefined
+  // Earlier versions recorded a round trip at a standard size, not this trade.
+  return { feeTierBps, costBps: Math.round(roundTrip / 2), measured: false, quoteOut, quoteOutUnit }
 }
 
 /** Every version's evidence, read the same way. Where a version recorded less, the field is simply missing. */
-function normaliseEvidence(evidence: Evidence): NormalisedEvidence {
-  const find = <K extends string>(kind: K) =>
-    evidence.find((e) => e.kind === kind) as Extract<Evidence[number], { kind: K }> | undefined
-  const priceItem = find('price')
-  const costItem = find('cost')
+function normaliseEvidence(evidence: readonly LooseItem[]): NormalisedEvidence {
+  const find = (kind: string) => evidence.find((e) => e.kind === kind)
+  const session = find('session')
+  const status = find('status')
+  const limits = find('limits')
+  const position = find('position')
   const news = find('news')
-  const vault = evidence.find((e) => e.kind === 'vault') as VaultEvidence | undefined
+  const vault = find('vault')
+  const event = find('event')
 
-  const price: PriceView | undefined = !priceItem
-    ? undefined
-    : 'poolPrice' in priceItem
+  const sessionView =
+    session && str(session.session) !== undefined && str(session.nextRegularOpen) !== undefined
       ? {
-          poolPrice: priceItem.poolPrice,
-          referenceLabel:
-            priceItem.reference === 'last_regular_close'
-              ? 'this pool at the last close'
-              : 'the last official update',
-          referencePrice: priceItem.referencePrice,
-          referenceAt: priceItem.referenceAt,
-          gapBps: priceItem.gapBps,
-          inLine: priceItem.inLine,
-          lastOfficialUpdate: priceItem.lastOfficialUpdate,
-          lastOfficialUpdateAt: priceItem.lastOfficialUpdateAt,
-          gapToLastOfficialUpdateBps: priceItem.gapToLastOfficialUpdateBps,
+          session: str(session.session) as string,
+          anchored: bool(session.anchored) ?? false,
+          nextRegularOpen: str(session.nextRegularOpen) as string,
         }
-      : {
-          // Versions 0 and 1 measured the gap against the oracle price and recorded nothing else.
-          poolPrice: undefined,
-          referenceLabel: 'the last official update',
-          referencePrice: priceItem.feedPrice,
-          referenceAt: priceItem.feedUpdatedAt,
-          gapBps: priceItem.gapBps,
-          inLine: priceItem.inLine,
-          lastOfficialUpdate: priceItem.feedPrice,
-          lastOfficialUpdateAt: priceItem.feedUpdatedAt,
-          gapToLastOfficialUpdateBps: priceItem.gapBps,
-        }
-
-  const cost: CostView | undefined = !costItem
-    ? undefined
-    : 'costBps' in costItem
+      : undefined
+  const statusView = status
+    ? {
+        tradingHalt: bool(status.tradingHalt) ?? null,
+        oraclePaused: bool(status.oraclePaused) ?? null,
+        deskPaused: bool(status.deskPaused) ?? false,
+      }
+    : undefined
+  const limitsView =
+    limits &&
+    str(limits.perActionCapUsdg) !== undefined &&
+    str(limits.remainingTodayUsdg) !== undefined &&
+    str(limits.deskUsdg) !== undefined
       ? {
-          feeTierBps: costItem.pinnedFeeTier,
-          costBps: costItem.costBps,
-          measured: true,
-          quoteOut: costItem.quoteOut,
-          quoteOutUnit: costItem.quoteOutUnit,
+          perActionCapUsdg: str(limits.perActionCapUsdg) as string,
+          remainingTodayUsdg: str(limits.remainingTodayUsdg) as string,
+          deskUsdg: str(limits.deskUsdg) as string,
+          deskHolds: str(limits.deskHolds),
+          countsAgainstLimitsUsdg: str(limits.countsAgainstLimitsUsdg),
         }
-      : {
-          feeTierBps: costItem.pinnedFeeTier,
-          // Earlier versions recorded a round trip at a standard size, not this trade.
-          costBps: Math.round(costItem.roundTripBpsAt100 / 2),
-          measured: false,
-          quoteOut: costItem.quoteOut,
-          quoteOutUnit: costItem.quoteOutUnit,
+      : undefined
+  const positionView =
+    position &&
+    num(position.weightBps) !== undefined &&
+    num(position.targetBps) !== undefined &&
+    num(position.driftBps) !== undefined &&
+    num(position.thresholdBps) !== undefined
+      ? {
+          weightBps: num(position.weightBps) as number,
+          targetBps: num(position.targetBps) as number,
+          driftBps: num(position.driftBps) as number,
+          thresholdBps: num(position.thresholdBps) as number,
         }
+      : undefined
+  const rawItems = news && Array.isArray(news.items) ? (news.items as Record<string, unknown>[]) : []
+  const newsItems = rawItems.flatMap((i) => {
+    const id = str(i.id)
+    const source = str(i.source)
+    const url = str(i.url)
+    const publishedAt = str(i.publishedAt)
+    return id && source && url && publishedAt ? [{ id, source, url, publishedAt }] : []
+  })
+  const newsView = news
+    ? {
+        available: bool(news.available) ?? true,
+        count: num(news.count) ?? newsItems.length,
+        items: newsItems,
+      }
+    : undefined
+  const vaultView =
+    vault && str(vault.vault) !== undefined && str(vault.keepUsdg) !== undefined
+      ? {
+          vault: str(vault.vault) as string,
+          netApyBps: num(vault.netApyBps) ?? null,
+          liquidityUsdg: str(vault.liquidityUsdg) ?? null,
+          roundTripFeeUsdg: str(vault.roundTripFeeUsdg) ?? null,
+          deskCashUsdg: str(vault.deskCashUsdg) ?? '0',
+          deskVaultUsdg: str(vault.deskVaultUsdg) ?? '0',
+          keepUsdg: str(vault.keepUsdg) as string,
+        }
+      : undefined
+  const eventView =
+    event && str(event.eventDate) !== undefined && num(event.daysAway) !== undefined
+      ? {
+          eventKind: (str(event.eventKind) ?? 'other') as 'earnings' | 'dividend' | 'split' | 'other',
+          eventDate: str(event.eventDate) as string,
+          timing: (str(event.timing) ?? null) as 'bmo' | 'amc' | null,
+          daysAway: num(event.daysAway) as number,
+        }
+      : undefined
 
   return {
-    price,
-    cost,
-    session: find('session'),
-    status: find('status'),
-    limits: find('limits'),
-    news: news
-      ? {
-          available: news.available,
-          count: news.count,
-          items: news.items.map((i) => ({
-            id: i.id,
-            source: i.source,
-            url: i.url,
-            publishedAt: i.publishedAt,
-          })),
-        }
-      : undefined,
-    position: find('position'),
-    vault: vault
-      ? {
-          vault: vault.vault,
-          netApyBps: vault.netApyBps,
-          liquidityUsdg: vault.liquidityUsdg,
-          roundTripFeeUsdg: vault.roundTripFeeUsdg,
-          deskCashUsdg: vault.deskCashUsdg,
-          deskVaultUsdg: vault.deskVaultUsdg,
-          keepUsdg: vault.keepUsdg,
-        }
-      : undefined,
+    price: normalisePrice(find('price')),
+    cost: normaliseCost(find('cost')),
+    session: sessionView,
+    status: statusView,
+    limits: limitsView,
+    news: newsView,
+    position: positionView,
+    vault: vaultView,
+    event: eventView,
   }
 }
 
@@ -191,7 +289,7 @@ export function viewRecord(body: unknown): RecordView | undefined {
   return {
     ...record,
     version: record.schemaVersion,
-    ...normaliseEvidence(record.evidence),
+    ...normaliseEvidence(record.evidence as LooseItem[]),
     approvalOf: ('approvalOf' in record ? record.approvalOf : undefined) ?? undefined,
   }
 }
@@ -241,6 +339,6 @@ function viewVersionZero(record: DecisionRecordV0): RecordView {
     outcome: record.outcome as RecordView['outcome'],
     preview: loose.preview ?? null,
     approvalOf: undefined,
-    ...normaliseEvidence(record.evidence),
+    ...normaliseEvidence(record.evidence as LooseItem[]),
   }
 }

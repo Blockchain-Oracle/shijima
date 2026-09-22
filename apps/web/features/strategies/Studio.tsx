@@ -27,6 +27,7 @@ export function Studio({
   signedIn,
   disclosureOn,
   contractVersion,
+  goLiveChecks,
 }: {
   draft: StudioDraft
   setDraft: (update: (d: StudioDraft) => StudioDraft) => void
@@ -36,6 +37,7 @@ export function Studio({
   signedIn: string | null
   disclosureOn: string | null
   contractVersion: string
+  goLiveChecks: number
 }) {
   const [step, setStep] = useState(1)
   const [problem, setProblem] = useState<string | null>(null)
@@ -79,6 +81,7 @@ export function Studio({
         contractVersion={contractVersion}
         perActionUsdg={createdAs.perAction}
         dailyUsdg={createdAs.daily}
+        goLiveChecks={goLiveChecks}
         onAnother={() => {
           setCreated(null)
           setStep(1)
@@ -124,7 +127,7 @@ export function Studio({
         <div className="agent-builder-panel">
           <h3 className="strat-choice-title mb-5 text-ink">{S.steps[step - 1]}</h3>
           {step === 1 && <BasketStep draft={draft} setDraft={setDraft} presets={presets} tokens={tokens} />}
-          {step === 2 && <LimitsStep draft={draft} setDraft={setDraft} />}
+          {step === 2 && <LimitsStep draft={draft} setDraft={setDraft} tokens={tokens} />}
           {step === 3 && (
             <ReadStep
               read={read}

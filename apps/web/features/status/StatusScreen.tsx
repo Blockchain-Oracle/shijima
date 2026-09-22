@@ -6,6 +6,7 @@ import type { Route } from 'next'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { SectionHeader } from '@/components/ui/section-header'
+import { When } from '@/components/when'
 import type { StatusDesk, StatusPayload, StatusRow } from './protocol'
 
 /** Agari re-checks every 30 s (`features/status/useStatus.ts`), and only while the tab is visible. */
@@ -61,8 +62,8 @@ export function StatusScreen({ first }: { first: StatusPayload | null }) {
           <Banner payload={reading} />
           <Table title={statusCopy.tableTitle(reading.rows.length)} rows={reading.rows} />
           {/* The viewer's own clock: the server's zone and locale may differ, so this line is the browser's. */}
-          <p className="status-checked" suppressHydrationWarning>
-            {statusCopy.lastChecked(new Date(reading.checkedAtMs).toLocaleTimeString())}
+          <p className="status-checked">
+            {statusCopy.readAt} <When at={new Date(reading.checkedAtMs)} clock /> · {statusCopy.refreshes}
           </p>
 
           <SectionHeader

@@ -207,7 +207,11 @@ export async function confirmedTradesSince(db: DbOrTx, deskId: string, since: Da
 }
 
 /** Sets the loss-limit baseline. What it should become after money moved is worked out in the engine. */
-export async function setDrawdownBaseline(db: DbOrTx, deskId: string, baselineUsdg: bigint): Promise<void> {
+export async function setDrawdownBaseline(
+  db: DbOrTx,
+  deskId: string,
+  baselineUsdg: bigint | null,
+): Promise<void> {
   await db.update(desks).set({ drawdownBaselineUsdg: baselineUsdg }).where(eq(desks.id, deskId))
 }
 
@@ -241,40 +245,49 @@ export type ModeChange =
  * owner has opened its report. Moving between the live modes, or back to practice, is always allowed.
  */
 export async function setDeskMode(
-  db: DbOrTx,
+  db: Db,
   deskId: string,
   mode: 'shadow' | 'ask_first' | 'on_its_own',
   by: By,
 ): Promise<ModeChange> {
-  const now = new Date()
-  const [before] = await db
-    .select({ mode: desks.mode, checks: desks.shadowChecks, reportOpenedAt: desks.shadowReportOpenedAt })
-    .from(desks)
-    .where(eq(desks.id, deskId))
-  if (!before || before.mode === mode) return { ok: true, changed: false }
-  if (before.mode === 'shadow' && mode !== 'shadow') {
-    if (before.checks < GO_LIVE_CHECKS)
-      return { ok: false, reason: 'practice_checks', checksDone: before.checks }
-    if (!before.reportOpenedAt) return { ok: false, reason: 'report_unread', checksDone: before.checks }
-  }
-  await db.update(desks).set({ mode, updatedAt: now }).where(eq(desks.id, deskId))
-  await db
-    .update(approvals)
-    .set({ status: 'cancelled', cancelledReason: 'the mode changed' })
-    .where(and(eq(approvals.deskId, deskId), eq(approvals.status, 'pending')))
-  await db
-    .update(deferrals)
-    .set({ status: 'cancelled', endedReason: 'the mode changed', endedAt: now })
-    .where(and(eq(deferrals.deskId, deskId), eq(deferrals.status, 'standing')))
-  await db.insert(deskEvents).values({
-    deskId,
-    kind: 'mode_changed',
-    actor: by.actor,
-    via: by.via,
-    detail: { from: before.mode, to: mode },
-    at: now,
+  return db.transaction(async (tx) => {
+    const now = new Date()
+    const [before] = await tx
+      .select({ mode: desks.mode, checks: desks.shadowChecks, reportOpenedAt: desks.shadowReportOpenedAt })
+      .from(desks)
+      .where(eq(desks.id, deskId))
+      .for('update')
+    if (!before || before.mode === mode) return { ok: true, changed: false }
+    if (before.mode === 'shadow' && mode !== 'shadow') {
+      if (before.checks < GO_LIVE_CHECKS)
+        return { ok: false, reason: 'practice_checks', checksDone: before.checks }
+      if (!before.reportOpenedAt) return { ok: false, reason: 'report_unread', checksDone: before.checks }
+    }
+    // Guarded on the mode it was read as, so two changes at once cannot both pass the go-live check.
+    const changed = await tx
+      .update(desks)
+      .set({ mode, updatedAt: now })
+      .where(and(eq(desks.id, deskId), eq(desks.mode, before.mode)))
+      .returning({ id: desks.id })
+    if (changed.length === 0) return { ok: true, changed: false }
+    await tx
+      .update(approvals)
+      .set({ status: 'cancelled', cancelledReason: 'the mode changed' })
+      .where(and(eq(approvals.deskId, deskId), eq(approvals.status, 'pending')))
+    await tx
+      .update(deferrals)
+      .set({ status: 'cancelled', endedReason: 'the mode changed', endedAt: now })
+      .where(and(eq(deferrals.deskId, deskId), eq(deferrals.status, 'standing')))
+    await tx.insert(deskEvents).values({
+      deskId,
+      kind: 'mode_changed',
+      actor: by.actor,
+      via: by.via,
+      detail: { from: before.mode, to: mode },
+      at: now,
+    })
+    return { ok: true, changed: true }
   })
-  return { ok: true, changed: true }
 }
 
 /** The owner opened the practice report: half of what going live needs. Only the first opening is kept. */
@@ -423,6 +436,8 @@ export async function pauseDesk(db: Db, deskId: string, by: By): Promise<boolean
       .set({ status: 'cancelled', endedReason: 'the desk was paused', endedAt: now })
       .where(and(eq(deferrals.deskId, deskId), eq(deferrals.status, 'standing')))
     await tx.insert(deskEvents).values({ deskId, kind: 'paused', actor: by.actor, via: by.via, at: now })
+    // The pinned Telegram message must not read "active" for up to an hour after a pause.
+    await tx.insert(notifications).values({ deskId, kind: 'status', payload: { reason: 'paused' } })
     return true
   })
 }
@@ -466,6 +481,7 @@ export async function resumeDesk(
       detail: { from: before.state, baselineReset: resetTo !== undefined },
       at: now,
     })
+    await tx.insert(notifications).values({ deskId, kind: 'status', payload: { reason: 'resumed' } })
     return true
   })
 }
@@ -496,6 +512,8 @@ export async function answeredApprovals(db: DbOrTx, deskId: string) {
       answeredAt: approvals.answeredAt,
       answeredVia: approvals.answeredVia,
       preview: approvals.preview,
+      /** An approval past this is carried out as "too late": recorded, never traded. */
+      expiresAt: approvals.expiresAt,
       decisionSeq: decisions.seq,
       record: decisions.record,
     })
@@ -545,6 +563,15 @@ export async function answerApproval(
       and(eq(approvals.id, input.approvalId), eq(approvals.status, 'pending'), gt(approvals.expiresAt, now)),
     )
     .returning()
+  // Answered on the website or in the chat: the Telegram request must stop showing live buttons.
+  if (row && input.via !== 'telegram') {
+    await db.insert(notifications).values({
+      deskId: row.deskId,
+      decisionId: row.decisionId,
+      kind: 'approval_answered',
+      payload: { approvalId: row.id, answer: input.answer, via: input.via },
+    })
+  }
   return row
 }
 
@@ -665,7 +692,8 @@ export async function recordOutsideChanges(
   db: Db,
   input: {
     deskId: string
-    baselineUsdg: bigint
+    /** null means the baseline is unknown until the next fully priced valuation sets it afresh. */
+    baselineUsdg: bigint | null
     event: Record<string, unknown>
     snapshot: Parameters<typeof saveValueSnapshot>[1]
   },
@@ -698,30 +726,55 @@ export async function createTelegramLink(db: DbOrTx, deskId: string, code: strin
  * Spends a link code and ties the chat to the desk. Guarded: the row must still be pending and unexpired, so
  * a code that leaks after it has been used, or after ten minutes, is worth nothing.
  */
+export type TelegramLinkClaim =
+  | { ok: true; row: typeof telegramLinks.$inferSelect }
+  | { ok: false; reason: 'used' | 'another_desk' }
+
 export async function claimTelegramLink(
-  db: DbOrTx,
+  db: Db,
   code: string,
   chat: { userId: number; chatId: number; username?: string | undefined },
-) {
+): Promise<TelegramLinkClaim> {
   const now = new Date()
-  const [row] = await db
-    .update(telegramLinks)
-    .set({
-      status: 'linked',
-      telegramUserId: chat.userId,
-      telegramChatId: chat.chatId,
-      telegramUsername: chat.username ?? null,
-      linkedAt: now,
-    })
-    .where(
-      and(
-        eq(telegramLinks.code, code),
-        eq(telegramLinks.status, 'pending'),
-        gt(telegramLinks.codeExpiresAt, now),
-      ),
-    )
-    .returning()
-  return row
+  return db.transaction(async (tx) => {
+    const [pending] = await tx
+      .select({ deskId: telegramLinks.deskId })
+      .from(telegramLinks)
+      .where(
+        and(
+          eq(telegramLinks.code, code),
+          eq(telegramLinks.status, 'pending'),
+          gt(telegramLinks.codeExpiresAt, now),
+        ),
+      )
+      .for('update')
+    if (!pending) return { ok: false, reason: 'used' }
+    // One Telegram account hears about ONE desk. Otherwise /pause or a button press would act on whichever
+    // desk the database happened to return first.
+    const [elsewhere] = await tx
+      .select({ deskId: telegramLinks.deskId })
+      .from(telegramLinks)
+      .where(and(eq(telegramLinks.telegramUserId, chat.userId), eq(telegramLinks.status, 'linked')))
+    if (elsewhere && elsewhere.deskId !== pending.deskId) return { ok: false, reason: 'another_desk' }
+    const [row] = await tx
+      .update(telegramLinks)
+      .set({
+        status: 'linked',
+        telegramUserId: chat.userId,
+        telegramChatId: chat.chatId,
+        telegramUsername: chat.username ?? null,
+        linkedAt: now,
+      })
+      .where(
+        and(
+          eq(telegramLinks.code, code),
+          eq(telegramLinks.status, 'pending'),
+          gt(telegramLinks.codeExpiresAt, now),
+        ),
+      )
+      .returning()
+    return row ? { ok: true, row } : { ok: false, reason: 'used' }
+  })
 }
 
 /** The desk this Telegram user is allowed to hear about. Nobody else's desk is ever answered for. */
@@ -731,6 +784,8 @@ export async function deskForTelegramUser(db: DbOrTx, telegramUserId: number) {
     .from(telegramLinks)
     .innerJoin(desks, eq(telegramLinks.deskId, desks.id))
     .where(and(eq(telegramLinks.telegramUserId, telegramUserId), eq(telegramLinks.status, 'linked')))
+    .orderBy(desc(telegramLinks.linkedAt))
+    .limit(1)
   return row
 }
 
@@ -771,6 +826,35 @@ export async function markNotificationSent(
       sentAt: outcome.status === 'sent' ? new Date() : null,
     })
     .where(eq(notifications.id, id))
+}
+
+/**
+ * A send that failed for a passing reason stays pending and is tried again later, with a longer wait each
+ * time. Only after the last attempt is a message failed for good: an approval request must not be lost to one
+ * dropped connection.
+ */
+export const NOTIFICATION_ATTEMPTS = 5
+const RETRY_AFTER_MS = [60_000, 5 * 60_000, 15 * 60_000, 15 * 60_000]
+
+export async function postponeNotification(db: DbOrTx, id: number, error: string, now = new Date()) {
+  const [row] = await db
+    .select({ attempts: notifications.attempts })
+    .from(notifications)
+    .where(eq(notifications.id, id))
+  const attempts = (row?.attempts ?? 0) + 1
+  if (attempts >= NOTIFICATION_ATTEMPTS) {
+    await db
+      .update(notifications)
+      .set({ status: 'failed', lastError: error, attempts })
+      .where(eq(notifications.id, id))
+    return { status: 'failed' as const, attempts }
+  }
+  const wait = RETRY_AFTER_MS[Math.min(attempts - 1, RETRY_AFTER_MS.length - 1)] ?? 60_000
+  await db
+    .update(notifications)
+    .set({ lastError: error, attempts, sendAfter: new Date(now.getTime() + wait) })
+    .where(eq(notifications.id, id))
+  return { status: 'pending' as const, attempts }
 }
 
 /** The Telegram message that carried a request, so answering anywhere can update it. */

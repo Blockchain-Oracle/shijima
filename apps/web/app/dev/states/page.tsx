@@ -106,6 +106,7 @@ export default function StatesPage() {
                   {
                     id: '00000000-0000-4000-8000-00000000a001',
                     summary: 'Buy now: the pool is in line with the reference and the cost is low.',
+                    name: 'Nvidia',
                     side: 'buy',
                     reason: 'ask_first',
                     expiresAt: new Date(Date.now() + 40 * 60_000).toISOString(),

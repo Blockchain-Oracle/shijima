@@ -9,16 +9,16 @@
  * There is NO model call here. The judgment was made when the request was raised, and the owner has answered
  * it. This step is arithmetic and nothing else.
  */
-import { type ApprovedToken, type DeskState, deadlineIn, readTokenConfig } from '@desk/chain'
+import { type ApprovedToken, type DeskState, deadlineIn, readDeskState, readTokenConfig } from '@desk/chain'
 import { answeredApprovals } from '@desk/db'
 import { DecisionRecordV2, engineCopy, type Mandate } from '@desk/shared'
 import { type Address, type PublicClient, parseUnits } from 'viem'
 import { z } from 'zod'
 import { type CommitContext, commit } from './commit'
 import { type Considered, DEADLINE_SECONDS, SLIPPAGE_BPS } from './consider'
-import { buildEvidence, ownerRules } from './evidence'
+import { buildEvidence, ownerRules, structuredRules } from './evidence'
 import { gate } from './gate'
-import { readMarket } from './market'
+import { type EventSource, readMarket } from './market'
 import type { Need } from './needs'
 import type { PlannedOutcome } from './plan'
 import { pregate } from './pregate'
@@ -37,6 +37,8 @@ export interface ApprovedRequest {
   askedBecause: 'ask_first' | 'large_action' | 'owner_override'
   answeredAt: Date
   answeredVia: 'telegram' | 'web' | 'chat'
+  /** The request's own expiry. Past it the approval is carried out as "too late": recorded, never traded. */
+  expiresAt: Date
   need: Need
   /** The amount and expected output the owner was shown. */
   shown: { amountIn: bigint; expectedOut: bigint }
@@ -46,6 +48,8 @@ export interface ApprovedContext {
   pub: PublicClient
   finnhubKey: string | undefined
   reference: ReferenceSource
+  events?: EventSource | undefined
+  approved?: ApprovedToken[] | undefined
   state: DeskState
   mandate: Mandate
   mandateLine: string
@@ -75,6 +79,7 @@ export async function considerApproved(
     readMarket(ctx.pub, { ...c, amountIn: request.shown.amountIn }, ctx.now, {
       finnhubKey: ctx.finnhubKey,
       reference: ctx.reference,
+      events: ctx.events,
     }),
     readTokenConfig(ctx.pub, ctx.deskAddress, c.token.address),
   ])
@@ -117,7 +122,7 @@ export async function considerApproved(
       ?.weightBps ?? 0
   const pack = buildEvidence({ ...c, amountIn: request.shown.amountIn }, market, ctx.state, freshGate, {
     mandateLine: ctx.mandateLine,
-    rules: ownerRules(ctx.mandate.notes),
+    rules: [...ownerRules(ctx.mandate.notes), ...structuredRules(ctx.mandate.rules, ctx.approved ?? [])],
     position: {
       weightBps: need.driftBps + targetBps,
       targetBps,
@@ -161,6 +166,8 @@ export async function considerApproved(
     preview: null,
   })
 
+  // A request the owner answered but the desk could not reach before it lapsed: brief 7 says it expires.
+  if (request.expiresAt.getTime() <= ctx.now.getTime()) return stop(engineCopy.approved.tooLate)
   const blocker = blockers[0]
   if (blocker) return stop(engineCopy.approved.refusedNow(blocker.text))
   if (freshGate.result === 'deny') return stop(engineCopy.approved.blockedNow(freshGate.reasons))
@@ -223,6 +230,7 @@ function approvedRequest(
     askedBecause: answered.reason,
     answeredAt: answered.answeredAt,
     answeredVia: answered.answeredVia,
+    expiresAt: answered.expiresAt,
     need: {
       candidate: {
         id: candidate.id,
@@ -244,13 +252,15 @@ function approvedRequest(
 
 export interface RunApprovedContext {
   mandate: Mandate
-  spentTodayUsdg: bigint
+  /** What the desk has spent in the last 24 hours. Every action this pass confirms is added to it. */
+  spent: { usdg: bigint }
   mandateLine: string
   deskState: 'active' | 'paused_by_owner' | 'stopped_by_loss_limit' | 'needs_attention'
   stateText: string
   valuation: Valuation
   now: Date
   reference: ReferenceSource
+  events?: EventSource | undefined
   say: (line: string) => void
 }
 
@@ -274,6 +284,8 @@ export async function runApprovedRequests(
         pub: deps.pub,
         finnhubKey: deps.finnhubKey,
         reference: run.reference,
+        events: run.events,
+        approved: deps.approved,
         state: ctx.state,
         mandate: run.mandate,
         mandateLine: run.mandateLine,
@@ -282,7 +294,7 @@ export async function runApprovedRequests(
         deskStateText: run.stateText,
         holdingUsdg: held?.valueUsdg ?? 0n,
         totalUsdg: run.valuation.totalUsdg,
-        spentTodayUsdg: run.spentTodayUsdg,
+        spentTodayUsdg: run.spent.usdg,
         now: run.now,
       },
       request,
@@ -292,7 +304,12 @@ export async function runApprovedRequests(
       { ...ctx, approval: { id: answered.approvalId, of: checked.approvalOf } },
       checked,
     )
-    moved ||= done.moved
+    if (done.moved) {
+      moved = true
+      // The next request sees this one's spend against the daily limit, and the desk as the chain now has it.
+      run.spent.usdg += checked.gate.countedUsdg
+      ctx.state = await readDeskState(deps.pub, ctx.desk.address as Address)
+    }
     records.push({ seq: done.seq, outcome: checked.outcome, summary: checked.summary })
     run.say(`approved request from record ${request.decisionSeq}: ${checked.outcome}. ${checked.summary}`)
   }

@@ -1,5 +1,6 @@
-import { deskRecord, desksOfOwner, GO_LIVE_CHECKS, pendingApprovals } from '@desk/db'
-import { ago, engineCopy, money, percent } from '@desk/shared'
+import { APPROVED_TOKENS } from '@desk/chain'
+import { deskRecord, desksOfOwner, GO_LIVE_CHECKS, pendingApprovals, telegramForDesk } from '@desk/db'
+import { ago, desksCopy as c, deskCopy, engineCopy, money, until } from '@desk/shared'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -12,7 +13,10 @@ import { signedInAddress } from '@/lib/session'
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Your desks' }
 
-const MODES = { shadow: 'Practice', ask_first: 'Ask first', on_its_own: 'On its own' } as const
+const nameOf = (token: string | null) =>
+  (token && APPROVED_TOKENS.find((t) => t.address.toLowerCase() === token.toLowerCase())?.displayName) ??
+  token ??
+  ''
 
 /**
  * The owner's own view. It shows the one thing a desk ever needs from its owner: an answer.
@@ -23,11 +27,11 @@ export default async function MyDesks() {
   const address = await signedInAddress()
   if (!address) {
     return (
-      <div className="max-w-xl space-y-3">
-        <h1 className="font-semibold text-2xl tracking-tight">Your desks</h1>
-        <p className="text-ink-soft">
-          Connect your wallet and sign in above to see them. Signing costs nothing and moves nothing.
-        </p>
+      <div className="container desk-page">
+        <header className="desk-hero">
+          <h1 className="type-headline text-ink">{c.title}</h1>
+          <p className="type-body text-ink-secondary">{c.signIn}</p>
+        </header>
       </div>
     )
   }
@@ -35,12 +39,14 @@ export default async function MyDesks() {
   const desks = await desksOfOwner(db(), address)
   if (desks.length === 0) {
     return (
-      <div className="max-w-xl space-y-3">
-        <h1 className="font-semibold text-2xl tracking-tight">Your desks</h1>
-        <p className="text-ink-soft">
-          This wallet does not own a desk yet. A desk is an account on the network that only you can withdraw
-          from, and an assistant that looks after it inside limits you set.
-        </p>
+      <div className="container desk-page">
+        <header className="desk-hero">
+          <h1 className="type-headline text-ink">{c.title}</h1>
+          <p className="type-body text-ink-secondary">{c.none}</p>
+          <Link href={'/strategies' as Route} className="type-caption text-accent hover:underline">
+            {c.makeOne}
+          </Link>
+        </header>
       </div>
     )
   }
@@ -55,79 +61,90 @@ export default async function MyDesks() {
       desk,
       waiting: await pendingApprovals(db(), desk.id),
       recent: await deskRecord(db(), desk.id, { limit: 3 }),
+      telegram: await telegramForDesk(db(), desk.id),
     })),
   )
 
   return (
-    <div className="space-y-8">
-      <h1 className="font-semibold text-2xl tracking-tight">Your desks</h1>
-      {loaded.map(({ desk, waiting, recent }) => {
+    <div className="container desk-page">
+      <header className="desk-hero">
+        <h1 className="type-headline text-ink">{c.title}</h1>
+      </header>
+      {loaded.map(({ desk, waiting, recent, telegram }) => {
         const newest = recent[0]
         const valuation = (newest?.record as { valuation?: { totalUsdg: string } } | undefined)?.valuation
+        const home = `/desk/${desk.shareSlug ?? desk.id}` as Route
         return (
-          <section key={desk.id} className="space-y-4 rounded-lg border border-line bg-surface p-4">
-            <header className="flex flex-wrap items-baseline justify-between gap-3">
+          <section key={desk.id} className="desk-panel">
+            <header className="desk-panel-head">
               <div>
-                <h2 className="font-medium text-lg">{desk.name ?? 'Your desk'}</h2>
-                <p className="text-ink-soft text-sm">
-                  {MODES[desk.mode]} · {engineCopy.deskState[desk.state]}
-                  {valuation ? ` · worth ${money(valuation.totalUsdg)}` : ''}
+                <h2 className="type-title text-ink">
+                  <Link href={home} className="hover:underline">
+                    {desk.name ?? 'Your desk'}
+                  </Link>
+                </h2>
+                <p className="type-caption text-ink-secondary">
+                  {deskCopy.modes[desk.mode]} · {engineCopy.deskState[desk.state]}
+                  {valuation ? ` · ${c.worth(money(valuation.totalUsdg))}` : ''}
                 </p>
               </div>
-              {desk.shareSlug ? (
-                <Link href={`/desk/${desk.shareSlug}`} className="text-accent text-sm hover:underline">
-                  The public view →
+              <span className="flex gap-3 type-caption">
+                <Link href={home} className="text-accent hover:underline">
+                  {c.open}
                 </Link>
-              ) : null}
+              </span>
             </header>
 
-            {desk.stateReason ? <p className="text-blocked text-sm">{desk.stateReason}</p> : null}
+            {desk.stateReason ? <p className="type-caption text-warning">{desk.stateReason}</p> : null}
 
-            <div className="space-y-3">
-              <h3 className="font-medium text-ink-soft text-sm uppercase tracking-wide">
-                {waiting.length === 0 ? 'Nothing needs you' : 'Waiting for you'}
+            <div className="flex flex-col gap-2">
+              <h3 className="type-label-micro text-ink-muted">
+                {waiting.length === 0 ? c.nothing : c.waiting}
               </h3>
               {waiting.map((a) => {
                 const shown = a.preview as { amountIn?: string; expectedOut?: string }
                 return (
-                  <div key={a.id} className="space-y-2 rounded-md border border-waited p-3">
-                    <p className="text-sm">{a.summary}</p>
-                    <p className="tabular text-ink-soft text-sm">
-                      {a.side === 'sell' ? 'Sell' : 'Buy'} {shown.amountIn ?? '?'} for about{' '}
-                      {shown.expectedOut ?? '?'}
-                      {a.reason === 'large_action' ? ' · asking because this one is large' : ''}
+                  <div key={a.id} className="desk-card">
+                    <p className="type-body text-ink">{a.summary}</p>
+                    <p className="type-data text-ink-secondary">
+                      {deskCopy.needsYou.trade(
+                        a.side ?? 'buy',
+                        shown.amountIn ?? '?',
+                        shown.expectedOut ?? '?',
+                        nameOf(a.token),
+                      )}
+                      {a.reason === 'large_action' ? c.large : ''}
+                    </p>
+                    <p className="type-caption text-ink-muted">
+                      {deskCopy.needsYou.expires(until(a.expiresAt, now))}
                     </p>
                     <Answer deskId={desk.id} approvalId={a.id} expiresAt={a.expiresAt.toISOString()} />
                   </div>
                 )
               })}
               {waiting.length === 0 ? (
-                <p className="text-ink-soft text-sm">
-                  {newest
-                    ? `Last check ${ago(newest.decidedAt, now)}: ${newest.summary}`
-                    : 'It has not checked yet.'}
+                <p className="type-caption text-ink-secondary">
+                  {newest ? c.lastCheck(ago(newest.decidedAt, now), newest.summary) : c.notChecked}
                 </p>
               ) : null}
+              {!telegram.linked && <p className="type-caption text-ink-muted">{c.telegramOff}</p>}
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 border-line border-t pt-3">
+            <div className="flex flex-wrap items-center gap-3">
               <Pause deskId={desk.id} paused={desk.state === 'paused_by_owner'} />
               {desk.mode === 'shadow' ? (
-                <span className="text-ink-faint text-xs">
-                  {Math.min(desk.shadowChecks, GO_LIVE_CHECKS)} of {GO_LIVE_CHECKS} practice checks done ·{' '}
-                  {desk.shadowReportOpenedAt ? 'report read' : 'report not read yet'}
-                  {desk.shadowChecks >= GO_LIVE_CHECKS && desk.shadowReportOpenedAt
-                    ? ' · it can go live when you choose'
-                    : ''}
+                <span className="type-caption text-ink-muted">
+                  {c.practiceLine(desk.shadowChecks, GO_LIVE_CHECKS, desk.shadowReportOpenedAt !== null)}
+                  {desk.shadowChecks >= GO_LIVE_CHECKS && desk.shadowReportOpenedAt ? c.ready : ''}
                 </span>
               ) : null}
             </div>
 
             {recent.length > 0 ? (
-              <ul className="space-y-1 border-line border-t pt-3">
+              <ul className="flex flex-col gap-1">
                 {recent.map((d) => (
-                  <li key={d.id} className="flex items-baseline justify-between gap-3 text-sm">
-                    <span className="text-ink-soft">{d.summary}</span>
+                  <li key={d.id} className="flex items-baseline justify-between gap-3 type-caption">
+                    <span className="text-ink-secondary">{d.summary}</span>
                     <span className="shrink-0">
                       <Outcome outcome={d.outcome} shadow={d.shadow} />
                     </span>
@@ -135,12 +152,7 @@ export default async function MyDesks() {
                 ))}
               </ul>
             ) : null}
-            {desk.mode === 'shadow' ? (
-              <p className="text-ink-faint text-xs">
-                In practice mode the desk decides for real and spends nothing. {percent(0)} of your money has
-                moved.
-              </p>
-            ) : null}
+            {desk.mode === 'shadow' ? <p className="type-caption text-ink-muted">{c.practiceNote}</p> : null}
           </section>
         )
       })}

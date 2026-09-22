@@ -1,11 +1,37 @@
-import { deskByShareSlug, deskRecord, groupQuietRuns } from '@desk/db'
-import { ago, localTime } from '@desk/shared'
+import { APPROVED_TOKENS } from '@desk/chain'
+import { deskRecord, groupQuietRuns, type RecordFilter } from '@desk/db'
+import { ago, recordPageCopy as c, deskCopy, recordPagesCopy } from '@desk/shared'
+import type { Route } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { Outcome } from '@/components/outcome'
+import { isOutcome, OUTCOME_KEYS, Outcome, outcomeLabel } from '@/components/outcome'
+import { When } from '@/components/when'
 import { db } from '@/lib/db'
+import { deskForViewer } from '@/lib/desk.server'
 
 export const dynamic = 'force-dynamic'
+
+const PAGE = 60
+const DAY = /^\d{4}-\d{2}-\d{2}$/
+
+type Params = { outcome?: string; token?: string; live?: string; from?: string; to?: string; before?: string }
+
+/** The filters as the page understands them [8.10]: outcome, token, dates, practice or live. */
+function filterFrom(
+  q: Params,
+): RecordFilter & { symbol?: string | undefined; live: 'all' | 'live' | 'practice' } {
+  const token = APPROVED_TOKENS.find((t) => t.symbol === q.token)
+  const live = q.live === 'live' || q.live === 'practice' ? q.live : 'all'
+  return {
+    outcome: q.outcome && isOutcome(q.outcome) ? q.outcome : undefined,
+    token: token?.address.toLowerCase(),
+    symbol: token?.symbol,
+    shadow: live === 'all' ? undefined : live === 'practice',
+    live,
+    from: q.from && DAY.test(q.from) ? new Date(`${q.from}T00:00:00Z`) : undefined,
+    to: q.to && DAY.test(q.to) ? new Date(`${q.to}T00:00:00Z`) : undefined,
+  }
+}
 
 /**
  * The product's signature screen: every check the desk ever made, newest first, including the many that found
@@ -17,87 +43,158 @@ export default async function RecordPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ before?: string }>
+  searchParams: Promise<Params>
 }) {
-  const [{ slug }, { before }] = await Promise.all([params, searchParams])
-  const desk = await deskByShareSlug(db(), slug)
-  if (!desk) notFound()
+  const [{ slug }, query] = await Promise.all([params, searchParams])
+  const resolved = await deskForViewer(slug)
+  if (!resolved) notFound()
+  const { face: desk, isOwner } = resolved
+  const filter = filterFrom(query)
+  const filtered = Boolean(
+    filter.outcome || filter.token || filter.shadow !== undefined || filter.from || filter.to,
+  )
 
-  const page = 60
   const decisions = await deskRecord(db(), desk.id, {
-    limit: page,
-    ...(before ? { before: Number(before) } : {}),
+    limit: PAGE,
+    before: query.before ? Number(query.before) : undefined,
+    outcome: filter.outcome,
+    token: filter.token,
+    shadow: filter.shadow,
+    from: filter.from,
+    to: filter.to,
   })
   const rows = groupQuietRuns(decisions)
   const oldest = decisions.at(-1)
   const now = new Date()
+  const keep = new URLSearchParams()
+  for (const [k, v] of Object.entries(query)) if (k !== 'before' && v) keep.set(k, v)
+  const older = oldest
+    ? `/desk/${slug}/record?${new URLSearchParams({ ...Object.fromEntries(keep), before: String(oldest.seq) })}`
+    : null
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-1">
-        <Link href={`/desk/${slug}`} className="text-accent text-sm hover:underline">
-          ← {desk.name ?? 'the desk'}
+    <div className="container desk-page">
+      <header className="desk-hero">
+        <Link href={`/desk/${slug}` as Route} className="type-caption text-accent hover:underline">
+          {recordPagesCopy.back(desk.name)}
         </Link>
-        <h1 className="font-semibold text-2xl tracking-tight">Every decision</h1>
-        <p className="text-ink-soft text-sm">
-          One entry for every check, including the ones that found nothing to do.
-        </p>
+        <h1 className="type-headline text-ink">{c.title}</h1>
+        <p className="type-caption text-ink-secondary">{c.intro}</p>
+        {!isOwner && <p className="type-caption text-ink-muted">{recordPagesCopy.visitor}</p>}
       </header>
 
-      {decisions.length === 0 ? (
-        <p className="text-ink-soft text-sm">Nothing recorded yet.</p>
-      ) : (
-        <ul className="space-y-2">
-          {rows.map((row) =>
-            row.kind === 'entry' ? (
-              <li key={row.decision.id}>
+      <form method="get" className="desk-panel" aria-label={c.filters.title}>
+        <h2 className="type-label-micro text-ink-muted">{c.filters.title}</h2>
+        <div className="record-filters">
+          <label className="desk-field">
+            <span className="type-caption text-ink-muted">{c.filters.outcome}</span>
+            <select name="outcome" defaultValue={filter.outcome ?? ''}>
+              <option value="">{c.filters.anyOutcome}</option>
+              {OUTCOME_KEYS.map((o) => (
+                <option key={o} value={o}>
+                  {outcomeLabel(o)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="desk-field">
+            <span className="type-caption text-ink-muted">{c.filters.token}</span>
+            <select name="token" defaultValue={filter.symbol ?? ''}>
+              <option value="">{c.filters.anyToken}</option>
+              {APPROVED_TOKENS.map((t) => (
+                <option key={t.symbol} value={t.symbol}>
+                  {t.displayName}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="desk-field">
+            <span className="type-caption text-ink-muted">{deskCopy.modes.shadow}</span>
+            <select name="live" defaultValue={filter.live}>
+              {(['all', 'live', 'practice'] as const).map((v) => (
+                <option key={v} value={v}>
+                  {c.filters.live[v]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="desk-field">
+            <span className="type-caption text-ink-muted">{c.filters.from}</span>
+            <input
+              type="date"
+              name="from"
+              defaultValue={query.from && DAY.test(query.from) ? query.from : ''}
+            />
+          </label>
+          <label className="desk-field">
+            <span className="type-caption text-ink-muted">{c.filters.to}</span>
+            <input type="date" name="to" defaultValue={query.to && DAY.test(query.to) ? query.to : ''} />
+          </label>
+          <div className="record-filters-actions">
+            <button type="submit" className="desk-control" data-cursor="hover">
+              {c.filters.apply}
+            </button>
+            {filtered && (
+              <Link
+                href={`/desk/${slug}/record` as Route}
+                className="type-caption text-ink-secondary hover:text-ink"
+              >
+                {c.filters.clear}
+              </Link>
+            )}
+          </div>
+        </div>
+      </form>
+
+      <section className="desk-panel">
+        {decisions.length === 0 ? (
+          <p className="type-body text-ink-secondary">{filtered ? c.emptyFiltered : c.empty}</p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {rows.map((row) =>
+              row.kind === 'entry' ? (
                 <Link
-                  href={`/desk/${slug}/decision/${row.decision.seq}`}
-                  className="block rounded-lg border border-line bg-surface p-3 hover:border-accent"
+                  key={row.decision.id}
+                  href={`/desk/${slug}/decision/${row.decision.seq}` as Route}
+                  className="desk-entry"
+                  data-cursor="hover"
                 >
                   <div className="flex items-baseline justify-between gap-3">
                     <Outcome outcome={row.decision.outcome} shadow={row.decision.shadow} />
-                    <span className="tabular text-ink-faint text-xs">
+                    <span className="type-caption text-ink-muted">
                       #{row.decision.seq} · {ago(row.decision.decidedAt, now)}
                     </span>
                   </div>
-                  <p className="mt-1 text-ink-soft text-sm">{row.decision.summary}</p>
+                  <p className="type-body text-ink-secondary">{row.decision.summary}</p>
                 </Link>
-              </li>
-            ) : (
-              <li key={`quiet-${row.decisions[0]?.id}`}>
-                <details className="rounded-lg border border-line border-dashed p-3">
-                  <summary className="cursor-pointer text-quiet text-sm">
-                    {row.count} checks, nothing new · {localTime(row.from)} to {localTime(row.to)}
+              ) : (
+                <details key={`quiet-${row.decisions[0]?.id}`} className="desk-quiet">
+                  <summary className="type-caption text-ink-muted">
+                    {row.count} checks, nothing new · <When at={row.from} /> to <When at={row.to} />
                   </summary>
-                  <ul className="mt-2 space-y-1 border-line border-t pt-2">
+                  <div className="mt-2 flex flex-col gap-1">
                     {row.decisions.map((d) => (
-                      <li key={d.id} className="flex items-baseline justify-between gap-3 text-sm">
-                        <Link
-                          href={`/desk/${slug}/decision/${d.seq}`}
-                          className="text-ink-soft hover:underline"
-                        >
-                          {d.summary}
-                        </Link>
-                        <span className="tabular shrink-0 text-ink-faint text-xs">#{d.seq}</span>
-                      </li>
+                      <Link
+                        key={d.id}
+                        href={`/desk/${slug}/decision/${d.seq}` as Route}
+                        className="flex items-baseline justify-between gap-3 type-caption text-ink-secondary hover:text-ink"
+                      >
+                        <span>{d.summary}</span>
+                        <span className="shrink-0 text-ink-muted">#{d.seq}</span>
+                      </Link>
                     ))}
-                  </ul>
+                  </div>
                 </details>
-              </li>
-            ),
-          )}
-        </ul>
-      )}
-
-      {decisions.length === page && oldest ? (
-        <Link
-          href={`/desk/${slug}/record?before=${oldest.seq}`}
-          className="inline-block text-accent text-sm hover:underline"
-        >
-          Older →
-        </Link>
-      ) : null}
+              ),
+            )}
+          </div>
+        )}
+        {decisions.length === PAGE && older ? (
+          <Link href={older as Route} className="type-caption text-accent hover:underline">
+            {c.older}
+          </Link>
+        ) : null}
+      </section>
     </div>
   )
 }

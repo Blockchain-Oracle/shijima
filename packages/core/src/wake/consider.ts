@@ -8,15 +8,15 @@
  *
  * The first four can each end it with NO model call.
  */
-import { type DeskState, deadlineIn, quotePinned, readTokenConfig } from '@desk/chain'
+import { type ApprovedToken, type DeskState, deadlineIn, quotePinned, readTokenConfig } from '@desk/chain'
 import type { DeferralRow } from '@desk/db'
 import { engineCopy, type Mandate } from '@desk/shared'
 import { type Address, keccak256, type PublicClient, toBytes } from 'viem'
 import { askTiming, type TimingAnswer } from './decide'
-import { type DeferralBaseline, whyDeferralEnds } from './deferral'
-import { buildEvidence, type EvidencePack, ownerRules } from './evidence'
+import { type DeferralBaseline, type HeadlineNow, whyDeferralEnds } from './deferral'
+import { buildEvidence, type EvidencePack, ownerRules, structuredRules } from './evidence'
 import { type GateResult, gate } from './gate'
-import { type MarketRead, readMarket } from './market'
+import { type EventSource, type MarketRead, readMarket } from './market'
 import type { Need } from './needs'
 import {
   type DeskMode,
@@ -64,6 +64,10 @@ export interface ConsiderContext {
   servApiKey: string
   finnhubKey: string | undefined
   reference: ReferenceSource
+  /** The company calendar, when the caller has one. */
+  events?: EventSource | undefined
+  /** The approved list, to name tokens in the owner's structured rules. */
+  approved?: ApprovedToken[] | undefined
   state: DeskState
   mandate: Mandate
   mandateLine: string
@@ -97,8 +101,14 @@ export async function considerCandidate(ctx: ConsiderContext, need: Need): Promi
   const { candidate: c } = need
   const { state, mandate } = ctx
   const held = state.holdings[c.token.address.toLowerCase()] ?? 0n
+  // A sale the owner's own rule demanded is protective: the gate and the pre-gate hold it to fewer refusals.
+  const protective = c.protective === true
   const [market, onChain] = await Promise.all([
-    readMarket(ctx.pub, c, ctx.now, { finnhubKey: ctx.finnhubKey, reference: ctx.reference }),
+    readMarket(ctx.pub, c, ctx.now, {
+      finnhubKey: ctx.finnhubKey,
+      reference: ctx.reference,
+      events: ctx.events,
+    }),
     readTokenConfig(ctx.pub, ctx.deskAddress, c.token.address),
   ])
   const gateFor = (amountIn: bigint, quoteOut: bigint) =>
@@ -116,7 +126,7 @@ export async function considerCandidate(ctx: ConsiderContext, need: Need): Promi
       },
       gapBps: market.gapBps,
       costBps: market.costBps,
-      protective: false,
+      protective,
       position: {
         holdingUsdg: ctx.holdingUsdg,
         totalUsdg: ctx.totalUsdg,
@@ -129,7 +139,7 @@ export async function considerCandidate(ctx: ConsiderContext, need: Need): Promi
   const targetBps = targetOf(mandate, c.token.address)
   const pack = buildEvidence(c, market, state, fullGate, {
     mandateLine: ctx.mandateLine,
-    rules: ownerRules(mandate.notes),
+    rules: [...ownerRules(mandate.notes), ...structuredRules(mandate.rules, ctx.approved ?? [])],
     position: {
       weightBps: need.driftBps + targetBps,
       targetBps,
@@ -138,6 +148,10 @@ export async function considerCandidate(ctx: ConsiderContext, need: Need): Promi
     },
   })
   const headlineHashes = (market.headlines ?? []).map((h) => keccak256(toBytes(h.url)))
+  const headlinesNow: HeadlineNow[] = (market.headlines ?? []).map((h) => ({
+    hash: keccak256(toBytes(h.url)),
+    publishedAt: h.publishedAt,
+  }))
 
   /** Ends the matter with no model call. */
   const settle = (
@@ -170,7 +184,7 @@ export async function considerCandidate(ctx: ConsiderContext, need: Need): Promi
     beyondBand: fullGate.reasons.includes(engineCopy.gate.beyondBand),
     onChain,
     repeatedWithinMinutes: ctx.repeatedWithinMinutes,
-    protective: false,
+    protective,
   })
   const first = blockers[0]
   if (first) return settle('DECLINED', first.text, blockers, null)
@@ -185,7 +199,13 @@ export async function considerCandidate(ctx: ConsiderContext, need: Need): Promi
     const baseline = ctx.standing.baseline as unknown as DeferralBaseline
     const ended = whyDeferralEnds(
       baseline,
-      { at: ctx.now, gapBps: market.gapBps, driftBps: need.driftBps, cashUsdg: ctx.cashUsdg, headlineHashes },
+      {
+        at: ctx.now,
+        gapBps: market.gapBps,
+        driftBps: need.driftBps,
+        cashUsdg: ctx.cashUsdg,
+        headlines: headlinesNow,
+      },
       ctx.standing.revisitAt,
       need.thresholdBps,
     )
@@ -214,6 +234,11 @@ export async function considerCandidate(ctx: ConsiderContext, need: Need): Promi
     userMessage: pack.userMessage,
     evidenceIds: pack.evidenceIds,
     ruleIds: pack.ruleIds,
+    // The model may cite these by id. A quotation would put licensed or private text in the public record.
+    privateTexts: [
+      ...pack.privateNotes.headlineTitles.map((h) => h.title),
+      ...ownerRules(mandate.notes).map((r) => r.text),
+    ],
   })
   const amountIn = sizedAmount(c.amountIn, answer.decision, null)
   const isPart = amountIn < c.amountIn

@@ -17,6 +17,8 @@ export async function createPriceAlert(
   db: DbOrTx,
   input: { ownerAddress: string; deskId: string; token: string; kind: PriceAlertKind; thresholdBps: number },
 ): Promise<string> {
+  // Telegram and the bell are per desk, so an alert with no desk could never be delivered. Refused here.
+  if (!input.deskId) throw new Error('a price alert needs a desk to be delivered to')
   const [row] = await db
     .insert(priceAlerts)
     .values({ ...input, ownerAddress: input.ownerAddress.toLowerCase(), token: input.token.toLowerCase() })
@@ -88,12 +90,20 @@ export async function firePriceAlert(
   at: Date,
 ): Promise<boolean> {
   return db.transaction(async (tx) => {
+    // An alert with no desk has nowhere to go. It is cancelled, never silently consumed as if it had fired.
+    if (!alert.deskId) {
+      await tx
+        .update(priceAlerts)
+        .set({ status: 'cancelled' })
+        .where(and(eq(priceAlerts.id, alert.id), eq(priceAlerts.status, 'active')))
+      return false
+    }
     const fired = await tx
       .update(priceAlerts)
       .set({ status: 'fired', firedAt: at, firedGapBps: gapBps })
       .where(and(eq(priceAlerts.id, alert.id), eq(priceAlerts.status, 'active')))
       .returning({ id: priceAlerts.id })
-    if (fired.length === 0 || !alert.deskId) return false
+    if (fired.length === 0) return false
     await tx
       .insert(notifications)
       .values({

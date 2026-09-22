@@ -183,6 +183,11 @@
   margin-left: 30px;
   max-width: calc(82% + 0px);
 }
+/* The bell's icon size, placed before the more specific svg rules below so the cascade reads top down. */
+.inbox-bell svg {
+  width: 16px;
+  height: 16px;
+}
 .desk-chat .sd-ava svg {
   width: 13px;
   height: 13px;
@@ -424,6 +429,14 @@
   color: var(--white);
   font-size: 16px;
 }
+.desk-input select {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font: inherit;
+}
 [data-theme="light"] .desk-input input {
   color: #141210;
 }
@@ -495,10 +508,6 @@
 .inbox-bell:hover {
   color: var(--white);
   border-color: rgba(255, 255, 255, 0.25);
-}
-.inbox-bell svg {
-  width: 16px;
-  height: 16px;
 }
 [data-theme="light"] .inbox-bell {
   border-color: rgba(20, 18, 16, 0.14);
@@ -639,4 +648,117 @@
 
 .reel-clock-value.sj-reel-outcome {
   font-size: 16px;
+}
+
+/* ── Review pass, 22 Sep: the record's pages on the same vocabulary as the desk ── */
+.desk-bytes {
+  max-height: 18rem;
+  overflow: auto;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--ms-hairline);
+  background: var(--ms-surface-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--gray-400);
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+.desk-card[data-tone="good"] {
+  border-color: color-mix(in srgb, var(--profit) 55%, transparent);
+}
+.desk-card[data-tone="bad"] {
+  border-color: color-mix(in srgb, var(--vermilion) 65%, transparent);
+}
+.record-filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 12px;
+  align-items: end;
+}
+@media (min-width: 768px) {
+  .record-filters {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+.record-filters .desk-field select,
+.record-filters .desk-field input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--ms-hairline);
+  background: var(--ms-surface-2);
+  color: var(--white);
+  font-size: 13px;
+}
+[data-theme="light"] .record-filters .desk-field select,
+[data-theme="light"] .record-filters .desk-field input {
+  color: #141210;
+}
+.record-filters-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.decision-grid {
+  display: grid;
+  gap: 8px 16px;
+}
+@media (min-width: 640px) {
+  .decision-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .decision-grid.is-two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.decision-grid dt {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+}
+.decision-option {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--ms-hairline);
+}
+.decision-option.is-chosen {
+  border-color: color-mix(in srgb, var(--profit) 55%, transparent);
+}
+.report-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+
+/* Standing rules: one row per rule, the sentence it means under it. */
+.desk-rule {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--ms-hairline);
+  border-radius: 10px;
+}
+.desk-rule-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.desk-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--ms-hairline);
+  background: var(--ms-surface-2);
+  color: var(--white);
+  font: inherit;
+  font-size: 13px;
+  resize: vertical;
+}
+[data-theme="light"] .desk-textarea {
+  color: #141210;
 }

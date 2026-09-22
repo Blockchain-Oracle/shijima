@@ -28,8 +28,11 @@ export async function startWorkerBeat(db: DbOrTx, info: Record<string, unknown>)
     })
 }
 
-/** Called after every pass of the loop, good or bad. */
-export async function recordWorkerPass(db: DbOrTx, pass: { ms: number; error?: string }): Promise<void> {
+/** Called after every pass of the loop, good or bad. `info` is merged into what the start wrote. */
+export async function recordWorkerPass(
+  db: DbOrTx,
+  pass: { ms: number; error?: string; info?: Record<string, unknown> },
+): Promise<void> {
   await db
     .update(workerBeats)
     .set({
@@ -37,8 +40,17 @@ export async function recordWorkerPass(db: DbOrTx, pass: { ms: number; error?: s
       passes: sql`${workerBeats.passes} + 1`,
       lastPassMs: pass.ms,
       lastError: pass.error ?? null,
+      ...(pass.info
+        ? { info: sql`coalesce(${workerBeats.info}, '{}'::jsonb) || ${JSON.stringify(pass.info)}::jsonb` }
+        : {}),
     })
     .where(eq(workerBeats.name, WORKER_NAME))
+}
+
+/** The worker's pulse row, or nothing when no worker has ever started against this database. */
+export async function workerBeat(db: DbOrTx): Promise<WorkerBeat | undefined> {
+  const [row] = await db.select().from(workerBeats).where(eq(workerBeats.name, WORKER_NAME))
+  return row
 }
 
 export interface StatusFacts {

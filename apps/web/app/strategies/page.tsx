@@ -1,5 +1,12 @@
 import { APPROVED_TOKENS } from '@desk/chain'
-import { desksOfOwner, disclosureAccepted, draftDeskOf, ownerIdOf, sharedMixes } from '@desk/db'
+import {
+  desksOfOwner,
+  disclosureAccepted,
+  draftDeskOf,
+  GO_LIVE_CHECKS,
+  ownerIdOf,
+  sharedMixes,
+} from '@desk/db'
 import { DISCLOSURE_VERSION, deskCopy, PRESETS, studioCopy } from '@desk/shared'
 import { type OwnDesk, type SharedMix, StrategiesScreen } from '@/features/strategies/StrategiesScreen'
 import { currentDeployment } from '@/lib/chain'
@@ -76,6 +83,7 @@ export default async function Strategies({
       contractVersion={deployment.version}
       requestedPreset={preset}
       requestedView={view}
+      goLiveChecks={GO_LIVE_CHECKS}
     />
   )
 }

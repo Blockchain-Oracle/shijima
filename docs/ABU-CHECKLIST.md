@@ -15,6 +15,9 @@ Vercel is needed now.
 - [x] ~~Fund the dev wallet for the first real trade.~~ Done 20 Sep.
 - [ ] **Turn on data collection** at https://console.openserv.ai/settings/organization . This is a hackathon
       eligibility rule.
+- [ ] **Say when the worker may run again** (`pnpm worker:start`). It has been off since Mon 09:00 UTC: the
+      weekend of 19 to 20 Sep is ungraded, 40 records are unsealed, and the daily seal costs about 2 cents of the
+      operator's ETH. Claude does not start it unasked.
 
 ## Hackathon admin, whenever you have five minutes
 - [x] ~~Ask whether a build with no MCP qualifies.~~ **Answered 21 Sep:** the official page says the track is

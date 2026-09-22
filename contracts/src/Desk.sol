@@ -18,14 +18,17 @@ import {ISwapRouter02, IUniswapV3Factory, IUniswapV3Pool, IAggregatorV3, IStockT
 ///           2. The two counterparties that pull tokens, the router and the vault, are constants.
 ///           3. The operator's trades are capped per action and per day, may only use the pool the OWNER
 ///              pinned for that token, and must land within BAND_BPS of the Chainlink price.
-///           4. The owner is never blocked: not by pause, caps, the band, a dead feed or a revoked operator.
+///           4. The owner is never blocked from taking money out: not by pause, caps, the band, a dead feed or a
+///              revoked operator. (The owner's own `buy` of a token they disallowed still reverts.)
 ///           5. The owner may grant ONE browser key (a session) for at most seven days. It can pay the owner
 ///              (`withdraw`), stop the desk, fire the agent, lower the caps, and sell under the operator's own
 ///              guards. It can never buy, raise a limit, add a token, change the operator or extend itself.
 ///
 ///         So the worst a stolen operator key can do is make bad trades, costing at most BAND_BPS of the
-///         daily cap per day plus pool fees, until the owner calls `revokeOperator`. A stolen session key can
-///         do no more than that, and only until it expires or the owner calls `revokeSession`.
+///         daily cap per 24-hour spending window plus pool fees, until the owner calls `revokeOperator`. The
+///         window is fixed, not rolling, so across a window boundary that can be twice the cap inside one
+///         calendar day. A stolen session key can do no more than that, and only until it expires or the
+///         owner calls `revokeSession`.
 ///
 /// @dev    No upgrade path, no admin, no fee switch, no ownership transfer. Deployed as EIP-1167 clones.
 contract Desk is Initializable, ReentrancyGuardTransient {
@@ -42,8 +45,10 @@ contract Desk is Initializable, ReentrancyGuardTransient {
     ///         the pool is several percent below Friday. The cost of this choice is the worst-case sentence
     ///         above. A tighter guard (pool TWAP) is planned and is additive.
     uint256 public constant BAND_BPS = 800;
-    /// @notice A "the feed is dead" detector only. It must exceed the longest holiday weekend.
-    uint256 public constant MAX_FEED_AGE = 4 days;
+    /// @notice A "the feed is dead" detector only. It must exceed the longest gap a live feed shows. The price
+    ///         log (22 Aug to 21 Sep 2026, Labor Day weekend included) showed gaps up to 96 hours, exactly four
+    ///         days, so four days would have refused a real feed. Six days clears it and still catches a dead one.
+    uint256 public constant MAX_FEED_AGE = 6 days;
     uint256 public constant MAX_TOKENS = 16;
     /// @notice The longest a session key may live. The owner grants again after that.
     uint256 public constant MAX_SESSION = 7 days;

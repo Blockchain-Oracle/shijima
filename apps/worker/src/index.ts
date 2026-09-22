@@ -15,7 +15,7 @@ import { startAskLoop } from './ask'
 import { openCli } from './cli/context'
 import { tryBecomeLeader } from './leader'
 import { startAgentIfProvisioned } from './openserv/serve'
-import { reviewAllDesks } from './review'
+import { type ReviewSummary, reviewAllDesksExclusive } from './review'
 import { resolveUnsettled } from './sender'
 import { startTelegram } from './telegram/start'
 
@@ -38,9 +38,13 @@ let running: Promise<unknown> = Promise.resolve()
 const loop = async () => {
   while (!stopping) {
     const started = Date.now()
-    running = reviewAllDesks(cli, log)
+    let summary: ReviewSummary | undefined
+    running = reviewAllDesksExclusive(cli, log)
       // The outbox is drained after the work, so a message never announces something not yet committed.
-      .then(() => telegram?.drain())
+      .then((s) => {
+        summary = s
+        return telegram?.drain()
+      })
       .then(() => undefined)
       .catch((e) => {
         log('tick_failed', { error: errorText(e) })
@@ -48,9 +52,11 @@ const loop = async () => {
       })
       // The pulse Status reads. A failed write here must never stop the clock.
       .then((error) =>
-        recordWorkerPass(cli.db, { ms: Date.now() - started, ...(error ? { error } : {}) }).catch(
-          () => undefined,
-        ),
+        recordWorkerPass(cli.db, {
+          ms: Date.now() - started,
+          ...(error ? { error } : {}),
+          info: { operatorLowGas: summary?.operatorLowGas ?? null },
+        }).catch(() => undefined),
       )
     await running
     await new Promise((r) => setTimeout(r, TICK_MS))

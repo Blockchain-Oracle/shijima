@@ -136,6 +136,8 @@ export async function resolveAction(
     if (!row) throw new ActionStateError(`action ${actionId} is already resolved or does not exist`)
 
     if (resolution.status === 'confirmed') {
+      // A pause carries no decision hash and advances nothing on the chain, so it seals no record.
+      if (row.kind === 'pause') return row
       if (!row.txHash) throw new ActionStateError(`action ${actionId} confirmed without a transaction hash`)
       const [decision] = await tx
         .select({ seq: decisions.seq })

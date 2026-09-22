@@ -164,6 +164,16 @@ const Vault = z.strictObject({
   keepUsdg: Decimal,
 })
 
+/** A company event near this token: a report date, a dividend or a split. Added 22 Sep. Only the date, never Finnhub's text. */
+const Event = z.strictObject({
+  id: z.string(),
+  kind: z.literal('event'),
+  eventKind: z.enum(['earnings', 'dividend', 'split', 'other']),
+  eventDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  timing: z.enum(['bmo', 'amc']).nullable(),
+  daysAway: Int,
+})
+
 export const EvidenceItemV2 = z.discriminatedUnion('kind', [
   Session,
   PriceV2,
@@ -173,6 +183,7 @@ export const EvidenceItemV2 = z.discriminatedUnion('kind', [
   Limits,
   Position,
   Vault,
+  Event,
 ])
 
 /**
@@ -182,6 +193,9 @@ export const EvidenceItemV2 = z.discriminatedUnion('kind', [
  * readable for ever. It has `createdAt` and `trigger` where later versions have `decidedAt` and `wake`, and it
  * predates the mandate, the valuation and the blockers.
  */
+/** Version 0's evidence, described loosely: its cost item said `quoteTokenOut` and its limits item had fewer fields. */
+const EvidenceItemV0 = z.looseObject({ id: z.string(), kind: z.string() })
+
 export const DecisionRecordV0 = z.looseObject({
   schemaVersion: z.literal(0),
   kind: z.literal('decision'),
@@ -195,7 +209,7 @@ export const DecisionRecordV0 = z.looseObject({
     .looseObject({ id: z.string(), side: z.enum(['buy', 'sell']), token: Address, symbol: z.string() })
     .nullable()
     .optional(),
-  evidence: z.array(EvidenceItemV1),
+  evidence: z.array(EvidenceItemV0),
   serv: z.looseObject({}).nullable().optional(),
   gate: z
     .looseObject({ result: z.enum(['allow', 'deny']), reasons: z.array(z.string()) })
@@ -329,6 +343,21 @@ export const DecisionRecordV2 = DecisionRecordV1.extend({
       answeredVia: z.enum(['telegram', 'web', 'chat']),
       /** How far the fresh quote moved from what the owner was shown. */
       movedBps: Int,
+    })
+    .nullable()
+    // Optional, not only nullable: sixteen real version 2 records were written before this field existed, and a
+    // widening must leave every record already fixed on-chain readable.
+    .optional(),
+  /** Widened 22 Sep: `rule` names the owner's standing instruction that raised this need, when one did. */
+  need: z
+    .strictObject({
+      driftBps: Int,
+      thresholdBps: Int,
+      limitedByPerActionLimit: z.boolean(),
+      rule: z
+        .strictObject({ id: z.string(), kind: z.literal('price_move_sell') })
+        .nullable()
+        .optional(),
     })
     .nullable(),
 }).strict()

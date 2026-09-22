@@ -183,7 +183,8 @@ of the plan. Full design in `ARCHITECTURE.md`.
    contract was proven on a fork: a plain contract bought NVDA, sold it, used the vault and got
    everything back. It has no upgrade path, no admin, and the owner never changes.
 2. **The honest promise.** "The agent cannot send your funds to anyone. A stolen agent key can only
-   make bad trades, costing at most 8% of your daily limit per day, until you remove it." This goes on
+   make bad trades, costing at most 8% of your daily limit in each 24-hour spending window, so at most twice
+   that across a window boundary, until you remove it." *(Reworded 22 Sep: `_spend` is a fixed window.)* This goes on
    the disclosure screen. It is stronger than "cannot steal" because it is exactly true.
 3. **A known limit, stated openly.** If a weekend price moves more than 8% from the last official
    update, the agent's trades are refused by the contract. The owner can still sell. The record and
@@ -394,6 +395,41 @@ Made 2026-09-22 by Claude, in step 12 of the chat-first plan. Abu can overrule a
 8. **The words are shown as the author's short wallet address**, as in Masayume and Agari. Posting says so, and
    says the desk's assistant never reads the Room or takes. The chat's context never loads either table.
 9. **Reels sits after Markets in the nav**, where Agari puts it, on the desktop bar and the phone's pill.
+
+---
+
+## Decisions made in the 22 Sep review pass
+
+Made 2026-09-22 by Claude, reviewing everything built against the plan at Abu's request. Abu can overrule any of these.
+
+1. **"Check it" asks the public network from the browser.** The official RPC allows browser requests, so the page
+   ships no fingerprint of its own to compare against: the browser fetches the transaction, decodes the desk's event
+   and compares. A record with no transaction is proven by walking the `prevHash` links to the record that sealed it,
+   and the page says which case it is. If the network cannot be reached, the page says only that the bytes match the
+   stored fingerprint and points at the transaction; it never claims more than it checked.
+2. **The disclosure's worst case is stated per 24-hour spending window**, twice that across a window boundary,
+   because that is what the contract enforces. A rolling window in the contract was the alternative; wording that is
+   exactly true was chosen over a contract change the day before v1's deploy. Recorded in `docs/V1-FREEZE.md`.
+3. **`MAX_FEED_AGE` is 6 days in v1.** The price log shows real feed gaps of 96 hours over a holiday weekend; a limit
+   equal to the longest observed gap would refuse the protective sell exactly when the mandate wanted out.
+4. **The protective rule is structured, never parsed from prose.** One template, `price_move_sell` (a token the
+   mandate holds, a fall of 1% to 20% below the reference on the pool's half-hour average, a cut of 10% to all of it).
+   Arithmetic raises the candidate, the gate's protective relaxations apply, and the model is told it is the owner's
+   standing instruction, so waiting needs a reason. Free-text notes stay context for timing only.
+5. **The mandate can be edited from a button with no model call**, one part at a time (strategy, targets, settings,
+   notes, rules), through the same checks and the same card as the chat. SERV credit being empty must never lock an
+   owner out of their own instructions.
+6. **Every desk page resolves the viewer the same way**: the owner by session, by id or share slug, whether sharing
+   is on or not; anyone else only through the share link while sharing is on. A visitor's page never carries the
+   owner's notes, and its wording never addresses the reader as the owner.
+7. **Boundary times are written in the reader's own zone with New York beside them**, as Agari does ("Mon 14:30
+   (09:30 ET)"). History rows rendered on the server stay in New York time, labelled.
+8. **An approval that was answered but never carried out expires at its stated time**, and the record says so; a
+   worker that comes back a day later does not trade on a day-old yes.
+9. **A second consecutive loss-limit breach pauses the desk on-chain**, as decision 5 after the research promised and
+   the code never did, through the ordinary sender with its own record.
+10. **The header drops the market session chip** (Agari b4faecc): five items crowded the bar at 1024 wide, and the
+    session already shows on Markets, the stock page, the marquee and the desk's next-check panel.
 
 ---
 

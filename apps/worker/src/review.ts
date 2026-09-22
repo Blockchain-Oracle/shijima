@@ -6,7 +6,9 @@
  * the safety net behind it. A check is keyed on (desk, the top of the hour), so whichever gets there first
  * does the work and the other finds it already done. Neither needs to know about the other.
  *
- * Desks are done one after another, never in parallel: there is one operator key, so there is one sender.
+ * Desks are done one after another, never in parallel: there is one operator key, so there is one sender. And
+ * there is ONE pass at a time in this process, whichever clock asked: `reviewAllDesksExclusive` hands a second
+ * caller the pass already running, so two clocks can never sign against the same nonce.
  */
 import { APPROVED_TOKENS, type DeskCall } from '@desk/chain'
 import {
@@ -39,7 +41,7 @@ const SEAL_EVERY_MS = 24 * 60 * 60 * 1000
 /** Multiplier changes are rare and report dates rarer. Read them now and then, never on every tick. */
 const MULTIPLIERS_EVERY_MS = 60 * 60 * 1000
 const EARNINGS_EVERY_MS = 12 * 60 * 60 * 1000
-const lastRead = { multipliers: 0, earnings: 0 }
+const lastRead = { multipliers: 0, earnings: 0, lowGasWarnedAt: 0 }
 /**
  * How long the worker's own timer waits before stepping in.
  *
@@ -48,6 +50,9 @@ const lastRead = { multipliers: 0, earnings: 0 }
  * holds back until a check is this far overdue. A trigger from the platform, or a person, runs at once.
  */
 const TIMER_GRACE_MS = 7 * 60 * 1000
+/** The operator should be able to pay for about this many more actions before Abu is told. */
+const LOW_GAS_ACTIONS = 20n
+const GAS_PER_ACTION = 400_000n
 
 export type Cli = Awaited<ReturnType<typeof openCli>>
 export type Log = (event: string, detail?: Record<string, unknown>) => void
@@ -59,7 +64,10 @@ export interface ReviewSummary {
   checks: { desk: string; status: string; records: number }[]
   graded: number
   sealed: number
+  /** True when an earlier transaction may still land, so nothing new was sent this pass. Reads still ran. */
   held: boolean
+  /** The operator wallet cannot pay for many more actions. Status shows it; Abu tops it up. */
+  operatorLowGas?: { balanceWei: string; neededWei: string }
 }
 
 /** The top of the hour that a check belongs to. Both clocks must agree on this, so it lives here. */
@@ -67,6 +75,27 @@ export function hourSlot(now = new Date()): Date {
   const hour = new Date(now)
   hour.setUTCMinutes(0, 0, 0)
   return hour
+}
+
+let inFlight: Promise<ReviewSummary> | undefined
+
+/**
+ * The one entry point both clocks use. A pass already running is returned to the second caller, never started
+ * again beside it: the operator key signs from one place at a time.
+ */
+export function reviewAllDesksExclusive(
+  cli: Cli,
+  log: Log,
+  options: { trigger?: WakeTrigger; now?: Date } = {},
+): Promise<ReviewSummary> {
+  if (inFlight) {
+    log('review_joined', { trigger: options.trigger ?? 'tick', note: 'a pass is already running' })
+    return inFlight
+  }
+  inFlight = reviewAllDesks(cli, log, options).finally(() => {
+    inFlight = undefined
+  })
+  return inFlight
 }
 
 export async function reviewAllDesks(
@@ -93,13 +122,22 @@ export async function reviewAllDesks(
     }
   }
 
-  /** Settles leftovers. False while an earlier transaction may still land: then nothing new is sent. */
+  /**
+   * Settles leftovers. False while an earlier transaction may still land: then nothing new is sent this pass,
+   * but everything that only reads (grading, prices, alerts) still runs.
+   */
   const clearToSend = async () => {
+    if (summary.held) return false
     const settled = await resolveUnsettled(cli.deps)
     for (const s of settled) {
       log('settled', { record: s.recordSeq, kind: s.kind, was: s.was, now: s.now, why: s.why })
     }
-    return !settled.some((s) => s.now === 'waiting')
+    if (settled.some((s) => s.now === 'waiting')) {
+      log('holding', { note: 'an earlier transaction may still land, so nothing new is sent this pass' })
+      summary.held = true
+      return false
+    }
+    return true
   }
 
   const overdue = now.getTime() - hour.getTime() >= TIMER_GRACE_MS
@@ -126,11 +164,7 @@ export async function reviewAllDesks(
       })
       continue
     }
-    if (!(await clearToSend())) {
-      log('holding', { note: 'an earlier transaction may still land' })
-      summary.held = true
-      return summary
-    }
+    if (!(await clearToSend())) break
     const report = await wakeDesk(wakeDeps, {
       deskId: request.deskId,
       scheduledFor: request.createdAt,
@@ -147,12 +181,7 @@ export async function reviewAllDesks(
 
   for (const desk of await runningDesks(cli.db)) {
     summary.desks++
-    if (mayCheck && !(await hasWake(cli.db, desk.id, hour))) {
-      if (!(await clearToSend())) {
-        log('holding', { note: 'an earlier transaction may still land' })
-        summary.held = true
-        return summary
-      }
+    if (mayCheck && !(await hasWake(cli.db, desk.id, hour)) && (await clearToSend())) {
       const report = await wakeDesk(wakeDeps, { deskId: desk.id, scheduledFor: hour, trigger })
       log('check', {
         desk: desk.address,
@@ -164,24 +193,25 @@ export async function reviewAllDesks(
       summary.checks.push({ desk: desk.address, status: report.status, records: report.records.length })
     }
 
-    // Marking its own homework, once the market has reopened. Reads only: it never trades.
-    const graded = await gradeAtReopen(
-      { db: cli.db, approved: APPROVED_TOKENS, reference: chainReferenceSource(cli.db, cli.pub) },
-      desk.id,
-      now,
-    )
-    if (graded.graded.length > 0) {
-      log('graded', { desk: desk.address, grades: graded.graded })
-      summary.graded += graded.graded.length
+    // Marking its own homework, once the market has reopened. Reads only: it never trades, so it runs even
+    // while a transaction is being waited on.
+    try {
+      const graded = await gradeAtReopen(
+        { db: cli.db, approved: APPROVED_TOKENS, reference: chainReferenceSource(cli.db, cli.pub) },
+        desk.id,
+        now,
+      )
+      if (graded.graded.length > 0) {
+        log('graded', { desk: desk.address, grades: graded.graded })
+        summary.graded += graded.graded.length
+      }
+    } catch (e) {
+      log('grading_failed', { desk: desk.address, error: errorText(e) })
     }
 
     // The daily seal: one checkpoint carries the newest record's hash, which commits to every record before it.
     const sealedAt = await lastSealAt(cli.db, desk.id)
-    if (!sealedAt || now.getTime() - sealedAt.getTime() >= SEAL_EVERY_MS) {
-      if (!(await clearToSend())) {
-        summary.held = true
-        return summary
-      }
+    if ((!sealedAt || now.getTime() - sealedAt.getTime() >= SEAL_EVERY_MS) && (await clearToSend())) {
       const plan = await planCheckpoint(cli.db, desk.id, cli.wallet.account.address)
       if (plan) {
         const sealed = await send(plan.action, {
@@ -221,6 +251,7 @@ export async function reviewAllDesks(
     log('prices_failed', { error: errorText(e) })
   }
   await readMarketFacts(cli, log, now)
+  await watchOperatorGas(cli, log, now, summary)
 
   if (!mayCheck) summary.waitingForPrimaryClock = true
   return summary
@@ -246,6 +277,28 @@ async function readMarketFacts(cli: Cli, log: Log, now: Date): Promise<void> {
     } catch (e) {
       log('earnings_failed', { error: errorText(e) })
     }
+  }
+}
+
+/**
+ * The operator pays the network fee for every action. When it could not pay for many more, the pass says so
+ * once an hour and Status shows it, so it is topped up before a protective sale is refused for want of gas.
+ */
+async function watchOperatorGas(cli: Cli, log: Log, now: Date, summary: ReviewSummary): Promise<void> {
+  try {
+    const [balance, gasPrice] = await Promise.all([
+      cli.pub.getBalance({ address: cli.wallet.account.address }),
+      cli.pub.getGasPrice(),
+    ])
+    const needed = LOW_GAS_ACTIONS * GAS_PER_ACTION * gasPrice
+    if (balance >= needed) return
+    summary.operatorLowGas = { balanceWei: balance.toString(), neededWei: needed.toString() }
+    if (now.getTime() - lastRead.lowGasWarnedAt >= 60 * 60 * 1000) {
+      lastRead.lowGasWarnedAt = now.getTime()
+      log('operator_low_gas', { balanceWei: balance.toString(), neededWei: needed.toString() })
+    }
+  } catch (e) {
+    log('operator_gas_unread', { error: errorText(e) })
   }
 }
 

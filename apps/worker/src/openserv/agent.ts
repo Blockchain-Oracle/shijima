@@ -9,11 +9,12 @@
  * to an hour first does the work, because a check is keyed on (desk, hour), and the other finds it done.
  */
 
+import { runningDesks, workerBeat } from '@desk/db'
 import { errorText } from '@desk/shared'
 import { Agent } from '@openserv-labs/sdk'
 import type { DoTaskActionSchema } from '@openserv-labs/sdk/dist/types.js'
 import { z } from 'zod'
-import { type Cli, type Log, reviewAllDesks } from '../review'
+import { type Cli, type Log, type ReviewSummary, reviewAllDesksExclusive } from '../review'
 
 export const AGENT_NAME = 'shijima'
 export const AGENT_DESCRIPTION =
@@ -29,7 +30,8 @@ export interface AgentCredentials {
 export function createDeskAgent(cli: Cli, log: Log, credentials?: AgentCredentials): Agent {
   const review = async (trigger: string) => {
     log('openserv_task', { trigger })
-    const summary = await reviewAllDesks(cli, log, { trigger: 'cron' })
+    // The same pass the timer runs, never beside it: one operator key, one pass at a time.
+    const summary = await reviewAllDesksExclusive(cli, log, { trigger: 'cron' })
     return summary
   }
 
@@ -68,23 +70,27 @@ export function createDeskAgent(cli: Cli, log: Log, credentials?: AgentCredentia
     ...(credentials ?? {}),
   })
 
-  // One capability, so the agent page states plainly what it can be asked to do.
+  // One capability, so the agent page states plainly what it can be asked to do. It READS: the hourly review
+  // is started by the workflow's cron trigger and by nothing a chat can say, so a stray request to the agent
+  // can never add a third clock beside the platform's and the worker's.
   agent.addCapability({
-    name: 'review_desks',
-    description: 'Check every running desk once, and act only within each owner mandate and on-chain limits.',
+    name: 'desk_status',
+    description:
+      'Say how many desks are running and when the worker last completed a pass. Reads only; it never starts a check.',
     schema: z.object({
-      reason: z.string().optional().describe('Why this run was asked for. Recorded, never acted on.'),
+      reason: z.string().optional().describe('Why this was asked. Recorded, never acted on.'),
     }),
     async run({ args }) {
-      const summary = await review(args.reason ?? 'capability')
-      return summarise(summary)
+      log('openserv_capability', { reason: args.reason ?? null })
+      const [desks, beat] = await Promise.all([runningDesks(cli.db), workerBeat(cli.db)])
+      return `${desks.length} desk${desks.length === 1 ? '' : 's'} running. The worker's last pass finished ${beat ? beat.beatAt.toISOString() : 'never'}. Checks run on the hourly trigger, not on request.`
     },
   })
 
   return agent
 }
 
-function summarise(s: Awaited<ReturnType<typeof reviewAllDesks>>): string {
+function summarise(s: ReviewSummary): string {
   if (s.held) return 'Held: an earlier transaction may still land, so nothing new was sent.'
   const checks = s.checks.map((c) => `${c.desk} ${c.status} (${c.records} records)`).join(', ')
   return [

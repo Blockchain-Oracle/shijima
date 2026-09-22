@@ -22,6 +22,9 @@ const TONES: Record<string, string> = {
   quiet: 'text-quiet',
 }
 
+export const OUTCOME_KEYS = Object.keys(OUTCOMES) as PublicDecision['outcome'][]
+export const isOutcome = (s: string): s is PublicDecision['outcome'] => s in OUTCOMES
+
 export function outcomeLabel(outcome: PublicDecision['outcome']): string {
   return OUTCOMES[outcome].label
 }

@@ -41,6 +41,7 @@ export const studioCopy = {
     position: 'The largest share any one stock may take',
     loss: 'Stop everything after a fall of',
     lossHint: 'Measured from what you put in. The desk stops acting and tells you.',
+    rulesTitle: 'Standing rules',
     limitsTitle: 'Held by your account itself',
     limitsBody:
       'These two are written into the desk’s contract. The assistant cannot go past them whatever it decides, and changing them later needs your wallet.',

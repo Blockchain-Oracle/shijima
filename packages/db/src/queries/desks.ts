@@ -54,6 +54,22 @@ export async function registerDesk(db: DbOrTx, input: RegisterDeskInput): Promis
   return desk
 }
 
+/**
+ * The owner's row for a wallet that has just proved itself. Created on the first sign-in, so the disclosure can
+ * be accepted before any desk exists. Idempotent: a returning owner only has their last visit noted.
+ */
+export async function ensureOwner(db: DbOrTx, address: string): Promise<{ id: string }> {
+  const lower = address.toLowerCase()
+  const now = new Date()
+  await db
+    .insert(owners)
+    .values({ address: lower, lastSeenAt: now })
+    .onConflictDoUpdate({ target: owners.address, set: { lastSeenAt: now } })
+  const [owner] = await db.select({ id: owners.id }).from(owners).where(eq(owners.address, lower))
+  if (!owner) throw new Error(`owner ${lower} could not be created`)
+  return owner
+}
+
 export async function findDeskByAddress(
   db: DbOrTx,
   address: string,

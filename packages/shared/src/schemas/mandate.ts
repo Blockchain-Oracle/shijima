@@ -16,6 +16,23 @@ export const MandateTargets = z.object({
 })
 export type MandateTargets = z.infer<typeof MandateTargets>
 
+/**
+ * A standing instruction the desk carries out by ARITHMETIC, never by reading prose. The only kind so far is the
+ * protective sale from the design brief: "If Nvidia falls more than 3% over a weekend, cut it by half." The fall
+ * is measured on the pool's 30 minute average against the same reference every decision uses.
+ */
+export const MandateRule = z.object({
+  id: z.string().regex(/^rule\d{1,2}$/, 'a rule id looks like rule1'),
+  kind: z.literal('price_move_sell'),
+  token: TokenAddress,
+  /** How far below the reference the price must be, in basis points. 1% to 20%. */
+  fallBps: z.number().int().min(100).max(2000),
+  /** How much of the holding to sell then, in basis points of the balance. 10% to all of it. */
+  cutBps: z.number().int().min(1000).max(10_000),
+})
+export type MandateRule = z.infer<typeof MandateRule>
+export const MAX_RULES = 10
+
 export const Mandate = z.object({
   preset: z.string().nullable(),
   targets: MandateTargets,
@@ -30,8 +47,10 @@ export const Mandate = z.object({
   lossStopBps: Bps,
   /** At or above this size the desk asks first, even in "on its own" mode. */
   largeActionUsdg: z.bigint().positive(),
-  /** The owner's own words. Compiled into rules by the mandate read-back. */
+  /** The owner's own words. They reach the model as context for WHEN, never as an instruction to size or hold. */
   notes: z.string().max(2000),
+  /** Structured rules the desk carries out itself. Absent means none. */
+  rules: z.array(MandateRule).max(MAX_RULES).optional(),
 })
 export type Mandate = z.infer<typeof Mandate>
 
@@ -66,5 +85,14 @@ export function checkMandate(m: Mandate, approved: { address: string; displayNam
   if (m.driftToleranceBps === 0)
     problems.push('a tolerance of zero would make the desk trade on every wobble')
   if (m.lossStopBps === 0) problems.push('a loss limit of zero would stop the desk at once')
+  const ruleIds = new Set<string>()
+  for (const r of m.rules ?? []) {
+    const name = names.get(r.token.toLowerCase())
+    if (ruleIds.has(r.id)) problems.push(`rule ${r.id} is listed twice`)
+    ruleIds.add(r.id)
+    if (!name) problems.push(`rule ${r.id} names a token that is not on the approved list`)
+    else if (!seen.has(r.token.toLowerCase()))
+      problems.push(`rule ${r.id} is about ${name}, which the mandate does not hold`)
+  }
   return problems
 }

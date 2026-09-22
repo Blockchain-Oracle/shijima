@@ -67,6 +67,11 @@
   color: var(--white);
   transition: color 150ms var(--ease);
 }
+.sj-member-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 a.sj-member:hover .sj-member-name {
   color: var(--vermilion);
 }
@@ -83,11 +88,6 @@ a.sj-member:hover .sj-member-name {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--gray-400);
-}
-.sj-member-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .sj-member-weight,
 .sj-member-gap {
@@ -159,6 +159,9 @@ a.sj-member:hover .sj-member-name {
   font-size: 14px;
   color: var(--white);
 }
+[data-theme="light"] .sj-mark-line {
+  color: #141210;
+}
 .sj-mark:hover .sj-mark-line {
   color: var(--vermilion);
 }
@@ -188,9 +191,6 @@ a.sj-member:hover .sj-member-name {
   font-size: 11px;
   color: var(--gray-500);
   white-space: nowrap;
-}
-[data-theme="light"] .sj-mark-line {
-  color: #141210;
 }
 [data-theme="light"] .sj-mark {
   border-left-color: rgba(20, 18, 16, 0.18);

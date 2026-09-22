@@ -5,12 +5,14 @@ import {
   isStockSymbol,
   normalizeText,
   parseCashtags,
+  shortAddress,
   TAKE_MAX,
   TAKES_FEED_LIMIT,
   type TakeView,
   TOKEN_BY_SYMBOL,
 } from '@/features/social/protocol'
 import { db } from '@/lib/db'
+import { sameOrigin } from '@/lib/origin'
 
 /**
  * Takes, from Agari (`app/api/takes/route.ts`). Reading is public, like a shared desk, and can be narrowed to one
@@ -23,7 +25,7 @@ const refuse = (error: string, status: number) => Response.json({ error }, { sta
 
 const view = (row: Awaited<ReturnType<typeof latestTakes>>[number]): TakeView => ({
   id: row.id,
-  author: row.author,
+  author: shortAddress(row.author),
   symbol: row.symbol,
   caption: row.caption,
   tags: row.tags,
@@ -47,6 +49,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  if (!sameOrigin(request)) return refuse(takesCopy.errors.badRequest, 403)
   let input: { symbol?: unknown; caption?: unknown; holds?: unknown }
   try {
     input = await request.json()

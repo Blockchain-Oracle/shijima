@@ -114,6 +114,7 @@ export function buildDecisionBody(i: DecisionBodyInput): Record<string, unknown>
           driftBps: i.need.driftBps,
           thresholdBps: i.need.thresholdBps,
           limitedByPerActionLimit: i.need.limitedByPerAction,
+          rule: i.need.rule ?? null,
         }
       : null,
     candidate: c

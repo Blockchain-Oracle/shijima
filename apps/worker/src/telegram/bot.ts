@@ -8,6 +8,9 @@
  * Two rules run through everything here. A chat only ever hears about the ONE desk it was linked to, checked
  * on the Telegram user id at every turn, so a forwarded message or a guessed id gets nothing. And answering
  * a request never moves money: it flips a row, and the worker re-reads the price on its next check.
+ *
+ * Nothing here waits on the model. A message to the desk is acknowledged at once and answered by the chat's
+ * own loop when it is ready, so /pause is never held behind someone else's question.
  */
 import { APPROVED_TOKENS } from '@desk/chain'
 import { type AskAnswer, confirmSigninProposal } from '@desk/core'
@@ -28,10 +31,8 @@ import { errorText, telegramCopy } from '@desk/shared'
 import { Bot, InlineKeyboard } from 'grammy'
 import type { Log } from '../review'
 
-/** How long a Telegram message waits for the desk's answer before saying it is still thinking. */
-const ASK_WAIT_MS = 45_000
-
 const CODE = /^[A-Za-z0-9]{6,12}$/
+const KNOWN_COMMANDS = new Set(['/start', '/help', '/status', '/pause', '/resume'])
 
 export interface TelegramDeps {
   db: Db
@@ -43,6 +44,10 @@ export interface TelegramDeps {
   /** Wakes the chat's loop, so a message is answered at once rather than at the next sweep. */
   kickAsk?: () => void
 }
+
+/** The desk page a link may open: the share link when sharing is on, else the owner's own signed-in page. */
+export const deskPath = (desk: { id: string; shareSlug: string | null; shareEnabled: boolean }) =>
+  desk.shareEnabled && desk.shareSlug ? desk.shareSlug : desk.id
 
 export function createBot(token: string, deps: TelegramDeps): Bot {
   const bot = new Bot(token)
@@ -88,13 +93,15 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
       if (!linked) return ctx.reply(telegramCopy.notLinked)
       const done = await run(db, linked.desk.id, { actor: 'owner', via: 'telegram' })
       log('telegram_command', { command, desk: linked.desk.address, done })
-      return ctx.reply(
+      await ctx.reply(
         done
           ? command === 'pause'
             ? telegramCopy.paused
             : telegramCopy.resumed
           : telegramCopy.alreadyInThatState,
       )
+      // The pinned message must not go on reading "active" for up to an hour after a pause.
+      if (done) await deps.refreshStatus(linked.desk.id).catch(() => false)
     })
   }
 
@@ -118,16 +125,30 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
     })
     log('telegram_answer', { desk: linked.desk.address, approvalId, answer, accepted: Boolean(row) })
     if (!row) {
-      await ctx.answerCallbackQuery({ text: telegramCopy.linkUsed, show_alert: true })
-      return void (await ctx.editMessageText(
-        telegramCopy.approvalAnswered('expired', found.decision.summary),
-        { parse_mode: 'HTML' },
-      ))
+      // Answered on the website or in the chat first, or lapsed. The message shows what really happened,
+      // never "expired" for a request the owner approved elsewhere.
+      const fresh = (await approvalById(db, approvalId))?.approval
+      const status = fresh?.status
+      const ended =
+        status === 'approved' || status === 'rejected' || status === 'expired' || status === 'cancelled'
+          ? status
+          : 'expired'
+      const where =
+        fresh?.answeredVia && fresh.answeredVia !== 'telegram'
+          ? telegramCopy.answeredWhere[fresh.answeredVia]
+          : undefined
+      await ctx.answerCallbackQuery({ text: telegramCopy.alreadyAnswered, show_alert: true })
+      return void (await ctx
+        .editMessageText(telegramCopy.approvalAnswered(ended, found.decision.summary, where), {
+          parse_mode: 'HTML',
+        })
+        .catch(() => undefined))
     }
     await ctx.answerCallbackQuery({ text: answer === 'approved' ? 'Approved' : 'Rejected' })
-    await ctx.editMessageText(telegramCopy.approvalAnswered(answer, found.decision.summary, 'buttons here'), {
-      parse_mode: 'HTML',
-    })
+    await ctx.editMessageText(
+      telegramCopy.approvalAnswered(answer, found.decision.summary, telegramCopy.answeredWhere.telegram),
+      { parse_mode: 'HTML' },
+    )
   })
 
   // The buttons under a chat card. The callback data carries the proposal id and nothing else.
@@ -153,8 +174,9 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
     return ctx.reply(outcome.text)
   })
 
-  // Free text is a message to the desk, answered by the same chat as the website. A bare code from an owner not
-  // yet linked still links, for owners who copy it rather than follow the link.
+  // Free text is a message to the desk, answered by the same chat as the website. The answer is delivered by
+  // the chat's loop when it is ready (see `deliverAskReply`), so this handler returns at once. A bare code from
+  // an owner not yet linked still links, for owners who copy it rather than follow the link.
   bot.on('message:text', async (ctx) => {
     const text = ctx.message.text.trim()
     const linked = await deskOf(ctx.from.id)
@@ -162,58 +184,29 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
       if (CODE.test(text)) return void (await link(ctx, text))
       return ctx.reply(telegramCopy.notLinked)
     }
+    // A slash command the bot does not know is not a question for the model.
+    if (text.startsWith('/')) {
+      const [word = ''] = text.split(/\s+/)
+      if (!KNOWN_COMMANDS.has(word.toLowerCase())) return ctx.reply(telegramCopy.unknownCommand)
+      return
+    }
     const desk = await deskById(db, linked.desk.id)
     if (!desk) return ctx.reply(telegramCopy.notLinked)
     const allowed = await askAllowed(db, desk.ownerAddress)
     if (!allowed.ok) return ctx.reply(telegramCopy.askSlowDown[allowed.reason])
 
-    const id = await createAskRequest(db, {
+    await createAskRequest(db, {
       ownerAddress: desk.ownerAddress,
       deskId: desk.id,
       kind: 'ask',
       via: 'telegram',
       question: text.slice(0, 1000),
+      // The chat id the answer goes back to. The loop delivers it; this handler does not wait.
+      payload: { telegramChatId: ctx.chat.id },
     })
     deps.kickAsk?.()
-    await ctx.replyWithChatAction('typing')
-    const deadline = Date.now() + ASK_WAIT_MS
-    let typingAt = Date.now()
-    while (Date.now() < deadline) {
-      await new Promise((r) => setTimeout(r, 500))
-      const row = await askRequestForOwner(db, id, desk.ownerAddress)
-      if (row?.status === 'failed') return ctx.reply(row.error ?? telegramCopy.askFailed)
-      if (row?.status === 'answered' && row.reply) {
-        const answer = row.reply as unknown as AskAnswer
-        const body =
-          answer.refused && answer.refused !== answer.reply
-            ? `${answer.reply}\n\n${answer.refused}`
-            : answer.reply
-        const proposal = row.proposal
-        if (proposal?.status !== 'open') return ctx.reply(body)
-        const card = proposal.deskView.card as { title?: string; after?: string[]; note?: string } | undefined
-        const cardText = [card?.title, ...(card?.after ?? []), card?.note].filter(Boolean).join('\n')
-        if (proposal.path === 'signin') {
-          return ctx.reply(`${body}\n\n${cardText}`, {
-            reply_markup: new InlineKeyboard()
-              .text(telegramCopy.confirm, `ask:ok:${proposal.id}`)
-              .text(telegramCopy.notNow, `ask:no:${proposal.id}`),
-          })
-        }
-        const slug = desk.shareSlug ?? desk.id
-        return ctx.reply(`${body}\n\n${cardText}\n\n${telegramCopy.confirmOnSiteNote}`, {
-          reply_markup: new InlineKeyboard().url(
-            telegramCopy.confirmOnSite,
-            `${deps.siteUrl}/desk/${slug}?proposal=${proposal.id}`,
-          ),
-        })
-      }
-      // Telegram shows "typing" for five seconds at a time.
-      if (Date.now() - typingAt > 4_500) {
-        typingAt = Date.now()
-        await ctx.replyWithChatAction('typing').catch(() => undefined)
-      }
-    }
-    return ctx.reply(telegramCopy.askStillThinking)
+    await ctx.replyWithChatAction('typing').catch(() => undefined)
+    return ctx.reply(telegramCopy.askThinking)
   })
 
   bot.catch((e) => log('telegram_error', { error: errorText(e.error) }))
@@ -229,12 +222,16 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
     const from = ctx.from
     const chatId = ctx.chat?.id
     if (!from || chatId === undefined) return
-    const row = await claimTelegramLink(db, code, {
+    const claim = await claimTelegramLink(db, code, {
       userId: from.id,
       chatId,
       username: from.username ?? undefined,
     })
-    if (!row) return void (await ctx.reply(telegramCopy.linkUsed))
+    if (!claim.ok) {
+      return void (await ctx.reply(
+        claim.reason === 'another_desk' ? telegramCopy.linkedElsewhere : telegramCopy.linkUsed,
+      ))
+    }
     const linked = await deskOf(from.id)
     log('telegram_linked', { desk: linked?.desk.address, user: from.id })
     await ctx.reply(telegramCopy.firstContact(linked?.desk.name ?? 'your desk'), { parse_mode: 'HTML' })
@@ -246,11 +243,59 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
   return bot
 }
 
-/** The buttons under a request. "See the full decision" is a plain link, so it works with no session. */
-export function approvalKeyboard(approvalId: string, siteUrl: string, slug: string | null, seq: number) {
-  const keyboard = new InlineKeyboard()
+/**
+ * The desk's answer to a Telegram message, sent when the chat's loop has it. A sign-in card gets Confirm and
+ * Not now buttons; a card that needs the wallet or the session key gets a link to confirm on the website.
+ */
+export async function deliverAskReply(
+  bot: Bot,
+  deps: TelegramDeps,
+  request: { id: string; ownerAddress: string; payload: Record<string, unknown> },
+): Promise<void> {
+  const chatId = request.payload.telegramChatId
+  if (typeof chatId !== 'number') return
+  const row = await askRequestForOwner(deps.db, request.id, request.ownerAddress)
+  if (!row) return
+  if (row.status === 'failed' || !row.reply) {
+    await bot.api.sendMessage(chatId, row.error ?? telegramCopy.askFailed)
+    return
+  }
+  const answer = row.reply as unknown as AskAnswer
+  const body =
+    answer.refused && answer.refused !== answer.reply ? `${answer.reply}\n\n${answer.refused}` : answer.reply
+  const proposal = row.proposal
+  if (proposal?.status !== 'open') {
+    await bot.api.sendMessage(chatId, body)
+    return
+  }
+  const card = proposal.deskView.card as { title?: string; after?: string[]; note?: string } | undefined
+  const cardText = [card?.title, ...(card?.after ?? []), card?.note].filter(Boolean).join('\n')
+  if (proposal.path === 'signin') {
+    await bot.api.sendMessage(chatId, `${body}\n\n${cardText}`, {
+      reply_markup: new InlineKeyboard()
+        .text(telegramCopy.confirm, `ask:ok:${proposal.id}`)
+        .text(telegramCopy.notNow, `ask:no:${proposal.id}`),
+    })
+    return
+  }
+  const desk = row.deskId ? await deskById(deps.db, row.deskId) : undefined
+  const slug = desk ? deskPath(desk) : (row.deskId ?? '')
+  await bot.api.sendMessage(chatId, `${body}\n\n${cardText}\n\n${telegramCopy.confirmOnSiteNote}`, {
+    reply_markup: new InlineKeyboard().url(
+      telegramCopy.confirmOnSite,
+      `${deps.siteUrl}/desk/${slug}?proposal=${proposal.id}`,
+    ),
+  })
+}
+
+/**
+ * The buttons under a request. "See the full decision" is a plain link: the share link when sharing is on,
+ * else the owner's own page, which asks them to sign in.
+ */
+export function approvalKeyboard(approvalId: string, siteUrl: string, slug: string, seq: number) {
+  return new InlineKeyboard()
     .text('Approve', `approve:${approvalId}`)
     .text('Reject', `reject:${approvalId}`)
-  if (slug) keyboard.row().url(telegramCopy.seeDetails, `${siteUrl}/desk/${slug}/decision/${seq}`)
-  return keyboard
+    .row()
+    .url(telegramCopy.seeDetails, `${siteUrl}/desk/${slug}/decision/${seq}`)
 }

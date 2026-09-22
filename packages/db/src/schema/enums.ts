@@ -132,6 +132,8 @@ export const notificationKind = pgEnum('notification_kind', [
   'monday_report',
   'first_contact',
   'price_alert',
+  // A request answered on the website or in the chat, or lapsed: the Telegram message is edited, never re-sent.
+  'approval_answered',
 ])
 export const notificationStatus = pgEnum('notification_status', ['pending', 'sent', 'failed', 'skipped'])
 export const servMode = pgEnum('serv_mode', ['serv', 'raw'])

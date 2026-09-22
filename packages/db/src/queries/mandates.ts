@@ -5,7 +5,7 @@
  * A mandate change also cancels every pending approval and standing deferral, because both were promises made
  * under the old instructions (architecture 1.4 step 8).
  */
-import type { Mandate } from '@desk/shared'
+import { type Mandate, MandateRule } from '@desk/shared'
 import { and, desc, eq, sql } from 'drizzle-orm'
 import type { Db, DbOrTx } from '../client'
 import { approvals, deferrals, deskEvents, desks, mandates } from '../schema'
@@ -65,6 +65,8 @@ export async function applyMandate(
         lossStopBps: mandate.lossStopBps,
         largeActionUsdg: mandate.largeActionUsdg,
         notes: mandate.notes,
+        // The structured rules the desk carries out by arithmetic. The column predates them and kept its name.
+        compiledRules: mandate.rules ?? [],
         ...(readBack ? { readBack } : {}),
         appliedAt: now,
       })
@@ -93,7 +95,14 @@ export async function applyMandate(
 
 /** The row as the engine's Mandate type. The database already stores amounts as bigint. */
 export function mandateFromRow(row: MandateRow): Mandate {
+  // Rules are added only when there are any, so a mandate without them keeps the fingerprint it always had. A
+  // stored rule that no longer parses is left out rather than allowed to stop the check.
+  const rules = (Array.isArray(row.compiledRules) ? row.compiledRules : []).flatMap((r) => {
+    const parsed = MandateRule.safeParse(r)
+    return parsed.success ? [parsed.data] : []
+  })
   return {
+    ...(rules.length > 0 ? { rules } : {}),
     preset: row.preset,
     targets: row.targets,
     driftToleranceBps: row.driftToleranceBps,

@@ -3,25 +3,28 @@
  *
  * The engine never talks to Telegram itself. It writes a row in the same transaction as the thing it is
  * announcing, and this drains those rows. So a message can never claim something that was not committed, and
- * a Telegram outage can never roll back a decision.
+ * a Telegram outage can never roll back a decision: a send that fails is tried again later, and only after
+ * several attempts is it given up on.
  *
  * The pinned message is EDITED, never re-sent. That is what keeps an hourly desk from becoming 160
  * notifications a week, which is how an owner ends up muting the thing meant to watch their money.
  */
 import {
+  approvalById,
   approvalMessageId,
   type Db,
   deskById,
   linkForDesk,
   markNotificationSent,
   pendingNotifications,
+  postponeNotification,
   setStatusMessageId,
 } from '@desk/db'
 import { errorText, telegramCopy } from '@desk/shared'
 import type { Bot } from 'grammy'
 import type { Log } from '../review'
-import { approvalKeyboard } from './bot'
-import { buildStatus } from './status'
+import { approvalKeyboard, deskPath } from './bot'
+import { buildStatus, nyClock } from './status'
 
 export interface OutboxDeps {
   db: Db
@@ -60,6 +63,18 @@ export async function drainOutbox(deps: OutboxDeps): Promise<number> {
         continue
       }
 
+      // A request answered somewhere else, or lapsed: the message that asked is edited, never a new one sent.
+      if (row.kind === 'approval_answered') {
+        const edited = await editAnsweredRequest(deps, row.deskId, row.decisionId, payload)
+        await markNotificationSent(db, row.id, {
+          status: edited ? 'sent' : 'skipped',
+          ...(edited ? {} : { error: 'no request message to edit' }),
+        })
+        if (edited) sent++
+        continue
+      }
+
+      const desk = await deskById(db, row.deskId)
       const body =
         row.kind === 'approval_request' || row.kind === 'large_action_request'
           ? telegramCopy.approvalRequest({
@@ -68,7 +83,7 @@ export async function drainOutbox(deps: OutboxDeps): Promise<number> {
               why,
               turnedDown: typeof payload.turnedDown === 'string' ? payload.turnedDown : undefined,
               confidence: text(payload, 'confidence', 'not stated'),
-              expires: text(payload, 'expiresAt').slice(11, 16) || 'the next check',
+              expires: expiresText(text(payload, 'expiresAt')),
             })
           : row.kind === 'acted'
             ? telegramCopy.acted(what, why)
@@ -76,16 +91,21 @@ export async function drainOutbox(deps: OutboxDeps): Promise<number> {
               ? telegramCopy.wouldHave(what, why)
               : row.kind === 'not_acted'
                 ? telegramCopy.notActed(what, why)
-                : telegramCopy.alert(text(payload, 'text', why))
+                : row.kind === 'monday_report'
+                  ? telegramCopy.mondayReport(
+                      text(payload, 'text'),
+                      `${deps.siteUrl}${text(payload, 'path')}`,
+                    )
+                  : telegramCopy.alert(text(payload, 'text', why))
 
-      const desk = await deskById(db, row.deskId)
       const keyboard =
         (row.kind === 'approval_request' || row.kind === 'large_action_request') &&
-        typeof payload.approvalId === 'string'
+        typeof payload.approvalId === 'string' &&
+        desk
           ? approvalKeyboard(
               payload.approvalId,
               deps.siteUrl,
-              desk?.shareSlug ?? null,
+              deskPath(desk),
               Number(payload.decisionSeq ?? 0),
             )
           : undefined
@@ -98,11 +118,19 @@ export async function drainOutbox(deps: OutboxDeps): Promise<number> {
       sent++
     } catch (e) {
       const error = errorText(e)
-      log('telegram_send_failed', { id: row.id, kind: row.kind, error })
-      await markNotificationSent(db, row.id, { status: 'failed', error })
+      // Tried again later, with a longer wait each time. Failed for good only after the last attempt.
+      const outcome = await postponeNotification(db, row.id, error)
+      log('telegram_send_failed', { id: row.id, kind: row.kind, error, ...outcome })
     }
   }
   return sent
+}
+
+/** "05:00 New York time", from the request's expiry, or "the next check" when it has none. */
+function expiresText(iso: string): string {
+  if (!iso) return 'the next check'
+  const at = new Date(iso)
+  return Number.isNaN(at.getTime()) ? 'the next check' : `${nyClock(at)} ${telegramCopy.timesAreNewYork}`
 }
 
 /**
@@ -149,6 +177,30 @@ export async function refreshStatus(deps: OutboxDeps, deskId: string): Promise<b
   return updateStatus(deps, deskId, link.telegramChatId, link.id, link.statusMessageId)
 }
 
+/** An `approval_answered` row, turned into the edit of the message that asked. */
+async function editAnsweredRequest(
+  deps: OutboxDeps,
+  deskId: string,
+  decisionId: string | null,
+  payload: Payload,
+): Promise<boolean> {
+  if (!decisionId) return false
+  const answer = text(payload, 'answer')
+  if (answer !== 'approved' && answer !== 'rejected' && answer !== 'expired' && answer !== 'cancelled')
+    return false
+  const found =
+    typeof payload.approvalId === 'string' ? await approvalById(deps.db, payload.approvalId) : undefined
+  const via = text(payload, 'via')
+  const where = via === 'web' || via === 'chat' ? telegramCopy.answeredWhere[via] : undefined
+  return updateAnsweredMessage(deps, {
+    deskId,
+    decisionId,
+    answer,
+    what: found?.decision.summary ?? '',
+    ...(where ? { where } : {}),
+  })
+}
+
 /**
  * Keeps a request's message honest when it was answered somewhere else, or simply ran out of time.
  *
@@ -160,14 +212,14 @@ export async function updateAnsweredMessage(
   input: {
     deskId: string
     decisionId: string
-    answer: 'approved' | 'rejected' | 'expired'
+    answer: 'approved' | 'rejected' | 'expired' | 'cancelled'
     what: string
     where?: string
   },
-): Promise<void> {
+): Promise<boolean> {
   const messageId = await approvalMessageId(deps.db, input.decisionId)
   const link = await linkForDesk(deps.db, input.deskId)
-  if (!messageId || !link?.telegramChatId) return
+  if (!messageId || !link?.telegramChatId) return false
   try {
     await deps.bot.api.editMessageText(
       link.telegramChatId,
@@ -175,10 +227,12 @@ export async function updateAnsweredMessage(
       telegramCopy.approvalAnswered(input.answer, input.what, input.where),
       { parse_mode: 'HTML' },
     )
+    return true
   } catch (e) {
     // Already edited, or too old to change. The record is the truth either way.
     if (!errorText(e).includes('message is not modified')) {
       deps.log('telegram_edit_failed', { decision: input.decisionId, error: errorText(e) })
     }
+    return true
   }
 }

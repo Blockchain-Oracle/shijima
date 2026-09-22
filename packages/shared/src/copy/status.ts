@@ -33,7 +33,8 @@ export const statusCopy = {
   latency: (ms: number) => (ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`),
   optional: 'not set up',
   expected: (session: string) => `${session.toLowerCase()} (expected)`,
-  lastChecked: (clock: string) => `Read at ${clock} · refreshes every 30 s`,
+  readAt: 'Read at',
+  refreshes: 'refreshes every 30 s',
 
   rows: {
     worker: 'Worker · heartbeat',
@@ -55,6 +56,8 @@ export const statusCopy = {
     commit: (sha: string) => `commit ${sha}`,
     rehearsal: 'rehearsal fork',
     lastError: (why: string) => `last pass failed: ${why}`,
+    operatorLowGas: (balance: string, needed: string) =>
+      `the assistant's wallet holds ${balance} ETH for network fees and needs about ${needed} for the next 20 actions: top it up`,
 
     noDesks: 'no running desk to check',
     notRegistered: 'no OpenServ agent on this worker: its own timer runs the checks',

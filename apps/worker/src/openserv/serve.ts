@@ -8,7 +8,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { errorText, registerSecrets } from '@desk/shared'
-import { getProvisionedInfo } from '@openserv-labs/client'
+import { getProvisionedInfo, PlatformClient } from '@openserv-labs/client'
 import { run } from '@openserv-labs/sdk'
 import { WORKER_ROOT } from '../cli/context'
 import type { Cli, Log } from '../review'
@@ -41,11 +41,34 @@ export async function startAgentIfProvisioned(
     // The SDK registers its own signal handlers by default, which would race the worker's shutdown.
     const running = await run(agent, { handleSignals: false })
     log('openserv_listening', { agent: AGENT_NAME, workflow: WORKFLOW_NAME, id: info?.agentId })
+    await reactivateTrigger(info, log)
     return { stop: running.stop, agentId: info?.agentId ?? null, workflowId: info?.workflowId ?? null }
   } catch (e) {
     // The platform being unreachable must never stop the desk: the timer is the safety net for exactly this.
     log('openserv_failed', { error: errorText(e), note: 'the desk carries on using its own timer' })
     return undefined
+  }
+}
+
+/**
+ * The platform may switch a trigger off, for example after a run it could not deliver. Every boot asks for it
+ * to be on again, with the user key that owns the workflow. Best effort: the worker's own timer is the safety net.
+ */
+async function reactivateTrigger(info: ReturnType<typeof getProvisionedInfo>, log: Log): Promise<void> {
+  if (!info?.workflowId || !info.triggerId) return
+  if (!process.env.OPENSERV_USER_API_KEY) {
+    log('openserv_trigger_unchecked', {
+      note: 'no OPENSERV_USER_API_KEY, so the trigger was not re-activated',
+    })
+    return
+  }
+  try {
+    const client = new PlatformClient({ apiKey: process.env.OPENSERV_USER_API_KEY })
+    await client.workflows.setRunning({ id: info.workflowId })
+    await client.triggers.activate({ workflowId: info.workflowId, id: info.triggerId })
+    log('openserv_trigger_active', { workflow: info.workflowId, trigger: info.triggerId })
+  } catch (e) {
+    log('openserv_trigger_failed', { error: errorText(e), note: 'the timer covers it' })
   }
 }
 

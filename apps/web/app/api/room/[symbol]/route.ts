@@ -7,9 +7,11 @@ import {
   ROOM_BODY_MAX,
   type RoomGate,
   type RoomLineView,
+  shortAddress,
   TOKEN_BY_SYMBOL,
 } from '@/features/social/protocol'
 import { db } from '@/lib/db'
+import { sameOrigin } from '@/lib/origin'
 
 /**
  * One Stock Token's Room, from Agari (`app/api/room/route.ts`). Reading and posting are both for members, as in
@@ -31,7 +33,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ sym
     }
     const lines: RoomLineView[] = (await roomThread(db(), symbol)).map((line) => ({
       id: line.id,
-      author: line.author,
+      author: shortAddress(line.author),
       body: line.body,
       holds: line.holds,
       createdAtMs: line.createdAt.getTime(),
@@ -48,6 +50,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ sym
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ symbol: string }> }) {
+  if (!sameOrigin(request)) return refuse(roomCopy.errors.badRequest, 403)
   const { symbol } = await params
   const token = TOKEN_BY_SYMBOL.get(symbol)
   if (!token) return refuse(roomCopy.errors.badRequest, 404)
@@ -70,7 +73,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ sym
     // The server's own row, not an echo of the request: what is on screen is what was stored.
     const line: RoomLineView = {
       id: row.id,
-      author: member.address,
+      author: shortAddress(member.address),
       body: row.body,
       holds: row.holds,
       createdAtMs: row.createdAt.getTime(),

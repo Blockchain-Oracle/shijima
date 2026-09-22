@@ -1,4 +1,5 @@
-import { deskCopy, engineCopy } from '@desk/shared'
+import { APPROVED_TOKENS } from '@desk/chain'
+import { deskCopy, engineCopy, PRESETS } from '@desk/shared'
 import { notFound } from 'next/navigation'
 import { DeskChat } from '@/features/desk/DeskChat'
 import { DeskControls } from '@/features/desk/DeskControls'
@@ -86,6 +87,20 @@ export default async function DeskPage({
                     cashUsdg: view.plate?.cashUsdg ?? null,
                     perActionCapUsdg: view.mandate?.perActionCapUsdg ?? null,
                     dailyCapUsdg: view.mandate?.dailyCapUsdg ?? null,
+                    mandate: view.mandate
+                      ? {
+                          presetId: view.mandate.presetId,
+                          targets: view.mandate.targets,
+                          cashBps: view.mandate.cashTargetBps,
+                          driftToleranceBps: view.mandate.driftToleranceBps,
+                          maxPositionBps: view.mandate.maxPositionBps,
+                          lossStopBps: view.mandate.lossStopBps,
+                          notes: view.mandate.notes,
+                          rules: view.mandate.rules,
+                        }
+                      : null,
+                    tokens: APPROVED_TOKENS.map((t) => ({ symbol: t.symbol, name: t.displayName })),
+                    presets: PRESETS.map((p) => ({ id: p.id, name: p.name })),
                   }}
                 />
               )}

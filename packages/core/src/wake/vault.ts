@@ -60,7 +60,7 @@ export function keepUsdg(state: DeskState, mandate: Mandate): bigint {
 
 /** What the buys arithmetic would want this check if every dollar of cash, in the vault or not, could be spent. */
 export function buysWantUsdg(v: Valuation, mandate: Mandate, perActionCapUsdg: bigint): bigint {
-  const all = { ...v, cashUsdg: v.cashUsdg + v.vaultUsdg }
+  const all = { ...v, cashUsdg: v.cashUsdg + v.vaultUsdg, vaultUsdg: 0n }
   return findNeeds(all, mandate, perActionCapUsdg)
     .slice(0, MAX_CANDIDATES_PER_WAKE)
     .filter((n) => n.candidate.side === 'buy')

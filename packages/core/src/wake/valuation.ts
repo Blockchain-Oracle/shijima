@@ -20,7 +20,6 @@ import type { PublicClient } from 'viem'
 
 export const PRICE_SOURCE = 'pool_twap_30m'
 const PRICE_SCALE = 10n ** 20n
-const BAND_BPS = 800
 
 export interface HoldingValue {
   token: ApprovedToken
@@ -36,10 +35,8 @@ export interface HoldingValue {
   targetBps: number
   /** weight minus target. Positive means over target. */
   driftBps: number
-  /** How far the valuation price sits from the last official update, in basis points. */
+  /** How far the valuation price sits from the last official update, in basis points. The gate judges the band. */
   gapToFeedBps: number
-  /** True while the average is within the contract's 8% band of the feed. */
-  insideBand: boolean
 }
 
 /** Either a token's two prices, or why they could not be read. A closed union, so neither half is optional. */
@@ -150,7 +147,6 @@ export async function readValuation(
         targetBps,
         driftBps: weightBps - targetBps,
         gapToFeedBps: offFeed,
-        insideBand: Math.abs(offFeed) < BAND_BPS,
       }
     }),
   }

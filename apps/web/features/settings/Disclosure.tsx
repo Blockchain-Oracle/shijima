@@ -19,6 +19,7 @@ export function Disclosure({
 }) {
   const [accepted, setAccepted] = useState(acceptedOn)
   const [declared, setDeclared] = useState(false)
+  const [problem, setProblem] = useState<string | null>(null)
   const [pending, start] = useTransition()
   return (
     <div className="flex flex-col gap-3">
@@ -52,7 +53,11 @@ export function Disclosure({
           onClick={() =>
             start(async () => {
               const done = await acceptDisclosureAction()
-              if (!done.ok) return
+              if (!done.ok) {
+                setProblem(done.why)
+                return
+              }
+              setProblem(null)
               setAccepted(new Date().toLocaleDateString('en-GB', { dateStyle: 'medium' }))
               onAccepted?.()
             })
@@ -60,6 +65,11 @@ export function Disclosure({
         >
           {d.accept}
         </Button>
+      )}
+      {problem && (
+        <p className="type-caption text-warning" role="alert">
+          {problem}
+        </p>
       )}
     </div>
   )

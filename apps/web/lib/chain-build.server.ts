@@ -7,6 +7,7 @@
  */
 import {
   APPROVED_TOKENS,
+  deadlineIn,
   deskAbi,
   ETH_USD_FEED,
   erc20Abi,
@@ -72,11 +73,18 @@ function oneTransaction(calls: Hex[]): Hex {
  * withdraw fit one signature. A v0 desk needs the exact amount, so the amount known now is sent instead.
  */
 const all = (desk: DeskForBuild, known: bigint) => (desk.contractVersion === 'v0' ? known : maxUint256)
+/**
+ * Cash a v0 desk will hold AFTER a sale or a redeem in the same batch. The vault can return a unit less than
+ * `convertToAssets` said, and a withdrawal of one unit more than the balance reverts the whole batch, so a v0
+ * desk leaves one unit of dust (a millionth of a dollar) behind. v1 takes the whole balance whatever it is.
+ */
+const cashAfterAll = (desk: DeskForBuild, known: bigint) =>
+  desk.contractVersion === 'v0' ? (known > 1n ? known - 1n : known) : maxUint256
 
 /** Every Stock Token the desk holds, sold to USDG inside the desk at no worse than 1% under a fresh quote. */
 async function sellEverything(holdings: Record<string, bigint>, reason: Hex) {
-  const block = await pub().getBlock()
-  const deadline = Number(block.timestamp) + DEADLINE_S
+  // The later of the chain clock and ours: a quiet chain's last block can be minutes old.
+  const deadline = await deadlineIn(pub(), DEADLINE_S)
   const sales = await Promise.all(
     Object.entries(holdings).map(async ([address, amount]) => {
       const token = tokenOf(address)
@@ -117,12 +125,12 @@ async function vaultPayable(): Promise<bigint | undefined> {
 
 /** The desk's savings-vault shares back to USDG inside the desk. Only the owner's wallet may redeem. */
 async function redeemAll(shares: bigint, reason: Hex) {
-  const [block, assets] = await Promise.all([
-    pub().getBlock(),
+  const [deadline, assets] = await Promise.all([
+    deadlineIn(pub(), DEADLINE_S),
     pub().readContract({ address: VAULT, abi: vaultAbi, functionName: 'convertToAssets', args: [shares] }),
   ])
   return {
-    call: encode('redeemFromVault', [shares, Number(block.timestamp) + DEADLINE_S, reason]),
+    call: encode('redeemFromVault', [shares, deadline, reason]),
     assets,
     line: `${dollars(assets)} comes back from the savings vault`,
   }
@@ -178,7 +186,10 @@ export async function build(proposal: AskProposalRow, desk: DeskForBuild): Promi
         const calls = [
           ...sold.calls,
           ...(redeemed ? [redeemed.call] : []),
-          encode('withdraw', [USDG, all(desk, cashAfter)]),
+          encode('withdraw', [
+            USDG,
+            sold.calls.length > 0 || redeemed ? cashAfterAll(desk, cashAfter) : all(desk, cashAfter),
+          ]),
         ]
         return {
           ...base,
@@ -217,11 +228,11 @@ export async function build(proposal: AskProposalRow, desk: DeskForBuild): Promi
       const payable = await vaultPayable()
       if (payable !== undefined && payable < short_)
         return `The savings vault can pay out only ${dollars(payable)} right now, less than the ${dollars(short_)} this needs from it. You can withdraw ${dollars(state.usdg + payable)} now, and the rest once the vault has the cash.`
-      const block = await pub().getBlock()
+      const deadline = await deadlineIn(pub(), DEADLINE_S)
       return {
         ...base,
         data: oneTransaction([
-          encode('redeemFromVault', [shares, Number(block.timestamp) + DEADLINE_S, reason]),
+          encode('redeemFromVault', [shares, deadline, reason]),
           encode('withdraw', [USDG, wanted]),
         ]),
         sessionMay: false,
@@ -334,7 +345,8 @@ export async function build(proposal: AskProposalRow, desk: DeskForBuild): Promi
           sessionMay = false
         }
         if (cashAfter > 0n) {
-          calls.push(encode('withdraw', [USDG, all(desk, cashAfter)]))
+          const sold = calls.length > 0
+          calls.push(encode('withdraw', [USDG, sold ? cashAfterAll(desk, cashAfter) : all(desk, cashAfter)]))
           lines.push(`At least ${dollars(cashAfter)} goes to your own wallet as USDG`)
         }
       } else {

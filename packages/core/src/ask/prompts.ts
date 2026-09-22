@@ -106,7 +106,20 @@ export const ASK_V3 = ASK_V2.replace(
 `,
 )
 
-export const ASK_PROMPTS = { 'ask.v1': ASK_V1, 'ask.v2': ASK_V2, 'ask.v3': ASK_V3 } as const
-export const ASK_PROMPT_VERSION = 'ask.v3' satisfies keyof typeof ASK_PROMPTS
+/**
+ * ask.v4, 22 Sep. ask.v3 with the owner's standing rules: "cut Nvidia by half if it falls 3%" becomes a rule the
+ * desk carries out by arithmetic, not a note the model reads. Derived from the frozen v3 text in the same way.
+ */
+const V4_ANCHOR =
+  "- price_alert: one message to the owner when a stock's pool moves a set distance from its reference. symbol is the stock's symbol, alertDirection is above, below or either, and thresholdBps is the distance in basis points, from 25 to 5000, so 2% is 200. It fires once and then stops. It changes nothing in the desk.\n"
+if (!ASK_V3.includes(V4_ANCHOR)) throw new Error('ask.v4 cannot be derived: its anchor in ask.v3 is gone')
+export const ASK_V4 = ASK_V3.replace(
+  V4_ANCHOR,
+  `${V4_ANCHOR}- set_rules: replace the owner's standing rules with a new list. Each rule is a protective sale the desk carries out itself: symbol is the stock, fallBps is how far its price must be below the reference in basis points (100 to 2000, so 3% is 300), and cutBps is how much of the holding to sell then in basis points (1000 to 10000, so half is 5000). rules is the WHOLE list after the change: to add one rule, repeat the ones in STANDING RULES and add it; an empty list removes them all. Only when the owner asks for a rule like "sell half of Nvidia if it falls 3%".
+`,
+)
+
+export const ASK_PROMPTS = { 'ask.v1': ASK_V1, 'ask.v2': ASK_V2, 'ask.v3': ASK_V3, 'ask.v4': ASK_V4 } as const
+export const ASK_PROMPT_VERSION = 'ask.v4' satisfies keyof typeof ASK_PROMPTS
 export const READBACK_PROMPTS = { 'readback.v1': READBACK_V1 } as const
 export const READBACK_PROMPT_VERSION = 'readback.v1' satisfies keyof typeof READBACK_PROMPTS

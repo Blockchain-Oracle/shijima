@@ -53,6 +53,12 @@ export function findOutsideChanges(
   priceE8: Record<string, bigint>,
   /** What 10^18 vault shares redeem for now, in USDG. Values an outside move of shares. */
   vaultUsdgPerShareE18: bigint,
+  /**
+   * The price each token had at the LAST snapshot. A token the mandate dropped and the owner then withdrew has
+   * no price this time, because nothing values it any more; the price it was last valued at is the honest one
+   * for what left, and stops the withdrawal reading as a loss.
+   */
+  previousPriceE8: Record<string, bigint> = {},
 ): OutsideChange[] {
   const expected: KnownBalances = {
     cashUsdg: previous.cashUsdg,
@@ -92,7 +98,7 @@ export function findOutsideChanges(
   for (const token of new Set([...Object.keys(expected.tokens), ...Object.keys(current.tokens)])) {
     const delta = (current.tokens[token] ?? 0n) - (expected.tokens[token] ?? 0n)
     if (delta === 0n) continue
-    const price = priceE8[token]
+    const price = priceE8[token] ?? previousPriceE8[token]
     changes.push({
       asset: token,
       delta,

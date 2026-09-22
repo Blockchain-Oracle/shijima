@@ -10,7 +10,13 @@
  */
 import { APPROVED_TOKENS } from '@desk/chain'
 import { answerAskRequest } from '@desk/core'
-import { ASK_CHANNEL, claimAskRequests, expireProposals, sweepStuckAskRequests } from '@desk/db'
+import {
+  ASK_CHANNEL,
+  type AskRequestRow,
+  claimAskRequests,
+  expireProposals,
+  sweepStuckAskRequests,
+} from '@desk/db'
 import { errorText } from '@desk/shared'
 import type { PoolClient } from 'pg'
 import type { Cli, Log } from './review'
@@ -25,6 +31,8 @@ const STUCK_MS = 2 * 60 * 1000
 export interface AskLoop {
   /** Answers anything waiting now. Telegram calls this right after it writes a message. */
   kick: () => void
+  /** Called once each message is answered. Telegram delivers its replies from here, so the bot never waits. */
+  onAnswered: (handler: (row: AskRequestRow) => Promise<void>) => void
   stop: () => Promise<void>
 }
 
@@ -34,9 +42,14 @@ export async function startAskLoop(cli: Cli, log: Log): Promise<AskLoop> {
   let stopping = false
   let claiming = false
   let listener: PoolClient | undefined
+  const answered: ((row: AskRequestRow) => Promise<void>)[] = []
 
-  const stuck = await sweepStuckAskRequests(cli.db, new Date(Date.now() - STUCK_MS))
-  if (stuck > 0) log('ask_stuck', { failed: stuck, note: 'claimed by a worker that stopped' })
+  /** A claim whose answer hangs must not hold one of the three slots for ever. Swept on boot and then every minute. */
+  const sweepStuck = async () => {
+    const stuck = await sweepStuckAskRequests(cli.db, new Date(Date.now() - STUCK_MS))
+    if (stuck > 0) log('ask_stuck', { failed: stuck, note: 'claimed but never answered' })
+  }
+  await sweepStuck()
 
   const kick = () => {
     if (stopping || claiming || inFlight.size >= MAX_AT_ONCE) return
@@ -47,6 +60,8 @@ export async function startAskLoop(cli: Cli, log: Log): Promise<AskLoop> {
           const started = Date.now()
           const job = answerAskRequest(deps, row)
             .then(() => log('ask_answered', { request: row.id, via: row.via, ms: Date.now() - started }))
+            .then(() => Promise.allSettled(answered.map((h) => h(row))))
+            .then(() => undefined)
             .finally(() => {
               inFlight.delete(job)
               kick()
@@ -82,12 +97,16 @@ export async function startAskLoop(cli: Cli, log: Log): Promise<AskLoop> {
   const sweep = setInterval(kick, SWEEP_MS)
   const expire = setInterval(() => {
     expireProposals(cli.db).catch((e) => log('ask_expire_failed', { error: errorText(e) }))
+    sweepStuck().catch((e) => log('ask_sweep_failed', { error: errorText(e) }))
   }, EXPIRE_EVERY_MS)
   kick()
   log('ask_listening', { channel: ASK_CHANNEL })
 
   return {
     kick,
+    onAnswered: (handler) => {
+      answered.push(handler)
+    },
     stop: async () => {
       stopping = true
       clearInterval(sweep)

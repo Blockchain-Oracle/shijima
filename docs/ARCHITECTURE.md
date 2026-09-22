@@ -85,8 +85,9 @@ Build the interface in `docs/research/architecture/03-desk-account.md` section 7
 - **Two deployments.** v0 on Sunday: happy-path fork tests, a $20 canary desk, a dev operator key.
   v1 on Tuesday, after the Monday skeleton has run against v0: the full 23-item test list from report
   03 section 8 plus batch tests, invariant fuzz on mocks, `/security-review` and a second model pass,
-  and a written interface-freeze checklist. Deploy with `--slow --gas-estimate-multiplier 300 --verify
-  --verifier blockscout`. Read the verified Stock Token source in a browser once.
+  and a written interface-freeze checklist (`docs/V1-FREEZE.md`). Deploy with `./contracts/deploy.sh v1`
+  (`--gas-estimate-multiplier 200`, verified on Sourcify by `verify.sh`), then verify the implementation on
+  Blockscout by hand so clones get a Write proxy tab. Read the verified Stock Token source in a browser once.
 - **Escape hatch.** A short page and README section: "If our website disappears, here is how to
   withdraw on Blockscout." If Blockscout does not show a Write tab for clones, the page gives the raw
   `cast send` commands. Mamo's "withdraw even if we are offline", made real.
@@ -226,12 +227,13 @@ rerun is rate limited. Raw mode uses `x-openserv-disable-braid: true`.
 - Owner transactions: `createDesk`, fund, `setLimits`, `allowToken`, `unpause`, `revokeOperator`,
   `withdraw`, `batch`. A `useOwnerGas()` guard sits on every one. An owner with no ETH funds first:
   Relay SDK 8.0.1 bridges USDG to the `predictDesk` address, and a second quote sends about $1 of ETH to
-  the owner's wallet. Origin token decimals are read, never assumed. Minimum funding $20, with the
-  reason shown.
+  the owner's wallet. Origin token decimals come from the token list (USDC on each origin, six). The $20
+  minimum is advised with its reason, not enforced.
 - Every read is scoped by owner or by share slug. The public view is a whitelisted projection with no
   Telegram identity, and shows headline source, time and link only, because Finnhub's free licence
-  forbids passing its text on. Desk creation sits behind a beta invite code. Quote and comparison
-  routes are rate limited.
+  forbids passing its text on. *(22 Sep: the beta invite code is NOT enforced; `invite_codes` exists unused.
+  The comparison page is pre-recorded, so it needs no rate limit; `/api/prices`, `/api/ticker` and the takes
+  feed are unthrottled reads.)*
 - Pause from web or Telegram is a soft pause: instant, free, reversible. The on-chain pause is for the
   loss stop and revoke. The UI shows the brief's states, never these mechanics.
 - Live vault rate and available liquidity come from the Morpho API and on-chain reads, never a
@@ -244,15 +246,18 @@ rerun is rate limited. Raw mode uses `x-openserv-disable-braid: true`.
   8.2 to 8.8 as one resumable flow driven by `desks.lifecycle`. `(desk)`: home 8.9, record 8.10,
   decision/[id] 8.11, reports 8.12, holding/[token] 8.13, mandate 8.14, withdraw 8.15, settings 8.18.
 - **Mobile first.** The owner is on a phone. Every screen is laid out for a narrow screen first.
-- Server components read from Postgres. Client components handle the wallet. TanStack Query polls the
-  desk home every 30 s. Forms are react-hook-form with the same zod schemas the engine uses.
+- Server components read from Postgres. Client components handle the wallet. The desk page is rendered fresh
+  on every load and the status page polls every 30 s; the desk home does not poll *(22 Sep)*. Forms use the
+  same zod schemas the engine uses.
 - A `<Price>` component refuses to render without a source and an as-of time. The Telegram step shows a
   button and a QR code, and settings can disconnect it. Slow calls (mandate read-back, comparison) stream
   progress so the screen is never frozen.
 - "Has not checked in" is derived in the web query, independent of the worker. `GET /api/quote` serves
-  "cost to trade your size". `GET /api/decisions/[id]/record.json` serves Download. "Check it"
-  recomputes the hash in the browser against the event log, and for non-actions walks `prev_hash` to the
-  sealing record or shows "not yet sealed, next seal HH:MM". The go-live lock is enforced server-side.
+  "cost to trade your size". Download builds the canonical bytes in the browser. "Check it" recomputes the
+  hash in the browser, asks the public RPC for the transaction's `decisionHash` itself, and for non-actions
+  walks `prevHash` through the bodies to the sealing record, or shows "not yet sealed" with the next seal
+  time *(rebuilt 22 Sep: until then it compared the record with its own stored hash)*. The go-live lock is
+  enforced server-side.
 - **A states gallery at `/dev/states`** renders every row of brief table 8.16 and every record outcome
   from fixtures. It makes the awkward states reviewable in one place, for us and for the designer.
 - **21 Sep: the design is Masayume's** (Abu's own app, `sommina-events`), ported from **Agari**
@@ -274,7 +279,9 @@ confidence, shadow flag, record json, `record_hash`, `prev_hash`, `sealed_by_tx`
 `actions` (leg, nonce, tx hash, calldata hash, expected, actual, failure code), `approvals` (reason,
 expiry, answered by, when, via, telegram message id), `grades`.
 Money over time: `desk_value_snapshots`, `cash_flows` (deposit, withdrawal, bridge in flight),
-`fee_accruals` (0.5% a year, waived, zero in Shadow). Vault interest is derived from `actions`.
+`fee_accruals` (0.5% a year, waived, zero in Shadow; *22 Sep: unused, the fee line is computed on the fly from
+value and days live*). Vault interest is not shown: the owner can move shares with their own wallet, which a
+running total would miscount.
 Market: `reference_snapshots` (close or open, multiplier), `price_points` (pool mid, feed, feed time,
 gap, cost at $100 and $1,000, halt), `multiplier_events`, `company_events`, `desk_token_flags`
 (alerts fire on change, not hourly), `news_cache` (per ticker, deduplicated by URL hash).

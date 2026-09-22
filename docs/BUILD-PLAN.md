@@ -752,6 +752,58 @@ the anvil fork and the rehearsal database in headless Chrome. Nothing was sent t
 - **Next:** the live weekend. Waiting on Abu: SERV top-up (then `pnpm compare:run`), the go for v1 (about $1) with
   Blockscout verification, then the demo desk with $50.
 
+**Tue 22 Sep, evening. REVIEW OF EVERYTHING BUILT AGAINST THE PLAN, at Abu's request, and the fixes.** Seven
+independent reviewers read the contracts, the engine, the chat and worker, the owner pages, the public pages, the
+database layer and Agari's changes since our port pin against `ARCHITECTURE.md`, `DESIGN-BRIEF.md`, `FIDELITY.md`,
+`DECISIONS.md`, `RECORD-SCHEMA.md` and this log. Every finding was verified in the code before it was fixed. What
+mattered most, in order:
+- **18 of the 44 real records on the live desk could not be read** (the decision page rendered half blank, the share
+  card drew nothing): the `approvalOf` widening was not optional, and version 0's evidence was held to version 1's
+  strict shape. Both are widenings now; all 44 live and 89 rehearsal records parse and view.
+- **"Check it" compared the record with its own stored hash**, not with the chain, and for a sealed non-action claimed
+  the fingerprint was on the network when only the sealing record's was. Rebuilt: the browser rebuilds the bytes,
+  asks the public RPC for the transaction itself and decodes the desk's event; for a record with no transaction it
+  walks every `prevHash` link to the sealing record; an unsealed record says so and names the next seal. Proven in
+  headless Chrome on mainnet records 1 and 3: "It matches", with the event's hash read from the network.
+- **A new wallet could not accept the disclosure** (no owner row until a desk existed), so a stranger could never make
+  a desk; sign-in now creates the row. **An owner of a private desk got 404 on their own record, report and decision
+  pages**, so the go-live rule could never be met; every desk page resolves the owner by session now.
+- **The loss stop could fire on the owner's own withdrawal of a dropped token** (an unpriced change counted as $0 in
+  the baseline). It is priced from the last snapshot, or the baseline waits for the next full valuation.
+- **The protective rule the decisions doc calls the demo could not fire**: notes only shaped timing. A structured
+  rule (`price_move_sell`: token, fall, cut) now lives in the mandate; `needs` raises a protective sale by arithmetic,
+  the model is told it is the owner's standing instruction, and the studio and the desk's new **Edit what you told
+  it** control (no model call, before-and-after card) set it. Proven on the rehearsal database in the browser.
+- Engine: the mandate's daily limit could be exceeded within one check; one candidate's read error failed the whole
+  check; company events never reached the engine (an `event` evidence item and an `EVENT_WINDOW` blocker now);
+  approved-but-unexecuted requests never expired; a second loss-limit breach never paused on-chain (it does now,
+  through the sender); grading and prices paused while a transaction was held; buys ignored the cash target.
+- Worker: the OpenServ trigger and the timer could run a pass at once with no mutex; a Telegram send that failed
+  once was dropped for good; an approval answered on the website never updated its Telegram message; `/pause`
+  waited behind a model call and left the pinned status stale; a second desk on one Telegram user acted on an
+  arbitrary desk; the Monday report was never sent. All fixed; migration 0006 adds `approval_answered`.
+- Contract (v1, undeployed): `MAX_FEED_AGE` 4 days equalled the longest gap the price log has seen, now 6; the
+  disclosure's "8% of your daily limit per day" overstated a fixed 24-hour window and is reworded everywhere;
+  owner-side deadlines came from a possibly stale block clock. `docs/V1-FREEZE.md` is the checklist the plan owed.
+- Web: holdings now show price with source and age, the reference and the gap; limits in use show spent today and
+  the room before the loss stop; the plate shows since the reopen; every boundary time is in the reader's zone with
+  New York beside it (Agari's rule; the desk's next check was a bare New York clock); the record has its filters;
+  the report lists past stretches; the decision page shows how a request was answered and the network fee; the
+  record, decision, report and Your desks pages left the pre-port frame; visitors are no longer addressed as the
+  owner; API routes check origin under a content security policy; SIWE pins the site and chain; social routes give
+  out short addresses; the header's session chip is gone as in Agari.
+- Docs corrected to what the code does: no invariant fuzz or sandwich tests, no invite code, no `record.json` route,
+  no desk-home polling, `fee_accruals` unused, deploy flags as scripted, record version 2 documented.
+- **Proven:** lint, typecheck, 98 checks, 42 fork tests, the production build; 136 page loads in headless Chrome at
+  four widths in both themes, signed in and out, with no console error, no sideways scroll and no 404; two live
+  "Check it" matches; two checks on a fresh anvil fork after the refactors (both candidates ended `FAILED_NO_DECISION`
+  on SERV's 402, as they should with $0.02 of credit); the Edit control's rule card confirmed and applied.
+- **Still owed, none blocking the weekend:** `wake.ts` is over the size rule; the second reading of `Desk.sol`;
+  operator gas alerts to Abu go to the log and the status page, not to a chat; the worker has been off since Monday
+  09:00 UTC, so the weekend of 19 to 20 Sep is ungraded and 40 records are unsealed until it runs.
+- **Next:** the live weekend. Waiting on Abu: SERV top-up, the go for v1 (`docs/V1-FREEZE.md`), the demo desk's $50,
+  and starting the worker.
+
 ## 6. Schedule
 
 | Day | Work | Must be true by end of day |
@@ -792,8 +844,10 @@ template later. Real transaction hashes throughout.
 
 ## 7. Verification
 
-- **Contracts.** `forge test` and `forge test --fork-url $ALCHEMY` unpinned. Invariant fuzz green.
-  Poisoned-pool and sandwich tests pass. Blockscout shows the clone's source and Write tab.
+- **Contracts.** 42 fork tests against live mainnet state at a pinned block (`BLOCK=<n> ./contracts/fork-test.sh`),
+  covering the guards, the session key's scope and the whale push. *(Corrected 22 Sep: no invariant fuzz and no
+  sandwich test exist; the whale push is the one adversarial-pool test.)* Blockscout shows the clone's source
+  and Write proxy tab once v1's implementation is verified there.
 - **Skeleton, Monday.** Event `decisionHash` equals the hash recomputed from the stored record. Change
   one byte and the check fails. Kill after send, restart, and the action resolves with no duplicate.
 - **Limits hold on-chain.** With the operator key: over per-action cap, over daily cap, a token not on

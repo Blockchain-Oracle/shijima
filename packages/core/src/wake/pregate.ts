@@ -14,7 +14,9 @@ import type { Candidate } from './types'
 export const MOVING_FAST_BPS = 100
 
 /** The contract refuses a feed older than this. Wall clock, because that is what the contract measures. */
-const MAX_FEED_AGE_S = 4 * 24 * 60 * 60
+const MAX_FEED_AGE_S = 6 * 24 * 60 * 60
+/** The desk does not buy this close to a company's report. The owner's own sell is never held up by it. */
+export const EVENT_WINDOW_DAYS = 2
 
 export interface Blocker {
   rule:
@@ -29,6 +31,8 @@ export interface Blocker {
     | 'TOKEN_NOT_ALLOWED'
     | 'POOL_MISMATCH'
     | 'DID_THIS_MINUTES_AGO'
+    | 'EVENT_WINDOW'
+    | 'LOSS_LIMIT'
   text: string
 }
 
@@ -68,5 +72,14 @@ export function pregate(input: {
   if (input.beyondBand) block('BEYOND_PRICE_BAND', copy.beyondPriceBand(name))
   if (m.movingBps >= MOVING_FAST_BPS) block('PRICE_MOVING_FAST', copy.movingFast(name, m.movingBps))
   if (m.headlines === undefined && !input.protective) block('NEWS_UNAVAILABLE', copy.newsUnavailable(name))
+  const e = m.event
+  if (
+    c.side === 'buy' &&
+    e &&
+    e.eventKind === 'earnings' &&
+    e.daysAway >= 0 &&
+    e.daysAway <= EVENT_WINDOW_DAYS
+  )
+    block('EVENT_WINDOW', copy.eventWindow(name, e.eventDate))
   return blockers
 }

@@ -25,6 +25,7 @@ import {
   addDeskEvent,
   appendRecord,
   bumpShadowChecks,
+  companyEventsFrom,
   confirmedTradesSince,
   currentMandate,
   type Db,
@@ -53,17 +54,21 @@ import { type Address, formatUnits, type Hex, type PublicClient } from 'viem'
 import { runApprovedRequests } from './approved'
 import { commit, snapshotOf } from './commit'
 import { considerCandidate } from './consider'
-import { findNeeds, MAX_CANDIDATES_PER_WAKE } from './needs'
+import { pauseOnChain } from './loss-stop'
+import { type EventSource, referenceFor } from './market'
+import { findNeeds, MAX_CANDIDATES_PER_WAKE, type Need } from './needs'
 import type { PlannedOutcome } from './plan'
 import { allPriced, findOutsideChanges, netFlowUsdg, scaledBaseline } from './reconcile'
 import { buildDecisionBody, mandateFingerprint, RECORD_SCHEMA_VERSION } from './record'
 import { chainReferenceSource } from './reference'
 import { USDG_DECIMALS } from './types'
-import { readValuation } from './valuation'
+import { readValuation, type Valuation } from './valuation'
 import { redeemForBuys, sweepIdleCash, type VaultStepContext } from './vault'
 
 /** The desk will not repeat the same trade on the same token inside this window. A stale read is the usual cause. */
 const REPEAT_WINDOW_MS = 10 * 60 * 1000
+/** On this many consecutive checks below the loss limit, the desk pauses itself on the chain. */
+const ON_CHAIN_PAUSE_AT_BREACH = 2
 
 /** What the worker's sender reports back. The worker owns the operator key, so sending is injected. */
 export type SendReport =
@@ -107,6 +112,25 @@ export function mandateLine(m: Mandate, version: number, approved: ApprovedToken
     approved.find((t) => t.address.toLowerCase() === a.toLowerCase())?.displayName ?? a
   const targets = m.targets.tokens.map((t) => `${name(t.token)} ${pct(t.weightBps)}`).join(', ')
   return `MANDATE v${version}: hold ${targets}, and ${pct(m.targets.cashBps)} cash. A holding may wander ${pct(m.driftToleranceBps)} from its target. No holding above ${pct(m.maxPositionBps)}.`
+}
+
+/** The company calendar the worker keeps, as the engine reads it: the soonest event for a token, or nothing. */
+export function companyEventSource(db: Db): EventSource {
+  return async (token, now) => {
+    const today = now.toISOString().slice(0, 10)
+    const [next] = await companyEventsFrom(db, today, [token.address])
+    if (!next) return undefined
+    const daysAway = Math.round(
+      (new Date(`${next.eventDate}T00:00:00Z`).getTime() - new Date(`${today}T00:00:00Z`).getTime()) /
+        86_400_000,
+    )
+    return {
+      eventKind: next.kind,
+      eventDate: next.eventDate,
+      timing: next.timing === 'bmo' || next.timing === 'amc' ? next.timing : null,
+      daysAway,
+    }
+  }
 }
 
 /**
@@ -157,12 +181,43 @@ async function absorbOwnerCalls(
   return absorbed ? null : unexplained
 }
 
+/**
+ * The reference price for every token the owner's standing rules name, from the same source every decision
+ * uses. Only rule tokens are read: a desk with no rules costs nothing here.
+ */
+async function ruleReferences(
+  pub: PublicClient,
+  mandate: Mandate,
+  valuation: Valuation,
+  now: Date,
+  reference: ReturnType<typeof chainReferenceSource>,
+): Promise<Record<string, bigint>> {
+  const out: Record<string, bigint> = {}
+  for (const rule of mandate.rules ?? []) {
+    const h = valuation.holdings.find((x) => x.token.address.toLowerCase() === rule.token.toLowerCase())
+    if (!h || h.balance === 0n) continue
+    try {
+      out[rule.token.toLowerCase()] = await referenceFor(
+        pub,
+        h.token,
+        { price: h.feedE8, updatedAt: h.feedUpdatedAt },
+        now,
+        reference,
+      )
+    } catch {
+      // No reference, no judgment: the rule stays quiet this check rather than firing on a guess.
+    }
+  }
+  return out
+}
+
 export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeReport> {
   const { db, pub } = deps
   const dry = input.dry === true
   const say = (line: string) => deps.log?.(line)
   const records: WakeReport['records'] = []
   const reference = chainReferenceSource(db, pub)
+  const events = companyEventSource(db)
 
   const desk = await deskById(db, input.deskId)
   if (!desk) throw new Error(`desk ${input.deskId} is not registered`)
@@ -176,6 +231,7 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
     return { status: 'skipped', note: 'the owner removed the assistant', records }
   const mandate = mandateFromRow(mandateRow)
   const mandateRef = { version: mandateRow.version, fingerprint: mandateFingerprint(mandate) }
+  const line = mandateLine(mandate, mandateRow.version, deps.approved)
 
   const wake = dry
     ? undefined
@@ -237,6 +293,9 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
           { cashUsdg: state.usdg, tokens: state.holdings, vaultShares: state.vaultShares },
           Object.fromEntries(valuation.holdings.map((h) => [h.token.address.toLowerCase(), h.twapE8])),
           usdgPerShareE18,
+          // A token nothing values any more is priced at what it was last valued at, so a withdrawal of it
+          // never reads as a loss.
+          Object.fromEntries(previous.holdings.map((h) => [h.token.toLowerCase(), BigInt(h.priceE8)])),
         )
       : []
     if (changes.length > 0) {
@@ -250,14 +309,17 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
       if (changes.length > 0) {
         // The baseline, the note of what happened, and the snapshot that stops it being counted again, all
         // in one transaction. Scaled, not added, so the owner's own money moving never changes how far down
-        // the desk is.
+        // the desk is. A change that could not be priced at all makes the baseline UNKNOWN: it is set afresh
+        // from the next fully priced valuation instead of being scaled by a number that is not real.
         await recordOutsideChanges(db, {
           deskId: desk.id,
-          baselineUsdg: scaledBaseline(
-            desk.drawdownBaselineUsdg ?? valuation.totalUsdg,
-            valuation.totalUsdg,
-            netFlowUsdg(changes),
-          ),
+          baselineUsdg: unpricedFlow
+            ? null
+            : scaledBaseline(
+                desk.drawdownBaselineUsdg ?? valuation.totalUsdg,
+                valuation.totalUsdg,
+                netFlowUsdg(changes),
+              ),
           event: {
             changes: changes.map((c) => ({
               asset: c.asset,
@@ -272,18 +334,21 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
       }
     }
 
-    // The loss limit. A breach stops the desk from acting. The owner restarts it.
+    // The loss limit. A breach stops the desk from acting. The owner restarts it. A baseline made unknown by an
+    // unpriced change is only set again once every holding has a price, so it is never a guess.
     const baseline = dry
       ? (desk.drawdownBaselineUsdg ?? valuation.totalUsdg)
-      : await ensureDrawdownBaseline(db, desk.id, valuation.totalUsdg)
+      : unpricedFlow || valuation.unpriced.length > 0
+        ? (desk.drawdownBaselineUsdg ?? valuation.totalUsdg)
+        : await ensureDrawdownBaseline(db, desk.id, valuation.totalUsdg)
     const lossBps =
       baseline > valuation.totalUsdg ? Number(((baseline - valuation.totalUsdg) * 10_000n) / baseline) : 0
     // A price we could not read is not a loss. Judging the limit on a partial valuation could stop the desk
     // over an RPC failure, so while anything is unpriced the limit is not evaluated and the record says so.
-    const canJudgeLoss = valuation.unpriced.length === 0 && !unpricedFlow
+    const canJudgeLoss = valuation.unpriced.length === 0 && !unpricedFlow && !dry
     const breached = canJudgeLoss && lossBps >= mandate.lossStopBps
     let deskState = desk.state
-    if (!dry) await recordDrawdownBreach(db, desk.id, breached)
+    const breaches = dry ? 0 : await recordDrawdownBreach(db, desk.id, breached)
     if (breached && deskState === 'active') {
       const why = engineCopy.lossLimitReached(
         usd(valuation.totalUsdg),
@@ -312,8 +377,6 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
     }
 
     const stateText = engineCopy.deskState[deskState]
-    // The owner's own daily limit is counted over a rolling 24 hours, which is stricter than the chain's window.
-    const spentTodayUsdg = await spentSince(db, desk.id, new Date(now.getTime() - 24 * 60 * 60 * 1000))
     let common = {
       chainId: CHAIN_ID,
       desk: desk.address,
@@ -324,6 +387,39 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
       valuation,
     }
 
+    // The second consecutive check still below the loss limit: the desk pauses itself ON THE CHAIN, so even a
+    // stolen operator key could not trade it. Only the owner's wallet can lift that.
+    if (breached && breaches >= ON_CHAIN_PAUSE_AT_BREACH && deskState !== 'active' && !state.paused && !dry) {
+      const paused = await pauseOnChain(deps, {
+        desk,
+        wakeId: wake?.id,
+        common,
+        state,
+        why: engineCopy.lossLimitReached(
+          usd(valuation.totalUsdg),
+          lossBps,
+          usd(baseline),
+          mandate.lossStopBps,
+        ),
+        breaches,
+        now,
+        say,
+      })
+      records.push(paused.record)
+      if (paused.moved) state = await readDeskState(pub, desk.address as Address)
+    }
+
+    // The owner's own daily limit is counted over a rolling 24 hours, which is stricter than the chain's window.
+    // Every action this check confirms is added, so several candidates can never add up past it in one pass.
+    const spent = { usdg: await spentSince(db, desk.id, new Date(now.getTime() - 24 * 60 * 60 * 1000)) }
+
+    /** Reads the desk and values it again after money moved, so nothing later in the check works on a stale picture. */
+    const refresh = async () => {
+      state = await readDeskState(pub, desk.address as Address)
+      valuation = await readValuation(pub, state, mandate, deps.approved, now)
+      common = { ...common, valuation }
+    }
+
     // What the owner has approved comes first: an approval is permission to act at about the price they were
     // shown, so every minute it waits makes it less true.
     if (!dry) {
@@ -332,32 +428,36 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
         { desk, wakeId: wake?.id, common, state, input },
         {
           mandate,
-          spentTodayUsdg,
-          mandateLine: mandateLine(mandate, mandateRow.version, deps.approved),
+          spent,
+          mandateLine: line,
           deskState,
           stateText,
           valuation,
           now,
           reference,
+          events,
           say,
         },
       )
       records.push(...carried.records)
-      if (carried.moved) state = await readDeskState(pub, desk.address as Address)
+      if (carried.moved) await refresh()
     }
 
-    // Requests the owner never answered have lapsed. Nothing was done, and they are told so.
-
+    // Requests the owner never answered have lapsed. Nothing was done, and they are told so. The Telegram
+    // message that asked is edited too, so it never keeps live buttons.
     if (!dry) {
       for (const lapsed of await expireApprovals(db, desk.id, now)) {
         await enqueueNotification(db, {
           deskId: desk.id,
-
           decisionId: lapsed.decisionId,
-
           kind: 'alert',
-
           payload: { alert: 'approval_expired', text: engineCopy.approvalExpired },
+        })
+        await enqueueNotification(db, {
+          deskId: desk.id,
+          decisionId: lapsed.decisionId,
+          kind: 'approval_answered',
+          payload: { approvalId: lapsed.id, answer: 'expired' },
         })
       }
     }
@@ -385,13 +485,16 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
     }
 
     // 3. needs. Arithmetic only. A desk that is not active looks, values, and proposes nothing.
-    const priceless = new Set(valuation.unpriced.map((u) => u.token.address.toLowerCase()))
-    const needs =
+    const references =
+      deskState === 'active' ? await ruleReferences(pub, mandate, valuation, now, reference) : {}
+    const priceless = () => new Set(valuation.unpriced.map((u) => u.token.address.toLowerCase()))
+    const currentNeeds = () =>
       deskState === 'active'
-        ? findNeeds(valuation, mandate, state.perActionCapUsdg)
-            .filter((n) => !priceless.has(n.candidate.token.address.toLowerCase()))
-            .slice(0, MAX_CANDIDATES_PER_WAKE)
+        ? findNeeds(valuation, mandate, state.perActionCapUsdg, references).filter(
+            (n) => !priceless().has(n.candidate.token.address.toLowerCase()),
+          )
         : []
+    let needs = currentNeeds().slice(0, MAX_CANDIDATES_PER_WAKE)
     if (needs.length === 0) {
       const summary = deskState === 'active' ? engineCopy.nothingToDo : engineCopy.notLooking(stateText)
       const seq = dry
@@ -426,78 +529,79 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
       say(`record ${seq ?? '(dry)'}: NOTHING_TO_DO. ${summary}`)
     }
 
-    // 4. each candidate: consider, record, act
-    for (const need of needs) {
-      const standing = await standingDeferral(db, desk.id, need.candidate.token.address)
-      const askedAt = await pendingApprovalSince(db, desk.id, need.candidate.token.address)
-      const held = valuation.holdings.find((h) => h.token.address === need.candidate.token.address)
-      const repeatedWithinMinutes = await didSameTradeSince(
-        db,
-        desk.id,
-        need.candidate.token.address,
-        need.candidate.side,
-        new Date(now.getTime() - REPEAT_WINDOW_MS),
-      )
-      let considered = await considerCandidate(
-        {
-          pub,
-          servApiKey: deps.servApiKey,
-          finnhubKey: deps.finnhubKey,
-          reference,
-          state,
-          mandate,
-          mandateLine: mandateLine(mandate, mandateRow.version, deps.approved),
-          mode: desk.mode,
-          deskActive: true,
-          deskStateText: stateText,
-          standing,
-          askedAt,
-          deskAddress: desk.address as Address,
-          holdingUsdg: held?.valueUsdg ?? 0n,
-          totalUsdg: valuation.totalUsdg,
-          spentTodayUsdg,
-          cashUsdg: valuation.cashUsdg + valuation.vaultUsdg,
-          repeatedWithinMinutes,
-          ...(input.force ? { force: true } : {}),
-          now,
-        },
-        need,
-      )
+    // 4. each candidate: consider, record, act. After money moves, the desk is valued again and the remaining
+    // candidates are sized on the fresh picture: a sale's freed cash is usable, a just-bought token is not
+    // proposed twice. One failing candidate is recorded as such and the rest still get their turn.
+    const done = new Set<string>()
+    let considered_ = 0
+    while (needs.length > 0 && considered_ < MAX_CANDIDATES_PER_WAKE) {
+      const need = needs[0] as Need
+      needs = needs.slice(1)
+      const key = `${need.candidate.side}:${need.candidate.token.address.toLowerCase()}`
+      if (done.has(key)) continue
+      done.add(key)
+      considered_++
       say(
         `${need.candidate.id} ${need.candidate.side.toUpperCase()} ${need.candidate.token.symbol}: ${need.candidate.why}`,
       )
-      if (considered.answer)
-        say(
-          `  SERV: ${considered.answer.serv.ok ? `${considered.answer.serv.value.option} (${considered.answer.serv.value.confidencePercent}%)` : `failed, ${considered.answer.serv.error}`}`,
-        )
-      // The model takes many seconds. The owner may have paused in that time, so the state is read again NOW.
-      if (considered.willAct || considered.ask) {
-        const fresh = await deskById(db, desk.id)
-        if (fresh && fresh.state !== 'active') {
-          const text = engineCopy.pausedMeanwhile(engineCopy.deskState[fresh.state])
-          considered = {
-            ...considered,
-            willAct: false,
-            ask: null,
-            outcome: 'DECLINED',
-            summary: text,
-            blockers: [{ rule: 'DESK_NOT_ACTIVE', text }],
-            preview: null,
-            newDeferralBaseline: null,
-          }
+      let moved = false
+      try {
+        moved = await runCandidate(deps, { desk, wakeId: wake?.id, common, state, input }, need, {
+          mandate,
+          line,
+          deskState,
+          stateText,
+          valuation,
+          spent,
+          reference,
+          events,
+          now,
+          dry,
+          say,
+          records,
+        })
+      } catch (e) {
+        const message = errorText(e)
+        say(`  ${need.candidate.id} failed: ${message}`)
+        if (!dry) {
+          const seq = (
+            await appendRecord(db, desk.id, (slot) => ({
+              record: buildDecisionBody({
+                ...common,
+                slot,
+                state,
+                need,
+                candidate: need.candidate,
+                deferral: null,
+                blockers: [],
+                evidence: [],
+                answer: null,
+                gate: null,
+                override: null,
+                outcome: 'FAILED_NO_DECISION',
+                ask: null,
+                preview: null,
+              }),
+              schemaVersion: RECORD_SCHEMA_VERSION,
+              ...(wake ? { wakeId: wake.id } : {}),
+              outcome: 'failed',
+              mode: desk.mode,
+              summary: engineCopy.noUsableDecision(message),
+              decidedAt: now,
+              token: need.candidate.token.address,
+              side: need.candidate.side,
+              failureCode: 'read_failed',
+            }))
+          ).decision.seq
+          records.push({ seq, outcome: 'FAILED_NO_DECISION', summary: engineCopy.noUsableDecision(message) })
         }
       }
-      if (dry) {
-        records.push({ seq: null, outcome: considered.outcome, summary: considered.summary })
-        say(`  record (dry): ${considered.outcome}. ${considered.summary}`)
-        continue
+      if (moved) {
+        await refresh()
+        needs = currentNeeds().filter(
+          (n) => !done.has(`${n.candidate.side}:${n.candidate.token.address.toLowerCase()}`),
+        )
       }
-      const acted = await commit(deps, { desk, wakeId: wake?.id, common, state, input }, considered)
-      records.push({ seq: acted.seq, outcome: considered.outcome, summary: considered.summary })
-      say(
-        `  record ${acted.seq}: ${considered.outcome}. ${considered.summary}${acted.note ? ` ${acted.note}` : ''}`,
-      )
-      if (acted.moved) state = await readDeskState(pub, desk.address as Address)
     }
 
     // Idle cash into the savings vault, after the trades have taken what they need. Read the state again first:
@@ -524,4 +628,100 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
     if (wake) await finishWake(db, wake.id, { status: 'failed', error: message })
     return { status: 'failed', note: message, records }
   }
+}
+
+interface CandidateRun {
+  mandate: Mandate
+  line: string
+  deskState: 'active' | 'paused_by_owner' | 'stopped_by_loss_limit' | 'needs_attention'
+  stateText: string
+  valuation: Valuation
+  spent: { usdg: bigint }
+  reference: ReturnType<typeof chainReferenceSource>
+  events: EventSource
+  now: Date
+  dry: boolean
+  say: (line: string) => void
+  records: WakeReport['records']
+}
+
+/** One candidate through consider, record and act. True when money moved. Throws on a read the check could not make. */
+async function runCandidate(
+  deps: WakeDeps,
+  ctx: Parameters<typeof commit>[1],
+  need: Need,
+  run: CandidateRun,
+): Promise<boolean> {
+  const { db, pub } = deps
+  const { desk } = ctx
+  const standing = await standingDeferral(db, desk.id, need.candidate.token.address)
+  const askedAt = await pendingApprovalSince(db, desk.id, need.candidate.token.address)
+  const held = run.valuation.holdings.find((h) => h.token.address === need.candidate.token.address)
+  const repeatedWithinMinutes = await didSameTradeSince(
+    db,
+    desk.id,
+    need.candidate.token.address,
+    need.candidate.side,
+    new Date(run.now.getTime() - REPEAT_WINDOW_MS),
+  )
+  let considered = await considerCandidate(
+    {
+      pub,
+      servApiKey: deps.servApiKey,
+      finnhubKey: deps.finnhubKey,
+      reference: run.reference,
+      events: run.events,
+      approved: deps.approved,
+      state: ctx.state,
+      mandate: run.mandate,
+      mandateLine: run.line,
+      mode: desk.mode,
+      deskActive: true,
+      deskStateText: run.stateText,
+      standing,
+      askedAt,
+      deskAddress: desk.address as Address,
+      holdingUsdg: held?.valueUsdg ?? 0n,
+      totalUsdg: run.valuation.totalUsdg,
+      spentTodayUsdg: run.spent.usdg,
+      cashUsdg: run.valuation.cashUsdg + run.valuation.vaultUsdg,
+      repeatedWithinMinutes,
+      ...(ctx.input.force ? { force: true } : {}),
+      now: run.now,
+    },
+    need,
+  )
+  if (considered.answer)
+    run.say(
+      `  SERV: ${considered.answer.serv.ok ? `${considered.answer.serv.value.option} (${considered.answer.serv.value.confidencePercent}%)` : `failed, ${considered.answer.serv.error}`}`,
+    )
+  // The model takes many seconds. The owner may have paused in that time, so the state is read again NOW.
+  if (considered.willAct || considered.ask) {
+    const fresh = await deskById(db, desk.id)
+    if (fresh && fresh.state !== 'active') {
+      const text = engineCopy.pausedMeanwhile(engineCopy.deskState[fresh.state])
+      considered = {
+        ...considered,
+        willAct: false,
+        ask: null,
+        outcome: 'DECLINED',
+        summary: text,
+        blockers: [{ rule: 'DESK_NOT_ACTIVE', text }],
+        preview: null,
+        newDeferralBaseline: null,
+      }
+    }
+  }
+  if (run.dry) {
+    run.records.push({ seq: null, outcome: considered.outcome, summary: considered.summary })
+    run.say(`  record (dry): ${considered.outcome}. ${considered.summary}`)
+    return false
+  }
+  const acted = await commit(deps, ctx, considered)
+  run.records.push({ seq: acted.seq, outcome: considered.outcome, summary: considered.summary })
+  run.say(
+    `  record ${acted.seq}: ${considered.outcome}. ${considered.summary}${acted.note ? ` ${acted.note}` : ''}`,
+  )
+  if (acted.moved) run.spent.usdg += considered.gate.countedUsdg
+  return acted.moved
 }

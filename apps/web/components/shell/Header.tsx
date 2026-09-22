@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation'
 import { HeaderAccount } from './HeaderAccount'
 import { HeaderInbox } from './HeaderInbox'
 import { HeaderMoneyPill } from './HeaderMoneyPill'
-import { MarketSessionChip } from './MarketSessionChip'
 import { MobileBottomNav } from './MobileBottomNav'
 import { DESKTOP_NAV, isActiveNavItem } from './nav-items'
 import { ShijimaMark } from './ShijimaMark'
@@ -55,7 +54,6 @@ export default function Header({ signedInAs, desksTotalUsdg, unread }: HeaderPro
           </div>
 
           <div className="header-right">
-            <MarketSessionChip className="header-session" />
             <ThemeToggle />
             {signedInAs ? <HeaderInbox unread={unread} /> : null}
             {signedInAs ? <HeaderMoneyPill totalUsdg={desksTotalUsdg} /> : null}

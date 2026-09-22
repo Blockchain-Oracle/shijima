@@ -166,15 +166,17 @@ export async function resolveUnsettled(deps: SenderDeps, now = new Date()): Prom
       was: action.status,
     }
     const kind = action.kind
-    const outcome =
-      action.txHash && kind !== 'pause'
-        ? await findOutcome(deps.pub, { kind, txHash: action.txHash as Hex })
-        : undefined
+    const outcome = action.txHash
+      ? await findOutcome(deps.pub, { kind, txHash: action.txHash as Hex })
+      : undefined
 
     if (outcome) {
       await settle(deps.db, action, outcome)
+      // A pause carries no decision hash, so there is nothing for it to disagree with.
       const hashMismatch =
-        outcome.status === 'confirmed' && outcome.eventHash.toLowerCase() !== recordHash.toLowerCase()
+        kind !== 'pause' &&
+        outcome.status === 'confirmed' &&
+        outcome.eventHash.toLowerCase() !== recordHash.toLowerCase()
       settlements.push({
         ...base,
         now: outcome.status,

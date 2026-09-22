@@ -27,12 +27,18 @@ export interface DeferralBaseline {
   headlineHashes: string[]
 }
 
+/** A headline as the wait sees it now: its hash, and when it was published. */
+export interface HeadlineNow {
+  hash: string
+  publishedAt: string
+}
+
 export interface DeferralNow {
   at: Date
   gapBps: number
   driftBps: number
   cashUsdg: bigint
-  headlineHashes: string[]
+  headlines: HeadlineNow[]
 }
 
 /** null means it still stands. Otherwise how it ended, in words for the record. */
@@ -62,8 +68,11 @@ export function whyDeferralEnds(
   if (driftGrowth >= toleranceBps / 2) {
     return { status: 'broken', reason: engineCopy.remembered.driftGrew(driftGrowth) }
   }
+  // A headline is new only when the wait had not seen it AND it was published after the wait was decided. A
+  // wait made while news was unavailable saw nothing, and older headlines returning with the feed are not news.
   const known = new Set(baseline.headlineHashes)
-  if (now.headlineHashes.some((h) => !known.has(h))) {
+  const decidedAt = new Date(baseline.decidedAt).getTime()
+  if (now.headlines.some((h) => !known.has(h.hash) && new Date(h.publishedAt).getTime() > decidedAt)) {
     return { status: 'broken', reason: engineCopy.remembered.newHeadline }
   }
   return null

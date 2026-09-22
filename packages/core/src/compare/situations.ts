@@ -180,6 +180,7 @@ function build(
     movingBps: Math.abs(bps(spotE8, e8(s.twap))),
     oraclePaused: false,
     halt: { symbol: s.symbol, isTradingHalt: false },
+    event: undefined,
     headlines: s.headlines?.map(
       (title, i): Headline => ({
         title,

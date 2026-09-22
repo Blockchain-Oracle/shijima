@@ -6,10 +6,12 @@
  * The hashed `record` body is public by design: it is the thing whose fingerprint is written on-chain, and a
  * record nobody can read proves nothing.
  */
-import { and, asc, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, gt, gte, inArray, lt, lte, sql } from 'drizzle-orm'
+import { alias } from 'drizzle-orm/pg-core'
 import type { DbOrTx } from '../client'
 import {
   actions,
+  approvals,
   decisions,
   deferrals,
   deskEvents,
@@ -77,21 +79,34 @@ export async function sharedDesks(db: DbOrTx) {
   return db.select(publicDeskColumns).from(desks).where(eq(desks.shareEnabled, true)).orderBy(desks.createdAt)
 }
 
+/** The record's filters [8.10]: outcome, token, dates, practice or live. Each one is optional. */
+export interface RecordFilter {
+  outcome?: (typeof decisions.$inferSelect)['outcome'] | undefined
+  /** A token's contract address, lower case. */
+  token?: string | undefined
+  shadow?: boolean | undefined
+  from?: Date | undefined
+  to?: Date | undefined
+}
+
 /** A page of the record, newest first. `before` is a seq, so paging cannot skip or repeat an entry. */
 export async function deskRecord(
   db: DbOrTx,
   deskId: string,
-  options: { limit?: number; before?: number } = {},
+  options: { limit?: number | undefined; before?: number | undefined } & RecordFilter = {},
 ) {
   const limit = Math.min(options.limit ?? 50, 200)
-  const where =
-    options.before === undefined
-      ? eq(decisions.deskId, deskId)
-      : and(eq(decisions.deskId, deskId), lt(decisions.seq, options.before))
+  const where = [eq(decisions.deskId, deskId)]
+  if (options.before !== undefined) where.push(lt(decisions.seq, options.before))
+  if (options.outcome !== undefined) where.push(eq(decisions.outcome, options.outcome))
+  if (options.token !== undefined) where.push(eq(decisions.token, options.token.toLowerCase()))
+  if (options.shadow !== undefined) where.push(eq(decisions.shadow, options.shadow))
+  if (options.from !== undefined) where.push(gte(decisions.decidedAt, options.from))
+  if (options.to !== undefined) where.push(lt(decisions.decidedAt, options.to))
   return db
     .select(publicDecisionColumns)
     .from(decisions)
-    .where(where)
+    .where(and(...where))
     .orderBy(desc(decisions.seq))
     .limit(limit)
 }
@@ -106,7 +121,9 @@ export async function decisionInFull(db: DbOrTx, deskId: string, seq: number) {
     .from(decisions)
     .where(and(eq(decisions.deskId, deskId), eq(decisions.seq, seq)))
   if (!decision) return undefined
-  const [legs, [grade]] = await Promise.all([
+  // The request this decision made, if it asked [8.11 item 8]: how it was answered, and by which door.
+  const executed = alias(decisions, 'executed')
+  const [legs, [grade], [approval]] = await Promise.all([
     db
       .select({
         leg: actions.leg,
@@ -137,12 +154,66 @@ export async function decisionInFull(db: DbOrTx, deskId: string, seq: number) {
       })
       .from(grades)
       .where(eq(grades.decisionId, decision.id)),
+    db
+      .select({
+        status: approvals.status,
+        reason: approvals.reason,
+        expiresAt: approvals.expiresAt,
+        answeredAt: approvals.answeredAt,
+        answeredVia: approvals.answeredVia,
+        cancelledReason: approvals.cancelledReason,
+        executionSeq: executed.seq,
+      })
+      .from(approvals)
+      .leftJoin(executed, eq(executed.id, approvals.executionDecisionId))
+      .where(eq(approvals.decisionId, decision.id))
+      .limit(1),
   ])
-  return { decision, actions: legs, grade }
+  return { decision, actions: legs, grade, approval }
+}
+
+/**
+ * The record a sealing transaction carried: the one whose own on-chain action that transaction was. Its
+ * fingerprint is the `decisionHash` in the event, and it commits to every record before it.
+ */
+export async function sealingRecordFor(db: DbOrTx, deskId: string, txHash: string) {
+  const [row] = await db
+    .select({ seq: decisions.seq, recordHash: decisions.recordHash })
+    .from(actions)
+    .innerJoin(decisions, eq(decisions.id, actions.decisionId))
+    .where(
+      and(
+        eq(actions.deskId, deskId),
+        eq(actions.txHash, txHash.toLowerCase()),
+        eq(actions.status, 'confirmed'),
+      ),
+    )
+    .limit(1)
+  return row
+}
+
+/** The bodies after one record up to and including another, oldest first: the links "Check it" walks. */
+export async function recordsBetween(db: DbOrTx, deskId: string, afterSeq: number, toSeq: number) {
+  return db
+    .select({ seq: decisions.seq, record: decisions.record, recordHash: decisions.recordHash })
+    .from(decisions)
+    .where(and(eq(decisions.deskId, deskId), gt(decisions.seq, afterSeq), lte(decisions.seq, toSeq)))
+    .orderBy(asc(decisions.seq))
 }
 
 /** One decision with every on-chain leg it sent and its grade, if the market has reopened since. */
 export type DecisionInFull = NonNullable<Awaited<ReturnType<typeof decisionInFull>>>
+
+/** The desk's value as it stood at or just before a moment, for "since the market reopened" [8.9]. */
+export async function valueSnapshotAtOrBefore(db: DbOrTx, deskId: string, at: Date) {
+  const [row] = await db
+    .select({ takenAt: deskValueSnapshots.takenAt, totalUsdg: deskValueSnapshots.totalUsdg })
+    .from(deskValueSnapshots)
+    .where(and(eq(deskValueSnapshots.deskId, deskId), lte(deskValueSnapshots.takenAt, at)))
+    .orderBy(desc(deskValueSnapshots.takenAt))
+    .limit(1)
+  return row
+}
 
 /** The desk's value over time, oldest first, for the chart. */
 export async function valueHistory(db: DbOrTx, deskId: string, limit = 400) {

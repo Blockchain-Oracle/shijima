@@ -22,9 +22,13 @@ export function holding(name: string, symbol: string, flags: Partial<Flags> = {}
   return {
     symbol,
     name,
+    amount: '0.0203',
     valueUsdg: '4120000',
     weightBps: 4120,
     targetBps: 4000,
+    price: { value: '$203.1040', at: iso(0.1) },
+    reference: { value: '$202.0000', kind: 'last_regular_close', at: iso(50) },
+    gapBps: 55,
     gapToFeedBps: flags.beyondBandBps ?? null,
     flags: { ...noFlags, ...flags },
   }
@@ -91,7 +95,13 @@ export function desk(overrides: {
       reportOpened: true,
       startedAt: iso(240),
       lastCheckAt: iso(0.3),
+      nextCheckAt: new Date(Math.ceil(NOW / HOUR) * HOUR).toISOString(),
+      telegramLinked: false,
       ...overrides.desk,
+    },
+    limitsInUse: {
+      spentTodayUsdg: '1440000',
+      lossStop: { stopAtUsdg: '8500000', roomUsdg: '1500000', roomBps: 1500 },
     },
     plate:
       overrides.plate === undefined
@@ -104,11 +114,16 @@ export function desk(overrides: {
             takenAt: iso(0.3),
             priceSource: 'pool_twap_30m',
             baselineUsdg: '10000000',
+            sinceReopenUsdg: '-120000',
+            reopenedAt: iso(30),
           }
         : overrides.plate,
     holdings: overrides.holdings ?? [holding('Nvidia', 'NVDA')],
     mandate: {
       preset: null,
+      presetId: null,
+      targets: [{ symbol: 'NVDA', weightBps: 4000 }],
+      rules: [],
       cashTargetBps: 3000,
       driftToleranceBps: 300,
       maxPositionBps: 5000,

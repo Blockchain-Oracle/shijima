@@ -103,15 +103,32 @@ function row(
   return { id, label: statusCopy.rows[id], tone, detail, lag, chip }
 }
 
+/** Wei as a short ETH figure for a sentence. */
+const eth = (wei: string) => (Number(BigInt(wei)) / 1e18).toFixed(4)
+
 function workerRow(f: StatusFacts): StatusRow {
   const beat = f.beat
   if (!beat) return row('worker', 'bad', d.workerNever)
   const sinceMs = f.now.getTime() - beat.beatAt.getTime()
   const lag = lagOf(beat.beatAt, f.now)
-  const info = beat.info as { tickMs?: number; commit?: string | null; rehearsal?: boolean }
+  const info = beat.info as {
+    tickMs?: number
+    commit?: string | null
+    rehearsal?: boolean
+    operatorLowGas?: { balanceWei: string; neededWei: string } | null
+  }
+  const lowGas = info.operatorLowGas
+    ? d.operatorLowGas(eth(info.operatorLowGas.balanceWei), eth(info.operatorLowGas.neededWei))
+    : null
   if (!f.lockHeld) return row('worker', 'bad', d.workerDown(ago(beat.beatAt, f.now)), lag)
   const tone: Tone =
-    sinceMs > WORKER_STUCK_MS ? 'bad' : sinceMs > WORKER_SLOW_MS ? 'warn' : beat.lastError ? 'warn' : 'good'
+    sinceMs > WORKER_STUCK_MS
+      ? 'bad'
+      : sinceMs > WORKER_SLOW_MS
+        ? 'warn'
+        : beat.lastError || lowGas
+          ? 'warn'
+          : 'good'
   const detail =
     sinceMs > WORKER_SLOW_MS
       ? d.workerSlow(ago(beat.beatAt, f.now))
@@ -126,6 +143,7 @@ function workerRow(f: StatusFacts): StatusRow {
     join(
       detail,
       beat.lastError && d.lastError(beat.lastError),
+      lowGas,
       info.commit && d.commit(info.commit),
       info.rehearsal && d.rehearsal,
     ),

@@ -155,6 +155,8 @@ async function answerAsk(deps: AskDeps, request: AskRequestRow, now: Date): Prom
 
   const rejected: string[] = []
   const answer = await checkAnswer(deps, context, result.value, rejected)
+  // Logged before the proposal is saved: the call happened and counts against the budget whatever comes next.
+  await logCall(deps.db, request.deskId, result, rejected)
   if (answer.proposal) {
     answer.reply.proposalId = await saveProposal(deps.db, {
       requestId: request.id,
@@ -169,7 +171,6 @@ async function answerAsk(deps: AskDeps, request: AskRequestRow, now: Date): Prom
       expiresAt: new Date(now.getTime() + PROPOSAL_TTL_MS),
     })
   }
-  await logCall(deps.db, request.deskId, result, rejected)
   return answer.reply
 }
 

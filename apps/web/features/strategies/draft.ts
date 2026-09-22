@@ -20,6 +20,16 @@ export interface StudioDraft {
   daily: string
   large: string
   notes: string
+  /** Protective rules, as typed: a symbol, a fall in percent, a cut in percent. Older saved drafts have none. */
+  rules?: DraftRule[]
+}
+
+export interface DraftRule {
+  symbol: string
+  fallPct: string
+  cutPct: string
+  /** A row key while editing; never saved into the mandate. */
+  key?: string
 }
 
 export interface DraftToken {
@@ -44,6 +54,7 @@ export function initialDraft(preset?: Preset): StudioDraft {
     daily: '50',
     large: '100',
     notes: '',
+    rules: [],
   }
 }
 
@@ -85,6 +96,17 @@ export function draftToMandate(d: StudioDraft, tokens: DraftToken[]): DraftResul
   const large = dollarsToUnits(d.large)
   if (!perAction || !daily || !large) problems.push('each limit needs an amount in dollars')
   if (d.notes.length > NOTES_MAX) problems.push(`the notes are longer than ${NOTES_MAX} characters`)
+  const rules = (d.rules ?? []).map((r, i) => {
+    const t = bySymbol.get(r.symbol)
+    if (!t) problems.push(`${r.symbol} is not on the approved list`)
+    return {
+      id: `rule${i + 1}`,
+      kind: 'price_move_sell' as const,
+      token: t?.address ?? r.symbol,
+      fallBps: pctToBps(r.fallPct),
+      cutBps: pctToBps(r.cutPct),
+    }
+  })
   if (problems.length > 0) return { ok: false, problems }
   const parsed = Mandate.safeParse({
     preset: d.preset,
@@ -96,8 +118,17 @@ export function draftToMandate(d: StudioDraft, tokens: DraftToken[]): DraftResul
     dailyCapUsdg: daily,
     largeActionUsdg: large,
     notes: d.notes.trim(),
+    ...(rules.length > 0 ? { rules } : {}),
   })
-  if (!parsed.success) return { ok: false, problems: ['a percentage is outside 0 to 100'] }
+  if (!parsed.success)
+    return {
+      ok: false,
+      problems: [
+        parsed.error.issues.some((i) => i.path[0] === 'rules')
+          ? 'a rule is outside its bounds: a fall of 1% to 20%, selling 10% to all of it'
+          : 'a percentage is outside 0 to 100',
+      ],
+    }
   const checked = checkMandate(
     parsed.data,
     tokens.map((t) => ({ address: t.address, displayName: t.name })),
@@ -146,5 +177,6 @@ export function mandateKey(m: Mandate): string {
     m.dailyCapUsdg.toString(),
     m.largeActionUsdg.toString(),
     m.notes,
+    (m.rules ?? []).map((r) => [r.token.toLowerCase(), r.fallBps, r.cutBps] as const),
   ])
 }

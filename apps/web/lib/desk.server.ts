@@ -4,6 +4,7 @@
  * the chain or holds a key.
  */
 import { APPROVED_TOKENS, fetchVaultRate } from '@desk/chain'
+import { previousWindow, reportWindow } from '@desk/core'
 import {
   ASSISTANT_REMOVED,
   askHistory,
@@ -20,10 +21,13 @@ import {
   latestValueSnapshot,
   mandateFromRow,
   pendingApprovals,
+  spentSince,
+  telegramForDesk,
   timingSummary,
   valueHistory,
+  valueSnapshotAtOrBefore,
 } from '@desk/db'
-import { PRESETS } from '@desk/shared'
+import { PRESETS, price, tokens as tokenAmount } from '@desk/shared'
 import { type ChatTurn, toChatTurn } from '@/features/desk/chat-model'
 import { db } from './db'
 import { signedInAddress } from './session'
@@ -54,15 +58,50 @@ async function currentVaultRateBps(): Promise<number | null> {
   return vaultRate.bps
 }
 
-export async function loadDesk(slug: string) {
+/**
+ * Who may see the desk a slug names, and how. The owner reaches their desk by its id or its share slug whether
+ * sharing is on or not. Anyone else sees it only through the share link, and only while sharing is on. Every
+ * desk page resolves through here, so an owner is never locked out of their own record, report or decisions.
+ */
+export async function deskForViewer(slug: string) {
   const viewer = await signedInAddress().catch(() => undefined)
   const id = UUID.test(slug) ? slug : await deskIdBySlug(db(), slug)
   if (!id) return undefined
   const desk = await deskById(db(), id)
   if (!desk) return undefined
   const isOwner = viewer !== undefined && viewer.toLowerCase() === desk.ownerAddress.toLowerCase()
-  // A visitor sees a desk only through its share link, and only while sharing is on.
   if (!isOwner && !(desk.shareEnabled && desk.shareSlug === slug)) return undefined
+  return {
+    isOwner,
+    slug,
+    /** The public face: what a visitor's page may show. No owner address, no Telegram, no notes. */
+    face: {
+      id: desk.id,
+      name: desk.name ?? 'Your desk',
+      address: desk.address,
+      chainId: desk.chainId,
+      contractVersion: desk.contractVersion,
+      mode: desk.mode,
+      state: desk.state,
+      stateReason: desk.stateReason,
+      lifecycle: desk.lifecycle,
+      shareSlug: desk.shareEnabled ? desk.shareSlug : null,
+      startedAt: desk.startedAt,
+      shadowChecks: desk.shadowChecks,
+      shadowReportOpenedAt: desk.shadowReportOpenedAt,
+      chainSeq: desk.chainSeq,
+    },
+    /** The whole row, for server code only. Never hand this to a client component or a visitor's page. */
+    raw: desk,
+  }
+}
+
+export type ViewerDesk = NonNullable<Awaited<ReturnType<typeof deskForViewer>>>
+
+export async function loadDesk(slug: string) {
+  const resolved = await deskForViewer(slug)
+  if (!resolved) return undefined
+  const { isOwner, raw: desk } = resolved
 
   const [snapshot, mandateRow, approvals, record, history, timing, chat] = await Promise.all([
     latestValueSnapshot(db(), desk.id),
@@ -76,11 +115,18 @@ export async function loadDesk(slug: string) {
   const mandate = mandateRow ? mandateFromRow(mandateRow) : null
   const tokens = mandate?.targets.tokens.map((t) => t.token) ?? []
   const today = new Date().toISOString().slice(0, 10)
-  const [lastCheck, notes, prices, events] = await Promise.all([
+  const now = new Date()
+  // The last reopen: this stretch's, if the market is open, otherwise the one before this close.
+  const stretch = reportWindow(now)
+  const reopenedAt = stretch.settled ? stretch.to : previousWindow(stretch).to
+  const [lastCheck, notes, prices, events, spentToday, atReopen, telegram] = await Promise.all([
     lastCheckOf(db(), desk.id),
     deskNotes(db(), desk.id, desk.startedAt ?? desk.createdAt, tokens),
     latestPricePoints(db()),
     tokens.length > 0 ? companyEventsFrom(db(), today, tokens) : Promise.resolve([]),
+    spentSince(db(), desk.id, new Date(now.getTime() - 24 * 60 * 60 * 1000)),
+    valueSnapshotAtOrBefore(db(), desk.id, reopenedAt),
+    isOwner ? telegramForDesk(db(), desk.id) : Promise.resolve(null),
   ])
   const priceOf = new Map(prices.map((p) => [p.token.toLowerCase(), p]))
   const reportOf = (token: string) => {
@@ -108,9 +154,21 @@ export async function loadDesk(slug: string) {
         return {
           symbol: token?.symbol ?? t.token,
           name: token?.displayName ?? t.token,
+          amount: held ? tokenAmount(BigInt(held.amountRaw)) : '0',
           valueUsdg: value.toString(),
           weightBps: share(value),
           targetBps: t.weightBps,
+          // The price with its source and age, and the reference it is measured against [8.9, section 10].
+          price: p?.poolMidE8 ? { value: price(p.poolMidE8), at: p.at.toISOString() } : null,
+          reference:
+            p?.referenceE8 && p.referenceKind
+              ? {
+                  value: price(p.referenceE8),
+                  kind: p.referenceKind,
+                  at: p.referenceAt?.toISOString() ?? null,
+                }
+              : null,
+          gapBps: p?.gapBps ?? null,
           gapToFeedBps: held?.gapToFeedBps ?? null,
           flags: {
             halted: fresh ? p.halted : false,
@@ -148,6 +206,22 @@ export async function loadDesk(slug: string) {
       ? 0n
       : (total * FEE_BPS_A_YEAR * BigInt(Math.round(liveDays * 1000))) / (10_000n * 365_000n)
 
+  const lossStop =
+    mandate && desk.drawdownBaselineUsdg !== null && total !== null
+      ? (() => {
+          const stopAt = (desk.drawdownBaselineUsdg * BigInt(10_000 - mandate.lossStopBps)) / 10_000n
+          const room = total - stopAt
+          return {
+            stopAtUsdg: stopAt.toString(),
+            roomUsdg: room.toString(),
+            roomBps: total > 0n ? Number((room * 10_000n) / total) : 0,
+          }
+        })()
+      : null
+  const nextCheck = new Date(now)
+  nextCheck.setUTCMinutes(0, 0, 0)
+  nextCheck.setUTCHours(nextCheck.getUTCHours() + 1)
+
   return {
     isOwner,
     slug,
@@ -168,6 +242,13 @@ export async function loadDesk(slug: string) {
       reportOpened: desk.shadowReportOpenedAt !== null,
       startedAt: desk.startedAt?.toISOString() ?? null,
       lastCheckAt: lastCheck?.at.toISOString() ?? null,
+      nextCheckAt: nextCheck.toISOString(),
+      /** null for a visitor: whether Telegram is linked is the owner's business. */
+      telegramLinked: telegram ? telegram.linked !== null : null,
+    },
+    limitsInUse: {
+      spentTodayUsdg: spentToday.toString(),
+      lossStop,
     },
     plate: snapshot
       ? {
@@ -179,12 +260,26 @@ export async function loadDesk(slug: string) {
           takenAt: snapshot.takenAt.toISOString(),
           priceSource: snapshot.priceSource,
           baselineUsdg: desk.drawdownBaselineUsdg?.toString() ?? null,
+          sinceReopenUsdg: atReopen ? (snapshot.totalUsdg - atReopen.totalUsdg).toString() : null,
+          reopenedAt: reopenedAt.toISOString(),
         }
       : null,
     holdings,
     mandate: mandate
       ? {
           preset: PRESETS.find((p) => p.id === mandate.preset)?.name ?? null,
+          presetId: mandate.preset,
+          targets: mandate.targets.tokens.map((t) => ({
+            symbol: nameOf(t.token)?.symbol ?? t.token,
+            weightBps: t.weightBps,
+          })),
+          rules: isOwner
+            ? (mandate.rules ?? []).map((r) => ({
+                symbol: nameOf(r.token)?.symbol ?? r.token,
+                fallBps: r.fallBps,
+                cutBps: r.cutBps,
+              }))
+            : [],
           cashTargetBps: mandate.targets.cashBps,
           driftToleranceBps: mandate.driftToleranceBps,
           maxPositionBps: mandate.maxPositionBps,
@@ -192,13 +287,15 @@ export async function loadDesk(slug: string) {
           perActionCapUsdg: mandate.perActionCapUsdg.toString(),
           dailyCapUsdg: mandate.dailyCapUsdg.toString(),
           largeActionUsdg: mandate.largeActionUsdg.toString(),
-          notes: mandate.notes,
+          // The owner's notes are theirs alone. A visitor's page never receives them.
+          notes: isOwner ? mandate.notes : '',
           version: mandateRow?.version ?? 0,
         }
       : null,
     approvals: approvals.map((a) => ({
       id: a.id,
       summary: a.summary ?? '',
+      name: (a.token && nameOf(a.token)?.displayName) ?? a.token ?? '',
       side: a.side,
       reason: a.reason,
       expiresAt: a.expiresAt.toISOString(),

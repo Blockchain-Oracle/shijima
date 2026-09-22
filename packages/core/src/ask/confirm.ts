@@ -72,7 +72,8 @@ export async function confirmSigninProposal(
       case 'switch_strategy':
       case 'set_weights':
       case 'set_notes':
-      case 'set_limits': {
+      case 'set_limits':
+      case 'set_rules': {
         const current = await currentMandate(db, desk.id)
         if (!current || current.version !== args.baseVersion) {
           return finish({ ok: false, text: 'Your settings changed since I suggested this. Ask me again.' })

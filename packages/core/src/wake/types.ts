@@ -14,6 +14,10 @@ export interface Candidate {
   amountIn: bigint
   /** Why arithmetic proposed it, in one plain sentence. */
   why: string
+  /** True when the owner's own standing rule demanded this sale. The gate holds it to fewer refusals. */
+  protective?: boolean
+  /** The rule that demanded it, by id, so the model and the record can name it. */
+  ruleId?: string
 }
 
 export const TOKEN_DECIMALS = 18

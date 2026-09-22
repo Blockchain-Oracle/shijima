@@ -24,7 +24,7 @@ import {
   timingSummary,
 } from '@desk/db'
 import { DecisionRecordV2, type Mandate, marketClock, PRESETS } from '@desk/shared'
-import { ownerRules } from '../wake/evidence'
+import { ownerRules, structuredRules } from '../wake/evidence'
 import { type DeskFacts, formatUsd, type StandingWait } from './proposal'
 
 const MODE_WORDS = {
@@ -86,6 +86,13 @@ export function mandateLines(m: Mandate, approved: ApprovedToken[], ids: Set<str
   const rules = ownerRules(m.notes)
   if (rules.length === 0) lines.push('None.')
   for (const r of rules) {
+    ids.add(r.id)
+    lines.push(`- ${r.id}: ${r.text}`)
+  }
+  lines.push('', 'STANDING RULES (carried out by arithmetic at every check)')
+  const standing = structuredRules(m.rules, approved)
+  if (standing.length === 0) lines.push('None.')
+  for (const r of standing) {
     ids.add(r.id)
     lines.push(`- ${r.id}: ${r.text}`)
   }

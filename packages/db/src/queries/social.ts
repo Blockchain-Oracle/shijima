@@ -2,19 +2,19 @@
  * Rooms and Takes. Every write names its author by owner id, which the web takes from the signed-in session,
  * never from the request. Reading a Room is for members; takes are public, like a shared desk.
  */
-import { and, desc, eq, gt, ne, sql } from 'drizzle-orm'
+import { and, desc, eq, gt, sql } from 'drizzle-orm'
 import type { DbOrTx } from '../client'
 import { desks, deskValueSnapshots, owners, roomPosts, takes } from '../schema'
 
 /**
- * The owner behind a signed-in wallet, and whether they own a desk that exists on the chain. A desk's row is
- * written before its contract, as `onboarding`; every later lifecycle means the contract was made.
+ * The owner behind a signed-in wallet, and whether they own a desk that is RUNNING. A desk's row is written
+ * before its contract, as `onboarding`, and a closed desk has sent everything home: neither counts.
  */
 export async function socialMember(db: DbOrTx, address: string) {
   const [row] = await db
     .select({ ownerId: owners.id, desks: sql<number>`count(${desks.id})::int` })
     .from(owners)
-    .leftJoin(desks, and(eq(desks.ownerId, owners.id), ne(desks.lifecycle, 'onboarding')))
+    .leftJoin(desks, and(eq(desks.ownerId, owners.id), eq(desks.lifecycle, 'running')))
     .where(eq(owners.address, address.toLowerCase()))
     .groupBy(owners.id)
   return row ? { ownerId: row.ownerId, ownsDesk: row.desks > 0 } : undefined
@@ -24,12 +24,21 @@ export async function socialMember(db: DbOrTx, address: string) {
  * Whether one of this owner's desks held the token at its latest valuation. This is what earns the "holds it"
  * badge, and only when the author asked to show it: a badge a client could assert would be worth nothing.
  */
+/** A valuation older than this says nothing about what the desk holds now. */
+const HOLDS_FRESH_MS = 3 * 60 * 60 * 1000
+
 export async function holdsToken(db: DbOrTx, ownerId: string, token: string): Promise<boolean> {
   const rows = await db
     .selectDistinctOn([deskValueSnapshots.deskId], { holdings: deskValueSnapshots.holdings })
     .from(deskValueSnapshots)
     .innerJoin(desks, eq(desks.id, deskValueSnapshots.deskId))
-    .where(eq(desks.ownerId, ownerId))
+    .where(
+      and(
+        eq(desks.ownerId, ownerId),
+        eq(desks.lifecycle, 'running'),
+        gt(deskValueSnapshots.takenAt, new Date(Date.now() - HOLDS_FRESH_MS)),
+      ),
+    )
     .orderBy(deskValueSnapshots.deskId, desc(deskValueSnapshots.takenAt))
   const wanted = token.toLowerCase()
   return rows.some((r) =>

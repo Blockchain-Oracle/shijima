@@ -1,30 +1,27 @@
 'use client'
 
-import { closeMinutes, marketClock, nextRegularOpen, webCopy } from '@desk/shared'
+import { closeMinutes, marketClock, nextRegularOpen, nyWallToUtc, webCopy } from '@desk/shared'
 import { useEffect, useState } from 'react'
+import { useViewerZone } from '@/components/when'
 import { cn } from '@/lib/utils'
+import { whenFor } from '@/lib/when'
 
 const TICK_MS = 30_000
 
-const nyClock = (at: Date, withDay: boolean) =>
-  at.toLocaleString('en-US', {
-    timeZone: 'America/New_York',
-    ...(withDay ? { weekday: 'short' as const } : {}),
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23',
-  })
+type When = ReturnType<typeof whenFor>
 
-/** "Open · closes 16:00 ET", "Weekend · reopens Mon 09:30 ET". Our calendar, in Agari's chip. */
-export function sessionLine(now: Date): { state: string; word: string; tail: string } {
+/**
+ * "Open · closes 16:00 ET", "Weekend · reopens Mon 14:30 (09:30 ET)". Our calendar, in Agari's chip, with the
+ * boundary written in the reader's own zone and the New York fact beside it (Agari D-120).
+ */
+export function sessionLine(now: Date, when: When): { state: string; word: string; tail: string } {
   const clock = marketClock(now)
   const word = webCopy.session.words[clock.session]
   if (clock.session === 'regular') {
-    const minutes = closeMinutes(clock.nyDate)
-    const time = `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`
-    return { state: clock.session, word, tail: webCopy.session.closes(time) }
+    const closeAt = nyWallToUtc(clock.nyDate, closeMinutes(clock.nyDate))
+    return { state: clock.session, word, tail: webCopy.session.closes(when(closeAt, { clock: true })) }
   }
-  return { state: clock.session, word, tail: webCopy.session.reopens(nyClock(nextRegularOpen(now), true)) }
+  return { state: clock.session, word, tail: webCopy.session.reopens(when(nextRegularOpen(now))) }
 }
 
 /**
@@ -33,13 +30,14 @@ export function sessionLine(now: Date): { state: string; word: string; tail: str
  */
 export function MarketSessionChip({ className }: { className?: string }) {
   const [now, setNow] = useState<Date | null>(null)
+  const zone = useViewerZone()
   useEffect(() => {
     setNow(new Date())
     const id = setInterval(() => setNow(new Date()), TICK_MS)
     return () => clearInterval(id)
   }, [])
   if (!now) return null
-  const line = sessionLine(now)
+  const line = sessionLine(now, whenFor(zone))
   return (
     <span
       className={cn('mks-chip', className)}

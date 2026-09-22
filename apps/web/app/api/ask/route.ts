@@ -1,6 +1,7 @@
 import { askAllowed, createAskRequest, ownsDesk } from '@desk/db'
 import { errorText } from '@desk/shared'
 import { db } from '@/lib/db'
+import { sameOrigin } from '@/lib/origin'
 import { signedInAddress } from '@/lib/session'
 
 /**
@@ -11,6 +12,8 @@ import { signedInAddress } from '@/lib/session'
  * from the studio carries the draft settings instead of a desk, since the desk does not exist yet.
  */
 export async function POST(request: Request) {
+  if (!sameOrigin(request))
+    return Response.json({ error: 'That request came from another site.' }, { status: 403 })
   const address = await signedInAddress()
   if (!address) return Response.json({ error: 'Sign in to talk to your desk.' }, { status: 401 })
 
