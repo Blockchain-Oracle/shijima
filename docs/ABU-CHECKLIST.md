@@ -9,15 +9,16 @@ Vercel is needed now.
 - [x] SERV Reasoning key
 
 ## Needed now
-- [ ] **Top up SERV credit** (it is $0.02). Every hourly check, the chat and the comparison page wait on it.
+- [x] ~~Top up SERV credit.~~ Done, confirmed with a live call 22 Sep.
 - [ ] **Say go for contract v1 on mainnet** (about $1 of gas). With it, Claude also publishes v1's source on
       Blockscout, so "Write proxy" appears for the withdraw-without-our-website steps.
 - [x] ~~Fund the dev wallet for the first real trade.~~ Done 20 Sep.
 - [ ] **Turn on data collection** at https://console.openserv.ai/settings/organization . This is a hackathon
       eligibility rule.
-- [ ] **Say when the worker may run again** (`pnpm worker:start`). It has been off since Mon 09:00 UTC: the
-      weekend of 19 to 20 Sep is ungraded, 40 records are unsealed, and the daily seal costs about 2 cents of the
-      operator's ETH. Claude does not start it unasked.
+- [x] ~~Say when the worker may run again.~~ Running again since 22 Sep 19:03 UTC. It graded the backlog and sealed.
+- [ ] **$50 for the demo desk.** The $10 sent on 20 Sep is already on the dev desk (about $5.20 USDG and some NVDA);
+      the dev wallet itself is empty. Send about $50 on Base to `0xB5D47f376c59c975F931000FAdD787abaEB91cf6` and
+      Claude bridges it with `pnpm dev:funds bridge`.
 
 ## Hackathon admin, whenever you have five minutes
 - [x] ~~Ask whether a build with no MCP qualifies.~~ **Answered 21 Sep:** the official page says the track is

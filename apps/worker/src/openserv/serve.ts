@@ -64,7 +64,11 @@ async function reactivateTrigger(info: ReturnType<typeof getProvisionedInfo>, lo
   }
   try {
     const client = new PlatformClient({ apiKey: process.env.OPENSERV_USER_API_KEY })
-    await client.workflows.setRunning({ id: info.workflowId })
+    // A workflow that is already running answers 400 "already set to the desired state". That is success.
+    await client.workflows.setRunning({ id: info.workflowId }).catch((e: unknown) => {
+      const body = (e as { response?: { data?: unknown } })?.response?.data
+      if (!/already set to the desired state/i.test(JSON.stringify(body ?? ''))) throw e
+    })
     await client.triggers.activate({ workflowId: info.workflowId, id: info.triggerId })
     log('openserv_trigger_active', { workflow: info.workflowId, trigger: info.triggerId })
   } catch (e) {

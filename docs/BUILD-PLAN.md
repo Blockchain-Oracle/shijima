@@ -804,6 +804,14 @@ mattered most, in order:
 - **Next:** the live weekend. Waiting on Abu: SERV top-up, the go for v1 (`docs/V1-FREEZE.md`), the demo desk's $50,
   and starting the worker.
 
+**Tue 22 Sep, 19:05 UTC. SERV FUNDED, THE WORKER RUNS AGAIN.** A live SERV call answers. The worker started at 19:03,
+graded the weekend backlog, sealed the day on chain (`0x59715485…`), sent one Telegram message and saved prices,
+multipliers and earnings. Its first boot showed `openserv_trigger_failed`: OpenServ answers 400 "already set to the
+desired state" when the workflow is already running, and that stopped the trigger from being switched on. Now treated
+as success; on restart the log shows `openserv_trigger_active`. The dev wallet is empty on every chain: the $10 from
+20 Sep is on the dev desk (5.21 USDG and 0.0025 NVDA). **Next:** the demo desk's $50 needs a new deposit on Base, and
+the go for v1.
+
 ## 6. Schedule
 
 | Day | Work | Must be true by end of day |
