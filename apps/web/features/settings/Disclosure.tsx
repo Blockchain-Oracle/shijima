@@ -1,6 +1,7 @@
 'use client'
 
 import { disclosureCopy, settingsCopy } from '@desk/shared'
+import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { acceptDisclosureAction } from '@/app/owner-actions'
 import { Button } from '@/components/ui/button'
@@ -35,6 +36,9 @@ export function Disclosure({
           ))}
         </div>
       </details>
+      <Link href="/how-it-works#withdraw-without-us" className="type-caption text-accent hover:underline">
+        {settingsCopy.withdrawAnywhere}
+      </Link>
       {!accepted && (
         <label className="flex items-start gap-2 type-caption text-ink-secondary">
           <input type="checkbox" checked={declared} onChange={(e) => setDeclared(e.target.checked)} />

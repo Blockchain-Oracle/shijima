@@ -63,3 +63,18 @@ export const servCalls = pgTable(
   },
   (t) => [index('serv_calls_at_idx').on(t.at), index('serv_calls_purpose_at_idx').on(t.purpose, t.at)],
 )
+
+/**
+ * The worker's pulse, for the Status page. One row per worker, written when it starts and after every pass of
+ * its loop. The Postgres lock says whether a worker process is alive; this row says whether its loop is turning.
+ * `info` names what the process runs: the operator, rehearsal or not, the OpenServ agent, Telegram, the commit.
+ */
+export const workerBeats = pgTable('worker_beats', {
+  name: text('name').primaryKey(),
+  startedAt: timestamptz('started_at').notNull(),
+  beatAt: timestamptz('beat_at').notNull(),
+  passes: integer('passes').notNull().default(0),
+  lastPassMs: integer('last_pass_ms'),
+  lastError: text('last_error'),
+  info: jsonb('info').$type<Record<string, unknown>>().notNull().default({}),
+})

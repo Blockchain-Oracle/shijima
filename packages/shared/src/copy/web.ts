@@ -99,6 +99,8 @@ export const webCopy = {
     disclosure:
       'Stock Tokens are not shares. Holding one gives you no ownership of the company and no shareholder rights. Nothing here is advice.',
     howItWorks: 'How it works',
+    withdraw: 'Withdraw without this website',
+    status: 'Status',
     source: 'Source',
   },
 

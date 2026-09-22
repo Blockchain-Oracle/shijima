@@ -8,7 +8,8 @@
  * This timer is the SAFETY NET, not the clock. OpenServ's hourly cron is the primary trigger. A check is keyed
  * on (desk, the top of the hour), so whichever arrives first does the work and the other finds it already done.
  */
-import { sweepInterruptedWakes } from '@desk/db'
+import { execFileSync } from 'node:child_process'
+import { recordWorkerPass, startWorkerBeat, sweepInterruptedWakes } from '@desk/db'
 import { errorText } from '@desk/shared'
 import { startAskLoop } from './ask'
 import { openCli } from './cli/context'
@@ -36,10 +37,21 @@ let stopping = false
 let running: Promise<unknown> = Promise.resolve()
 const loop = async () => {
   while (!stopping) {
+    const started = Date.now()
     running = reviewAllDesks(cli, log)
       // The outbox is drained after the work, so a message never announces something not yet committed.
       .then(() => telegram?.drain())
-      .catch((e) => log('tick_failed', { error: errorText(e) }))
+      .then(() => undefined)
+      .catch((e) => {
+        log('tick_failed', { error: errorText(e) })
+        return errorText(e)
+      })
+      // The pulse Status reads. A failed write here must never stop the clock.
+      .then((error) =>
+        recordWorkerPass(cli.db, { ms: Date.now() - started, ...(error ? { error } : {}) }).catch(
+          () => undefined,
+        ),
+      )
     await running
     await new Promise((r) => setTimeout(r, TICK_MS))
   }
@@ -64,8 +76,26 @@ const agent = await startAgentIfProvisioned(cli, log)
 // The chat answers beside the clock, never inside it: a person typing should not wait for a check.
 const ask = await startAskLoop(cli, log)
 const telegram = startTelegram(cli, log, ask)
+await startWorkerBeat(cli.db, {
+  operator: cli.wallet.account.address,
+  rehearsal: cli.env.isRehearsal,
+  openservAgent: agent?.agentId ?? null,
+  openservWorkflow: agent?.workflowId ?? null,
+  telegram: Boolean(telegram),
+  tickMs: TICK_MS,
+  commit: gitCommit(),
+})
 for (const stuck of await sweepInterruptedWakes(cli.db, new Date(Date.now() - STUCK_WAKE_MS))) {
   log('interrupted_check', { desk: stuck.deskId, hour: stuck.scheduledFor.toISOString() })
 }
 await resolveUnsettled(cli.deps)
 await loop()
+
+/** The commit this process runs, so Status can say which code is awake. Unknown outside a checkout. */
+function gitCommit(): string | null {
+  try {
+    return execFileSync('git', ['rev-parse', '--short', 'HEAD'], { encoding: 'utf8' }).trim()
+  } catch {
+    return null
+  }
+}

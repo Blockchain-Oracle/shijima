@@ -5,10 +5,8 @@
  * The lock is a Postgres SESSION advisory lock, held on one dedicated connection for the life of the process.
  * If the process dies, Postgres drops the connection and the lock with it, so a crash never leaves it stuck.
  */
+import { LEADER_LOCK_KEY } from '@desk/db'
 import type { Pool, PoolClient } from 'pg'
-
-/** Any fixed number. Every worker of this product asks for the same one. */
-const LEADER_LOCK_KEY = 4663_001
 
 /**
  * Takes the lock, or explains who has it. Any command that can SEND must hold this, not just the worker: a

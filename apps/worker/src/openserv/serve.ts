@@ -19,7 +19,7 @@ const WORKFLOW_NAME = 'Hourly desk review'
 export async function startAgentIfProvisioned(
   cli: Cli,
   log: Log,
-): Promise<{ stop: () => Promise<void> } | undefined> {
+): Promise<{ stop: () => Promise<void>; agentId: number | null; workflowId: number | null } | undefined> {
   const stateFile = process.env.OPENSERV_STATE_FILE ?? resolve(WORKER_ROOT, '.openserv.json')
   if (!existsSync(stateFile)) {
     log('openserv_not_registered', {
@@ -41,7 +41,7 @@ export async function startAgentIfProvisioned(
     // The SDK registers its own signal handlers by default, which would race the worker's shutdown.
     const running = await run(agent, { handleSignals: false })
     log('openserv_listening', { agent: AGENT_NAME, workflow: WORKFLOW_NAME, id: info?.agentId })
-    return running
+    return { stop: running.stop, agentId: info?.agentId ?? null, workflowId: info?.workflowId ?? null }
   } catch (e) {
     // The platform being unreachable must never stop the desk: the timer is the safety net for exactly this.
     log('openserv_failed', { error: errorText(e), note: 'the desk carries on using its own timer' })

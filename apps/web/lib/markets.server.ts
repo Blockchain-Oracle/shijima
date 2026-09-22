@@ -433,6 +433,11 @@ export async function loadMarkets(presetId: string | undefined, range: Range): P
   }
 }
 
+/** The weekend fact on its own, for How it works. Null when the price log has no full weekend yet. */
+export async function loadWeekendFact(): Promise<string | null> {
+  return weekendFact(await latestWeekendMove(db()).catch(() => undefined))
+}
+
 /** The first-run tutorial's real number: the largest weekend move from the Friday reference, in words. */
 function weekendFact(w: Awaited<ReturnType<typeof latestWeekendMove>>): string | null {
   const token = w ? APPROVED_TOKENS.find((t) => t.address.toLowerCase() === w.token.toLowerCase()) : undefined
