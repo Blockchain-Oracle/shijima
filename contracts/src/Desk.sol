@@ -26,7 +26,7 @@ import {ISwapRouter02, IUniswapV3Factory, IUniswapV3Pool, IAggregatorV3, IStockT
 ///
 ///         So the worst a stolen operator key can do is make bad trades, costing at most BAND_BPS of the
 ///         daily cap per 24-hour spending window plus pool fees, until the owner calls `revokeOperator`. The
-///         window is fixed, not rolling, so across a window boundary that can be twice the cap inside one
+///         window is fixed, not rolling, so across a window boundary that loss can be twice that inside one
 ///         calendar day. A stolen session key can do no more than that, and only until it expires or the
 ///         owner calls `revokeSession`.
 ///

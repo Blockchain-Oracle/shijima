@@ -352,7 +352,7 @@ Made 2026-09-22 by Claude, finishing what step 3 of the chat-first plan owed. Ab
 3. **A sweep must earn, over 30 days at the live rate, three times what a deposit and its later withdrawal cost in
    network fees, and at least $10.** Rate and liquidity come from Morpho's API; the fee is measured gas units times
    the block's base fee (this chain ignores tips) times the Chainlink ETH price. Today that bar is about $0.11, so a
-   sweep starts at roughly $140 of idle cash. The $50 demo desk will not sweep, and it should not.
+   sweep starts at roughly $140 of idle cash. The $5 demo desk will not sweep, and it should not.
 4. **No model is asked.** A vault move is not a timing call and its value never leaves the desk. It is its own
    record (version 2, widened for `sweep`, `redeem` and a `vault` evidence item), with its own hash on-chain, and
    counts nothing against the owner's limits, as the contract counts nothing.
@@ -514,6 +514,6 @@ Tight pick from the Glider pass.
 | Whether Telegram messages can be edited | **Settled.** Our own bot, so yes. |
 | SERV tool calls with `reasoning_effort` | Tested Sunday with one call. |
 | Where the news comes from | **Settled.** Finnhub, with Tavily as fallback. Weekend coverage tested Sunday. |
-| How much real money goes in | About $100 of USDG: a $20 test desk, a $50 demo desk, and the main desk. Abu decides. |
+| How much real money goes in | **Settled 2026-09-22 by Abu: about $5.** The dev desk's funds (5.21 USDG and a little NVDA) cover all development, the v1 move and the demo. No $50 demo desk; the rules and caps are sized to $5. Abu's go also covers the v1 deploy's gas. |
 | Does a build with no MCP qualify for the "Mainnet & MCP" track | **Settled 2026-09-21: yes.** The track is for agents that act on Robinhood Chain *or* use Robinhood MCP. We also fit the Open track. `research/2026-09-21-tracks.md`. |
 | The product's name | **Settled 2026-09-21: Shijima (しじま).** Abu chose it. Reasoning below. |

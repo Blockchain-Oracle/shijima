@@ -37,7 +37,7 @@ v0 is live at factory `0x35A40883BAD8874F8fB5592c72c4385226070958`. Every box be
 2. `./contracts/verify.sh v1` publishes source on Sourcify.
 3. Verify the implementation on Blockscout by hand (its API sits behind a bot check), so every clone gets a
    "Write proxy" tab and the withdraw-without-our-website page's steps work as written.
-4. Create the demo desk on v1 with the studio, fund it with Abu's $50, move the dev desk's funds, and mark the
+4. Create the demo desk on v1 with the studio, fund it with the dev desk's funds (about $5; Abu, 22 Sep: no $50), and mark the
    v0 desk row `closed`.
 5. Restart the worker from the tagged commit.
 
