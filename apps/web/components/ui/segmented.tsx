@@ -56,10 +56,9 @@ export function Segmented<V extends string>({
       role="radiogroup"
       aria-label={label}
       className={cn(
-        'relative inline-grid rounded-full border border-border bg-[var(--color-surface-1)] p-[3px]',
+        'relative inline-flex max-w-full rounded-full border border-border bg-[var(--color-surface-1)] p-[3px]',
         className,
       )}
-      style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
     >
       {options.map((o, i) => {
         const on = i === index
@@ -87,7 +86,9 @@ export function Segmented<V extends string>({
             }}
             className={cn(
               'relative z-0 whitespace-nowrap rounded-full text-center font-medium transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-40',
-              size === 'sm' ? 'px-2.5 py-1 text-[11.5px]' : 'px-4 py-[7px] text-[13px]',
+              size === 'sm'
+                ? 'px-2.5 py-1 text-[11.5px]'
+                : 'px-3 py-[7px] text-[12.5px] sm:px-4 sm:text-[13px]',
               on ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/80',
             )}
           >

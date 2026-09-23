@@ -4,6 +4,7 @@ import type { Route } from 'next'
 import Link from 'next/link'
 import { Answer } from '@/components/answer'
 import { AllocationDonut } from '@/components/ui/allocation-donut'
+import { Countdown, CountUp } from '@/components/ui/count-up'
 import { TokenLogo } from '@/components/ui/token-logo'
 import { When } from '@/components/when'
 import { TelegramConnect } from '@/features/settings/TelegramConnect'
@@ -119,13 +120,21 @@ export function Plate({ view }: { view: DeskView }) {
     <section className="desk-panel">
       <header className="desk-panel-head">
         <h2 className="type-label-micro text-ink-muted">{deskCopy.plate.title}</h2>
-        <span className="type-caption text-ink-muted">
-          {deskCopy.plate.valuedShort(ago(new Date(p.takenAt)))}
+        <span className="flex items-center gap-2">
+          {view.desk.state === 'active' && view.desk.lifecycle === 'running' && (
+            <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-border px-2.5 py-0.5 text-[11px] text-ink-secondary">
+              <span className="size-1.5 animate-pulse rounded-full bg-[var(--profit)]" aria-hidden />
+              <Countdown to={view.desk.nextCheckAt} />
+            </span>
+          )}
+          <span className="hidden type-caption text-ink-muted sm:inline">
+            {deskCopy.plate.valuedShort(ago(new Date(p.takenAt)))}
+          </span>
         </span>
       </header>
       <div className="flex flex-wrap items-end gap-x-4 gap-y-1">
         <div className="font-[family-name:var(--font-data)] text-[44px] leading-none font-semibold tracking-[-0.02em] text-ink tabular-nums">
-          {usd(total)}
+          <CountUp value={Number(total) / 1e6} />
         </div>
         {change !== null && (
           <div className="pb-1 font-[family-name:var(--font-data)] text-[14px] tabular-nums">

@@ -16,6 +16,7 @@ import { notFound } from 'next/navigation'
 import { formatEther } from 'viem'
 import { CheckIt } from '@/components/check-it'
 import { Outcome, outcomeLabel } from '@/components/outcome'
+import { TokenLogo } from '@/components/ui/token-logo'
 import { When } from '@/components/when'
 import { CostShown, LimitsCheck, Options, WhatItSaw } from '@/features/record/DecisionSaw'
 import { decisionCard } from '@/features/share/card-data'
@@ -79,11 +80,16 @@ export default async function DecisionPage({ params }: { params: Promise<{ slug:
           {c.back}
         </Link>
         <div className="flex flex-wrap items-baseline justify-between gap-3">
-          <h1 className="type-headline text-ink">
-            {outcomeLabel(decision.outcome)}
-            {body?.candidate ? (
-              <span className="text-ink-secondary"> · {vaultMove ? c.vault : body.candidate.symbol}</span>
+          <h1 className="flex items-center gap-3 type-headline text-ink">
+            {body?.candidate && !vaultMove ? (
+              <TokenLogo symbol={body.candidate.symbol} size={36} className="shrink-0" />
             ) : null}
+            <span>
+              {outcomeLabel(decision.outcome)}
+              {body?.candidate ? (
+                <span className="text-ink-secondary"> · {vaultMove ? c.vault : body.candidate.symbol}</span>
+              ) : null}
+            </span>
           </h1>
           <span className="flex items-baseline gap-3 type-caption text-ink-muted">
             <span>

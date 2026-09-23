@@ -469,6 +469,7 @@ export const deskCopy = {
       `Valued ${age} on the trading pools’ half-hour average, never on the frozen official price.`,
     notYet: 'Not valued yet. The desk values itself at its first check.',
     valuedShort: (age: string) => `valued ${age}`,
+    nextCheckIn: (when: string) => (when === 'now' ? 'checking now' : `next check in ${when}`),
     sinceStartShort: 'since your money went in',
     timing: 'Timing',
     timingNote:

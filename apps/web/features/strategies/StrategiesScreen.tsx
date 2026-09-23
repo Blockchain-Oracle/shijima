@@ -1,12 +1,13 @@
 'use client'
 
-import { type Preset, short, studioCopy } from '@desk/shared'
+import { type Preset, short, studioCopy, usd } from '@desk/shared'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { HeaderAccount } from '@/components/shell/HeaderAccount'
 import { Button } from '@/components/ui/button'
 import { Segmented } from '@/components/ui/segmented'
+import { Sparkline } from '@/components/ui/sparkline'
 import type { DraftToken } from './draft'
 import { withPreset } from './draft'
 import { type Performance, StrategyCard } from './StrategyCard'
@@ -31,6 +32,9 @@ export interface OwnDesk {
   lifecycle: string
   mode: string
   checks: number
+  /** Latest value, in USDG units, or null before the first valuation. */
+  valueUsdg: string | null
+  spark: number[]
 }
 
 type View = 'create' | 'from' | 'yours'
@@ -290,12 +294,24 @@ function YourDesks({
       )}
       {own.map((d) => (
         <div key={d.id} className="strat-row studio-desk-row">
-          <div className="min-w-0">
-            <p className="strat-choice-title text-ink">{d.name}</p>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <p className="strat-choice-title truncate text-ink">{d.name}</p>
+              <span
+                className="desk-badge hidden sm:inline-flex"
+                data-mode={d.lifecycle === 'closed' ? undefined : d.mode}
+              >
+                {d.lifecycle === 'closed' ? (Y.lifecycle[d.lifecycle] ?? d.lifecycle) : d.mode}
+              </span>
+            </div>
             <p className="strat-mono-11 text-ink-muted">
-              {Y.lifecycle[d.lifecycle] ?? d.lifecycle} · {d.mode} · {Y.checks(d.checks)}
+              {Y.lifecycle[d.lifecycle] ?? d.lifecycle} · {Y.checks(d.checks)}
             </p>
           </div>
+          <Sparkline values={d.spark} width={96} height={30} className="hidden sm:block" />
+          <span className="shrink-0 text-right font-[family-name:var(--font-data)] text-[14px] text-ink tabular-nums">
+            {d.valueUsdg ? usd(BigInt(d.valueUsdg)) : '—'}
+          </span>
           <Link href={`/desk/${d.slug}` as Route} className="strat-sensei">
             {Y.open}
           </Link>

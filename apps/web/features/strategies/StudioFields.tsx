@@ -341,7 +341,7 @@ export function LimitsStep({
       </span>
     </Field>
   )
-  const usd = (key: 'perAction' | 'daily' | 'large', label: string, hint?: string) => (
+  const usd = (key: 'perAction' | 'daily' | 'large', label: string, hint?: string, slideTo?: number) => (
     <Field label={label} {...(hint ? { hint } : {})}>
       <span className="studio-dollar block">
         <input
@@ -351,6 +351,20 @@ export function LimitsStep({
           onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.value }))}
         />
       </span>
+      {slideTo !== undefined && (
+        // A dollar slider beside the box, for a quick setting; the box stays for an exact amount.
+        <input
+          type="range"
+          min={1}
+          max={slideTo}
+          step={1}
+          aria-label={label}
+          value={Math.min(slideTo, Math.max(1, Number(draft[key]) || 1))}
+          onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.value }))}
+          className="mt-2 w-full cursor-pointer"
+          style={{ accentColor: 'var(--color-accent)' }}
+        />
+      )}
     </Field>
   )
   return (
@@ -369,8 +383,8 @@ export function LimitsStep({
         <h3 className="strat-choice-title text-ink">{B.limitsTitle}</h3>
         <p className="strat-choice-body mb-4">{B.limitsBody}</p>
         <div className="grid gap-4 sm:grid-cols-2">
-          {usd('perAction', B.perAction)}
-          {usd('daily', B.daily)}
+          {usd('perAction', B.perAction, undefined, 250)}
+          {usd('daily', B.daily, undefined, 1000)}
         </div>
       </div>
 

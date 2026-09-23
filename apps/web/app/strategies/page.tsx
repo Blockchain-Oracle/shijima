@@ -6,6 +6,7 @@ import {
   GO_LIVE_CHECKS,
   ownerIdOf,
   sharedMixes,
+  valueHistory,
 } from '@desk/db'
 import { DISCLOSURE_VERSION, deskCopy, PRESETS, studioCopy } from '@desk/shared'
 import { type OwnDesk, type SharedMix, StrategiesScreen } from '@/features/strategies/StrategiesScreen'
@@ -59,14 +60,25 @@ export default async function Strategies({
         ]
       : [],
   )
-  const own: OwnDesk[] = desks.map((d) => ({
-    id: d.id,
-    slug: d.shareSlug ?? d.id,
-    name: d.name ?? studioCopy.side.unnamed,
-    lifecycle: d.lifecycle,
-    mode: deskCopy.modes[d.mode],
-    checks: d.shadowChecks,
-  }))
+  // A day or two of each desk's value, for the row's sparkline and its figure.
+  const histories = await Promise.all(desks.map((d) => valueHistory(db(), d.id, 48)))
+  // Running desks first; a closed one stays listed, below, so its record is still one tap away.
+  const order = (l: string) => (l === 'closed' ? 1 : 0)
+  const own: OwnDesk[] = desks
+    .map((d, i) => {
+      const h = histories[i] ?? []
+      return {
+        id: d.id,
+        slug: d.shareSlug ?? d.id,
+        name: d.name ?? studioCopy.side.unnamed,
+        lifecycle: d.lifecycle,
+        mode: deskCopy.modes[d.mode],
+        checks: d.shadowChecks,
+        valueUsdg: h.at(-1)?.totalUsdg.toString() ?? null,
+        spark: h.map((x) => Number(x.totalUsdg) / 1e6),
+      }
+    })
+    .sort((a, b) => order(a.lifecycle) - order(b.lifecycle))
 
   return (
     <StrategiesScreen
