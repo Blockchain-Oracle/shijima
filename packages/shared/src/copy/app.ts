@@ -334,7 +334,8 @@ export const appCopy = {
     workspace: (name: string | null) => name ?? 'A workspace',
     since: (when: string) => `linked ${when}`,
     allowChecks: 'Let it ask for a look now',
-    allowChecksNote: 'Its agents can then wake yours. Your limits still decide; it can never withdraw or raise them.',
+    allowChecksNote:
+      'Its agents can then wake yours. Your limits still decide; it can never withdraw or raise them.',
     unlink: 'Unlink',
     credit: 'Runs on OpenServ · decisions by SERV Reasoning',
   },
