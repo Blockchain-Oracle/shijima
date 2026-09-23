@@ -1,12 +1,15 @@
 'use client'
 
-import { type Preset, percent, short, studioCopy } from '@desk/shared'
+import { type Preset, short, studioCopy } from '@desk/shared'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { HeaderAccount } from '@/components/shell/HeaderAccount'
+import { Button } from '@/components/ui/button'
+import { Segmented } from '@/components/ui/segmented'
 import type { DraftToken } from './draft'
 import { withPreset } from './draft'
+import { type Performance, StrategyCard } from './StrategyCard'
 import { Studio } from './Studio'
 import { useStudioDraft } from './useStudioDraft'
 
@@ -49,6 +52,7 @@ export function StrategiesScreen({
   goLiveChecks,
   requestedPreset,
   requestedView,
+  performance,
 }: {
   presets: Preset[]
   tokens: DraftToken[]
@@ -61,6 +65,8 @@ export function StrategiesScreen({
   goLiveChecks: number
   requestedPreset: string | undefined
   requestedView: string | undefined
+  /** Each preset's return over the price log's last month, by preset id. */
+  performance: Record<string, Performance>
 }) {
   const [view, setView] = useState<View>(
     requestedView === 'from' || requestedView === 'yours' ? requestedView : 'create',
@@ -88,19 +94,18 @@ export function StrategiesScreen({
       </div>
       <p className="mt-5 mb-2 max-w-2xl text-ink-secondary text-sm">{T.lede}</p>
 
-      <nav className="agent-entry" aria-label={T.aria}>
-        {(
-          [
-            ['create', T.tabs.create],
-            ['from', T.tabs.from],
-            ['yours', T.tabs.yours],
-          ] as const
-        ).map(([key, label]) => (
-          <button key={key} type="button" aria-pressed={view === key} onClick={() => setView(key)}>
-            {label}
-          </button>
-        ))}
-      </nav>
+      <div className="mt-6 mb-8 max-w-full overflow-x-auto">
+        <Segmented<View>
+          label={T.aria}
+          value={view}
+          onChange={setView}
+          options={[
+            { value: 'create', label: T.tabs.create },
+            { value: 'from', label: T.tabs.from },
+            { value: 'yours', label: T.tabs.yours },
+          ]}
+        />
+      </div>
 
       {draftDesk && view !== 'yours' && (
         <div className="copy-progress">
@@ -128,6 +133,7 @@ export function StrategiesScreen({
           presets={presets}
           shared={shared}
           tokens={tokens}
+          performance={performance}
           onPreset={(p) => {
             setDraft((d) => withPreset(d, p))
             setView('create')
@@ -146,80 +152,51 @@ export function StrategiesScreen({
   )
 }
 
-function MixBar({
-  weights,
-  cashBps,
-  tokens,
-}: {
-  weights: Record<string, number>
-  cashBps: number
-  tokens: DraftToken[]
-}) {
-  const held = tokens.filter((t) => (weights[t.symbol] ?? 0) > 0)
-  const F = T.from
-  return (
-    <>
-      <div className="studio-bar" aria-hidden>
-        {held.map((t, i) => (
-          <span
-            key={t.symbol}
-            style={{
-              width: `${(weights[t.symbol] ?? 0) / 100}%`,
-              background: `color-mix(in srgb, var(--color-vermilion) ${90 - i * 8}%, var(--bg))`,
-            }}
-          />
-        ))}
-      </div>
-      <div className="studio-weights">
-        {held.slice(0, 6).map((t) => (
-          <span key={t.symbol}>
-            {t.symbol} <b>{percent(weights[t.symbol] ?? 0)}</b>
-          </span>
-        ))}
-        {held.length > 6 && <span>{F.more(held.length - 6)}</span>}
-        <span>{F.cash(percent(cashBps))}</span>
-      </div>
-    </>
-  )
-}
-
 function StartFrom({
   presets,
   shared,
   tokens,
+  performance,
   onPreset,
   onMix,
 }: {
   presets: Preset[]
   shared: SharedMix[]
   tokens: DraftToken[]
+  performance: Record<string, Performance>
   onPreset: (p: Preset) => void
   onMix: (m: SharedMix) => void
 }) {
   const F = T.from
   return (
-    <section className="flex flex-col gap-8">
+    <section className="flex flex-col gap-10">
       <div>
         <h2 className="strat-h2">{F.title}</h2>
         <p className="strat-choice-body max-w-2xl">{F.body}</p>
       </div>
       <div className="flex flex-col gap-3">
-        <h3 className="strat-meta text-ink-muted">{F.presets}</h3>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h3 className="strat-meta text-ink-muted">{F.presets}</h3>
+          <p className="text-[11px] text-muted-foreground">{F.pastNote}</p>
+        </div>
         <div className="studio-cards">
-          {presets.map((p) => (
-            <div key={p.id} className="strat-choice">
-              <span className="strat-choice-title text-ink">{p.name}</span>
-              <p className="strat-choice-body">{p.description}</p>
-              <MixBar weights={p.weights} cashBps={p.cashBps} tokens={tokens} />
-              <button
-                type="button"
-                className="strat-sensei mt-4"
-                onClick={() => onPreset(p)}
-                data-cursor="hover"
-              >
-                {F.use}
-              </button>
-            </div>
+          {presets.map((p, i) => (
+            <StrategyCard
+              key={p.id}
+              index={i}
+              name={p.name}
+              description={p.description}
+              suits={p.suits}
+              weights={p.weights}
+              cashBps={p.cashBps}
+              tokens={tokens}
+              performance={performance[p.id]}
+              action={
+                <Button className="w-full" onClick={() => onPreset(p)} data-cursor="hover">
+                  {F.use}
+                </Button>
+              }
+            />
           ))}
         </div>
       </div>
@@ -229,22 +206,29 @@ function StartFrom({
           <p className="strat-choice-body">{F.sharedEmpty}</p>
         ) : (
           <div className="studio-cards">
-            {shared.map((m) => (
-              <div key={m.slug} className="strat-choice">
-                <span className="strat-choice-title text-ink">{m.name}</span>
-                <MixBar weights={m.weights} cashBps={m.cashBps} tokens={tokens} />
-                <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <button type="button" className="strat-sensei" onClick={() => onMix(m)} data-cursor="hover">
-                    {F.use}
-                  </button>
-                  <Link
-                    href={`/desk/${m.slug}` as Route}
-                    className="type-caption text-ink-secondary hover:text-ink"
-                  >
-                    {F.watch} →
-                  </Link>
-                </div>
-              </div>
+            {shared.map((m, i) => (
+              <StrategyCard
+                key={m.slug}
+                index={i}
+                name={m.name}
+                description={F.sharedMode(m.mode)}
+                weights={m.weights}
+                cashBps={m.cashBps}
+                tokens={tokens}
+                action={
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button variant="outline" onClick={() => onMix(m)} data-cursor="hover">
+                      {F.use}
+                    </Button>
+                    <Link
+                      href={`/desk/${m.slug}` as Route}
+                      className="type-caption text-ink-secondary hover:text-ink"
+                    >
+                      {F.watch} →
+                    </Link>
+                  </div>
+                }
+              />
             ))}
           </div>
         )}

@@ -402,7 +402,7 @@ export const deskCopy = {
       'Ask what it holds and why it waited, or tell it what to change. It shows you a card, and nothing changes until you confirm.',
     placeholder: 'Ask your desk, or tell it what to change…',
     send: 'Send',
-    starters: ['How is my desk doing?', 'Why did you wait?', 'Move me into The Mag Seven', 'Check now'],
+    starters: ['How is my desk doing?', 'Why did you wait?', 'Move me into The 7 giants', 'Check now'],
     thinking: 'Thinking…',
     slow: 'Still thinking. The desk answers in about ten seconds.',
     failed: 'I could not answer just now. Nothing was changed.',

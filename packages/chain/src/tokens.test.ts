@@ -21,7 +21,7 @@ describe('approved token list', () => {
       expect(t.roundTripBps1000).toBeLessThanOrEqual(75)
     }
   })
-  it('contains both index funds, which the "Broad market" preset depends on', () => {
+  it('contains both index funds, which "The whole US market" preset depends on', () => {
     const symbols = APPROVED_TOKENS.map((t) => t.symbol)
     expect(symbols).toContain('SPY')
     expect(symbols).toContain('QQQ')

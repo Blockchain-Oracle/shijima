@@ -28,7 +28,7 @@ export const howCopy = {
     basket: {
       title: 'Pick a basket',
       body: (tokens: number) =>
-        `Choose a ready-made mix, such as The Mag Seven, or set your own weights across ${tokens} Stock Tokens and cash. The weights must add up to 100%.`,
+        `Choose a ready-made mix, such as The whole US market, or set your own weights across ${tokens} Stock Tokens and cash. The weights must add up to 100%.`,
     },
     limits: {
       title: 'Set two hard limits',

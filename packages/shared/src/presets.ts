@@ -7,6 +7,8 @@ export interface Preset {
   id: string
   name: string
   description: string
+  /** Who it suits, in a few words, shown on the card. */
+  suits: string
   cashBps: number
   weights: Record<string, number>
 }
@@ -14,37 +16,42 @@ export interface Preset {
 export const PRESETS: Preset[] = [
   {
     id: 'broad-market',
-    name: 'Broad market',
-    description: 'The S&P 500 and the Nasdaq 100 through two funds, with some cash kept aside.',
+    name: 'The whole US market',
+    description:
+      'Two funds that follow the 500 largest US companies and the Nasdaq 100. The steadiest mix here.',
+    suits: 'A first desk',
     cashBps: 2000,
     weights: { SPY: 5000, QQQ: 3000 },
   },
   {
     id: 'big-tech',
     name: 'Big tech',
-    description: 'Six large technology companies in equal measure, with some cash kept aside.',
+    description: 'Six of the largest technology companies, an equal share each.',
+    suits: 'Tech, spread out',
     cashBps: 1600,
     weights: { NVDA: 1400, AAPL: 1400, MSFT: 1400, GOOGL: 1400, AMZN: 1400, META: 1400 },
   },
   {
     id: 'mag-seven',
-    name: 'The Mag Seven',
-    description: 'The seven largest US technology companies in equal measure, with some cash kept aside.',
+    name: 'The 7 giants',
+    description: 'Apple, Microsoft, Nvidia, Amazon, Alphabet, Meta and Tesla, an equal share each.',
+    suits: 'The biggest names',
     cashBps: 1600,
     weights: { AAPL: 1200, MSFT: 1200, NVDA: 1200, AMZN: 1200, GOOGL: 1200, META: 1200, TSLA: 1200 },
   },
   {
     id: 'ai-builders',
-    name: 'AI Builders',
-    description:
-      'Five companies building the chips, cloud and models behind AI, in equal measure, with cash aside.',
+    name: 'The companies building AI',
+    description: 'The chips, cloud and models behind AI: Nvidia, Microsoft, Alphabet, Meta and Amazon.',
+    suits: 'A bet on AI',
     cashBps: 2000,
     weights: { NVDA: 1600, MSFT: 1600, GOOGL: 1600, META: 1600, AMZN: 1600 },
   },
   {
     id: 'mostly-cash',
-    name: 'Mostly cash',
-    description: 'Mostly cash, with a small broad-market holding.',
+    name: 'Play it safe',
+    description: 'Mostly cash, with a small slice of the whole US market.',
+    suits: 'Trying it out',
     cashBps: 6000,
     weights: { SPY: 2500, QQQ: 1500 },
   },

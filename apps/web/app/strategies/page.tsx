@@ -11,6 +11,7 @@ import { DISCLOSURE_VERSION, deskCopy, PRESETS, studioCopy } from '@desk/shared'
 import { type OwnDesk, type SharedMix, StrategiesScreen } from '@/features/strategies/StrategiesScreen'
 import { currentDeployment } from '@/lib/chain'
 import { db } from '@/lib/db'
+import { presetPerformance } from '@/lib/markets.server'
 import { signedInAddress } from '@/lib/session'
 
 export const dynamic = 'force-dynamic'
@@ -31,11 +32,12 @@ export default async function Strategies({
   const address = (await signedInAddress().catch(() => undefined)) ?? null
   const deployment = currentDeployment()
 
-  const [mixes, desks, draft, ownerId] = await Promise.all([
+  const [mixes, desks, draft, ownerId, performance] = await Promise.all([
     sharedMixes(db()),
     address ? desksOfOwner(db(), address) : Promise.resolve([]),
     address ? draftDeskOf(db(), address, deployment.factory) : Promise.resolve(undefined),
     address ? ownerIdOf(db(), address) : Promise.resolve(undefined),
+    presetPerformance(30).catch(() => []),
   ])
   const accepted = ownerId ? await disclosureAccepted(db(), ownerId, DISCLOSURE_VERSION) : null
 
@@ -84,6 +86,7 @@ export default async function Strategies({
       requestedPreset={preset}
       requestedView={view}
       goLiveChecks={GO_LIVE_CHECKS}
+      performance={Object.fromEntries(performance.map((p) => [p.id, p]))}
     />
   )
 }

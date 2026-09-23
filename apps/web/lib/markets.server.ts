@@ -152,6 +152,59 @@ function basketSeries(rows: PriceRow[], members: { address: string; weightBps: n
   return thin(points)
 }
 
+/** A preset's past, for its card: the return over the window and a thin line to draw. */
+export interface PresetPerformance {
+  id: string
+  /** Percent over the window, from the first moment every member had a price. Null with too little data. */
+  changePct: number | null
+  /** Up to 40 values of $1,000 put in at the start, oldest first. */
+  spark: number[]
+  /** Days actually covered, which can be fewer than asked when the price log is younger. */
+  days: number
+}
+
+/**
+ * Every preset's return over the last `days`, from the same arithmetic as the markets page's strategy chart, so
+ * the two can never disagree. Read from the price log only.
+ */
+export async function presetPerformance(days = 30, now = new Date()): Promise<PresetPerformance[]> {
+  const rows = await pricesBetween(db(), new Date(now.getTime() - days * DAY), now)
+  return PRESETS.map((preset) => {
+    const members = Object.entries(preset.weights).flatMap(([symbol, weightBps]) => {
+      const token = bySymbol(symbol)
+      return token ? [{ address: token.address.toLowerCase(), weightBps }] : []
+    })
+    const points = basketSeries(rows, members, preset.cashBps)
+    const first = points[0]
+    const last = points.at(-1)
+    const enough = first && last && last.time - first.time > DAY / 1000
+    return {
+      id: preset.id,
+      changePct: enough ? (last.value / first.value - 1) * 100 : null,
+      spark: evenlyInTime(points, 40),
+      days: enough ? Math.round((last.time - first.time) / 86_400) : 0,
+    }
+  })
+}
+
+/**
+ * `n` values at evenly spaced moments, each the last point at or before its moment. The price log is hourly in
+ * its backfilled past and every five minutes lately, so thinning by index would stretch the recent days.
+ */
+function evenlyInTime(points: Point[], n: number): number[] {
+  const first = points[0]
+  const last = points.at(-1)
+  if (!first || !last || points.length < 2) return points.map((p) => p.value)
+  const out: number[] = []
+  let j = 0
+  for (let k = 0; k < n; k++) {
+    const at = first.time + ((last.time - first.time) * k) / (n - 1)
+    while (j + 1 < points.length && (points[j + 1]?.time ?? Number.POSITIVE_INFINITY) <= at) j++
+    out.push(points[j]?.value ?? first.value)
+  }
+  return out
+}
+
 function tokenSeries(rows: PriceRow[], address: string): Point[] {
   return thin(
     rows
