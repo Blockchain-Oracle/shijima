@@ -279,7 +279,7 @@ export const desksCopy = {
   large: ' · asking because this one is large',
   telegramOff: 'Telegram is not connected, so it can only ask you here.',
   practiceLine: (done: number, needed: number, read: boolean) =>
-    `${Math.min(done, needed)} of ${needed} practice checks done · ${read ? 'report read' : 'report not read yet'}`,
+    `${Math.min(done, needed)} of ${needed} practice hours done · ${read ? 'report read' : 'report not read yet'}`,
   ready: ' · it can go live when you choose',
   practiceNote:
     'In practice mode the desk decides for real and spends nothing. None of your money has moved.',

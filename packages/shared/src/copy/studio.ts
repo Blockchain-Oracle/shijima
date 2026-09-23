@@ -6,8 +6,8 @@
 
 export const studioCopy = {
   kicker: 'Strategies · Robinhood Chain',
-  title: 'Give your money a desk.',
-  lede: 'Choose a basket of Stock Tokens, set the limits, hear the desk read it back, then create it. The desk decides only when to move toward your basket, and your account enforces the limits whatever it decides.',
+  title: 'Give your money an AI agent.',
+  lede: 'Pick a strategy, put in USDG, and your agent keeps it on plan around the clock. It decides only when to move, and your own account enforces the limits whatever it decides.',
   tabs: { create: 'New desk', from: 'Start from a strategy', yours: 'Your desks' },
   aria: 'Strategies workspace',
 
@@ -119,7 +119,7 @@ export const studioCopy = {
     title: 'Create your desk',
     body: 'This creates an account on Robinhood Chain that belongs to you. Only you can take money out. The assistant may trade inside it, within the limits above, and you can remove it at any time.',
     starts:
-      'It starts in practice: it decides for real and spends nothing. It can go live after 24 checks and once you have read its report.',
+      'It starts in practice: it decides for real and spends nothing. It can go live after a day of practice, once you have read its report.',
     address: 'Your desk’s address',
     addressNote: 'Known before it exists, so money can be sent to it first.',
     fee: 'Network fee',

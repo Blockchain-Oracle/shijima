@@ -590,8 +590,7 @@ export const deskCopy = {
 
   practice: {
     title: 'Practice',
-    progress: (done: number, needed: number) =>
-      `${Math.min(done, needed)} of ${needed} practice checks done.`,
+    progress: (done: number, needed: number) => `${Math.min(done, needed)} of ${needed} practice hours done.`,
     report: { read: 'Report read.', unread: 'Report not read yet.' },
     ready: 'It can go live when you choose.',
     readReport: 'Read the practice report',
@@ -859,7 +858,7 @@ export const controlsCopy = {
     eyebrow: 'Mode',
     title: 'How much the desk does on its own',
     locked: (done: number, needed: number, read: boolean) =>
-      `Going live needs ${needed} practice checks and the practice report read. This desk has done ${done}${read ? ', and you have read the report' : ', and the report is not read yet'}.`,
+      `Going live needs ${needed} hours of practice and the practice report read. This desk has done ${done}${read ? ', and you have read the report' : ', and the report is not read yet'}.`,
     onItsOwn: 'On its own means it acts inside your limits without asking, and still asks for large actions.',
     current: 'Now',
   },

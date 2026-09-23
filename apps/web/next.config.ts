@@ -8,13 +8,21 @@ const dev = process.env.NODE_ENV !== 'production'
  * frame the site, forms post only here, and the browser may reach only this site, the public RPC and the
  * services the page really calls. Model text is rendered as text; this is the lock behind that.
  */
+/** The fork's origin when NEXT_PUBLIC_RPC_URL is a local http address, else nothing. */
+const localRpc = (() => {
+  const url = process.env.NEXT_PUBLIC_RPC_URL
+  if (!url?.startsWith('http://127.0.0.1') && !url?.startsWith('http://localhost')) return null
+  return new URL(url).origin
+})()
+
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${dev ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   "img-src 'self' data: blob:",
-  "connect-src 'self' https: wss:",
+  // A rehearsal points the browser at a local fork over plain http; production reads only over https.
+  `connect-src 'self' https: wss:${localRpc ? ` ${localRpc}` : ''}`,
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",

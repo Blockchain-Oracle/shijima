@@ -123,7 +123,7 @@ export const howCopy = {
     shadow: {
       title: 'Practice',
       body: (checks: number) =>
-        `It watches and decides for real, and records what it would have done, but spends nothing. Every desk starts here. It can go live after ${checks} practice checks and once you have read its report.`,
+        `It watches and decides for real, and records what it would have done, but spends nothing. Every desk starts here. It can go live after ${checks} hours of practice, once you have read its report.`,
     },
     askFirst: {
       title: 'Ask first',
@@ -303,7 +303,7 @@ export const howCopy = {
     practice: {
       q: 'Why does it start in practice?',
       a: (checks: number) =>
-        `So you can see how it decides before it spends anything. After ${checks} practice checks, and once you have read its report, you can let it ask first or act on its own.`,
+        `So you can see how it decides before it spends anything. After ${checks} hours of practice, and once you have read its report, you can let it ask first or act on its own.`,
     },
     vault: {
       q: 'Does idle cash earn anything?',
