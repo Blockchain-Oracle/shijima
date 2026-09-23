@@ -14,6 +14,7 @@ import { APPROVED_TOKENS, type DeskCall } from '@desk/chain'
 import {
   chainReferenceSource,
   checkPriceAlerts,
+  copyLeaderMoves,
   gradeAtReopen,
   logPrices,
   priceSlot,
@@ -74,6 +75,8 @@ export interface ReviewSummary {
   checks: { desk: string; status: string; records: number }[]
   graded: number
   sealed: number
+  /** Leader moves answered by followers this pass: copied, or missed with the reason. */
+  copies: number
   /** True when an earlier transaction may still land, so nothing new was sent this pass. Reads still ran. */
   held: boolean
   /** The operator wallet cannot pay for many more actions. Status shows it; Abu tops it up. */
@@ -148,7 +151,7 @@ export async function reviewAllDesks(
   // changed. The top-of-the-hour slot is the one OpenServ's cron asks for.
   const slot = priceSlot(now)
   const trigger = options.trigger ?? 'tick'
-  const summary: ReviewSummary = { desks: 0, checks: [], graded: 0, sealed: 0, held: false }
+  const summary: ReviewSummary = { desks: 0, checks: [], graded: 0, sealed: 0, copies: 0, held: false }
 
   const send = async (action: ActionRow, call: DeskCall): Promise<SendReport> => {
     // Through Coinbase AgentKit: its action runs the same write-ahead sender, and its wallet provider signs.
@@ -302,6 +305,26 @@ export async function reviewAllDesks(
       }
     }
   }
+  // Copy trading (D4): every leader move a follower has not answered yet, confirmed on-chain above or in an earlier
+  // pass, is copied now, one follower at a time through the same sender. Nothing is sent while an earlier
+  // transaction may still land; the moves wait for the next pass, and a move too old by then is recorded as missed.
+  if (await clearToSend()) {
+    try {
+      for (const c of await copyLeaderMoves(wakeDeps)) {
+        log('copy', {
+          follower: c.follower,
+          leaderDecision: c.leaderDecision,
+          record: c.seq,
+          outcome: c.outcome,
+          summary: c.summary,
+        })
+        if (c.seq !== null) summary.copies++
+      }
+    } catch (e) {
+      log('copy_failed', { error: errorText(e) })
+    }
+  }
+
   // The price logger: one row per Stock Token every five minutes, for the charts. Reads only, never trades.
   try {
     const priced = await logPrices(

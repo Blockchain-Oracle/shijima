@@ -4,6 +4,7 @@
  */
 import { sql } from 'drizzle-orm'
 import {
+  type AnyPgColumn,
   bigint,
   boolean,
   check,
@@ -113,6 +114,12 @@ export const decisions = pgTable(
     openservTaskId: text('openserv_task_id'),
     openservExecutionId: text('openserv_execution_id'),
 
+    /**
+     * Copy trading (D4): the leader's decision this record copied, or missed copying. One per follower per leader
+     * decision, enforced below, so a restart can never copy the same move twice.
+     */
+    copiedFromDecisionId: uuid('copied_from_decision_id').references((): AnyPgColumn => decisions.id),
+
     decidedAt: timestamptz('decided_at').notNull(),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
   },
@@ -122,6 +129,9 @@ export const decisions = pgTable(
     index('decisions_desk_decided_idx').on(t.deskId, t.decidedAt),
     index('decisions_desk_outcome_idx').on(t.deskId, t.outcome),
     index('decisions_unsealed_idx').on(t.deskId, t.seq).where(sql`${t.sealedByTx} is null`),
+    uniqueIndex('decisions_desk_copied_from_key')
+      .on(t.deskId, t.copiedFromDecisionId)
+      .where(sql`${t.copiedFromDecisionId} is not null`),
     check('decisions_seq_positive', sql`${t.seq} >= 1`),
     check(
       'decisions_confidence_range',

@@ -33,6 +33,7 @@ export interface Blocker {
     | 'DID_THIS_MINUTES_AGO'
     | 'EVENT_WINDOW'
     | 'LOSS_LIMIT'
+    | 'COPY_MISSED'
   text: string
 }
 

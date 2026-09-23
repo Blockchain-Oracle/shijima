@@ -62,6 +62,8 @@ export interface CommitContext {
   input: WakeInput
   /** Set when this record carries out a request the owner approved. */
   approval?: { id: string; of: ApprovalOf } | undefined
+  /** Set when this record copies a leader's move: that decision's id. One record per leader move, ever. */
+  copiedFrom?: string | undefined
 }
 
 /** Saves the record and everything that must exist with it, then acts if the desk is acting. */
@@ -104,6 +106,7 @@ export async function commit(
     // The row mirrors the body, so a listing can filter on it without opening every record.
     kind: ctx.approval ? 'execution' : 'decision',
     ...(ctx.wakeId ? { wakeId: ctx.wakeId } : {}),
+    ...(ctx.copiedFrom ? { copiedFromDecisionId: ctx.copiedFrom } : {}),
     outcome: OUTCOME_COLUMN[k.outcome],
     mode: desk.mode,
     summary: k.summary,

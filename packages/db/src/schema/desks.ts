@@ -78,6 +78,13 @@ export const desks = pgTable(
     demotedAt: timestamptz('demoted_at'),
     demotionReason: text('demotion_reason'),
 
+    /**
+     * Copy trading (D4, D5). The owner lets others copy this desk's moves, for a one-time fee of $0 to $5 in USDG
+     * (6 decimals) paid when someone starts copying.
+     */
+    copyable: boolean('copyable').notNull().default(false),
+    copyFeeUsdg: uint('copy_fee_usdg').notNull().default(sql`0`),
+
     /** The contract's own `seq` as we last saw it. Cross-checked against the chain on every wake. */
     chainSeq: bigint('chain_seq', { mode: 'number' }).notNull().default(0),
 
@@ -94,6 +101,7 @@ export const desks = pgTable(
     isAddress('desks_operator_format', t.operator),
     isHash32('desks_salt_format', t.salt),
     nonNegative('desks_drawdown_baseline_nonneg', t.drawdownBaselineUsdg),
+    nonNegative('desks_copy_fee_nonneg', t.copyFeeUsdg),
   ],
 )
 
@@ -129,6 +137,8 @@ export const mandates = pgTable(
     /** The owner's own words, and what they compiled into. FREEFORM_CONTEXT rules are never enforced. */
     notes: text('notes').notNull().default(''),
     compiledRules: jsonb('compiled_rules').$type<unknown[]>().notNull().default([]),
+    /** Set while this desk copies another (D4): `{ leaderDeskId }`. Its own drift rebalancing is off then. */
+    follow: jsonb('follow').$type<{ leaderDeskId: string }>(),
     readBack: jsonb('read_back').$type<Record<string, unknown>>(),
 
     createdAt: timestamptz('created_at').notNull().defaultNow(),
