@@ -9,10 +9,10 @@ import { SectionHeader } from '@/components/ui/section-header'
 import { TokenLogo, TokenStack } from '@/components/ui/token-logo'
 import { doingNow } from '@/features/desk/AgentCard'
 import { StrategyCard } from '@/features/strategies/StrategyCard'
-import { LiveAgentsCarousel } from './LiveAgentsCarousel'
 import type { PublicAgent } from '@/lib/agents.server'
 import type { DeskView } from '@/lib/desk.server'
 import type { PresetPerformance } from '@/lib/markets.server'
+import { LiveAgentsCarousel } from './LiveAgentsCarousel'
 import './home.css'
 
 const TOKENS = APPROVED_TOKENS.map((t) => ({
