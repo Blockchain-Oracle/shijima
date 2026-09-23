@@ -1,8 +1,8 @@
 import { APPROVED_TOKENS } from '@desk/chain'
 import { deskRecord, desksOfOwner, isQuiet, pendingApprovals } from '@desk/db'
 import { appCopy } from '@desk/shared'
-import { redirect } from 'next/navigation'
 import { type ActivityRow, ActivityScreen, type NeedRow } from '@/features/activity/ActivityScreen'
+import { SignedOutCard } from '@/features/money/SignedOutCard'
 import { db } from '@/lib/db'
 import { signedInAddress } from '@/lib/session'
 
@@ -23,7 +23,7 @@ type Tab = (typeof TABS)[number]
  */
 export default async function ActivityPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const address = await signedInAddress().catch(() => undefined)
-  if (!address) redirect('/agents')
+  if (!address) return <SignedOutCard />
   const { tab: raw } = await searchParams
   const tab: Tab = (TABS as readonly string[]).includes(raw ?? '') ? (raw as Tab) : 'all'
 

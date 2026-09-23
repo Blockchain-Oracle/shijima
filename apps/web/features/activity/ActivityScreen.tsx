@@ -1,11 +1,11 @@
 import { appCopy, marketsCopy } from '@desk/shared'
-import { ArrowUpRight, CircleDashed, CircleSlash, Clock, Hand, Zap } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
+import type { ReactNode } from 'react'
 import { Answer } from '@/components/answer'
+import { Pill, Screen, ScreenTitle, StatusPill, type TxStatus } from '@/components/kit'
 import { TokenLogo } from '@/components/ui/token-logo'
 import { When } from '@/components/when'
-import { cn } from '@/lib/utils'
 
 interface AgentRef {
   id: string
@@ -34,20 +34,38 @@ export interface NeedRow {
   createdAt: string
 }
 
-const ICON: Record<string, typeof Zap> = {
-  acted: Zap,
-  acted_in_part: Zap,
-  acted_by_override: Hand,
-  would_have_acted: CircleDashed,
-  waited: Clock,
-  declined: CircleSlash,
-}
-
 const TRADED = new Set(['acted', 'acted_in_part', 'acted_by_override'])
 
+/** Each decision's outcome as the reference's status pill: done trades are green, the rest quiet. */
+function statusOf(r: ActivityRow): { status: TxStatus; label: string } {
+  const label = (marketsCopy.outcomes[r.outcome] ?? r.outcome).toUpperCase()
+  if (r.shadow) return { status: 'confirmed', label: `${label} · PRACTICE` }
+  if (TRADED.has(r.outcome)) return { status: 'done', label }
+  if (r.outcome === 'failed' || r.outcome === 'blocked') return { status: 'failed', label }
+  return { status: 'confirmed', label }
+}
+
+function Row({ first, children }: { first: boolean; children: ReactNode }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 14,
+        padding: '16px 18px',
+        borderTop: first ? 'none' : '1px solid var(--bd)',
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
 /**
- * Activity, on 21st's Notification Panel (27135): tabs for everything, what needs an answer and the trades,
- * each row an agent's decision with its token and time, and requests answered right in the row.
+ * Activity, as the reference wallet lists it (apps/web/src/wallet/ActivityScreen.tsx): a title with its pill, one
+ * line of what this is, chip filters, then one bordered panel of rows. Each row: a round mark, the agent and what
+ * it did, a quiet detail line, and on the right its status and the way to open it. Requests that wait on you are
+ * answered right in their row.
  */
 export function ActivityScreen({
   tab,
@@ -62,98 +80,162 @@ export function ActivityScreen({
   const trades = rows.filter((r) => TRADED.has(r.outcome) && !r.shadow)
   const shown = tab === 'trades' ? trades : rows
   const tabs = [
-    { key: 'all', label: c.tabs.all, count: null },
-    { key: 'needs', label: c.tabs.needs, count: needs.length },
-    { key: 'trades', label: c.tabs.trades, count: null },
+    { key: 'all', label: c.tabs.all },
+    { key: 'needs', label: needs.length > 0 ? `${c.tabs.needs} · ${needs.length}` : c.tabs.needs },
+    { key: 'trades', label: c.tabs.trades },
   ] as const
 
-  return (
-    <div className="app-container">
-      <header className="ov-head">
-        <div>
-          <p className="ov-kicker">{c.kicker}</p>
-          <h1 className="ov-title">{c.title}</h1>
-        </div>
-      </header>
+  const empty = tab === 'needs' ? needs.length === 0 : shown.length === 0
 
-      <section className="act-panel">
-        <nav className="act-tabs" aria-label={c.title}>
-          {tabs.map((t) => (
+  return (
+    <Screen width={760} gap={18}>
+      <ScreenTitle
+        title={c.title}
+        sub={c.sub}
+        right={
+          <Pill
+            label={needs.length > 0 ? `${needs.length} WAITING` : 'UP TO DATE'}
+            tone={needs.length > 0 ? 'warn' : 'pos'}
+            dot
+            pulse={needs.length > 0}
+          />
+        }
+      />
+
+      <nav aria-label={c.title} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {tabs.map((t) => {
+          const active = tab === t.key
+          return (
             <Link
               key={t.key}
               href={(t.key === 'all' ? '/activity' : `/activity?tab=${t.key}`) as Route}
-              className={cn('act-tab', tab === t.key && 'is-active')}
-              aria-current={tab === t.key ? 'page' : undefined}
+              aria-current={active ? 'page' : undefined}
+              style={{
+                padding: '5px 12px',
+                borderRadius: 999,
+                border: active ? '1px solid var(--ac)' : '1px solid var(--bd)',
+                background: active ? 'color-mix(in srgb, var(--ac) 12%, transparent)' : 'transparent',
+                color: active ? 'var(--tx)' : 'var(--tx2)',
+                fontSize: 12,
+                fontWeight: 600,
+                textDecoration: 'none',
+              }}
             >
               {t.label}
-              {t.count ? <span className="app-sidebar-count">{t.count}</span> : null}
             </Link>
-          ))}
-        </nav>
+          )
+        })}
+      </nav>
 
-        {tab === 'needs' ? (
-          needs.length === 0 ? (
-            <p className="act-empty">{c.noneNeeds}</p>
-          ) : (
-            <ul className="act-list">
-              {needs.map((n) => (
-                <li key={n.approvalId} className="act-row is-need">
-                  <span className="act-mark">
-                    {n.symbol ? <TokenLogo symbol={n.symbol} size={28} /> : null}
-                  </span>
-                  <div className="act-body">
-                    <p className="act-line">
-                      <strong>{n.agent.name}</strong> {n.summary}
-                    </p>
-                    <p className="act-meta">
-                      <When at={n.createdAt} />
-                    </p>
-                    <div className="act-answer">
+      {empty ? (
+        <div
+          style={{
+            padding: 18,
+            border: '1px dashed var(--bd2)',
+            borderRadius: 13,
+            textAlign: 'center',
+            fontSize: 12,
+            color: 'var(--tx3)',
+            lineHeight: 1.5,
+          }}
+        >
+          {tab === 'needs' ? c.noneNeeds : tab === 'trades' ? c.noneTrades : c.noneAll}
+        </div>
+      ) : (
+        <div
+          style={{
+            border: '1px solid var(--bd)',
+            borderRadius: 16,
+            background: 'var(--panel)',
+            overflow: 'hidden',
+          }}
+        >
+          {tab === 'needs'
+            ? needs.map((n, i) => (
+                <Row key={n.approvalId} first={i === 0}>
+                  <TokenLogo symbol={n.symbol ?? 'CASH'} size={38} />
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 600 }}>
+                      {n.agent.name} ·{' '}
+                      <span style={{ color: 'var(--warn)' }}>{c.tabs.needs.toLowerCase()}</span>
+                    </div>
+                    <div style={{ fontSize: 12.5, color: 'var(--tx2)', marginTop: 3, lineHeight: 1.45 }}>
+                      {n.summary}
+                    </div>
+                    <div style={{ marginTop: 10 }}>
                       <Answer deskId={n.agent.id} approvalId={n.approvalId} expiresAt={n.expiresAt} />
                     </div>
                   </div>
-                </li>
-              ))}
-            </ul>
-          )
-        ) : shown.length === 0 ? (
-          <p className="act-empty">{tab === 'trades' ? c.noneTrades : c.noneAll}</p>
-        ) : (
-          <ul className="act-list">
-            {shown.map((r) => {
-              const Icon = ICON[r.outcome] ?? Clock
-              return (
-                <li key={`${r.agent.id}-${r.seq}`}>
-                  <Link href={`/agents/${r.agent.slug}/decision/${r.seq}` as Route} className="act-row">
-                    <span className="act-mark">
-                      {r.symbol ? (
-                        <TokenLogo symbol={r.symbol} size={28} />
-                      ) : (
-                        <TokenLogo symbol="CASH" size={28} />
-                      )}
-                      <span className={cn('act-kind', TRADED.has(r.outcome) && !r.shadow && 'is-trade')}>
-                        <Icon aria-hidden="true" className="size-3" />
-                      </span>
-                    </span>
-                    <div className="act-body">
-                      <p className="act-line">
-                        <strong>{r.agent.name}</strong> {r.summary}
-                      </p>
-                      <p className="act-meta">
-                        <When at={r.at} />
-                        <span>· {marketsCopy.outcomes[r.outcome] ?? r.outcome}</span>
-                        {r.shadow && <span className="act-chip">{c.practice}</span>}
-                        <span>· #{r.seq}</span>
-                      </p>
+                  <div
+                    style={{
+                      alignSelf: 'flex-start',
+                      fontSize: 10.5,
+                      fontFamily: 'var(--fm)',
+                      color: 'var(--tx3)',
+                    }}
+                  >
+                    <When at={n.createdAt} />
+                  </div>
+                </Row>
+              ))
+            : shown.map((r, i) => {
+                const s = statusOf(r)
+                return (
+                  <Row key={`${r.agent.id}-${r.seq}`} first={i === 0}>
+                    <TokenLogo symbol={r.symbol ?? 'CASH'} size={38} />
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 600 }}>{r.agent.name}</div>
+                      <div
+                        title={r.summary}
+                        style={{
+                          fontSize: 12.5,
+                          color: 'var(--tx2)',
+                          marginTop: 3,
+                          lineHeight: 1.45,
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {r.summary}
+                      </div>
+                      <div
+                        style={{ fontSize: 10.5, color: 'var(--tx3)', fontFamily: 'var(--fm)', marginTop: 4 }}
+                      >
+                        <When at={r.at} /> · #{r.seq}
+                      </div>
                     </div>
-                    <ArrowUpRight aria-hidden="true" className="act-open size-4" />
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </section>
-    </div>
+                    <div
+                      style={{
+                        marginLeft: 'auto',
+                        textAlign: 'right',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'flex-end',
+                        gap: 6,
+                        flex: 'none',
+                      }}
+                    >
+                      <StatusPill status={s.status} label={s.label} />
+                      <Link
+                        href={`/agents/${r.agent.slug}/decision/${r.seq}` as Route}
+                        style={{
+                          fontSize: 10.5,
+                          color: 'var(--ac2)',
+                          fontWeight: 700,
+                          fontFamily: 'var(--fm)',
+                          textDecoration: 'none',
+                        }}
+                      >
+                        {c.open} ↗
+                      </Link>
+                    </div>
+                  </Row>
+                )
+              })}
+        </div>
+      )}
+    </Screen>
   )
 }

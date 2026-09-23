@@ -164,6 +164,7 @@ export const appCopy = {
     meta: 'Activity',
     kicker: 'Every agent, every decision',
     title: 'Activity',
+    sub: 'Every decision your agents made, and what waits on you. Each links to its record and its proof.',
     tabs: { all: 'All', needs: 'Needs you', trades: 'Trades' },
     quiet: 'Hide quiet checks',
     noneAll: 'No decisions yet. Your agents look every five minutes and write down each decision here.',
