@@ -1,5 +1,7 @@
 # Design brief: the Desk
 
+> **Updated product language and journeys, 23 Sep 2026:** [the product fidelity handoff](2026-09-23-product-fidelity-handoff.md) supersedes this brief's desk naming, signed-in home redirect and “never planned” copy-trading line. The owner now requires an agent-first, decision-first page, real trade copying, creator fees, funding and a visible OpenServ connection. Preserve the useful safety and content requirements here while using the newer handoff for scope.
+
 For a designer. Written in plain language on purpose. It covers everything the product does, every
 screen, every message, and every awkward state. It says nothing about colours, type, or visual style.
 Those are yours to decide.

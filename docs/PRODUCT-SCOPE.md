@@ -1,5 +1,7 @@
 # Product scope
 
+> **Updated scope, 23 Sep 2026:** [the product fidelity handoff](2026-09-23-product-fidelity-handoff.md) records the owner's later requirement for live-agent trade copying, creator fees, twenty strategies, mainnet funding/credit and visible OpenServ linking. Any copy-trading exclusion below is historical, not the current requirement.
+
 Draft 2026-09-19, for Abu to cut down. Built from five research passes saved under `docs/research/`.
 This document is about WHAT the product is and WHICH features are in. Not how it is built.
 

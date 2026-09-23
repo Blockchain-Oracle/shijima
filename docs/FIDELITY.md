@@ -1,5 +1,7 @@
 # Fidelity: Shijima on Masayume's design
 
+> **Current authority, 23 Sep 2026:** [the product fidelity handoff](2026-09-23-product-fidelity-handoff.md) supersedes this file where the latest owner feedback differs. In particular, `/` must remain reachable after sign-in, public **Agents** replace user-facing “desk/DEX,” and actual live-agent trade copying replaces L-53's basket-only copy. Creator fees, mainnet funding, a visible OpenServ connection and a one-time credit are required work; do not treat this historical plan's copy exclusion as current scope.
+
 Rewritten 21 Sep 2026, evening, with the `reference-product-fidelity` method. **Masayume replaces Glider** as
 the reference, at Abu's request. This file reconciles five things into one contract: Masayume, Agari (Masayume
 already ported to US stocks), our current web app, `DESIGN-BRIEF.md`, and the build work still pending. It is
