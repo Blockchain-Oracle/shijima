@@ -53,7 +53,7 @@ export default async function MyDesks() {
 
   // One desk: go straight to it, where the chat is first. The list is for owners of more than one.
   const [only] = desks
-  if (only && desks.length === 1) redirect(`/desk/${only.shareSlug ?? only.id}` as Route)
+  if (only && desks.length === 1) redirect(`/agents/${only.shareSlug ?? only.id}` as Route)
 
   const now = new Date()
   const loaded = await Promise.all(
@@ -73,7 +73,7 @@ export default async function MyDesks() {
       {loaded.map(({ desk, waiting, recent, telegram }) => {
         const newest = recent[0]
         const valuation = (newest?.record as { valuation?: { totalUsdg: string } } | undefined)?.valuation
-        const home = `/desk/${desk.shareSlug ?? desk.id}` as Route
+        const home = `/agents/${desk.shareSlug ?? desk.id}` as Route
         return (
           <section key={desk.id} className="desk-panel">
             <header className="desk-panel-head">

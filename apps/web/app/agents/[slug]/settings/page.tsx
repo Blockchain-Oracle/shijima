@@ -53,7 +53,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
   return (
     <div className="container settings-page">
       <header className="desk-hero">
-        <Link href={`/desk/${slug}` as Route} className="type-caption text-ink-secondary hover:text-ink">
+        <Link href={`/agents/${slug}` as Route} className="type-caption text-ink-secondary hover:text-ink">
           ← {s.back}
         </Link>
         <h1 className="type-headline text-ink">

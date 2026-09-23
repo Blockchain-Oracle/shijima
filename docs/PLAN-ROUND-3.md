@@ -364,3 +364,7 @@ Not in this plan, on purpose:
   - the Ask drawer opens on every app page.
 - `21st review` on the changed paths after each step.
 - **Mainnet, after Abu funds:** one real claim, then create, then trade. The tx hashes go into BUILD-PLAN's log.
+
+## Added by Abu on 23 Sep, during the build
+- **Colour: Robinhood green instead of the vermilion orange, everywhere.** Take Robinhood's own palette (the green/neon on black of its current brand); swap the accent token (`--vermilion` → the green) in the Yosuku/Agari token sheets so every surface follows, then re-check contrast in both themes. Profit green must stay distinguishable from the accent.
+- **Logo redesign.** A new Shijima mark that fits the green-on-black look; keep しじま.

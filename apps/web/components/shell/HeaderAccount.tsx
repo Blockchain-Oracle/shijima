@@ -75,7 +75,7 @@ export function HeaderAccount({
               </div>
             )}
             <Link
-              href="/desks"
+              href="/agents"
               className="header-account-link"
               role="menuitem"
               onClick={() => setOpen(false)}
@@ -84,7 +84,7 @@ export function HeaderAccount({
             </Link>
             {telegram && (
               <Link
-                href={`/desk/${telegram.deskId}/settings` as Route}
+                href={`/agents/${telegram.deskId}/settings` as Route}
                 className="header-account-link"
                 role="menuitem"
                 onClick={() => setOpen(false)}

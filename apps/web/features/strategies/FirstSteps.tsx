@@ -145,7 +145,7 @@ export function FirstSteps({
           {D.another}
         </button>
         <Link
-          href={`/desk/${created.slug}` as Route}
+          href={`/agents/${created.slug}` as Route}
           className="strat-confirm strat-confirm--live text-center"
         >
           {D.open}

@@ -137,14 +137,14 @@ export async function openservCodeAction(
 export async function openservUnlinkAction(deskId: string): Promise<{ ok: boolean }> {
   if (!(await ownerOf(deskId))) return { ok: false }
   const n = await unlinkOpenserv(db(), deskId)
-  revalidatePath(`/desk/${deskId}/settings`)
+  revalidatePath(`/agents/${deskId}/settings`)
   return { ok: n > 0 }
 }
 
 export async function telegramUnlinkAction(deskId: string): Promise<{ ok: boolean }> {
   if (!(await ownerOf(deskId))) return { ok: false }
   const done = await unlinkTelegram(db(), deskId, { actor: 'owner', via: 'web' })
-  revalidatePath(`/desk/${deskId}/settings`)
+  revalidatePath(`/agents/${deskId}/settings`)
   return { ok: done }
 }
 
@@ -163,7 +163,7 @@ export async function shareAction(deskId: string, enabled: boolean): Promise<{ o
       .toLowerCase()
       .replace(/[^a-z0-9]/g, 'x')
   await setDeskShare(db(), deskId, { slug, enabled }, { actor: 'owner', via: 'web' })
-  revalidatePath(`/desk/${deskId}/settings`)
+  revalidatePath(`/agents/${deskId}/settings`)
   return { ok: true, slug }
 }
 

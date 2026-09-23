@@ -104,7 +104,7 @@ export default async function RecordPage({
     if (value === undefined) next.delete(key)
     else next.set(key, value)
     const q = next.toString()
-    return `/desk/${slug}/record${q ? `?${q}` : ''}`
+    return `/agents/${slug}/record${q ? `?${q}` : ''}`
   }
   const item = (d: (typeof decisions)[number]): TimelineItem => ({
     id: `d${d.seq}`,
@@ -113,7 +113,7 @@ export default async function RecordPage({
     outcome: d.outcome,
     shadow: d.shadow,
     summary: `#${d.seq} · ${d.summary ?? ''}`,
-    href: `/desk/${slug}/decision/${d.seq}`,
+    href: `/agents/${slug}/decision/${d.seq}`,
     symbol: d.token ? symbolOf.get(d.token.toLowerCase()) : undefined,
   })
   const items: TimelineItem[] = rows.map((row) =>
@@ -129,13 +129,13 @@ export default async function RecordPage({
         },
   )
   const older = oldest
-    ? `/desk/${slug}/record?${new URLSearchParams({ ...Object.fromEntries(keep), before: String(oldest.seq) })}`
+    ? `/agents/${slug}/record?${new URLSearchParams({ ...Object.fromEntries(keep), before: String(oldest.seq) })}`
     : null
 
   return (
     <div className="container desk-page">
       <header className="desk-hero">
-        <Link href={`/desk/${slug}` as Route} className="type-caption text-accent hover:underline">
+        <Link href={`/agents/${slug}` as Route} className="type-caption text-accent hover:underline">
           {recordPagesCopy.back(desk.name)}
         </Link>
         <h1 className="type-headline text-ink">{c.title}</h1>
@@ -205,7 +205,7 @@ export default async function RecordPage({
             </details>
             {filtered && (
               <Link
-                href={`/desk/${slug}/record` as Route}
+                href={`/agents/${slug}/record` as Route}
                 className="ml-1 type-caption text-ink-secondary hover:text-ink"
               >
                 {c.filters.clear}

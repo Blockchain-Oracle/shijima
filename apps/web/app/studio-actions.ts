@@ -217,7 +217,7 @@ export async function finishDeskAction(input: {
     await applyMandate(db(), desk.id, draft.mandate, { actor: 'owner', via: 'web' }, readBack)
     await startDesk(db(), desk.id)
     revalidatePath('/strategies')
-    revalidatePath('/desks')
+    revalidatePath('/agents')
     return { ok: true, slug }
   } catch (e) {
     console.error(`[studio] finish: ${errorText(e)}`)

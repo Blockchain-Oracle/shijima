@@ -289,9 +289,9 @@ function deskRow(desk: DeskCheck, now: Date): StatusDesk {
     name: desk.name ?? s.unnamed,
     href:
       desk.shareEnabled && desk.shareSlug
-        ? `/desk/${desk.shareSlug}`
+        ? `/agents/${desk.shareSlug}`
         : desk.mine
-          ? `/desk/${desk.shareSlug ?? desk.id}`
+          ? `/agents/${desk.shareSlug ?? desk.id}`
           : null,
     chip: null,
   }

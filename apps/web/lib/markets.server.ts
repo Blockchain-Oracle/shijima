@@ -275,7 +275,7 @@ function toMarks(decisions: SharedDecision[], times: number[]): DeskMark[] {
         kind: markKind(d.outcome, d.shadow),
         side: d.side === 'buy' || d.side === 'sell' ? d.side : null,
         symbol: token.symbol,
-        href: `/desk/${d.shareSlug}/decision/${d.seq}`,
+        href: `/agents/${d.shareSlug}/decision/${d.seq}`,
         line: marketsCopy.decisionLine(d.deskName ?? 'A desk', outcome, d.side, token.displayName),
         outcome,
         summary: d.summary,
@@ -300,7 +300,7 @@ async function viewer(): Promise<Viewer> {
 }
 
 export const askHref = (v: Viewer, question: string): Route | null =>
-  v.desk ? (`/desk/${v.desk.slug}?ask=${encodeURIComponent(question)}` as Route) : null
+  v.desk ? (`/agents/${v.desk.slug}?ask=${encodeURIComponent(question)}` as Route) : null
 
 // ---------------------------------------------------------------- the markets page
 

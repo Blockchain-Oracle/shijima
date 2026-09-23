@@ -40,7 +40,7 @@ function Cites({ ids, slug }: { ids: string[]; slug: string }) {
           {i > 0 ? ', ' : ''}
           {/^d\d+$/.test(c.id) ? (
             <Link
-              href={`/desk/${slug}/decision/${c.id.slice(1)}` as Route}
+              href={`/agents/${slug}/decision/${c.id.slice(1)}` as Route}
               className="underline-offset-2 hover:underline"
             >
               {c.label}

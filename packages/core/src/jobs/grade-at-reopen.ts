@@ -108,7 +108,7 @@ async function announceReport(db: Db, deskId: string, settled: Date): Promise<vo
     kind: 'monday_report',
     payload: {
       text: summary.sentence,
-      path: `/desk/${slug}/report?at=${encodeURIComponent(window.from.toISOString())}`,
+      path: `/agents/${slug}/report?at=${encodeURIComponent(window.from.toISOString())}`,
       windowFrom: window.from.toISOString(),
     },
     dedupeKey: `report:${window.from.toISOString()}`,

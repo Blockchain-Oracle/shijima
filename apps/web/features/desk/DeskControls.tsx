@@ -264,7 +264,7 @@ export function DeskControls({ view }: { view: ControlsView }) {
       <header className="desk-panel-head">
         <h2 className="type-label-micro text-ink-muted">{c.title}</h2>
         <Link
-          href={`/desk/${view.slug}/settings` as Route}
+          href={`/agents/${view.slug}/settings` as Route}
           className="type-caption text-ink-secondary hover:text-ink"
         >
           {deskCopy.settingsLink} →

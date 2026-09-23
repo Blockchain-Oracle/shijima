@@ -51,7 +51,7 @@ export default async function ReportPage({
   return (
     <div className="container desk-page">
       <header className="desk-hero">
-        <Link href={`/desk/${slug}` as Route} className="type-caption text-accent hover:underline">
+        <Link href={`/agents/${slug}` as Route} className="type-caption text-accent hover:underline">
           {recordPagesCopy.back(desk.name)}
         </Link>
         <h1 className="type-headline text-ink">{c.title}</h1>
@@ -74,7 +74,7 @@ export default async function ReportPage({
             {judged.map((r) => (
               <div key={r.seq} className="desk-entry">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <Link href={`/desk/${slug}/decision/${r.seq}` as Route} className="hover:underline">
+                  <Link href={`/agents/${slug}/decision/${r.seq}` as Route} className="hover:underline">
                     <Outcome outcome={r.outcome} shadow={r.shadow} />
                   </Link>
                   <span className="type-caption text-ink-muted">
@@ -129,7 +129,7 @@ export default async function ReportPage({
                   </span>
                 ) : (
                   <Link
-                    href={`/desk/${slug}/report?at=${encodeURIComponent(w.from.toISOString())}` as Route}
+                    href={`/agents/${slug}/report?at=${encodeURIComponent(w.from.toISOString())}` as Route}
                     className="type-caption text-accent hover:underline"
                   >
                     {newYorkTime(w.from)}

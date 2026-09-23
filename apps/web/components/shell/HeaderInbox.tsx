@@ -66,8 +66,8 @@ export function HeaderInbox({ unread }: { unread: number }) {
                   item.symbol
                     ? `/stock/${item.symbol}`
                     : item.decisionSeq === null
-                      ? `/desk/${item.deskId}`
-                      : `/desk/${item.deskId}/decision/${item.decisionSeq}`
+                      ? `/agents/${item.deskId}`
+                      : `/agents/${item.deskId}/decision/${item.decisionSeq}`
                 ) as Route
                 return (
                   <li key={item.id}>

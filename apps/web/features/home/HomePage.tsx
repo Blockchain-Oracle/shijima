@@ -55,7 +55,7 @@ function LiveAgent({ view }: { view: DeskView | undefined }) {
         </div>
       ) : null}
       {latest ? (
-        <Link href={`/desk/${view.slug}/decision/${latest.seq}` as Route} className="hm-live-latest">
+        <Link href={`/agents/${view.slug}/decision/${latest.seq}` as Route} className="hm-live-latest">
           <small>
             {H.live.latest} · {outcomeLabel(latest.outcome as Parameters<typeof outcomeLabel>[0])}
           </small>
@@ -67,7 +67,7 @@ function LiveAgent({ view }: { view: DeskView | undefined }) {
           <Fingerprint className="size-3.5" aria-hidden />
           {H.live.check}
         </span>
-        <Link href={`/desk/${view.slug}` as Route} className="lp-link">
+        <Link href={`/agents/${view.slug}` as Route} className="lp-link">
           {H.live.open} →
         </Link>
       </div>
@@ -162,7 +162,7 @@ export function HomePage({
                   {H.hero.primary}
                 </Link>
                 <Link
-                  href={(showcase ? `/desk/${showcase.slug}` : '/markets') as Route}
+                  href={(showcase ? `/agents/${showcase.slug}` : '/markets') as Route}
                   className="btn btn-outline lp-cta"
                   data-cursor="hover"
                 >
@@ -368,7 +368,7 @@ export function HomePage({
               <ul className="hm-proof-list">
                 {recent.map((r) => (
                   <li key={r.seq}>
-                    <Link href={`/desk/${showcase?.slug}/decision/${r.seq}` as Route}>
+                    <Link href={`/agents/${showcase?.slug}/decision/${r.seq}` as Route}>
                       <small>#{r.seq}</small>
                       <span className="truncate">
                         {outcomeLabel(r.outcome)} · {r.summary}

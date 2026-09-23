@@ -103,7 +103,7 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
       ...(button
         ? {
             reply_markup: new InlineKeyboard()
-              .url(telegramCopy.connectButton, `${deps.siteUrl}/desks`)
+              .url(telegramCopy.connectButton, `${deps.siteUrl}/agents`)
               .url(telegramCopy.howButton, `${deps.siteUrl}/how-it-works`),
           }
         : {}),
@@ -119,7 +119,7 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
     const html = { parse_mode: 'HTML' as const }
     const desk = await deskById(db, deskId)
     const status = await buildStatus(db, deskId)
-    const siteDesk = desk ? `${deps.siteUrl}/desk/${deskPath(desk)}` : deps.siteUrl
+    const siteDesk = desk ? `${deps.siteUrl}/agents/${deskPath(desk)}` : deps.siteUrl
     if (view === 'portfolio') {
       kb.text(telegramCopy.menu.refresh, 'menu:portfolio').text(telegramCopy.menu.back, 'menu:home')
       const body = status ? telegramCopy.status(status) : telegramCopy.notCheckedYet
@@ -424,7 +424,7 @@ export async function deliverAskReply(
   await bot.api.sendMessage(chatId, `${body}\n\n${cardText}\n\n${telegramCopy.confirmOnSiteNote}`, {
     reply_markup: new InlineKeyboard().url(
       telegramCopy.confirmOnSite,
-      `${deps.siteUrl}/desk/${slug}?proposal=${proposal.id}`,
+      `${deps.siteUrl}/agents/${slug}?proposal=${proposal.id}`,
     ),
   })
 }
@@ -438,5 +438,5 @@ export function approvalKeyboard(approvalId: string, siteUrl: string, slug: stri
     .text('Approve', `approve:${approvalId}`)
     .text('Reject', `reject:${approvalId}`)
     .row()
-    .url(telegramCopy.seeDetails, `${siteUrl}/desk/${slug}/decision/${seq}`)
+    .url(telegramCopy.seeDetails, `${siteUrl}/agents/${slug}/decision/${seq}`)
 }

@@ -57,14 +57,14 @@ export async function answerWorkspace(
     if (claim.ok) {
       const desk = await deskById(cli.db, claim.deskId)
       log('openserv_linked', { workspace: workspaceId, desk: desk?.address })
-      const url = `${site}/desk/${desk?.shareSlug ?? claim.deskId}`
+      const url = `${site}/agents/${desk?.shareSlug ?? claim.deskId}`
       if (!question) return C.linked(desk?.name ?? 'your desk', url)
     }
   }
   if (!question) {
     const ws = await deskForWorkspace(cli.db, workspaceId)
     return ws
-      ? C.linked(ws.name ?? 'your desk', `${site}/desk/${ws.shareSlug ?? ws.deskId}`)
+      ? C.linked(ws.name ?? 'your desk', `${site}/agents/${ws.shareSlug ?? ws.deskId}`)
       : C.notLinked(site)
   }
 
@@ -76,7 +76,7 @@ export async function answerWorkspace(
   const allowed = await askAllowed(cli.db, desk.ownerAddress)
   if (!allowed.ok) return C.slowDown
 
-  const path = `${site}/desk/${linked.shareSlug ?? linked.deskId}`
+  const path = `${site}/agents/${linked.shareSlug ?? linked.deskId}`
   try {
     const id = await createAskRequest(cli.db, {
       ownerAddress: desk.ownerAddress,

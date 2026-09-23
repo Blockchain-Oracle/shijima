@@ -101,7 +101,7 @@ export default async function DecisionPage({ params }: { params: Promise<{ slug:
   return (
     <div className="container desk-page dc-page">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <Link href={`/desk/${slug}/record` as Route} className="type-caption text-accent hover:underline">
+        <Link href={`/agents/${slug}/record` as Route} className="type-caption text-accent hover:underline">
           {c.back}
         </Link>
         <ShareDecisionButton card={decisionCard(desk, full, body)} />
@@ -261,7 +261,7 @@ export default async function DecisionPage({ params }: { params: Promise<{ slug:
                   <p className="type-caption text-ink-secondary">
                     {approval.executionSeq !== null ? (
                       <Link
-                        href={`/desk/${slug}/decision/${approval.executionSeq}` as Route}
+                        href={`/agents/${slug}/decision/${approval.executionSeq}` as Route}
                         className="text-accent hover:underline"
                       >
                         {c.asked.executed(approval.executionSeq)}

@@ -49,7 +49,7 @@ try {
       throw new Error('a slug is lower case letters, numbers and dashes')
     await setDeskShare(cli.db, desk.id, { slug, enabled: !off }, by)
     console.log(
-      off ? `the public link is off (${slug})` : `anyone with the link can now watch: /desk/${slug}`,
+      off ? `the public link is off (${slug})` : `anyone with the link can now watch: /agents/${slug}`,
     )
   } else if (process.argv.includes('--pause')) {
     const done = await pauseDesk(cli.db, desk.id, by)

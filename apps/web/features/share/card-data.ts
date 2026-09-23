@@ -97,7 +97,7 @@ export function decisionCard(
 
   return {
     folio: `${slug.toUpperCase()}-${decision.seq}`,
-    path: `/desk/${slug}/decision/${decision.seq}`,
+    path: `/agents/${slug}/decision/${decision.seq}`,
     fileName: `shijima-${slug}-${decision.seq}.png`,
     symbol: token?.symbol ?? null,
     label: [

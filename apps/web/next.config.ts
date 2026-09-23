@@ -36,6 +36,15 @@ const config: NextConfig = {
   // The app is live and authenticated. Nothing here may be served from a build-time cache.
   cacheComponents: false,
   typedRoutes: true,
+  // A desk is called an agent now. Every link ever shared, to a desk, a decision, a report or a record, keeps
+  // working: it lands on the same thing at its new address.
+  async redirects() {
+    return [
+      { source: '/desk/:path*', destination: '/agents/:path*', permanent: true },
+      { source: '/desks', destination: '/agents', permanent: true },
+      { source: '/start', destination: '/agents/new', permanent: false },
+    ]
+  },
   async headers() {
     return [
       {

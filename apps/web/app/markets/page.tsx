@@ -81,7 +81,7 @@ export default async function Markets({
                 {view.desks.map((d) => (
                   <Link
                     key={d.id}
-                    href={`/desk/${d.shareSlug}` as Route}
+                    href={`/agents/${d.shareSlug}` as Route}
                     className="desk-entry"
                     data-cursor="hover"
                   >

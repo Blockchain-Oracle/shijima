@@ -64,6 +64,11 @@ export default function Header({ signedInAs, desksTotalUsdg, unread, telegram }:
             <ThemeToggle />
             {signedInAs ? <HeaderInbox unread={unread} /> : null}
             {signedInAs ? <HeaderMoneyPill totalUsdg={desksTotalUsdg} /> : null}
+            {signedInAs ? (
+              <Link href="/overview" className="btn-primary header-open-app" data-cursor="hover">
+                {webCopy.nav.openApp} →
+              </Link>
+            ) : null}
             <HeaderAccount signedInAs={signedInAs} telegram={telegram} />
           </div>
         </nav>

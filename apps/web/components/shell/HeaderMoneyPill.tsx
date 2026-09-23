@@ -10,7 +10,7 @@ export function HeaderMoneyPill({ totalUsdg }: { totalUsdg: string | null }) {
   const amount = totalUsdg === null ? '—' : usd(BigInt(totalUsdg))
   return (
     <Link
-      href="/desks"
+      href="/agents"
       title={webCopy.moneyPill.title}
       aria-label={webCopy.moneyPill.aria(amount)}
       className="dusdc-pill"

@@ -298,7 +298,7 @@ export function NextCheck({ view }: { view: DeskView }) {
           </p>
           {view.isOwner && !d.reportOpened && (
             <Link
-              href={`/desk/${view.slug}/report` as Route}
+              href={`/agents/${view.slug}/report` as Route}
               className="type-caption text-accent hover:underline"
             >
               {deskCopy.practice.readReport} →
@@ -498,7 +498,7 @@ export function Record({ view, limit = 14 }: { view: DeskView; limit?: number })
               outcome: row.decision.outcome,
               shadow: row.decision.shadow,
               summary: row.decision.summary ?? '',
-              href: `/desk/${view.slug}/decision/${row.decision.seq}`,
+              href: `/agents/${view.slug}/decision/${row.decision.seq}`,
               symbol: symbolOfDecision(row.decision, view),
             }
           : {
@@ -514,7 +514,7 @@ export function Record({ view, limit = 14 }: { view: DeskView; limit?: number })
                 outcome: d.outcome,
                 shadow: d.shadow,
                 summary: d.summary ?? '',
-                href: `/desk/${view.slug}/decision/${d.seq}`,
+                href: `/agents/${view.slug}/decision/${d.seq}`,
                 symbol: symbolOfDecision(d, view),
               })),
             },
@@ -536,10 +536,10 @@ export function Record({ view, limit = 14 }: { view: DeskView; limit?: number })
       title={deskCopy.record.title}
       aside={
         <span className="flex gap-3 type-caption">
-          <Link href={`/desk/${view.slug}/report` as Route} className="text-ink-secondary hover:text-ink">
+          <Link href={`/agents/${view.slug}/report` as Route} className="text-ink-secondary hover:text-ink">
             {deskCopy.record.report} →
           </Link>
-          <Link href={`/desk/${view.slug}/record` as Route} className="text-ink-secondary hover:text-ink">
+          <Link href={`/agents/${view.slug}/record` as Route} className="text-ink-secondary hover:text-ink">
             {deskCopy.record.whole} →
           </Link>
         </span>

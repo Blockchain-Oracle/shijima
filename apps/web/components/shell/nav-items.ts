@@ -6,13 +6,13 @@ import {
   GalleryVerticalEnd,
   Layers3,
   type LucideIcon,
-  MessageSquare,
+  Radar,
 } from 'lucide-react'
 import type { Route } from 'next'
 
 /**
- * Every destination in one registry, as in Agari (`components/shell/header/nav-items.ts`), with ours: Your desk
- * (it is the chat), Markets, Reels (after Markets, where Agari puts it), Strategies and How it works.
+ * Every destination in one registry, as in Agari (`components/shell/header/nav-items.ts`), with ours. Markets
+ * comes first, then Agents: the website's header. Signed in, the app's sidebar takes over.
  */
 export type NavItem = {
   id: string
@@ -26,13 +26,13 @@ export type NavItem = {
 export type NavSection = { id: string; name: string; description: string; items: readonly NavItem[] }
 
 export const NAV_ITEMS = {
-  desk: {
-    id: 'desk',
-    name: webCopy.nav.desk.name,
-    href: '/desks',
-    description: webCopy.nav.desk.description,
-    icon: MessageSquare,
-    match: { paths: ['/desks', '/desk'] },
+  agents: {
+    id: 'agents',
+    name: webCopy.nav.agents.name,
+    href: '/agents',
+    description: webCopy.nav.agents.description,
+    icon: Radar,
+    match: { paths: ['/agents'] },
   },
   markets: {
     id: 'markets',
@@ -74,22 +74,22 @@ export const NAV_ITEMS = {
 } as const satisfies Record<string, NavItem>
 
 export const DESKTOP_NAV: readonly NavItem[] = [
-  NAV_ITEMS.desk,
   NAV_ITEMS.markets,
-  NAV_ITEMS.reels,
+  NAV_ITEMS.agents,
   NAV_ITEMS.strategies,
+  NAV_ITEMS.reels,
   NAV_ITEMS.howItWorks,
 ]
 
 export const MOBILE_NAV: readonly NavItem[] = [
-  NAV_ITEMS.desk,
   NAV_ITEMS.markets,
-  NAV_ITEMS.reels,
+  NAV_ITEMS.agents,
   NAV_ITEMS.strategies,
+  NAV_ITEMS.reels,
 ]
 
 export const MOBILE_DRAWER_SECTIONS: readonly NavSection[] = [
-  { id: 'yours', ...webCopy.nav.sections.yours, items: [NAV_ITEMS.desk] },
+  { id: 'yours', ...webCopy.nav.sections.yours, items: [NAV_ITEMS.agents] },
   {
     id: 'explore',
     ...webCopy.nav.sections.explore,

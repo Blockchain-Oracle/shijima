@@ -19,7 +19,8 @@ export const webCopy = {
   },
 
   nav: {
-    desk: { name: 'Your desk', description: 'Talk to your desk, and see what it did and why.' },
+    agents: { name: 'Agents', description: 'Live agents you can watch or copy, and your own.' },
+    openApp: 'Open app',
     markets: {
       name: 'Markets',
       description: 'The ten Stock Tokens, with each price, its source and its age.',
@@ -28,18 +29,18 @@ export const webCopy = {
       name: 'Reels',
       description: 'The Stock Tokens, what shared desks decided, and takes, one card at a time.',
     },
-    strategies: { name: 'Strategies', description: 'Start a desk from a basket of stocks.' },
-    howItWorks: { name: 'How it works', description: 'What the desk decides, and what it never can.' },
+    strategies: { name: 'Strategies', description: 'Twenty baskets of stocks to start an agent from.' },
+    howItWorks: { name: 'How it works', description: 'What your agent decides, and what it never can.' },
     docs: { name: 'Docs', description: 'The manual: using Shijima, and how it is built.' },
     more: 'More',
     openAll: 'Open all navigation',
     drawerKicker: 'Navigate',
     drawerTitle: 'Everything in Shijima',
-    drawerDescription: 'Your desk, the markets, and how it all works.',
+    drawerDescription: 'The markets, the agents, and how it all works.',
     sections: {
-      yours: { name: 'Yours', description: 'Your money and your desk' },
+      yours: { name: 'Yours', description: 'Your money and your agents' },
       explore: { name: 'Explore', description: 'Prices, takes and baskets' },
-      learn: { name: 'Learn', description: 'How the desk decides' },
+      learn: { name: 'Learn', description: 'How your agent decides' },
     },
     primaryAria: 'Primary navigation',
     mobileAria: 'Mobile navigation',

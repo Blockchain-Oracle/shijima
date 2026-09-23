@@ -226,7 +226,7 @@ function StartFrom({
                       {F.use}
                     </Button>
                     <Link
-                      href={`/desk/${m.slug}` as Route}
+                      href={`/agents/${m.slug}` as Route}
                       className="type-caption text-ink-secondary hover:text-ink"
                     >
                       {F.watch} →
@@ -312,7 +312,7 @@ function YourDesks({
           <span className="shrink-0 text-right font-[family-name:var(--font-data)] text-[14px] text-ink tabular-nums">
             {d.valueUsdg ? usd(BigInt(d.valueUsdg)) : '—'}
           </span>
-          <Link href={`/desk/${d.slug}` as Route} className="strat-sensei">
+          <Link href={`/agents/${d.slug}` as Route} className="strat-sensei">
             {Y.open}
           </Link>
         </div>

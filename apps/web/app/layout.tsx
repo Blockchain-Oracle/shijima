@@ -2,7 +2,7 @@ import { webCopy } from '@desk/shared'
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import { Providers } from '@/components/providers'
-import { ShellChrome } from '@/components/shell'
+import { ShellSwitch } from '@/components/shell/ShellSwitch'
 import { Toaster } from '@/components/ui/toast'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { fontVariables } from '@/lib/fonts'
@@ -32,7 +32,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <Providers>
           <TooltipProvider>
             <Toaster limit={1}>
-              <ShellChrome {...shell}>{children}</ShellChrome>
+              <ShellSwitch {...shell}>{children}</ShellSwitch>
             </Toaster>
           </TooltipProvider>
         </Providers>

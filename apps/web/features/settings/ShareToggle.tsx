@@ -21,7 +21,7 @@ export function ShareToggle({
   // Read after mounting, so the server and the browser draw the same first frame.
   const [origin, setOrigin] = useState<string | null>(null)
   useEffect(() => setOrigin(window.location.origin), [])
-  const url = share.enabled && share.slug && origin ? `${origin}/desk/${share.slug}` : null
+  const url = share.enabled && share.slug && origin ? `${origin}/agents/${share.slug}` : null
 
   const flip = () =>
     start(async () => {

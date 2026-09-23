@@ -49,7 +49,7 @@ export async function answerApprovalAction(formData: FormData): Promise<ActionRe
       }
     }
     const row = await answerApproval(db(), { approvalId, answer, ownerId: owner.ownerId, via: 'web' })
-    revalidatePath('/desks')
+    revalidatePath('/agents')
     return row
       ? {
           ok: true,
@@ -72,7 +72,7 @@ export async function pauseAction(formData: FormData): Promise<ActionResult> {
     if (!owner) return { ok: false, message: 'That is not your desk.' }
     const by = { actor: 'owner', via: 'web' } as const
     const done = resume ? await resumeDesk(db(), deskId, by) : await pauseDesk(db(), deskId, by)
-    revalidatePath('/desks')
+    revalidatePath('/agents')
     if (!done) return { ok: false, message: 'Nothing changed: the desk was already in that state.' }
     return {
       ok: true,
@@ -98,7 +98,7 @@ export async function confirmProposalAction(proposalId: string): Promise<ActionR
       ownerAddress: address,
       via: 'web',
     })
-    revalidatePath('/desks')
+    revalidatePath('/agents')
     return { ok: outcome.ok, message: outcome.text }
   } catch (e) {
     return { ok: false, message: errorText(e) }
@@ -122,7 +122,7 @@ export async function finishChainProposalAction(proposalId: string, txHash: stri
   if (!address) return { ok: false, message: 'Sign in first.' }
   try {
     const done = await finishChainProposal(proposalId, address, txHash)
-    revalidatePath('/desks')
+    revalidatePath('/agents')
     return { ok: done.ok, message: done.text }
   } catch (e) {
     return { ok: false, message: errorText(e) }

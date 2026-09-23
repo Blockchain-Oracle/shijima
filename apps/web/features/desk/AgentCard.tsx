@@ -82,7 +82,7 @@ export function AgentCard({ view }: { view: DeskView }) {
       </dl>
 
       {latest ? (
-        <Link href={`/desk/${view.slug}/decision/${latest.seq}` as Route} className="ag-latest">
+        <Link href={`/agents/${view.slug}/decision/${latest.seq}` as Route} className="ag-latest">
           <span className="ag-label">
             {A.latest} · {outcomeLabel(latest.outcome as Parameters<typeof outcomeLabel>[0])}
           </span>
