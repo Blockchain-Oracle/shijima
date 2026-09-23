@@ -44,6 +44,25 @@ export const quoterV2Abi = parseAbi([
   'function quoteExactInputSingle(QuoteExactInputSingleParams params) view returns (uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate)',
 ])
 
+/**
+ * Uniswap's SwapRouter02, the router the desk itself trades through. The owner's own swaps (ETH or a Stock Token
+ * into an agent as USDG, a dollar of USDG into ETH for gas) go through it from the owner's wallet.
+ *   exactInputSingle   payable: with ETH attached and tokenIn = WETH9, the router wraps it
+ *   multicall          with a deadline, so a swap signed now cannot be run much later
+ *   unwrapWETH9        WETH the router holds (recipient ADDRESS_THIS) out as ETH to the owner
+ *   refundETH          any ETH the swap did not use back to the sender
+ */
+export const swapRouter02Abi = parseAbi([
+  'struct ExactInputSingleParams { address tokenIn; address tokenOut; uint24 fee; address recipient; uint256 amountIn; uint256 amountOutMinimum; uint160 sqrtPriceLimitX96; }',
+  'function exactInputSingle(ExactInputSingleParams params) payable returns (uint256 amountOut)',
+  'function multicall(uint256 deadline, bytes[] data) payable returns (bytes[] results)',
+  'function unwrapWETH9(uint256 amountMinimum, address recipient) payable',
+  'function refundETH() payable',
+])
+
+/** ERC-20 approve, kept apart from `erc20Abi` so nothing that only reads can build an approval by accident. */
+export const erc20ApproveAbi = parseAbi(['function approve(address spender, uint256 amount) returns (bool)'])
+
 export const aggregatorV3Abi = parseAbi([
   'function latestRoundData() view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)',
   'function decimals() view returns (uint8)',
