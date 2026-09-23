@@ -17,6 +17,8 @@ import {
   isCloneOf,
   readDeskState,
   recordedCallsBetween,
+  USDG,
+  VAULT,
   vaultAssetsOf,
 } from '@desk/chain'
 import {
@@ -60,7 +62,7 @@ import { pauseOnChain } from './loss-stop'
 import { type EventSource, referenceFor } from './market'
 import { findNeeds, MAX_CANDIDATES_PER_WAKE, type Need } from './needs'
 import { OUTCOME_COLUMN, type PlannedOutcome } from './plan'
-import { allPriced, findOutsideChanges, netFlowUsdg, scaledBaseline } from './reconcile'
+import { allPriced, findOutsideChanges, netFlowUsdg, scaledBaseline, VAULT_ASSET } from './reconcile'
 import { buildDecisionBody, mandateFingerprint, RECORD_SCHEMA_VERSION } from './record'
 import { chainReferenceSource } from './reference'
 import { USDG_DECIMALS } from './types'
@@ -353,6 +355,12 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
             })),
           },
           snapshot,
+          // One money row per change, so the charts net it out and the record can say who moved it.
+          flows: changes.map((c) => ({
+            token: c.asset === 'USDG' ? USDG : c.asset === VAULT_ASSET ? VAULT : c.asset,
+            delta: c.delta,
+            usdgValue: c.priced ? c.usdgValue : null,
+          })),
         })
       } else if (!watching || !previous || now.getTime() - previous.takenAt.getTime() >= WATCH_SNAPSHOT_MS) {
         await saveValueSnapshot(db, snapshot)

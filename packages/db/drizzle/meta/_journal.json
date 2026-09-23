@@ -99,6 +99,13 @@
       "when": 1790170100000,
       "tag": "0013_telegram_owner_user",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790180000000,
+      "tag": "0014_money_moves",
+      "breakpoints": true
     }
   ]
 }

@@ -18,6 +18,13 @@ export const uint = customType<{ data: bigint; driverData: string }>({
   fromDriver: (value) => BigInt(value),
 })
 
+/** An exact SIGNED integer in the same numeric(78,0), for running totals that go below zero. bigint in code. */
+export const int = customType<{ data: bigint; driverData: string }>({
+  dataType: () => 'numeric(78, 0)',
+  toDriver: (value) => value.toString(),
+  fromDriver: (value) => BigInt(value),
+})
+
 /** All times are stored in UTC. The web app shows the owner's local time, and New York time for market hours. */
 export const timestamptz = (name: string) => timestamp(name, { withTimezone: true, mode: 'date' })
 

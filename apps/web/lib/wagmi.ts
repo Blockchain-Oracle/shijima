@@ -1,6 +1,7 @@
 import { arbitrum, base, bsc, mainnet, robinhood } from 'viem/chains'
 import { createConfig, http } from 'wagmi'
 import { injected } from 'wagmi/connectors'
+import { chainRpcUrl, moneyChain } from './money/chains'
 
 /**
  * The wallet, in the browser only.
@@ -11,8 +12,9 @@ import { injected } from 'wagmi/connectors'
  * The RPC is passed explicitly, because viem's built-in entry for this chain lists a third-party endpoint we
  * did not choose.
  */
-/** The RPC the browser reads and sends through. A rehearsal points it at the local fork. */
-export const chainRpcUrl = process.env.NEXT_PUBLIC_RPC_URL ?? 'https://rpc.mainnet.chain.robinhood.com'
+export { chainRpcUrl }
+
+const rpc = (id: number) => moneyChain(id)?.rpc
 
 /**
  * Robinhood Chain is home. The other four are only where an owner may bring dollars from, through Relay: the
@@ -23,10 +25,10 @@ export const config = createConfig({
   connectors: [injected()],
   transports: {
     [robinhood.id]: http(chainRpcUrl),
-    [base.id]: http('https://mainnet.base.org'),
-    [arbitrum.id]: http('https://arb1.arbitrum.io/rpc'),
-    [mainnet.id]: http('https://ethereum-rpc.publicnode.com'),
-    [bsc.id]: http('https://bsc-dataseed.bnbchain.org'),
+    [base.id]: http(rpc(base.id)),
+    [arbitrum.id]: http(rpc(arbitrum.id)),
+    [mainnet.id]: http(rpc(mainnet.id)),
+    [bsc.id]: http(rpc(bsc.id)),
   },
   ssr: true,
 })

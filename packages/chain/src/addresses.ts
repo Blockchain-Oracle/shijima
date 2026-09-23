@@ -27,6 +27,18 @@ export type FeeTier = (typeof FEE_TIERS)[number]
 /** Chainlink ETH / USD on this chain, 8 decimals. Only for showing network fees in dollars, never for a trade. */
 export const ETH_USD_FEED: Address = '0x78F3556b67E17Df817D51Ef5a990cDaF09E8d3A9'
 
+/** Wrapped ETH on this chain: Relay's own list names it, and the WETH/USDG pool below is made of it. */
+export const WETH9: Address = '0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73'
+/** The WETH/USDG pool's fee tier: 0.01%. Checked on 23 Sep 2026, it held $11.3M of USDG. */
+export const WETH_USDG_FEE = 100
+/**
+ * SwapRouter02's "the router itself" recipient: a swap paid to this leaves the WETH in the router, for
+ * `unwrapWETH9` in the same multicall to send out as ETH.
+ */
+export const ROUTER_ADDRESS_THIS: Address = '0x0000000000000000000000000000000000000002'
+/** The native coin, as Relay's lists and our money rows name it. */
+export const NATIVE: Address = '0x0000000000000000000000000000000000000000'
+
 export const RHJ_API = 'https://api.robinhood.com/rhj'
 export const CHAINLINK_FEEDS_DIRECTORY =
   'https://reference-data-directory.vercel.app/feeds-robinhood-mainnet.json'
