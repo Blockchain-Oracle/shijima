@@ -209,7 +209,14 @@ export function checkProposal(
         const token = approved.find((t) => t.symbol === symbol)
         return { token: token?.address ?? symbol, weightBps }
       })
-      const next: Mandate = { ...m, preset: preset.id, targets: { cashBps: preset.cashBps, tokens } }
+      // A one-fund preset holds 90%, so the largest holding allowed rises to fit it. It never falls.
+      const maxPositionBps = Math.max(m.maxPositionBps, ...Object.values(preset.weights))
+      const next: Mandate = {
+        ...m,
+        preset: preset.id,
+        maxPositionBps,
+        targets: { cashBps: preset.cashBps, tokens },
+      }
       return mandateProposal(p.kind, next, facts, `Move to ${preset.name}`, approved)
     }
     case 'set_weights': {

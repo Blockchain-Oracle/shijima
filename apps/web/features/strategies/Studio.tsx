@@ -62,7 +62,7 @@ export function Studio({
   const mandate = result.ok ? result.mandate : null
   const key = useMemo(() => (mandate ? mandateKey(mandate) : null), [mandate])
   const heard = read.status === 'heard' && read.key === key
-  // An unnamed desk takes its strategy's name: "The 7 giants" reads better than "Unnamed desk".
+  // An unnamed desk takes its strategy's name: "The giants" reads better than "Unnamed desk".
   const name = draft.name.trim() || presets.find((p) => p.id === draft.preset)?.name || SIDE.unnamed
 
   const advance = () => {
