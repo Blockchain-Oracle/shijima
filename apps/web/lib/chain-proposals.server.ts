@@ -8,18 +8,20 @@
  * itself before calling the card done: a transaction hash from the browser proves nothing until the chain agrees
  * that it went where the card said, from its owner or its session key, and succeeded.
  */
-import { deskAbi, erc20Abi, USDG } from '@desk/chain'
+import { CHAIN_ID, deskAbi, erc20Abi, priceStocksNow, USDG, VAULT, vaultAssetsOf } from '@desk/chain'
 import {
   type AskProposalRow,
   closeDesk,
+  createMoneyMove,
   deskById,
   finishProposal,
   markAssistantBack,
   markAssistantRemoved,
+  ownerIdOf,
   proposalForOwner,
   takeProposal,
 } from '@desk/db'
-import { type Address, type Hex, isHash, parseEventLogs } from 'viem'
+import { type Address, type Hex, isHash, parseEventLogs, type TransactionReceipt } from 'viem'
 import { type Built, build, type DeskForBuild, estimateFee, pub, targetOf } from './chain-build.server'
 import { db } from './db'
 
@@ -158,6 +160,14 @@ export async function finishChainProposal(proposalId: string, owner: string, txH
       }
   }
 
+  // Money in or out, and a sale, are money moves too: Activity lists them, and reconcile ties the change it finds
+  // at the next check to this row, so the charts net it out and the record says who moved it.
+  if (proposal.kind === 'withdraw' || proposal.kind === 'sell_some' || proposal.kind === 'add_money') {
+    await recordChainMove(proposal, desk, receipt, txHash).catch((e) =>
+      console.error('money move not recorded', proposal.id, e instanceof Error ? e.message : e),
+    )
+  }
+
   const by = byOf(proposal)
   let text = 'Done. It is on the chain, and the agent’s record picks it up at its next check.'
   if (proposal.kind === 'remove_assistant') {
@@ -181,6 +191,73 @@ export async function finishChainProposal(proposalId: string, owner: string, txH
   }
   await finishProposal(db(), proposal.id, { status: 'done', result: { text, signer }, txHash })
   return { ok: true as const, text }
+}
+
+/**
+ * A confirmed withdraw, sale or deposit card, as a done money move. Its dollars come from the receipt itself:
+ * USDG counts as it is, a Stock Token at what selling it now would give, vault shares at what they redeem for.
+ */
+async function recordChainMove(
+  proposal: AskProposalRow,
+  desk: NonNullable<Awaited<ReturnType<typeof deskById>>>,
+  receipt: TransactionReceipt,
+  txHash: string,
+) {
+  const deskAddress = desk.address.toLowerCase()
+  const owner = desk.ownerAddress.toLowerCase()
+  const transfers = parseEventLogs({ abi: erc20Abi, logs: receipt.logs, eventName: 'Transfer' })
+  const kind =
+    proposal.kind === 'add_money' ? 'fund' : proposal.kind === 'sell_some' ? 'sell_some' : 'withdraw'
+  // Out of the agent to the owner, into it from the owner, or (a sale) USDG arriving from the pool.
+  const moved = transfers.filter((l) =>
+    kind === 'withdraw'
+      ? l.args.from.toLowerCase() === deskAddress && l.args.to.toLowerCase() === owner
+      : kind === 'fund'
+        ? l.args.from.toLowerCase() === owner && l.args.to.toLowerCase() === deskAddress
+        : l.args.to.toLowerCase() === deskAddress && l.address.toLowerCase() === USDG.toLowerCase(),
+  )
+  if (moved.length === 0) return
+  const amounts: Record<string, bigint> = {}
+  for (const l of moved)
+    amounts[l.address.toLowerCase()] = (amounts[l.address.toLowerCase()] ?? 0n) + l.args.value
+  const usdg = amounts[USDG.toLowerCase()] ?? 0n
+  const shares = amounts[VAULT.toLowerCase()] ?? 0n
+  const stocks = Object.fromEntries(
+    Object.entries(amounts).filter(([a]) => a !== USDG.toLowerCase() && a !== VAULT.toLowerCase()),
+  )
+  const [prices, savings] = await Promise.all([
+    priceStocksNow(pub(), stocks),
+    shares > 0n ? vaultAssetsOf(pub(), shares) : Promise.resolve(0n),
+  ])
+  const worth = usdg + savings + Object.values(prices).reduce<bigint>((s, v) => s + (v ?? 0n), 0n)
+  const [main = USDG.toLowerCase(), mainAmount = 0n] =
+    usdg > 0n ? [USDG.toLowerCase(), usdg] : (Object.entries(amounts)[0] ?? [])
+  const ownerId = await ownerIdOf(db(), owner)
+  if (!ownerId) return
+  await createMoneyMove(db(), {
+    ownerId,
+    deskId: desk.id,
+    kind,
+    status: 'done',
+    fromChainId: CHAIN_ID,
+    toChainId: CHAIN_ID,
+    tokenIn: main,
+    amountIn: mainAmount,
+    tokenOut: main,
+    amountOutQuoted: mainAmount,
+    usdgValue: worth,
+    feeUsdg: null,
+    recipient: kind === 'withdraw' ? owner : deskAddress,
+    steps: [
+      {
+        chainId: CHAIN_ID,
+        to: receipt.to?.toLowerCase() ?? deskAddress,
+        kind: 'transfer',
+        label: proposal.kind,
+      },
+    ],
+    txHashes: [txHash.toLowerCase()],
+  })
 }
 
 /** The owner closed their wallet without signing, or the key could not send. The card ends, honestly. */

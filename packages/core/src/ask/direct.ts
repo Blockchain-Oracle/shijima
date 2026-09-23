@@ -58,6 +58,7 @@ export const BUTTON_KINDS = [
   'set_limits',
   'set_notes',
   'set_rules',
+  'sell_some',
 ] as const satisfies readonly ProposalKind[]
 export type ButtonKind = (typeof BUTTON_KINDS)[number]
 

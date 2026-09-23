@@ -45,6 +45,8 @@ export const PROPOSAL_KINDS = [
   'close_desk',
   'price_alert',
   'set_rules',
+  // Round 4: sell one stock to cash inside the agent, all of it or a dollar amount. For the Withdraw screen.
+  'sell_some',
 ] as const
 export type ProposalKind = (typeof PROPOSAL_KINDS)[number]
 
@@ -74,7 +76,8 @@ export const AskReply = z.object({
       answer: z.enum(['approve', 'reject']).nullable(),
       decisionId: z.string().nullable(),
       amountUsdg: z.string().nullable(),
-      withdrawAs: z.enum(['usdg', 'stocks']).nullable(),
+      /** usdg: cash. stocks: every holding as it is. stock: one holding as it is, named by `symbol`. */
+      withdrawAs: z.enum(['usdg', 'stocks', 'stock']).nullable(),
       /** The limits the desk's account itself enforces, in dollars, for set_chain_limits. Null keeps the current one. */
       perActionCapUsdg: z.string().nullable(),
       dailyCapUsdg: z.string().nullable(),
@@ -403,6 +406,26 @@ export function checkProposal(
       // signed. The last hourly valuation is too old to refuse on: money may have arrived since.
       const amount = dollars(p.amountUsdg)
       if (typeof amount === 'string') return { ok: false, why: amount }
+      if (as === 'stock') {
+        // One holding as it is: all of it, or about this many dollars of it at a fresh quote. The session key may
+        // sign it, because it only ever pays the owner's own wallet.
+        const token = approved.find((t) => t.symbol === (p.symbol ?? '').toUpperCase())
+        if (!token) return { ok: false, why: 'Which stock? I need its symbol.' }
+        return {
+          ok: true,
+          proposal: {
+            kind: p.kind,
+            path: 'session',
+            args: { as, token: token.address, amountUsdg: amount?.toString() ?? null },
+            card: {
+              title: amount
+                ? `Withdraw $${formatUsd(amount)} of ${token.displayName} as it is`
+                : `Withdraw all your ${token.displayName} as it is`,
+              note: 'It goes to your own wallet, the owner of this agent, and nowhere else. The cost is shown before you sign.',
+            },
+          },
+        }
+      }
       return {
         ok: true,
         proposal: {
@@ -423,6 +446,26 @@ export function checkProposal(
         'Sell everything to cash',
         'Every holding becomes USDG in the agent’s account. The cost is shown before you sign.',
       )
+    case 'sell_some': {
+      const token = approved.find((t) => t.symbol === (p.symbol ?? '').toUpperCase())
+      if (!token) return { ok: false, why: 'Which stock? I need its symbol.' }
+      const amount = dollars(p.amountUsdg)
+      if (typeof amount === 'string') return { ok: false, why: amount }
+      return {
+        ok: true,
+        proposal: {
+          kind: p.kind,
+          path: 'wallet',
+          args: { token: token.address, amountUsdg: amount?.toString() ?? null },
+          card: {
+            title: amount
+              ? `Sell $${formatUsd(amount)} of ${token.displayName}`
+              : `Sell all your ${token.displayName}`,
+            note: 'It becomes USDG in the agent’s account, at no worse than 1% under the quote. Only your wallet can sign a sale. The cost is shown before you sign.',
+          },
+        },
+      }
+    }
     case 'remove_assistant':
       return simple(
         p.kind,

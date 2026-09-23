@@ -81,32 +81,53 @@ const all = (desk: DeskForBuild, known: bigint) => (desk.contractVersion === 'v0
 const cashAfterAll = (desk: DeskForBuild, known: bigint) =>
   desk.contractVersion === 'v0' ? (known > 1n ? known - 1n : known) : maxUint256
 
+/**
+ * One Stock Token the desk holds, sold to USDG inside the desk at no worse than 1% under a fresh quote. The line
+ * says how the quote sits against the price feed, so a sale into a thin pool is visible before signing.
+ */
+async function sellOne(address: string, amount: bigint, reason: Hex, deadline: number) {
+  const token = tokenOf(address)
+  if (!token) throw new Error(`the agent holds a token that is not on the list: ${address}`)
+  const [out, feed] = await Promise.all([
+    quotePinned(pub(), token, 'sell', amount),
+    readFeed(pub(), token.feed).catch(() => null),
+  ])
+  const minOut = (out * (10_000n - OWNER_SELL_SLIPPAGE_BPS)) / 10_000n
+  const gap = feed && feed.price > 0n && out > 0n ? tokenGapBps(out, amount, feed.price) : null
+  const versus =
+    gap === null
+      ? ''
+      : Math.abs(gap) < 5
+        ? ', in line with the price feed'
+        : `, ${(Math.abs(gap) / 100).toFixed(1)}% ${gap < 0 ? 'below' : 'above'} the price feed`
+  return {
+    call: encode('sell', [token.address, amount, minOut, deadline, reason]),
+    out,
+    minOut,
+    line: `${token.displayName} sells for about ${dollars(out)}${versus}`,
+  }
+}
+
+/**
+ * How much of one holding makes about `wanted` dollars at a fresh sale quote: all of it when `wanted` is null or
+ * worth more than the holding. Found by proportion on a quote for the whole holding; a pool's price barely moves
+ * inside one holding's size, and the sale itself carries its own minimum.
+ */
+async function partOf(address: string, held: bigint, wanted: bigint | null) {
+  const token = tokenOf(address)
+  if (!token) throw new Error(`that token is not on the list: ${address}`)
+  if (wanted === null) return { token, amount: held }
+  const whole = await quotePinned(pub(), token, 'sell', held)
+  if (whole <= wanted) return { token, amount: held }
+  return { token, amount: (held * wanted) / whole }
+}
+
 /** Every Stock Token the desk holds, sold to USDG inside the desk at no worse than 1% under a fresh quote. */
 async function sellEverything(holdings: Record<string, bigint>, reason: Hex) {
   // The later of the chain clock and ours: a quiet chain's last block can be minutes old.
   const deadline = await deadlineIn(pub(), DEADLINE_S)
   const sales = await Promise.all(
-    Object.entries(holdings).map(async ([address, amount]) => {
-      const token = tokenOf(address)
-      if (!token) throw new Error(`the agent holds a token that is not on the list: ${address}`)
-      const [out, feed] = await Promise.all([
-        quotePinned(pub(), token, 'sell', amount),
-        readFeed(pub(), token.feed).catch(() => null),
-      ])
-      const minOut = (out * (10_000n - OWNER_SELL_SLIPPAGE_BPS)) / 10_000n
-      const gap = feed && feed.price > 0n && out > 0n ? tokenGapBps(out, amount, feed.price) : null
-      const versus =
-        gap === null
-          ? ''
-          : Math.abs(gap) < 5
-            ? ', in line with the price feed'
-            : `, ${(Math.abs(gap) / 100).toFixed(1)}% ${gap < 0 ? 'below' : 'above'} the price feed`
-      return {
-        call: encode('sell', [token.address, amount, minOut, deadline, reason]),
-        minOut,
-        line: `${token.displayName} sells for about ${dollars(out)}${versus}`,
-      }
-    }),
+    Object.entries(holdings).map(([address, amount]) => sellOne(address, amount, reason, deadline)),
   )
   return {
     calls: sales.map((s) => s.call),
@@ -146,6 +167,25 @@ export async function build(proposal: AskProposalRow, desk: DeskForBuild): Promi
 
   switch (proposal.kind) {
     case 'withdraw': {
+      if (args.as === 'stock') {
+        // One holding as it is, all of it or about a dollar amount of it, to the owner's own wallet.
+        const address = String(args.token ?? '').toLowerCase()
+        const held = state.holdings[address] ?? 0n
+        const name = tokenOf(address)?.displayName ?? address
+        if (held === 0n) return `The agent holds no ${name}.`
+        const wanted = typeof args.amountUsdg === 'string' ? BigInt(args.amountUsdg) : null
+        const part = await partOf(address, held, wanted)
+        const whole = part.amount === held
+        return {
+          ...base,
+          data: encode('withdraw', [part.token.address, whole ? all(desk, held) : part.amount]),
+          sessionMay: true,
+          summary: `Withdraw ${whole ? 'all your' : 'some of your'} ${name} as it is, ${toOwner}`,
+          lines: [
+            `${formatUnits(part.amount, part.token.decimals)} ${part.token.symbol}${whole ? ', all of it' : ` of ${formatUnits(held, part.token.decimals)}`}`,
+          ],
+        }
+      }
       if (args.as === 'stocks') {
         const calls: Hex[] = []
         const lines: string[] = []
@@ -251,6 +291,24 @@ export async function build(proposal: AskProposalRow, desk: DeskForBuild): Promi
         summary:
           'Sell every holding to USDG inside the agent’s account, at no worse than 1% under the quote.',
         lines: [...sold.lines, `At least ${dollars(state.usdg + sold.minOut)} in cash afterwards`],
+      }
+    }
+
+    case 'sell_some': {
+      // One holding, all of it or about a dollar amount of it, sold to USDG inside the agent. Owner-signed: the
+      // session key may never sell.
+      const address = String(args.token ?? '').toLowerCase()
+      const held = state.holdings[address] ?? 0n
+      if (held === 0n) return `The agent holds no ${tokenOf(address)?.displayName ?? address}.`
+      const wanted = typeof args.amountUsdg === 'string' ? BigInt(args.amountUsdg) : null
+      const part = await partOf(address, held, wanted)
+      const sale = await sellOne(address, part.amount, reason, await deadlineIn(pub(), DEADLINE_S))
+      return {
+        ...base,
+        data: sale.call,
+        sessionMay: false,
+        summary: `Sell ${part.amount === held ? 'all your' : 'some of your'} ${part.token.displayName} to USDG inside the agent’s account, at no worse than 1% under the quote.`,
+        lines: [sale.line, `At least ${dollars(state.usdg + sale.minOut)} in cash afterwards`],
       }
     }
 

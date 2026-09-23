@@ -38,6 +38,7 @@ export async function createMoneyMove(
     steps: MoneyMoveStep[]
     relayRequestId?: string | null
     status?: MoneyMoveStatus
+    txHashes?: string[]
   },
 ): Promise<MoneyMoveRow> {
   const [row] = await db
