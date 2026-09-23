@@ -488,3 +488,12 @@ export async function deskNotes(db: DbOrTx, deskId: string, since: Date, tokens:
     .sort((a, b) => b.at.getTime() - a.at.getTime())
     .slice(0, limit)
 }
+
+/** How many decisions of each outcome a desk has made: the agent card's counts. */
+export async function outcomeCounts(db: DbOrTx, deskId: string) {
+  return db
+    .select({ outcome: decisions.outcome, n: sql<number>`count(*)::int` })
+    .from(decisions)
+    .where(eq(decisions.deskId, deskId))
+    .groupBy(decisions.outcome)
+}

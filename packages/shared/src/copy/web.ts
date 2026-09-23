@@ -399,18 +399,64 @@ export const deskCopy = {
   },
   visitor: 'Someone else’s desk. You are watching it read-only.',
   settingsLink: 'Settings',
-  tabs: { chat: 'Chat', desk: 'Desk', record: 'Record' },
+  tabs: { chat: 'Agent', desk: 'Portfolio', record: 'Activity' },
+  ownBasket: 'Your own basket',
+  sections: {
+    portfolio: 'Portfolio',
+    activity: 'Activity',
+    settings: 'Settings',
+    aria: 'Your desk, in detail',
+  },
+
+  /** The AI agent's own card on the desk page: who it is, what it is doing right now, and when it looks next. */
+  agent: {
+    name: 'Shijima',
+    role: 'Your AI agent',
+    roleVisitor: 'This desk’s AI agent',
+    doing: 'Right now',
+    status: {
+      paused: 'Paused by you. I am not acting until you resume.',
+      stopped: 'Stopped by your loss limit. Nothing moves until you restart me.',
+      attention: 'I need your attention before I can carry on.',
+      removed: 'You removed me from this desk. Your money stays where it is.',
+      closed: 'This desk is closed. Its record stays readable.',
+      asking: (n: number) => `Waiting for your answer on ${n === 1 ? 'one request' : `${n} requests`}.`,
+      wouldHave: (what: string) =>
+        `Practice: I would already have chosen to ${what}. Nothing has changed since, so I am holding that call.`,
+      waiting: (what: string, when: string) =>
+        `Waiting to ${what}. I look again ${when}, or sooner if something changes.`,
+      watching: (n: number) =>
+        n === 0
+          ? 'Nothing to hold yet. Add money and I start on your plan.'
+          : `Watching ${n === 1 ? 'your one stock' : `your ${n} stocks`}. Everything is inside its range.`,
+      notStarted: 'I have not made my first check yet.',
+    },
+    buy: (amount: string, name: string) =>
+      `buy ${amount} of ${name.startsWith('S&P') || name.startsWith('Nasdaq') ? `the ${name}` : name}`,
+    sell: (name: string) => `sell some ${name}`,
+    afterReopen: 'after the market reopens',
+    lastCheck: 'Last look',
+    nextCheck: 'Next look',
+    decisions: 'Decisions',
+    acted: 'Acted',
+    waited: 'Waited',
+    telegramOn: 'Telegram on',
+    telegramOff: 'Telegram off',
+    latest: 'Latest decision',
+    practiceNote: 'Practice: I decide for real and spend nothing.',
+    liveNote: 'Live: I act inside the limits your account enforces.',
+  },
 
   chat: {
     title: 'Your desk',
-    eyebrow: 'Talk to it',
+    eyebrow: 'Talk to Shijima',
     intro:
-      'Ask what it holds and why it waited, or tell it what to change. It shows you a card, and nothing changes until you confirm.',
-    placeholder: 'Ask your desk, or tell it what to change…',
+      'Ask what I hold and why I waited, or tell me what to change. I show you a card, and nothing changes until you confirm.',
+    placeholder: 'Ask Shijima, or tell it what to change…',
     send: 'Send',
-    starters: ['How is my desk doing?', 'Why did you wait?', 'Move me into The 7 giants', 'Check now'],
+    starters: ['How am I doing?', 'Why did you wait?', 'Move me into The 7 giants', 'Check now'],
     thinking: 'Thinking…',
-    slow: 'Still thinking. The desk answers in about ten seconds.',
+    slow: 'Still thinking. Shijima answers in about ten seconds.',
     failed: 'I could not answer just now. Nothing was changed.',
     signedOut: 'Sign in to talk to your desk. Signing costs nothing and moves nothing.',
     notAdvice: 'The desk explains and proposes. Nothing it says is advice, and it never forecasts a price.',

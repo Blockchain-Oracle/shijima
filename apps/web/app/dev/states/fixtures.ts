@@ -145,6 +145,7 @@ export function desk(overrides: {
     timing: { live: { usdg: '0', decisions: 0 }, practice: { usdg: '0', decisions: 0 } },
     feeUsdg: '0',
     turns: [],
+    agent: { waits: [], total: 0, acted: 0, waited: 0, latest: null },
   }
 }
 

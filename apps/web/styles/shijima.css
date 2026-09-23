@@ -132,36 +132,18 @@
     display: none;
   }
   .desk-grid {
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
     align-items: start;
   }
-  .desk-frame.is-visitor .desk-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .desk-col-chat {
-    position: sticky;
-    top: calc(var(--appstrip) + 108px);
-  }
+  /* The agent card, then the chat at a comfortable reading height; the column scrolls with the page. */
   .desk-chat {
-    height: calc(100vh - var(--appstrip) - 132px);
+    height: min(620px, calc(100vh - var(--appstrip) - 160px));
+    min-height: 420px;
   }
   .desk-col-side {
     display: flex;
     flex-direction: column;
     gap: 16px;
-  }
-  /* A visitor has no chat, so the record takes the right-hand column and stays in view beside the portfolio. */
-  .desk-frame.is-visitor .desk-col-side {
-    display: grid;
-    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-    align-items: start;
-    gap: 20px;
-  }
-  .desk-frame.is-visitor [data-panel="record"] {
-    position: sticky;
-    top: calc(var(--appstrip) + 108px);
-    max-height: calc(100vh - var(--appstrip) - 132px);
-    overflow-y: auto;
   }
 }
 

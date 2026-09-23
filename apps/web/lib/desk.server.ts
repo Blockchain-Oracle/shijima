@@ -20,10 +20,12 @@ import {
   latestPricePoints,
   latestValueSnapshot,
   mandateFromRow,
+  outcomeCounts,
   pendingApprovals,
   predecessorOf,
   pricesBetween,
   spentSince,
+  standingWaits,
   telegramForDesk,
   timingSummary,
   valueHistory,
@@ -139,15 +141,19 @@ export async function loadDesk(slug: string) {
       .filter((_, i) => i % step === 0 || i === rows.length - 1)
       .map((r) => Number(r.poolMidE8) / 1e8)
   }
-  const [lastCheck, notes, prices, events, spentToday, atReopen, telegram] = await Promise.all([
-    lastCheckOf(db(), desk.id),
-    deskNotes(db(), desk.id, desk.startedAt ?? desk.createdAt, tokens),
-    latestPricePoints(db()),
-    tokens.length > 0 ? companyEventsFrom(db(), today, tokens) : Promise.resolve([]),
-    spentSince(db(), desk.id, new Date(now.getTime() - 24 * 60 * 60 * 1000)),
-    valueSnapshotAtOrBefore(db(), desk.id, reopenedAt),
-    isOwner ? telegramForDesk(db(), desk.id) : Promise.resolve(null),
-  ])
+  const [lastCheck, notes, prices, events, spentToday, atReopen, telegram, waits, counts] = await Promise.all(
+    [
+      lastCheckOf(db(), desk.id),
+      deskNotes(db(), desk.id, desk.startedAt ?? desk.createdAt, tokens),
+      latestPricePoints(db()),
+      tokens.length > 0 ? companyEventsFrom(db(), today, tokens) : Promise.resolve([]),
+      spentSince(db(), desk.id, new Date(now.getTime() - 24 * 60 * 60 * 1000)),
+      valueSnapshotAtOrBefore(db(), desk.id, reopenedAt),
+      isOwner ? telegramForDesk(db(), desk.id) : Promise.resolve(null),
+      standingWaits(db(), desk.id),
+      outcomeCounts(db(), desk.id),
+    ],
+  )
   const priceOf = new Map(prices.map((p) => [p.token.toLowerCase(), p]))
   const reportOf = (token: string) => {
     const e = events.find((x) => x.token.toLowerCase() === token.toLowerCase() && x.kind === 'earnings')
@@ -359,6 +365,36 @@ export async function loadDesk(slug: string) {
     },
     feeUsdg: feeUsdg.toString(),
     turns,
+    /** The agent card: what it is waiting on, how many decisions it has made, and its latest real one. */
+    agent: (() => {
+      const count = (...o: string[]) =>
+        counts.filter((c) => o.includes(c.outcome)).reduce((a, c) => a + c.n, 0)
+      const latest = record.find((d) => d.outcome !== 'nothing_to_do')
+      return {
+        waits: waits.map((w) => {
+          const candidate = (w.record as { candidate?: { amountIn?: string } | null }).candidate
+          return {
+            symbol: nameOf(w.token)?.symbol ?? w.token,
+            name: nameOf(w.token)?.displayName ?? w.token,
+            side: w.side,
+            wouldHave: w.kind === 'would_have',
+            amountUsdg: w.side === 'buy' ? (candidate?.amountIn ?? null) : null,
+            revisitAt: w.revisitAt.toISOString(),
+          }
+        }),
+        total: count(...counts.map((c) => c.outcome)),
+        acted: count('acted', 'acted_in_part', 'acted_by_override', 'would_have_acted'),
+        waited: count('waited', 'declined'),
+        latest: latest
+          ? {
+              seq: latest.seq,
+              outcome: latest.outcome,
+              summary: latest.summary,
+              at: latest.decidedAt.toISOString(),
+            }
+          : null,
+      }
+    })(),
   }
 }
 

@@ -270,6 +270,8 @@ export async function standingWaits(db: DbOrTx, deskId: string) {
       summary: decisions.summary,
       record: decisions.record,
       decidedAt: decisions.decidedAt,
+      /** `wait` when the AI chose to wait; `would_have` when a practice desk remembers a trade it would have made. */
+      kind: sql<string>`${deferrals.baseline}->>'kind'`,
     })
     .from(deferrals)
     .innerJoin(decisions, eq(deferrals.decisionId, decisions.id))

@@ -290,3 +290,37 @@ export function DeskControls({ view }: { view: ControlsView }) {
     </section>
   )
 }
+
+/**
+ * The four things an owner reaches for most, right under the desk's value (after Agari's cockpit toolbar): add
+ * money, take it out, pause or resume, and ask for a look now. Each opens the same dialog and card as the full set
+ * of controls, which lives under Settings.
+ */
+export function QuickActions({ view }: { view: ControlsView }) {
+  const [open, setOpen] = useState<ControlForm | null>(null)
+  if (view.lifecycle === 'closed') return null
+  const paused = view.state === 'paused_by_owner'
+  const buttons: [ControlForm, string, boolean][] = [
+    ['addMoney', c.actions.addMoney, true],
+    ['withdraw', c.actions.withdraw, false],
+    paused ? ['resume', c.actions.resume, false] : ['pause', c.actions.pause, false],
+    ['checkNow', c.actions.checkNow, false],
+  ]
+  return (
+    <div className="desk-quick">
+      {buttons.map(([form, label, primary]) => (
+        <button
+          key={form}
+          type="button"
+          className="desk-quick-btn"
+          data-primary={primary ? '' : undefined}
+          onClick={() => setOpen(form)}
+          data-cursor="hover"
+        >
+          {label}
+        </button>
+      ))}
+      <ControlDialog key={open ?? 'none'} view={view} form={open} onClose={() => setOpen(null)} />
+    </div>
+  )
+}
