@@ -265,6 +265,7 @@ export const marketsCopy = {
     waited: 'Waited',
     declined: 'Declined',
     would_have_acted: 'Would have acted',
+    nothing_to_do: 'Nothing to do',
   } as Record<string, string>,
   practice: 'practice',
   decisionLine: (desk: string, outcome: string, side: string | null, name: string) =>

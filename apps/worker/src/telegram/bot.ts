@@ -12,6 +12,7 @@
  * Nothing here waits on the model. A message to the desk is acknowledged at once and answered by the chat's
  * own loop when it is ready, so /pause is never held behind someone else's question.
  */
+import { resolve } from 'node:path'
 import { APPROVED_TOKENS } from '@desk/chain'
 import { type AskAnswer, confirmSigninProposal } from '@desk/core'
 import {
@@ -24,15 +25,33 @@ import {
   type Db,
   deskById,
   deskForTelegramUser,
+  deskRecord,
   pauseDesk,
   resumeDesk,
 } from '@desk/db'
-import { errorText, telegramCopy } from '@desk/shared'
-import { Bot, InlineKeyboard } from 'grammy'
+import { ago, errorText, marketsCopy, telegramCopy } from '@desk/shared'
+import { Bot, InlineKeyboard, InputFile } from 'grammy'
 import type { Log } from '../review'
+import { ASSETS } from './profile'
+import { buildStatus } from './status'
 
 const CODE = /^[A-Za-z0-9]{6,12}$/
-const KNOWN_COMMANDS = new Set(['/start', '/help', '/status', '/pause', '/resume'])
+const KNOWN_COMMANDS = new Set([
+  '/start',
+  '/help',
+  '/status',
+  '/pause',
+  '/resume',
+  '/portfolio',
+  '/record',
+  '/ask',
+])
+
+/** Telegram refuses link buttons to anything but a public https address, so before deploy links go in the text. */
+export const canLinkButton = (url: string) => url.startsWith('https://')
+
+const MENU = /^menu:(home|portfolio|record|pause|resume|ask|refresh)$/
+type MenuView = 'home' | 'portfolio' | 'record' | 'ask'
 
 export interface TelegramDeps {
   db: Db
@@ -66,10 +85,129 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
   bot.command('start', async (ctx) => {
     const payload = ctx.match?.trim()
     const linked = await deskOf(ctx.from?.id)
-    if (linked)
-      return ctx.reply(telegramCopy.firstContact(linked.desk.name ?? 'your desk'), { parse_mode: 'HTML' })
+    if (linked) return ctx.reply(...(await menuMessage(linked.desk.id, 'home')))
     if (payload && CODE.test(payload)) return void (await link(ctx, payload))
-    return ctx.reply(telegramCopy.notLinked)
+    return welcome(ctx)
+  })
+
+  // The brand first, as a photo, then the words and the buttons as their own message. A photo cannot be edited
+  // into text later, and a missing picture must never cost the welcome.
+  async function welcome(ctx: {
+    replyWithPhoto: (photo: InputFile) => Promise<unknown>
+    reply: (text: string, other?: object) => Promise<unknown>
+  }) {
+    await ctx.replyWithPhoto(new InputFile(resolve(ASSETS, 'welcome.png'))).catch(() => undefined)
+    const button = canLinkButton(deps.siteUrl)
+    return ctx.reply(telegramCopy.welcome(deps.siteUrl, button), {
+      parse_mode: 'HTML',
+      ...(button
+        ? {
+            reply_markup: new InlineKeyboard()
+              .url(telegramCopy.connectButton, `${deps.siteUrl}/desks`)
+              .url(telegramCopy.howButton, `${deps.siteUrl}/how-it-works`),
+          }
+        : {}),
+    })
+  }
+
+  /**
+   * One message, many views. The main menu and everything it opens are the same text message, edited in place,
+   * so the chat never fills up with menus. Returns the arguments for `reply` or `editMessageText`.
+   */
+  async function menuMessage(deskId: string, view: MenuView): Promise<[string, object]> {
+    const kb = new InlineKeyboard()
+    const html = { parse_mode: 'HTML' as const }
+    const desk = await deskById(db, deskId)
+    const status = await buildStatus(db, deskId)
+    const siteDesk = desk ? `${deps.siteUrl}/desk/${deskPath(desk)}` : deps.siteUrl
+    if (view === 'portfolio') {
+      kb.text(telegramCopy.menu.refresh, 'menu:portfolio').text(telegramCopy.menu.back, 'menu:home')
+      const body = status ? telegramCopy.status(status) : telegramCopy.notCheckedYet
+      return [telegramCopy.portfolioView(body), { ...html, reply_markup: kb }]
+    }
+    if (view === 'record') {
+      const rows = await deskRecord(db, deskId, { limit: 5 })
+      const lines = rows.map((r) =>
+        telegramCopy.recordLine(
+          ago(r.decidedAt),
+          marketsCopy.outcomes[r.outcome] ?? r.outcome.replace(/_/g, ' '),
+          r.summary,
+        ),
+      )
+      const button = canLinkButton(deps.siteUrl)
+      if (button) kb.url(telegramCopy.seeDetails, `${siteDesk}/record`).row()
+      kb.text(telegramCopy.menu.back, 'menu:home')
+      return [
+        telegramCopy.recordView(lines, button ? undefined : `${siteDesk}/record`),
+        { ...html, reply_markup: kb },
+      ]
+    }
+    if (view === 'ask') {
+      kb.text(telegramCopy.menu.back, 'menu:home')
+      return [telegramCopy.askHint, { ...html, reply_markup: kb }]
+    }
+    const paused = desk?.state === 'paused_by_owner'
+    kb.text(telegramCopy.menu.portfolio, 'menu:portfolio')
+      .text(telegramCopy.menu.record, 'menu:record')
+      .row()
+      .text(
+        paused ? telegramCopy.menu.resume : telegramCopy.menu.pause,
+        paused ? 'menu:resume' : 'menu:pause',
+      )
+      .text(telegramCopy.menu.ask, 'menu:ask')
+    if (canLinkButton(deps.siteUrl)) kb.row().url(telegramCopy.menu.open, siteDesk)
+    return [
+      telegramCopy.menu.title(
+        desk?.name ?? 'Your desk',
+        status?.mode ?? 'Practice',
+        status?.state ?? 'active',
+      ),
+      { ...html, reply_markup: kb },
+    ]
+  }
+
+  bot.command('portfolio', async (ctx) => {
+    const linked = await deskOf(ctx.from?.id)
+    if (!linked) return welcome(ctx)
+    return ctx.reply(...(await menuMessage(linked.desk.id, 'portfolio')))
+  })
+  bot.command('record', async (ctx) => {
+    const linked = await deskOf(ctx.from?.id)
+    if (!linked) return welcome(ctx)
+    return ctx.reply(...(await menuMessage(linked.desk.id, 'record')))
+  })
+  bot.command('ask', async (ctx) => {
+    const linked = await deskOf(ctx.from?.id)
+    if (!linked) return welcome(ctx)
+    return ctx.reply(...(await menuMessage(linked.desk.id, 'ask')))
+  })
+
+  // Menu presses edit the message they came from. Pause and resume act, then show the menu with the other button.
+  bot.callbackQuery(MENU, async (ctx) => {
+    const [, action] = ctx.match as unknown as [string, string]
+    const linked = await deskOf(ctx.from?.id)
+    if (!linked) return ctx.answerCallbackQuery({ text: telegramCopy.notLinked, show_alert: true })
+    let toast: string | undefined
+    let view: MenuView = 'home'
+    if (action === 'pause' || action === 'resume') {
+      const run = action === 'pause' ? pauseDesk : resumeDesk
+      const done = await run(db, linked.desk.id, { actor: 'owner', via: 'telegram' })
+      log('telegram_command', { command: action, desk: linked.desk.address, done, via: 'menu' })
+      toast = done ? (action === 'pause' ? 'Paused' : 'Active again') : 'It was already like that'
+      if (done) await deps.refreshStatus(linked.desk.id).catch(() => false)
+    } else if (action === 'refresh') {
+      // The ↻ under the pinned message: bring it up to date where it is.
+      await deps.refreshStatus(linked.desk.id).catch(() => false)
+      return ctx.answerCallbackQuery({ text: 'Up to date' })
+    } else if (action !== 'home') {
+      view = action as MenuView
+    }
+    await ctx.answerCallbackQuery(toast ? { text: toast } : {})
+    const [text, other] = await menuMessage(linked.desk.id, view)
+    await ctx.editMessageText(text, other).catch((e) => {
+      // "message is not modified" means a second press on the same view: nothing to do.
+      if (!errorText(e).includes('not modified')) throw e
+    })
   })
 
   bot.command('help', (ctx) => ctx.reply(telegramCopy.help, { parse_mode: 'HTML' }))
@@ -182,7 +320,7 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
     const linked = await deskOf(ctx.from.id)
     if (!linked) {
       if (CODE.test(text)) return void (await link(ctx, text))
-      return ctx.reply(telegramCopy.notLinked)
+      return welcome(ctx)
     }
     // A slash command the bot does not know is not a question for the model.
     if (text.startsWith('/')) {
@@ -215,7 +353,7 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
     ctx: {
       from?: { id: number; username?: string | undefined } | undefined
       chat?: { id: number } | undefined
-      reply: (text: string, other?: { parse_mode?: 'HTML' }) => Promise<unknown>
+      reply: (text: string, other?: object) => Promise<unknown>
     },
     code: string,
   ) {
@@ -237,7 +375,10 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
     await ctx.reply(telegramCopy.firstContact(linked?.desk.name ?? 'your desk'), { parse_mode: 'HTML' })
     // Pin the status straight away. A desk that has been checking for hours should not greet its owner with
     // "it has not checked yet" and then say nothing until the next hour turns.
-    if (linked) await deps.refreshStatus(linked.desk.id)
+    if (linked) {
+      await deps.refreshStatus(linked.desk.id)
+      await ctx.reply(...(await menuMessage(linked.desk.id, 'home')))
+    }
   }
 
   return bot

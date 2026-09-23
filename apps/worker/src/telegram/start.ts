@@ -11,6 +11,7 @@ import type { AskLoop } from '../ask'
 import type { Cli, Log } from '../review'
 import { createBot, deliverAskReply } from './bot'
 import { drainOutbox, refreshStatus } from './outbox'
+import { ensureProfile } from './profile'
 
 export interface Telegram {
   bot: Bot
@@ -46,6 +47,9 @@ export function startTelegram(cli: Cli, log: Log, ask?: AskLoop): Telegram | und
       row,
     ).catch((e) => log('telegram_reply_failed', { request: row.id, error: errorText(e) }))
   })
+
+  // The name, descriptions, commands and picture. Cosmetic, so it runs in the background and never blocks.
+  void ensureProfile(bot, log)
 
   // Long polling, started in the background. It must never hold up the clock.
   void bot

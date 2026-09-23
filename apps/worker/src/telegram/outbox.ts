@@ -21,7 +21,7 @@ import {
   setStatusMessageId,
 } from '@desk/db'
 import { errorText, telegramCopy } from '@desk/shared'
-import type { Bot } from 'grammy'
+import { type Bot, InlineKeyboard } from 'grammy'
 import type { Log } from '../review'
 import { approvalKeyboard, deskPath } from './bot'
 import { buildStatus, nyClock } from './status'
@@ -148,10 +148,12 @@ async function updateStatus(
   const status = await buildStatus(db, deskId)
   if (!status) return false
   const body = telegramCopy.status(status)
+  // A ↻ under the pinned message, so the owner can bring it up to date without typing /status.
+  const reply_markup = new InlineKeyboard().text(telegramCopy.menu.refresh, 'menu:refresh')
 
   if (messageId) {
     try {
-      await bot.api.editMessageText(chatId, messageId, body, { parse_mode: 'HTML' })
+      await bot.api.editMessageText(chatId, messageId, body, { parse_mode: 'HTML', reply_markup })
       return true
     } catch (e) {
       if (errorText(e).includes('message is not modified')) return true
@@ -162,6 +164,7 @@ async function updateStatus(
   const message = await bot.api.sendMessage(chatId, body, {
     parse_mode: 'HTML',
     disable_notification: true,
+    reply_markup,
   })
   await bot.api
     .pinChatMessage(chatId, message.message_id, { disable_notification: true })

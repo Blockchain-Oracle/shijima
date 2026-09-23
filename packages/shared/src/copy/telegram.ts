@@ -109,10 +109,82 @@ export const telegramCopy = {
   /** 9.7 Alerts. Each short and specific. */
   alert: (text: string) => `${b('Heads up')}\n${esc(text)}`,
 
+  /** The bot's own profile: what Telegram shows before anyone has pressed Start. */
+  profile: {
+    name: 'Shijima',
+    shortDescription: 'Keeps your Stock Token basket on track while Wall Street sleeps.',
+    description: [
+      'Shijima looks after a basket of Stock Tokens on Robinhood Chain while the US market is shut.',
+      '',
+      'You choose what to hold. It decides only when to move toward it, inside limits your own account enforces, and writes every decision down where anyone can check it.',
+      '',
+      'Press Start, then connect your desk from the website.',
+    ].join('\n'),
+    commands: [
+      { command: 'start', description: 'Your desk at a glance' },
+      { command: 'portfolio', description: 'What it holds and what it is worth' },
+      { command: 'record', description: 'The last few decisions' },
+      { command: 'pause', description: 'Stop acting. Nothing is sold' },
+      { command: 'resume', description: 'Start acting again' },
+      { command: 'ask', description: 'How to ask the desk anything' },
+      { command: 'help', description: 'Everything I understand' },
+    ],
+  },
+
+  /** /start before a desk is linked. The photo carries the brand; this carries the words. */
+  welcome: (siteUrl: string, canButton: boolean) =>
+    [
+      b('Welcome to Shijima.'),
+      '',
+      'I look after a basket of Stock Tokens while the US market is shut. I decide only when to act, never what to own, and I write every decision down.',
+      '',
+      canButton
+        ? 'To hear from your desk here, connect it from the website.'
+        : `To hear from your desk here, open ${esc(siteUrl)}, go to your desk, and choose Connect Telegram.`,
+    ].join('\n'),
+  connectButton: 'Connect my desk',
+  howButton: 'How it works',
+
+  /** The main menu under /start once linked. Every view edits this one message. */
+  menu: {
+    title: (deskName: string, mode: string, state: string) =>
+      `${b(deskName)}\n${esc(mode)} · ${esc(state)}\n\nWhat would you like to see?`,
+    portfolio: '📈 Portfolio',
+    record: '🧾 Record',
+    pause: '⏸ Pause',
+    resume: '▶ Resume',
+    ask: '💬 Ask',
+    open: '🌐 Open Shijima',
+    back: '‹ Back',
+    refresh: '↻ Refresh',
+  },
+  /** The portfolio view in the menu: the pinned status, with a header. */
+  portfolioView: (status: string) => `${b('Portfolio')}\n\n${status}`,
+  /** The record view: the last few decisions, newest first. */
+  recordView: (lines: string[], url: string | undefined) =>
+    [
+      b('The record'),
+      '',
+      ...(lines.length > 0 ? lines : ['Nothing decided yet. The first check writes the first line.']),
+      ...(url ? ['', `Every decision: ${esc(url)}`] : []),
+    ].join('\n'),
+  recordLine: (ago: string, outcome: string, summary: string) =>
+    `• ${esc(ago)} · ${b(outcome)}\n  ${esc(summary)}`,
+  askHint: [
+    b('Ask me anything'),
+    '',
+    'Just write to me here. "What are you holding?", "Why did you wait last night?", "Sell half the Nvidia."',
+    '',
+    'I answer in this chat. Anything that would change the desk comes back as a card for you to confirm first.',
+  ].join('\n'),
+
   /** 9.10 Commands. */
   help: [
     b('What you can ask me'),
-    '/status  what the desk is doing right now',
+    '/start  your desk at a glance',
+    '/portfolio  what it holds and what it is worth',
+    '/record  the last few decisions',
+    '/status  bring the pinned message up to date',
     '/pause  stop acting. Nothing is sold',
     '/resume  start acting again',
     '/help  this',
