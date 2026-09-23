@@ -1,13 +1,44 @@
 import { APPROVED_TOKENS } from '@desk/chain'
 import { deskRecord, groupQuietRuns, type RecordFilter } from '@desk/db'
-import { ago, recordPageCopy as c, deskCopy, recordPagesCopy } from '@desk/shared'
+import { recordPageCopy as c, recordPagesCopy } from '@desk/shared'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { isOutcome, OUTCOME_KEYS, Outcome, outcomeLabel } from '@/components/outcome'
-import { When } from '@/components/when'
+import { isOutcome, outcomeLabel } from '@/components/outcome'
+import { TokenLogo } from '@/components/ui/token-logo'
+import { RecordTimeline, type TimelineItem } from '@/features/desk/RecordTimeline'
 import { db } from '@/lib/db'
 import { deskForViewer } from '@/lib/desk.server'
+import { cn } from '@/lib/utils'
+
+/** The outcomes worth a chip. Every other outcome is still listed; these are the ones people look for. */
+const OUTCOME_CHIPS = [
+  'acted',
+  'would_have_acted',
+  'waited',
+  'declined',
+  'blocked_by_limit',
+  'failed',
+] as const
+const symbolOf = new Map(APPROVED_TOKENS.map((t) => [t.address.toLowerCase(), t.symbol]))
+
+function Chip({ href, on, children }: { href: string; on: boolean; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href as Route}
+      aria-current={on ? 'true' : undefined}
+      scroll={false}
+      className={cn(
+        'inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[12.5px] transition-colors',
+        on
+          ? 'border-[var(--color-accent)] bg-[var(--color-accent-wash)] text-foreground'
+          : 'border-border text-muted-foreground hover:border-[var(--color-border-strong)] hover:text-foreground',
+      )}
+    >
+      {children}
+    </Link>
+  )
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -65,9 +96,38 @@ export default async function RecordPage({
   })
   const rows = groupQuietRuns(decisions)
   const oldest = decisions.at(-1)
-  const now = new Date()
   const keep = new URLSearchParams()
   for (const [k, v] of Object.entries(query)) if (k !== 'before' && v) keep.set(k, v)
+  /** This page's address with one filter changed, and paging reset. */
+  const withFilter = (key: string, value: string | undefined) => {
+    const next = new URLSearchParams(keep)
+    if (value === undefined) next.delete(key)
+    else next.set(key, value)
+    const q = next.toString()
+    return `/desk/${slug}/record${q ? `?${q}` : ''}`
+  }
+  const item = (d: (typeof decisions)[number]): TimelineItem => ({
+    id: `d${d.seq}`,
+    kind: 'decision',
+    at: d.decidedAt.getTime(),
+    outcome: d.outcome,
+    shadow: d.shadow,
+    summary: `#${d.seq} · ${d.summary ?? ''}`,
+    href: `/desk/${slug}/decision/${d.seq}`,
+    symbol: d.token ? symbolOf.get(d.token.toLowerCase()) : undefined,
+  })
+  const items: TimelineItem[] = rows.map((row) =>
+    row.kind === 'entry'
+      ? item(row.decision)
+      : {
+          id: `q${row.decisions[0]?.seq ?? row.from.getTime()}`,
+          kind: 'quiet',
+          at: row.to.getTime(),
+          count: row.count,
+          label: c.quietRun(row.count),
+          children: row.decisions.map(item),
+        },
+  )
   const older = oldest
     ? `/desk/${slug}/record?${new URLSearchParams({ ...Object.fromEntries(keep), before: String(oldest.seq) })}`
     : null
@@ -83,111 +143,83 @@ export default async function RecordPage({
         {!isOwner && <p className="type-caption text-ink-muted">{recordPagesCopy.visitor}</p>}
       </header>
 
-      <form method="get" className="desk-panel" aria-label={c.filters.title}>
-        <h2 className="type-label-micro text-ink-muted">{c.filters.title}</h2>
-        <div className="record-filters">
-          <label className="desk-field">
-            <span className="type-caption text-ink-muted">{c.filters.outcome}</span>
-            <select name="outcome" defaultValue={filter.outcome ?? ''}>
-              <option value="">{c.filters.anyOutcome}</option>
-              {OUTCOME_KEYS.map((o) => (
-                <option key={o} value={o}>
-                  {outcomeLabel(o)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="desk-field">
-            <span className="type-caption text-ink-muted">{c.filters.token}</span>
-            <select name="token" defaultValue={filter.symbol ?? ''}>
-              <option value="">{c.filters.anyToken}</option>
-              {APPROVED_TOKENS.map((t) => (
-                <option key={t.symbol} value={t.symbol}>
-                  {t.displayName}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="desk-field">
-            <span className="type-caption text-ink-muted">{deskCopy.modes.shadow}</span>
-            <select name="live" defaultValue={filter.live}>
-              {(['all', 'live', 'practice'] as const).map((v) => (
-                <option key={v} value={v}>
-                  {c.filters.live[v]}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="desk-field">
-            <span className="type-caption text-ink-muted">{c.filters.from}</span>
-            <input
-              type="date"
-              name="from"
-              defaultValue={query.from && DAY.test(query.from) ? query.from : ''}
-            />
-          </label>
-          <label className="desk-field">
-            <span className="type-caption text-ink-muted">{c.filters.to}</span>
-            <input type="date" name="to" defaultValue={query.to && DAY.test(query.to) ? query.to : ''} />
-          </label>
-          <div className="record-filters-actions">
-            <button type="submit" className="desk-control" data-cursor="hover">
-              {c.filters.apply}
-            </button>
+      <section className="desk-panel" aria-label={c.filters.title}>
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap gap-2">
+            <Chip href={withFilter('outcome', undefined)} on={!filter.outcome}>
+              {c.filters.anyOutcome}
+            </Chip>
+            {OUTCOME_CHIPS.map((o) => (
+              <Chip key={o} href={withFilter('outcome', o)} on={filter.outcome === o}>
+                {outcomeLabel(o)}
+              </Chip>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Chip href={withFilter('token', undefined)} on={!filter.symbol}>
+              {c.filters.anyToken}
+            </Chip>
+            {APPROVED_TOKENS.map((t) => (
+              <Chip key={t.symbol} href={withFilter('token', t.symbol)} on={filter.symbol === t.symbol}>
+                <TokenLogo symbol={t.symbol} size={18} />
+                {t.symbol}
+              </Chip>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {(['all', 'live', 'practice'] as const).map((v) => (
+              <Chip key={v} href={withFilter('live', v === 'all' ? undefined : v)} on={filter.live === v}>
+                {c.filters.live[v]}
+              </Chip>
+            ))}
+            <details className="group">
+              <summary className="inline-flex h-8 cursor-pointer list-none items-center rounded-full border border-dashed border-border px-3 text-[12.5px] text-muted-foreground hover:text-foreground">
+                {filter.from || filter.to ? c.filters.datesSet : c.filters.dates}
+              </summary>
+              <form method="get" className="mt-3 flex flex-wrap items-end gap-3">
+                {[...keep.entries()]
+                  .filter(([k]) => k !== 'from' && k !== 'to')
+                  .map(([k, v]) => (
+                    <input key={k} type="hidden" name={k} value={v} />
+                  ))}
+                <label className="desk-field">
+                  <span className="type-caption text-ink-muted">{c.filters.from}</span>
+                  <input
+                    type="date"
+                    name="from"
+                    defaultValue={query.from && DAY.test(query.from) ? query.from : ''}
+                  />
+                </label>
+                <label className="desk-field">
+                  <span className="type-caption text-ink-muted">{c.filters.to}</span>
+                  <input
+                    type="date"
+                    name="to"
+                    defaultValue={query.to && DAY.test(query.to) ? query.to : ''}
+                  />
+                </label>
+                <button type="submit" className="desk-control" data-cursor="hover">
+                  {c.filters.apply}
+                </button>
+              </form>
+            </details>
             {filtered && (
               <Link
                 href={`/desk/${slug}/record` as Route}
-                className="type-caption text-ink-secondary hover:text-ink"
+                className="ml-1 type-caption text-ink-secondary hover:text-ink"
               >
                 {c.filters.clear}
               </Link>
             )}
           </div>
         </div>
-      </form>
+      </section>
 
       <section className="desk-panel">
         {decisions.length === 0 ? (
           <p className="type-body text-ink-secondary">{filtered ? c.emptyFiltered : c.empty}</p>
         ) : (
-          <div className="flex flex-col gap-2">
-            {rows.map((row) =>
-              row.kind === 'entry' ? (
-                <Link
-                  key={row.decision.id}
-                  href={`/desk/${slug}/decision/${row.decision.seq}` as Route}
-                  className="desk-entry"
-                  data-cursor="hover"
-                >
-                  <div className="flex items-baseline justify-between gap-3">
-                    <Outcome outcome={row.decision.outcome} shadow={row.decision.shadow} />
-                    <span className="type-caption text-ink-muted">
-                      #{row.decision.seq} · {ago(row.decision.decidedAt, now)}
-                    </span>
-                  </div>
-                  <p className="type-body text-ink-secondary">{row.decision.summary}</p>
-                </Link>
-              ) : (
-                <details key={`quiet-${row.decisions[0]?.id}`} className="desk-quiet">
-                  <summary className="type-caption text-ink-muted">
-                    {row.count} checks, nothing new · <When at={row.from} /> to <When at={row.to} />
-                  </summary>
-                  <div className="mt-2 flex flex-col gap-1">
-                    {row.decisions.map((d) => (
-                      <Link
-                        key={d.id}
-                        href={`/desk/${slug}/decision/${d.seq}` as Route}
-                        className="flex items-baseline justify-between gap-3 type-caption text-ink-secondary hover:text-ink"
-                      >
-                        <span>{d.summary}</span>
-                        <span className="shrink-0 text-ink-muted">#{d.seq}</span>
-                      </Link>
-                    ))}
-                  </div>
-                </details>
-              ),
-            )}
-          </div>
+          <RecordTimeline items={items} empty={c.empty} earlier={null} />
         )}
         {decisions.length === PAGE && older ? (
           <Link href={older as Route} className="type-caption text-accent hover:underline">

@@ -74,7 +74,10 @@ export const recordPageCopy = {
     to: 'To',
     apply: 'Apply',
     clear: 'Clear',
+    dates: 'Pick dates',
+    datesSet: 'Dates set',
   },
+  quietRun: (n: number) => `${n} checks, nothing new`,
 } as const
 
 /** One decision, in full [8.11]. Section titles in the brief's order. */
