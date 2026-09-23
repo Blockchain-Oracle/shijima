@@ -69,7 +69,7 @@ Plus the free $1 below.
 - Creators see how many people copy them and what they've earned.
 
 **D6. 20 strategies.**
-- 18 Stock Tokens pass our liquidity rule today: pool at least $100k, round trip at most 0.75%.
+- 15 Stock Tokens pass our liquidity rule (rescanned 23 Sep; INTC, BABA, PLTR, META dropped out, GME came in): pool at least $100k, round trip at most 0.75%.
   - The app knows 10 of them: SPY, QQQ, NVDA, AAPL, MSFT, GOOGL, AMZN, META, TSLA, SGOV.
   - It will also add SPCX, CRCL, USO, MU, SLV, INTC, BABA, PLTR.
 - That's enough for 20 distinct baskets (listed in step 7). `pnpm strategies:verify` re-checks feeds and pools on mainnet before any of them ship.
