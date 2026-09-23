@@ -491,6 +491,81 @@
   gap: 16px;
   max-width: 720px;
 }
+/* Connections (21st 28170): Telegram across the top, then the wallet and the agent side by side. */
+.connections-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+@media (min-width: 640px) {
+  .connections-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .connection-card--wide {
+    grid-column: 1 / -1;
+  }
+}
+.connection-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--ms-hairline);
+  border-radius: 12px;
+}
+.connection-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 8px;
+  border: 1px solid var(--ms-hairline);
+  border-radius: 10px;
+  color: var(--ink, currentColor);
+}
+.connection-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 10px;
+}
+.connection-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.connection-rows > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.connection-rows dt {
+  color: var(--gray-500);
+}
+.connection-rows dd {
+  font-variant-numeric: tabular-nums;
+}
+.connection-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--vermilion);
+  text-underline-offset: 3px;
+}
+.connection-link:hover {
+  text-decoration: underline;
+}
+.connection-link:focus-visible {
+  outline: 2px solid var(--vermilion);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
 .settings-telegram {
   display: flex;
   flex-wrap: wrap;

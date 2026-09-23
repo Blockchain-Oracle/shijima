@@ -111,6 +111,24 @@
 [data-theme="light"] .header-account-link:hover {
   background: rgba(20, 18, 16, 0.05);
 }
+/* Telegram, in the menu while the open desk is not linked: one line of why, then the one-click button. */
+.header-account-telegram {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--gray-500);
+}
+[data-theme="light"] .header-account-telegram {
+  border-bottom-color: rgba(20, 18, 16, 0.08);
+}
+.header-account-row .val--profit {
+  color: var(--profit);
+}
+
 /* Disconnect: block w-full text-left · text-vermilion/70 hover:text-vermilion (Header.tsx L356–362) */
 .header-account-link--danger {
   width: 100%;

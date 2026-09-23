@@ -856,6 +856,22 @@ and light, with no console errors and no sideways scroll:
   desk page** (functions passed to client components) that typecheck could not see: fixed, and every changed page
   is now loaded after each change.
 
+**Wed 23 Sep, 03:00 UTC. BLOCKSCOUT, OPENSERV LISTING AND IDENTITY, CONNECTIONS.**
+- **Blockscout:** Desk v1's implementation `0x90ff…fe0F` is fully verified there, sent from headless Chrome because
+  Blockscout's Cloudflare check refuses scripts. The dev desk now shows a Read/Write proxy tab with every function, so
+  "withdraw without this website" works. The factory's verification still answers 429 (Blockscout's rate limit);
+  it is only cosmetic and gets retried later.
+- **OpenServ listing** (`pnpm openserv:listing`): logo on IPFS through OpenServ's own presigned link, categories
+  Finance and Technology plus Research and Analysis (the API field is `categoryIds`, not `categories`), trading agent
+  on, usage and expected output written. `--submit` asks for review; held until there is a public app URL and repo.
+- **ERC-8004 identity** (`pnpm openserv:identity`): Base token **95396**, owned by the deployer wallet, with Shijima's
+  own card, saved back to the workspace. The platform's placeholder id 8453:999999918 does not exist on-chain, which
+  is why the SDK's `registerOnChain` could not be used. Cost about $0.003.
+- **Settings "Connections"** (21st 28170): Telegram, Wallet (owner and desk, Blockscout link), OpenServ agent
+  (agent 4513 and identity 95396). **Header account menu** shows Telegram: "@name" when linked, the one-click
+  Connect when not, plus a Settings link. Proven at 390 and 1440, dark and light, no console errors. The unlinked
+  menu state was not seen live (the only desk is linked).
+
 ## 6. Schedule
 
 | Day | Work | Must be true by end of day |

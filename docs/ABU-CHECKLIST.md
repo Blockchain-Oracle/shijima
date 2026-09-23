@@ -21,7 +21,7 @@ Vercel is needed now.
 ## Hackathon admin, whenever you have five minutes
 - [x] ~~Ask whether a build with no MCP qualifies.~~ **Answered 21 Sep:** the official page says the track is
       for agents that "act on Robinhood Chain **or** operate funds via Robinhood MCP". We qualify.
-- [ ] **Publish Shijima on OpenServ before submitting** (found 23 Sep, `research/2026-09-23-openserv-publishing.md`).
+- [ ] **Publish Shijima on OpenServ before submitting.** 23 Sep: listing filled and ERC-8004 identity 95396 minted on Base; only "submit for review" is left, run with `pnpm openserv:listing --submit` once the app has a public URL. (found 23 Sep, `research/2026-09-23-openserv-publishing.md`).
       Claude does: fill the agent's listing (logo, categories, trading agent, usage, repo link) and register its
       ERC-8004 identity on Base (a few cents of gas), replacing a sample card the platform left there. Abu does,
       only if the API cannot: press "submit for review" on agent 4513 so it appears under Browse agents.

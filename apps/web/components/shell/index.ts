@@ -1,5 +1,5 @@
 export { default as Footer } from './Footer'
-export { default as Header } from './Header'
+export { default as Header, type HeaderTelegram } from './Header'
 export { MarketSessionChip } from './MarketSessionChip'
 export { default as Marquee, type TickerCell } from './Marquee'
 export { ShellChrome } from './ShellChrome'

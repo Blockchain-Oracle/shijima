@@ -17,10 +17,17 @@ export interface HeaderProps {
   desksTotalUsdg: string | null
   /** Messages the owner has not opened yet. */
   unread: number
+  /** The owner's open desk and whether its Telegram is linked, for the account menu. */
+  telegram: HeaderTelegram | null
+}
+
+export interface HeaderTelegram {
+  deskId: string
+  linked: { username: string | null } | null
 }
 
 /** Agari's header (`components/shell/header/Header.tsx`), with our nav, our mark and our account corner. */
-export default function Header({ signedInAs, desksTotalUsdg, unread }: HeaderProps) {
+export default function Header({ signedInAs, desksTotalUsdg, unread, telegram }: HeaderProps) {
   const pathname = usePathname()
   return (
     <>
@@ -57,7 +64,7 @@ export default function Header({ signedInAs, desksTotalUsdg, unread }: HeaderPro
             <ThemeToggle />
             {signedInAs ? <HeaderInbox unread={unread} /> : null}
             {signedInAs ? <HeaderMoneyPill totalUsdg={desksTotalUsdg} /> : null}
-            <HeaderAccount signedInAs={signedInAs} />
+            <HeaderAccount signedInAs={signedInAs} telegram={telegram} />
           </div>
         </nav>
       </header>

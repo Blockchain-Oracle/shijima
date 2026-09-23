@@ -6,9 +6,9 @@ import { notFound } from 'next/navigation'
 import ThemeToggle from '@/components/shell/ThemeToggle'
 import { DeskSessionProvider } from '@/features/session/DeskSessionProvider'
 import { CloseDeskButton } from '@/features/settings/CloseDeskButton'
+import { Connections } from '@/features/settings/Connections'
 import { Disclosure } from '@/features/settings/Disclosure'
 import { ShareToggle } from '@/features/settings/ShareToggle'
-import { TelegramConnect } from '@/features/settings/TelegramConnect'
 import { db } from '@/lib/db'
 import { signedInAddress } from '@/lib/session'
 
@@ -27,7 +27,7 @@ function Section({ title, body, children }: { title: string; body?: string; chil
   )
 }
 
-/** Settings (design brief 8.18): Telegram, the share link, the disclosure, appearance, and closing the desk. */
+/** Settings (design brief 8.18): connections (Telegram, wallet, agent), the share link, the disclosure, appearance, and closing the desk. */
 export default async function SettingsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const viewer = await signedInAddress().catch(() => undefined)
@@ -58,10 +58,12 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
         contractVersion={desk.contractVersion}
       >
         <div className="settings-grid">
-          <Section title={s.telegram.title} body={s.telegram.body}>
-            <TelegramConnect
+          <Section title={s.connections.title} body={s.connections.body}>
+            <Connections
               deskId={desk.id}
-              initial={{
+              ownerAddress={desk.ownerAddress}
+              deskAddress={desk.address}
+              telegram={{
                 linked: telegram.linked ? { username: telegram.linked.username } : null,
                 pending: telegram.pending
                   ? { code: telegram.pending.code, expiresAt: telegram.pending.codeExpiresAt.toISOString() }

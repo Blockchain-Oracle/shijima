@@ -1,10 +1,13 @@
 'use client'
 
 import { short, webCopy } from '@desk/shared'
+import type { Route } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { type RefObject, useRef, useState } from 'react'
 import { useDisconnect } from 'wagmi'
+import { TelegramConnect } from '@/features/settings/TelegramConnect'
+import type { HeaderTelegram } from './Header'
 import { SignInButton } from './SignInButton'
 import { useFloatingMenus } from './useFloatingMenus'
 
@@ -13,7 +16,13 @@ import { useFloatingMenus } from './useFloatingMenus'
  * "Sign in", then the address pill and its menu. Signing in proves the wallet with one message, costs nothing
  * and moves nothing. Every transaction that moves money is a separate signature, asked for when it happens.
  */
-export function HeaderAccount({ signedInAs }: { signedInAs: string | undefined }) {
+export function HeaderAccount({
+  signedInAs,
+  telegram,
+}: {
+  signedInAs: string | undefined
+  telegram?: HeaderTelegram | null
+}) {
   const router = useRouter()
   const { disconnect } = useDisconnect()
   const [open, setOpen] = useState(false)
@@ -49,7 +58,22 @@ export function HeaderAccount({ signedInAs }: { signedInAs: string | undefined }
                 <span>{webCopy.account.signedInAs}</span>
                 <span className="val">{short(signedInAs, 6, 4)}</span>
               </div>
+              {telegram?.linked && (
+                <div className="header-account-row">
+                  <span>{webCopy.account.telegram}</span>
+                  <span className="val val--profit">
+                    {telegram.linked.username ? `@${telegram.linked.username}` : webCopy.account.telegramOn}
+                  </span>
+                </div>
+              )}
             </div>
+            {/* Mounted only while the menu is open, so a code is made only when someone looks. */}
+            {telegram && !telegram.linked && (
+              <div className="header-account-telegram">
+                <span>{webCopy.account.telegramOff}</span>
+                <TelegramConnect deskId={telegram.deskId} compact />
+              </div>
+            )}
             <Link
               href="/desks"
               className="header-account-link"
@@ -58,6 +82,16 @@ export function HeaderAccount({ signedInAs }: { signedInAs: string | undefined }
             >
               {webCopy.account.yourDesks}
             </Link>
+            {telegram && (
+              <Link
+                href={`/desk/${telegram.deskId}/settings` as Route}
+                className="header-account-link"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+              >
+                {webCopy.account.settings}
+              </Link>
+            )}
             <button
               type="button"
               className="header-account-link header-account-link--danger"
