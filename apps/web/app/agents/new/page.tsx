@@ -8,7 +8,7 @@ export const metadata = { title: studioCopy.tabs.create }
 export default async function NewAgent({
   searchParams,
 }: {
-  searchParams: Promise<{ preset?: string; view?: string }>
+  searchParams: Promise<{ preset?: string; view?: string; copy?: string }>
 }) {
   const params = await searchParams
   return Strategies({ searchParams: Promise.resolve({ ...params, view: 'create' }) })

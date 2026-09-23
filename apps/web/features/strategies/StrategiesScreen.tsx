@@ -1,9 +1,10 @@
 'use client'
 
-import { type Preset, short, studioCopy, usd } from '@desk/shared'
+import { appCopy, type Preset, short, studioCopy, usd } from '@desk/shared'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import type { CopyQuote } from '@/app/copy-actions'
 import { HeaderAccount } from '@/components/shell/HeaderAccount'
 import { Button } from '@/components/ui/button'
 import { Segmented } from '@/components/ui/segmented'
@@ -57,6 +58,7 @@ export function StrategiesScreen({
   requestedPreset,
   requestedView,
   performance,
+  copyOf = null,
 }: {
   presets: Preset[]
   tokens: DraftToken[]
@@ -69,6 +71,8 @@ export function StrategiesScreen({
   goLiveChecks: number
   requestedPreset: string | undefined
   requestedView: string | undefined
+  /** The agent being copied, when the studio was opened from "Copy this agent". */
+  copyOf?: CopyQuote | null
   /** Each preset's return over the price log's last month, by preset id. */
   performance: Record<string, Performance>
 }) {
@@ -76,6 +80,26 @@ export function StrategiesScreen({
     requestedView === 'from' || requestedView === 'yours' ? requestedView : 'create',
   )
   const { draft, setDraft, reset } = useStudioDraft(presets, requestedPreset)
+
+  // Copying starts from the leader's own mix, named after it. The owner still chooses the money and the limits.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: once per agent being copied
+  useEffect(() => {
+    if (!copyOf) return
+    const symbolOf = new Map(tokens.map((t) => [t.address.toLowerCase(), t.symbol]))
+    const weights = Object.fromEntries(
+      copyOf.targets.flatMap((t) => {
+        const symbol = symbolOf.get(t.token.toLowerCase())
+        return symbol ? [[symbol, t.weightBps]] : []
+      }),
+    )
+    setDraft((d) => ({
+      ...d,
+      name: appCopy.copy.studio.banner(copyOf.name),
+      preset: copyOf.presetId,
+      weights,
+      cashBps: copyOf.cashBps,
+    }))
+  }, [copyOf?.leaderId])
 
   useEffect(() => {
     const url = new URL(window.location.href)
@@ -111,6 +135,13 @@ export function StrategiesScreen({
         />
       </div>
 
+      {copyOf && (
+        <div className="copy-progress copy-banner">
+          <strong>{appCopy.copy.studio.banner(copyOf.name)}</strong>
+          <p>{appCopy.copy.studio.bannerBody}</p>
+        </div>
+      )}
+
       {draftDesk && view !== 'yours' && (
         <div className="copy-progress">
           <strong>{T.yours.draft}</strong>
@@ -130,6 +161,7 @@ export function StrategiesScreen({
           contractVersion={contractVersion}
           goLiveChecks={goLiveChecks}
           performance={performance}
+          copyOf={copyOf}
         />
       </div>
 

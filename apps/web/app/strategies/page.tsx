@@ -9,6 +9,7 @@ import {
   valueHistory,
 } from '@desk/db'
 import { DISCLOSURE_VERSION, deskCopy, PRESETS, studioCopy } from '@desk/shared'
+import { copyQuoteAction } from '@/app/copy-actions'
 import { type OwnDesk, type SharedMix, StrategiesScreen } from '@/features/strategies/StrategiesScreen'
 import { currentDeployment } from '@/lib/chain'
 import { db } from '@/lib/db'
@@ -27,9 +28,9 @@ const symbolOf = new Map(APPROVED_TOKENS.map((t) => [t.address.toLowerCase(), t.
 export default async function Strategies({
   searchParams,
 }: {
-  searchParams: Promise<{ preset?: string; view?: string }>
+  searchParams: Promise<{ preset?: string; view?: string; copy?: string }>
 }) {
-  const { preset, view } = await searchParams
+  const { preset, view, copy } = await searchParams
   const address = (await signedInAddress().catch(() => undefined)) ?? null
   const deployment = currentDeployment()
 
@@ -41,6 +42,8 @@ export default async function Strategies({
     presetPerformance(30).catch(() => []),
   ])
   const accepted = ownerId ? await disclosureAccepted(db(), ownerId, DISCLOSURE_VERSION) : null
+  const quote = copy ? await copyQuoteAction(copy).catch(() => null) : null
+  const copyOf = quote?.ok && !quote.mine ? quote : null
 
   const shared: SharedMix[] = mixes.flatMap((m) =>
     m.shareSlug
@@ -97,6 +100,7 @@ export default async function Strategies({
       contractVersion={deployment.version}
       requestedPreset={preset}
       requestedView={view}
+      copyOf={copyOf}
       goLiveChecks={GO_LIVE_CHECKS}
       performance={Object.fromEntries(performance.map((p) => [p.id, p]))}
     />

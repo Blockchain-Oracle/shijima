@@ -4,9 +4,11 @@ import { money, type Preset, studioCopy } from '@desk/shared'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useCallback, useMemo, useState } from 'react'
 import { formatUnits } from 'viem'
+import type { CopyQuote } from '@/app/copy-actions'
 import { AllocationDonut } from '@/components/ui/allocation-donut'
 import { Stepper } from '@/components/ui/stepper'
 import { TokenStack } from '@/components/ui/token-logo'
+import { CopyFinish } from '@/features/copy/CopyFinish'
 import { cn } from '@/lib/utils'
 import { type Created, CreateStep } from './CreateStep'
 import { type DraftToken, draftToMandate, draftTotalBps, mandateKey, type StudioDraft } from './draft'
@@ -36,6 +38,7 @@ export function Studio({
   contractVersion,
   goLiveChecks,
   performance,
+  copyOf = null,
 }: {
   draft: StudioDraft
   setDraft: (update: (d: StudioDraft) => StudioDraft) => void
@@ -47,6 +50,8 @@ export function Studio({
   contractVersion: string
   goLiveChecks: number
   performance: Record<string, Performance>
+  /** Set when this agent is being made to copy another: after creating it, the fee and the link come first. */
+  copyOf?: CopyQuote | null
 }) {
   const reduced = useReducedMotion()
   const [step, setStep] = useState(1)
@@ -96,19 +101,22 @@ export function Studio({
 
   if (created && signedIn) {
     return (
-      <FirstSteps
-        created={created}
-        name={createdAs.name}
-        owner={signedIn}
-        contractVersion={contractVersion}
-        perActionUsdg={createdAs.perAction}
-        dailyUsdg={createdAs.daily}
-        goLiveChecks={goLiveChecks}
-        onAnother={() => {
-          setCreated(null)
-          setStep(1)
-        }}
-      />
+      <>
+        {copyOf && <CopyFinish quote={copyOf} followerDeskId={created.deskId} followerSlug={created.slug} />}
+        <FirstSteps
+          created={created}
+          name={createdAs.name}
+          owner={signedIn}
+          contractVersion={contractVersion}
+          perActionUsdg={createdAs.perAction}
+          dailyUsdg={createdAs.daily}
+          goLiveChecks={goLiveChecks}
+          onAnother={() => {
+            setCreated(null)
+            setStep(1)
+          }}
+        />
+      </>
     )
   }
 

@@ -1,4 +1,4 @@
-import { decisionInFull } from '@desk/db'
+import { decisionInFull, leaderOf } from '@desk/db'
 import { appCopy, deskCopy, engineCopy, short, viewRecord } from '@desk/shared'
 import { Settings } from 'lucide-react'
 import type { Route } from 'next'
@@ -10,6 +10,8 @@ import { AgentActivity } from '@/features/agent/AgentActivity'
 import { AgentMoney } from '@/features/agent/AgentMoney'
 import { LatestDecision } from '@/features/agent/LatestDecision'
 import { Portfolio } from '@/features/agent/Portfolio'
+import { CopyButton } from '@/features/copy/CopyButton'
+import { CopyingBar } from '@/features/copy/CopyingBar'
 import { DeskChat } from '@/features/desk/DeskChat'
 import { QuickActions } from '@/features/desk/DeskControls'
 import { Limits, NeedsYou, Record } from '@/features/desk/DeskPanels'
@@ -17,6 +19,7 @@ import { DeskSessionProvider } from '@/features/session/DeskSessionProvider'
 import { controlsOf } from '@/lib/controls'
 import { db } from '@/lib/db'
 import { deskForViewer, loadDesk } from '@/lib/desk.server'
+import { signedInAddress } from '@/lib/session'
 import '@/features/agent/agent-page.css'
 import '@/features/desk/agent.css'
 
@@ -38,11 +41,11 @@ export default async function AgentPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ ask?: string }>
+  searchParams: Promise<{ ask?: string; copy?: string }>
 }) {
   const { slug } = await params
   const [view, resolved] = await Promise.all([loadDesk(slug), deskForViewer(slug)])
-  const { ask } = await searchParams
+  const { ask, copy } = await searchParams
   if (!view || !resolved) notFound()
   const d = view.desk
   const c = appCopy.agentPage
@@ -50,6 +53,8 @@ export default async function AgentPage({
   const full = latestSeq !== undefined ? await decisionInFull(db(), d.id, latestSeq) : undefined
   const body = full ? viewRecord(full.decision.record) : undefined
   const symbols = view.mandate?.targets.map((t) => t.symbol) ?? []
+  const leader = await leaderOf(db(), d.id)
+  const signedIn = (await signedInAddress().catch(() => undefined)) !== undefined
 
   return (
     <div className="app-container ap-page">
@@ -75,6 +80,9 @@ export default async function AgentPage({
         </div>
         <div className="ap-head-side">
           <LiveBadge compact />
+          {!view.isOwner && d.lifecycle !== 'closed' && (
+            <CopyButton leaderSlug={view.slug} signedIn={signedIn} autoOpen={copy === '1'} />
+          )}
           {view.isOwner && (
             <Link href={`/agents/${view.slug}/settings` as Route} className="ap-gear" aria-label={c.settings}>
               <Settings aria-hidden="true" className="size-4" />
@@ -92,6 +100,17 @@ export default async function AgentPage({
           <div className="ap-actions">
             <QuickActions view={controlsOf(view)} />
           </div>
+        )}
+        {leader && (
+          <CopyingBar
+            deskId={d.id}
+            owner={view.isOwner}
+            leader={{
+              name: leader.name ?? 'Agent',
+              slug: leader.shareSlug ?? leader.link.leaderDeskId,
+              status: leader.link.status,
+            }}
+          />
         )}
         {!view.isOwner && <p className="ap-visitor">{deskCopy.visitor}</p>}
 

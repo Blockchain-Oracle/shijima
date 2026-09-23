@@ -7,6 +7,7 @@ import { APPROVED_TOKENS } from '@desk/chain'
 import {
   currentMandate,
   deskRecord,
+  followersOf,
   gradeTally,
   isQuiet,
   latestValueSnapshot,
@@ -53,13 +54,14 @@ export async function publicAgents(): Promise<PublicAgent[]> {
   const shared = (await sharedDesks(db())).filter((d) => d.lifecycle !== 'closed' && d.shareSlug)
   const rows = await Promise.all(
     shared.map(async (d): Promise<PublicAgent> => {
-      const [now, dayAgo, mandateRow, record, tally, history] = await Promise.all([
+      const [now, dayAgo, mandateRow, record, tally, history, followers] = await Promise.all([
         latestValueSnapshot(db(), d.id),
         valueSnapshotAtOrBefore(db(), d.id, new Date(Date.now() - DAY_MS)),
         currentMandate(db(), d.id),
         deskRecord(db(), d.id, { limit: 40 }),
         gradeTally(db(), d.id),
         valueHistory(db(), d.id, 200),
+        followersOf(db(), d.id),
       ])
       const mandate = mandateRow ? mandateFromRow(mandateRow) : null
       const latest = record.find((r) => !isQuiet(r)) ?? record[0]
@@ -92,7 +94,7 @@ export async function publicAgents(): Promise<PublicAgent[]> {
           : null,
         graded: tally.graded,
         better: tally.better,
-        followers: 0,
+        followers: followers.filter((f) => f.link.status !== 'stopped').length,
         spark: recent.filter((_, i) => i % step === 0).map((h) => Number(h.totalUsdg) / 1e6),
         startedAt: d.startedAt?.toISOString() ?? null,
       }

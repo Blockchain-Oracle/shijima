@@ -6,11 +6,12 @@ import {
   ownerIdOf,
   telegramForDesk,
 } from '@desk/db'
-import { DISCLOSURE_VERSION, settingsCopy as s } from '@desk/shared'
+import { appCopy, DISCLOSURE_VERSION, settingsCopy as s } from '@desk/shared'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import ThemeToggle from '@/components/shell/ThemeToggle'
+import { CopySettings } from '@/features/copy/CopySettings'
 import { DeskControls } from '@/features/desk/DeskControls'
 import { Mandate } from '@/features/desk/DeskPanels'
 import { DeskSessionProvider } from '@/features/session/DeskSessionProvider'
@@ -96,6 +97,15 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
           <Section title={s.share.title} body={s.share.body}>
             <ShareToggle deskId={desk.id} initial={{ enabled: desk.shareEnabled, slug: desk.shareSlug }} />
           </Section>
+          {desk.lifecycle !== 'closed' && (
+            <Section title={appCopy.copy.settings.title} body={appCopy.copy.settings.body}>
+              <CopySettings
+                deskId={desk.id}
+                shared={desk.shareEnabled}
+                initial={{ copyable: desk.copyable, feeUsdg: desk.copyFeeUsdg.toString() }}
+              />
+            </Section>
+          )}
           <Section title={s.disclosure.title}>
             <Disclosure
               acceptedOn={accepted ? accepted.toLocaleDateString('en-GB', { dateStyle: 'medium' }) : null}
