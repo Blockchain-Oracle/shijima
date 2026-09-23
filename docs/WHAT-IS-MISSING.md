@@ -229,3 +229,29 @@ component source; the design thinking is ours.
 8. OpenServ capabilities and the link code.
 9. `/docs`, the install page and the PWA, and `/demo` for judges.
 10. The stock page, markets, How it works and the add-ons, last.
+
+---
+
+## 9. Progress, 23 Sep (same day)
+
+Built, checked in the browser at desktop and phone widths, committed:
+
+| Item | Commit | How it was proven |
+|---|---|---|
+| The five bugs | `d05a44f` | `/` opens the live desk; the chat answered in plain words; the phone chat box clears the menu; the manifest and icons serve |
+| Desk kit ported from Agari, decision page rebuilt | `b2fff91` | decision #2 at 1280 and 390, light and dark, no sideways scroll |
+| The AI agent on the desk page, portfolio in tabs | `73c3b8f` | owner view at 1440 and 390 |
+| Home page | `8d450e1` | visitor at 1440 and 390, light and dark |
+| Onboarding starts from money (Strategy · Add USDG · Limits · Meet your agent) | `2f88251` | walked to the last step as the owner; the header pill fixed ($11.58 was $5.79 counted twice) |
+| Watch every five minutes, wake when something moves | `680763d` | anvil fork: quiet looks wrote 0 records, USDG sent in was noticed and the model asked, a quiet day wrote its line; live since 06:00 |
+| OpenServ: link a workspace, chat and tasks answered for the desk | `ecdba7f` | through the platform: workspace 13903 linked and got the desk's answer in 4.8 s; the hourly workflow still runs the review |
+| `/docs`, README | `0e0d4b7`, `eb14ae4` | page loads; every address checked against `deployments.json` |
+| Stock page | `22e5399` | NVDA at 1280 |
+
+**Still to do:**
+- Prove create-then-fund with a wallet on the fork (the transfer is a plain USDG `transfer` to the desk; the
+  harness from step 10 is gone and needs rebuilding).
+- The markets page, How it works (still a long text page), the record page and the first-run tutorial on the kit.
+- `/demo` for judges.
+- The Telegram Mini App and "Log in with Telegram" wait for a public domain.
+- The showcase desk going live needs Abu's wallet (24 practice hours are done).
