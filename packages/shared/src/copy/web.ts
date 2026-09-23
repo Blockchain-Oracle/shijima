@@ -13,9 +13,9 @@ export const webCopy = {
     name: 'Shijima',
     ja: 'しじま',
     tagline:
-      'An AI desk for your Stock Tokens. You tell it what to hold; it decides when, inside hard limits.',
+      'An AI agent for your Stock Tokens. You tell it what to hold; it decides when, inside hard limits.',
     description:
-      'Talk to your desk and it gets things done: it holds the basket you chose, decides only when to move, and writes down every decision.',
+      'Talk to your agent and it gets things done: it holds the basket you chose, decides only when to move, and writes down every decision.',
   },
 
   nav: {
@@ -27,7 +27,7 @@ export const webCopy = {
     },
     reels: {
       name: 'Reels',
-      description: 'The Stock Tokens, what shared desks decided, and takes, one card at a time.',
+      description: 'The Stock Tokens, what shared agents decided, and takes, one card at a time.',
     },
     strategies: { name: 'Strategies', description: 'Twenty baskets of stocks to start an agent from.' },
     howItWorks: { name: 'How it works', description: 'What your agent decides, and what it never can.' },
@@ -72,12 +72,12 @@ export const webCopy = {
     connect: 'Connect a wallet',
     connecting: 'Check your wallet…',
     noWallet: 'No wallet found',
-    installWallet: 'Install a browser wallet such as MetaMask or Rabby to use a desk.',
+    installWallet: 'Install a browser wallet such as MetaMask or Rabby to use an agent.',
     signIn: (address: string) => `Sign in as ${address}`,
     signInNote: 'Signing proves the wallet is yours. It costs nothing and moves nothing.',
     signInFailed: 'Sign-in failed.',
     signOut: 'Sign out',
-    yourDesks: 'Your desks',
+    yourDesks: 'Your agents',
     settings: 'Settings',
     telegram: 'Telegram',
     telegramOn: 'Connected',
@@ -87,8 +87,8 @@ export const webCopy = {
   },
 
   moneyPill: {
-    title: 'What your desks hold in total, at their last check',
-    aria: (amount: string) => `Your desks hold ${amount} in total`,
+    title: 'What your agents hold in total, at their last check',
+    aria: (amount: string) => `Your agents hold ${amount} in total`,
     unit: 'USDG',
   },
 
@@ -150,8 +150,8 @@ export const webCopy = {
         body: 'Robinhood Chain could not be reached just now. Nothing was sent.',
       },
       'desk-unreachable': {
-        headline: 'The desk did not answer',
-        body: 'The desk’s records could not be read just now. Your money is untouched.',
+        headline: 'The agent did not answer',
+        body: 'The agent’s records could not be read just now. Your money is untouched.',
       },
       'not-found': {
         headline: 'Nothing here',
@@ -226,10 +226,10 @@ export const marketsCopy = {
         acted > 0 ? `acted ${times(acted)}` : '',
         waited > 0 ? `waited ${times(waited)}` : '',
       ].filter(Boolean)
-      return parts.length === 0 ? '' : `Shared desks ${parts.join(' and ')} on these stocks in this period.`
+      return parts.length === 0 ? '' : `Shared agents ${parts.join(' and ')} on these stocks in this period.`
     },
     halted: (names: string) =>
-      `${names} ${names.includes(' and ') ? 'are' : 'is'} halted, so no desk can trade it now.`,
+      `${names} ${names.includes(' and ') ? 'are' : 'is'} halted, so no agent can trade it now.`,
   },
 
   rail: {
@@ -241,7 +241,7 @@ export const marketsCopy = {
     costUnknown: 'The cost to trade is not known right now.',
     nothingHalted: 'Nothing in it is halted.',
     report: (name: string, when: string) => `${name} reports ${when}.`,
-    start: 'Start a desk with this',
+    start: 'Start an agent with this',
     notAdvice: 'This shows what the pools did. It is not advice, and I never forecast a price.',
   },
 
@@ -253,11 +253,11 @@ export const marketsCopy = {
     },
     desks: {
       index: '02',
-      title: 'What desks did',
-      desc: 'Decisions from desks whose owners share them. Each opens its reason.',
-      none: 'No shared desk has acted or waited in this period.',
+      title: 'What agents did',
+      desc: 'Decisions from agents whose owners share them. Each opens its reason.',
+      none: 'No shared agent has acted or waited in this period.',
     },
-    watch: { index: '03', title: 'Desks you can watch', none: 'No desk has been shared yet.' },
+    watch: { index: '03', title: 'Agents you can watch', none: 'No agent has been shared yet.' },
   },
 
   card: {
@@ -280,7 +280,7 @@ export const marketsCopy = {
   decisionLine: (desk: string, outcome: string, side: string | null, name: string) =>
     `${desk}: ${outcome.toLowerCase()}${side ? ` on a ${side} of ${name}` : ` on ${name}`}`,
 
-  signInToAsk: 'Sign in to ask your desk about this.',
+  signInToAsk: 'Sign in to ask your agent about this.',
 } as const
 
 /** One Stock Token's page: Agari's ticker hub on our facts. */
@@ -288,7 +288,7 @@ export const stockCopy = {
   eyebrow: (fund: boolean) => (fund ? 'Stock Token · fund' : 'Stock Token'),
   headingJp: '銘柄。',
   intro: (name: string) =>
-    `Everything Shijima knows about ${name}: the pool’s price and how far it sits from its reference, what trading it costs, how its multiplier has changed, its next report, and what desks decided about it.`,
+    `Everything Shijima knows about ${name}: the pool’s price and how far it sits from its reference, what trading it costs, how its multiplier has changed, its next report, and what agents decided about it.`,
   stats: {
     price: 'Pool price',
     reference: 'Reference',
@@ -311,10 +311,10 @@ export const stockCopy = {
         : `${name} is ${(Math.abs(bps) / 100).toFixed(1)}% ${bps > 0 ? 'above' : 'below'} its reference, ${reference}.`,
     referenceClose: (when: string) => `the pool at the last regular close, ${when}`,
     cost: (pct: string) => `Trading $1,000 of it now would cost about ${pct}.`,
-    halted: 'Trading in it is halted, so no desk can trade it now.',
+    halted: 'Trading in it is halted, so no agent can trade it now.',
   },
-  askQuestion: (name: string) => `What is ${name} doing right now, and does it matter for my desk?`,
-  startWith: 'Start a desk with it',
+  askQuestion: (name: string) => `What is ${name} doing right now, and does it matter for my agent?`,
+  startWith: 'Start an agent with it',
   back: 'All markets',
   /** The hero's chip, in words a person reads at a glance. */
   chip: (bps: number | null) =>
@@ -347,8 +347,8 @@ export const stockCopy = {
     decisions: {
       index: '01',
       title: 'What agents decided',
-      desc: 'From desks whose owners share them, newest first. Each opens its reason.',
-      none: 'No shared desk has acted or waited on it yet.',
+      desc: 'From agents whose owners share them, newest first. Each opens its reason.',
+      none: 'No shared agent has acted or waited on it yet.',
     },
     events: {
       index: '02',
@@ -386,7 +386,7 @@ export const alertsCopy = {
     `It is already ${gap} away, so this fires with the next price, within five minutes.`,
   saved: 'Alert set. You will hear once.',
   signedOut: 'Sign in to set an alert. It arrives by Telegram and in the bell.',
-  noDesk: 'Alerts arrive through your desk’s Telegram and bell, so start a desk first.',
+  noDesk: 'Alerts arrive through your agent’s Telegram and bell, so start an agent first.',
   waiting: (pct: string, direction: string) => `Waiting: ${pct} ${direction}`,
   fired: (when: string, gap: string) => `Sent ${when}, at ${gap}`,
   cancelled: 'Cancelled',
@@ -411,7 +411,7 @@ export const deskCopy = {
     ask_first: 'It asks you before every action.',
     on_its_own: 'It acts inside your limits, and asks for large actions.',
   },
-  visitor: 'Someone else’s desk. You are watching it read-only.',
+  visitor: 'Someone else’s agent. You are watching it read-only.',
   settingsLink: 'Settings',
   tabs: { chat: 'Agent', desk: 'Portfolio', record: 'Activity' },
   ownBasket: 'Your own basket',
@@ -419,21 +419,21 @@ export const deskCopy = {
     portfolio: 'Portfolio',
     activity: 'Activity',
     settings: 'Settings',
-    aria: 'Your desk, in detail',
+    aria: 'Your agent, in detail',
   },
 
   /** The AI agent's own card on the desk page: who it is, what it is doing right now, and when it looks next. */
   agent: {
     name: 'Shijima',
     role: 'Your AI agent',
-    roleVisitor: 'This desk’s AI agent',
+    roleVisitor: 'This agent’s AI',
     doing: 'Right now',
     status: {
       paused: 'Paused by you. I am not acting until you resume.',
       stopped: 'Stopped by your loss limit. Nothing moves until you restart me.',
       attention: 'I need your attention before I can carry on.',
-      removed: 'You removed me from this desk. Your money stays where it is.',
-      closed: 'This desk is closed. Its record stays readable.',
+      removed: 'You removed me from this agent. Your money stays where it is.',
+      closed: 'This agent is closed. Its record stays readable.',
       asking: (n: number) => `Waiting for your answer on ${n === 1 ? 'one request' : `${n} requests`}.`,
       wouldHave: (what: string) =>
         `Practice: I would already have chosen to ${what}. Nothing has changed since, so I am holding that call.`,
@@ -462,7 +462,7 @@ export const deskCopy = {
   },
 
   chat: {
-    title: 'Your desk',
+    title: 'Your agent',
     eyebrow: 'Talk to Shijima',
     intro:
       'Ask what I hold and why I waited, or tell me what to change. I show you a card, and nothing changes until you confirm.',
@@ -472,8 +472,8 @@ export const deskCopy = {
     thinking: 'Thinking…',
     slow: 'Still thinking. Shijima answers in about ten seconds.',
     failed: 'I could not answer just now. Nothing was changed.',
-    signedOut: 'Sign in to talk to your desk. Signing costs nothing and moves nothing.',
-    notAdvice: 'The desk explains and proposes. Nothing it says is advice, and it never forecasts a price.',
+    signedOut: 'Sign in to talk to your agent. Signing costs nothing and moves nothing.',
+    notAdvice: 'The agent explains and proposes. Nothing it says is advice, and it never forecasts a price.',
     /** The desk's side of an exchange started from a button: the card is the answer. */
     fromButton: 'Here it is. Check the card, and nothing happens until you confirm.',
     fromButtonLabel: 'from a button',
@@ -533,13 +533,13 @@ export const deskCopy = {
     vaultNote: 'Taking cash out of the savings vault depends on how much it has available at that moment.',
     valued: (age: string) =>
       `Valued ${age} on the trading pools’ half-hour average, never on the frozen official price.`,
-    notYet: 'Not valued yet. The desk values itself at its first check.',
+    notYet: 'Not valued yet. The agent values itself at its first check.',
     valuedShort: (age: string) => `valued ${age}`,
     nextCheckIn: (when: string) => (when === 'now' ? 'looking now' : `watching · next look in ${when}`),
     sinceStartShort: 'since your money went in',
     timing: 'Timing',
     timingNote:
-      'What the desk’s timing calls earned or cost against acting at once, graded after the market reopened. It can be negative.',
+      'What the agent’s timing calls earned or cost against acting at once, graded after the market reopened. It can be negative.',
     timingNone: 'Nothing graded yet. Grading happens after the US market reopens.',
     practice: (amount: string, n: number) => `In practice: ${amount} over ${n} graded decisions.`,
   },
@@ -561,8 +561,8 @@ export const deskCopy = {
     over: (pct: string) => `${pct} over`,
     under: (pct: string) => `${pct} under`,
     flags: {
-      halted: 'Trading is paused in this token. The desk will not touch it until it resumes.',
-      haltUnknown: 'Its trading status cannot be read right now, so the desk will not touch it.',
+      halted: 'Trading is paused in this token. The agent will not touch it until it resumes.',
+      haltUnknown: 'Its trading status cannot be read right now, so the agent will not touch it.',
       band: (pct: string) =>
         `${pct} from its last official update. The assistant cannot trade it right now; only you can sell.`,
       feed: 'No price feed right now. The assistant cannot trade it; only you can sell.',
@@ -580,13 +580,13 @@ export const deskCopy = {
     title: 'Watching',
     lead: 'Watching every five minutes. It wakes when something moves;',
     at: (when: string) => `Watching every five minutes. Its next look is at ${when} New York.`,
-    stopped: 'The desk is not acting until you resume it.',
+    stopped: 'The agent is not acting until you resume it.',
     late: (ago: string) =>
       `Has not checked in. Last check was ${ago}. Your money is safe in your account and cannot move without the assistant.`,
     first: 'No check yet. The first one happens at the top of the next hour.',
     paused: 'Paused by you. Nothing will happen until you resume.',
     lossStop:
-      'It stopped itself because of your loss limit. To restart, press Resume in Controls; the limit then counts from what the desk is worth at that moment.',
+      'It stopped itself because of your loss limit. To restart, press Resume in Controls; the limit then counts from what the agent is worth at that moment.',
   },
 
   practice: {
@@ -623,7 +623,7 @@ export const deskCopy = {
     over: (pct: string) => `${pct} over plan`,
     under: (pct: string) => `${pct} under plan`,
     sentence: (name: string, pct: string, under: boolean) =>
-      `${name} is ${pct} ${under ? 'under' : 'over'} plan, past what it may wander. The desk weighs moving it back at each check.`,
+      `${name} is ${pct} ${under ? 'under' : 'over'} plan, past what it may wander. The agent weighs moving it back at each check.`,
   },
 
   mandate: {
@@ -637,12 +637,12 @@ export const deskCopy = {
   },
 
   telegramOff:
-    'Telegram is not connected, so the desk can only ask you here and cannot tell you when something happens. Connect it in Settings.',
+    'Telegram is not connected, so the agent can only ask you here and cannot tell you when something happens. Connect it in Settings.',
 
   /** Protective rules [8.6]: carried out by arithmetic, never by reading prose. */
   rules: {
     title: 'Standing rules',
-    hint: 'A rule the desk carries out itself, by arithmetic: if a stock you hold falls this far below its reference, it sells this much of it. The assistant still picks the moment and can only wait with a reason.',
+    hint: 'A rule the agent carries out itself, by arithmetic: if a stock you hold falls this far below its reference, it sells this much of it. The assistant still picks the moment and can only wait with a reason.',
     none: 'No standing rules.',
     stock: 'Stock',
     fall: 'Falls by',
@@ -654,23 +654,23 @@ export const deskCopy = {
     bounds: 'A fall of 1% to 20%, selling 10% to all of it.',
   },
   fee: (amount: string) => `Fee so far: ${amount}, waived.`,
-  feeNote: '0.5% a year of what the desk holds, nothing in practice. Waived during the beta.',
+  feeNote: '0.5% a year of what the agent holds, nothing in practice. Waived during the beta.',
 
   record: {
     title: 'The record',
-    empty: 'The desk has not checked yet.',
+    empty: 'The agent has not checked yet.',
     quiet: (n: number) => `${n} quiet checks`,
     today: 'Today',
     yesterday: 'Yesterday',
     practice: 'practice',
-    earlier: (n: number) => `${n} decisions on the desk’s earlier contract`,
+    earlier: (n: number) => `${n} decisions on the agent’s earlier contract`,
     earlierExplorer: 'Every one is on the earlier contract’s page on the explorer',
     notes: {
       outside: (what: string) =>
-        `Your balance is different from what the desk expected: ${what}. It has updated its picture, and your loss limit counts from the new amount.`,
+        `Your balance is different from what the agent expected: ${what}. It has updated its picture, and your loss limit counts from the new amount.`,
       owner: (what: string) => `You ${what} yourself, from your wallet.`,
       ownerLabel: 'Your own call',
-      outsideLabel: 'Changed outside the desk',
+      outsideLabel: 'Changed outside the agent',
       multiplierLabel: 'Value changed with no trade',
       multiplier: (name: string, pct: string) =>
         `${name}’s multiplier rose ${pct}: a dividend paid as more token, not as cash. The holding is worth more with no trade.`,
@@ -691,7 +691,7 @@ export const deskCopy = {
 
   chart: {
     title: 'Value',
-    empty: 'The chart starts at the desk’s second check.',
+    empty: 'The chart starts at the agent’s second check.',
     emptyTitle: 'Nothing to draw yet',
     acted: 'acted',
     waited: 'waited',
@@ -705,18 +705,18 @@ export const deskCopy = {
     legendStart: 'Where it started',
     legend: { acted: 'Traded', would: 'Would have traded', waited: 'Chose to wait' },
     aria: (value: string, pct: string | null) =>
-      `Desk value ${value}${pct === null ? '' : `, ${pct}% against where it started`}.`,
+      `Agent value ${value}${pct === null ? '' : `, ${pct}% against where it started`}.`,
   },
 } as const
 
 /** The browser's session key, from Masayume's tap-to-act key: one key, at most seven days, revocable. */
 export const sessionCopy = {
   title: 'This browser’s key',
-  unsupported: 'This desk’s contract came before session keys, so your wallet signs its chain actions.',
+  unsupported: 'This agent’s contract came before session keys, so your wallet signs its chain actions.',
   none: 'Give this browser a key and chat actions like a withdrawal run in one click, with no wallet pop-up.',
   live: (left: string) => `Active. It ends ${left}.`,
   expired: 'This browser’s key has ended. Give it a new one to keep one-click actions.',
-  elsewhere: 'Another browser holds this desk’s key. Give this one its own, and the other stops working.',
+  elsewhere: 'Another browser holds this agent’s key. Give this one its own, and the other stops working.',
   give: 'Give this browser a key',
   giving: 'Check your wallet…',
   revoke: 'Revoke the key',
@@ -727,16 +727,16 @@ export const sessionCopy = {
     title: 'What you are signing',
     can: 'It can',
     canValue:
-      'withdraw to your own wallet only, pause the desk, remove the assistant, lower your limits, and sell inside the assistant’s own caps',
+      'withdraw to your own wallet only, pause the agent, remove the assistant, lower your limits, and sell inside the assistant’s own caps',
     cannot: 'It can never',
-    cannotValue: 'buy, raise a limit, restart the desk, or send money anywhere but your wallet',
+    cannotValue: 'buy, raise a limit, restart the agent, or send money anywhere but your wallet',
     ends: 'It ends',
     gas: 'Fees',
     gasValue: (eth: string) => `your wallet sends the key ${eth} ETH to pay its own fees`,
     signatures: 'Signatures',
     signaturesValue: 'two: the grant, then the fee top-up',
   },
-  wrongWallet: 'Connect the wallet that owns this desk.',
+  wrongWallet: 'Connect the wallet that owns this agent.',
   failed: 'The key was not granted. Nothing changed.',
   signWithKey: 'Your session key signs this. No wallet pop-up.',
   signWithWallet: 'Your wallet signs this.',
@@ -760,7 +760,7 @@ export const controlsCopy = {
   close: 'Close',
   review: 'Show me the card',
   reviewing: 'Checking…',
-  closed: 'This desk is closed. Its record stays readable.',
+  closed: 'This agent is closed. Its record stays readable.',
   actions: {
     addMoney: 'Add money',
     withdraw: 'Withdraw',
@@ -771,8 +771,8 @@ export const controlsCopy = {
     limits: 'Limits on the chain',
     checkNow: 'Check now',
     removeAssistant: 'Remove the assistant',
-    restart: 'Restart the desk',
-    closeDesk: 'Close the desk',
+    restart: 'Restart the agent',
+    closeDesk: 'Close the agent',
     editMandate: 'Edit what you told it',
   },
   words: {
@@ -786,19 +786,19 @@ export const controlsCopy = {
     withdrawAll: (asStocks: boolean) =>
       asStocks ? 'Withdraw everything, as it is' : 'Withdraw everything, as cash',
     sellAll: 'Sell everything to cash',
-    pause: 'Pause the desk',
-    resume: 'Resume the desk',
+    pause: 'Pause the agent',
+    resume: 'Resume the agent',
     mode: (name: string) => `Switch to ${name}`,
     limits: 'Change the limits on the chain',
     checkNow: 'Check now',
     removeAssistant: 'Remove the assistant',
-    restart: 'Restart the desk',
+    restart: 'Restart the agent',
     closeDesk: (asStocks: boolean) =>
-      asStocks ? 'Close the desk, sending the holdings as they are' : 'Close the desk, selling to cash',
+      asStocks ? 'Close the agent, sending the holdings as they are' : 'Close the agent, selling to cash',
   },
   addMoney: {
     eyebrow: 'Add money',
-    title: 'Put money in your desk',
+    title: 'Put money in your agent',
     body: 'Money goes into your own account. Only you can take it out.',
     here: 'I have USDG on Robinhood Chain',
     hereNote: 'Enter an amount and confirm in your wallet.',
@@ -812,7 +812,7 @@ export const controlsCopy = {
     quote: 'Get a quote',
     quoting: 'Asking Relay…',
     youSend: 'You send',
-    youReceive: 'Your desk receives about',
+    youReceive: 'Your agent receives about',
     cost: 'Cost',
     takes: 'Takes',
     seconds: (n: number) => (n <= 60 ? 'usually seconds' : `about ${Math.ceil(n / 60)} minutes`),
@@ -825,9 +825,9 @@ export const controlsCopy = {
       waiting: 'Sent. Waiting for it to arrive on Robinhood Chain…',
       back: 'Arrived. Switching your wallet back to Robinhood Chain…',
       done: (amount: string) =>
-        `Arrived: about ${amount} is in your desk. Your agent notices it within five minutes.`,
+        `Arrived: about ${amount} is in your agent’s account. Your agent notices it within five minutes.`,
       failed:
-        'It did not go through. If anything left your wallet, Relay returns it. Nothing reached the desk.',
+        'It did not go through. If anything left your wallet, Relay returns it. Nothing reached the agent.',
       cancelled: 'You cancelled in your wallet. Nothing was sent.',
     },
   },
@@ -846,20 +846,20 @@ export const controlsCopy = {
   sellAll: {
     eyebrow: 'Sell everything',
     title: 'Turn every holding into cash',
-    body: 'Every Stock Token the desk holds is sold to USDG inside the desk. Nothing leaves your account. You see what each sells for before you sign.',
+    body: 'Every Stock Token the agent holds is sold to USDG inside the agent’s account. Nothing leaves your account. You see what each sells for before you sign.',
   },
   pause: {
     eyebrow: 'Pause',
-    title: 'Stop the desk acting',
+    title: 'Stop the agent acting',
     body: 'Nothing is sold. It stops acting until you resume it, and waiting requests are cancelled.',
-    resumeTitle: 'Let the desk carry on',
+    resumeTitle: 'Let the agent carry on',
     resumeBody: 'It carries on from its next look.',
   },
   mode: {
     eyebrow: 'Mode',
-    title: 'How much the desk does on its own',
+    title: 'How much the agent does on its own',
     locked: (done: number, needed: number, read: boolean) =>
-      `Going live needs ${needed} hours of practice and the practice report read. This desk has done ${done}${read ? ', and you have read the report' : ', and the report is not read yet'}.`,
+      `Going live needs ${needed} hours of practice and the practice report read. This agent has done ${done}${read ? ', and you have read the report' : ', and the report is not read yet'}.`,
     onItsOwn: 'On its own means it acts inside your limits without asking, and still asks for large actions.',
     current: 'Now',
   },
@@ -870,7 +870,7 @@ export const controlsCopy = {
     perAction: 'Most per action, in dollars',
     daily: 'Most per day, in dollars',
     settings: (perAction: string, daily: string) =>
-      `Your settings also say ${perAction} per action and ${daily} a day. The desk keeps to whichever is lower.`,
+      `Your settings also say ${perAction} per action and ${daily} a day. The agent keeps to whichever is lower.`,
   },
   editMandate: {
     eyebrow: 'What you told it',
@@ -896,21 +896,21 @@ export const controlsCopy = {
   check: {
     eyebrow: 'Check now',
     title: 'Look at everything now',
-    body: 'The desk checks now and decides as it always does. It may still choose to wait.',
+    body: 'The agent checks now and decides as it always does. It may still choose to wait.',
   },
   remove: {
     eyebrow: 'Remove the assistant',
     title: 'Take away all its access',
-    body: 'It loses all access at once and the desk stops. Your money stays in your account. You can bring it back later with your wallet.',
+    body: 'It loses all access at once and the agent stops. Your money stays in your account. You can bring it back later with your wallet.',
   },
   restart: {
     eyebrow: 'Restart',
-    title: 'Restart the desk on-chain',
+    title: 'Restart the agent on-chain',
     body: 'If you removed the assistant, this brings it back too. Only your wallet can do this.',
   },
   closeDesk: {
-    eyebrow: 'Close the desk',
-    title: 'Close this desk for good',
+    eyebrow: 'Close the agent',
+    title: 'Close this agent for good',
     body: 'One signature sells or sends everything to your own wallet, removes the assistant and stops all checks. The record stays readable afterwards.',
     asCash: 'Sell everything to cash, then send it',
     asStocks: 'Send the holdings as they are',
@@ -928,7 +928,7 @@ export const settingsCopy = {
   telegram: {
     bot: 'ShijimaBot',
     title: 'Telegram',
-    body: 'Approvals, what the desk did, and alerts, in a chat with @ShijimaBot. You can answer requests there too.',
+    body: 'Approvals, what the agent did, and alerts, in a chat with @ShijimaBot. You can answer requests there too.',
     connected: (name: string | null) => (name ? `Connected as @${name}.` : 'Connected.'),
     connect: 'Connect Telegram',
     making: 'Making a code…',
@@ -940,20 +940,20 @@ export const settingsCopy = {
     openAgain: 'Open Telegram again',
     qr: 'QR code',
     disconnect: 'Disconnect',
-    disconnected: 'Disconnected. The bot no longer answers for this desk.',
+    disconnected: 'Disconnected. The bot no longer answers for this agent.',
     without: 'Without Telegram, requests that need your answer only reach you here on the website.',
   },
   connections: {
     title: 'Connections',
-    body: 'What this desk is linked to. Telegram is yours to connect or disconnect; the other two are fixed.',
+    body: 'What this agent is linked to. Telegram is yours to connect or disconnect; the other two are fixed.',
     wallet: 'Wallet',
-    walletBody: 'The only address that can withdraw, change limits or close this desk.',
+    walletBody: 'The only address that can withdraw, change limits or close this agent.',
     owner: 'Your wallet',
-    desk: 'This desk',
+    desk: 'This agent',
     view: 'View on Blockscout',
     agent: 'OpenServ agent',
     agentBody:
-      'The agent that watches this desk around the clock. It can trade only inside the limits the desk contract enforces, and never withdraw.',
+      'The AI that watches this agent around the clock. It can trade only inside the limits the agent’s contract enforces, and never withdraw.',
     agentId: (id: number) => `Agent ${id}`,
     openAgent: 'Open on OpenServ',
     openIdentity: 'See the identity',
@@ -973,7 +973,7 @@ export const settingsCopy = {
   },
   share: {
     title: 'Share a read-only link',
-    body: 'Anyone with the link sees this desk’s holdings and record, never your chat or your notes. Turn it off at any time.',
+    body: 'Anyone with the link sees this agent’s holdings and record, never your chat or your notes. Turn it off at any time.',
     on: 'Sharing is on',
     off: 'Sharing is off',
     turnOn: 'Turn sharing on',
@@ -993,7 +993,7 @@ export const settingsCopy = {
   },
   appearance: { title: 'Appearance', body: 'Dark or light. It is remembered in this browser.' },
   close: {
-    title: 'Close the desk',
+    title: 'Close the agent',
     body: 'Sells or sends everything to your own wallet, removes the assistant and stops the checks, in one signature. The record stays readable.',
   },
   withdrawAnywhere: 'Take your money out without this website',
@@ -1003,7 +1003,7 @@ export const settingsCopy = {
 export const inboxCopy = {
   title: 'Messages',
   aria: (n: number) => (n > 0 ? `${n} unread messages` : 'Messages'),
-  empty: 'Nothing yet. What the desk does and asks appears here, and in Telegram if you connect it.',
+  empty: 'Nothing yet. What the agent does and asks appears here, and in Telegram if you connect it.',
   markRead: 'Mark all as read',
   kinds: {
     approval_request: 'Asking you',
@@ -1066,7 +1066,7 @@ export const disclosureCopy = {
  */
 export const ogCopy = {
   site: {
-    alt: 'Shijima: an AI desk for your Stock Tokens. You choose what to hold; it decides only when, inside hard limits.',
+    alt: 'Shijima: an AI agent for your Stock Tokens. You choose what to hold; it decides only when, inside hard limits.',
     eyebrow: 'Stock Tokens on Robinhood Chain',
     lead: 'You choose what to hold.',
     em: 'It decides only when.',
@@ -1074,8 +1074,8 @@ export const ogCopy = {
   },
   honesty: 'Stock Tokens are not shares · nothing here is advice',
   desk: {
-    alt: 'A shared Shijima desk: its name, its mode and its last check.',
-    eyebrow: 'A shared desk',
+    alt: 'A shared Shijima agent: its name, its mode and its last check.',
+    eyebrow: 'A shared agent',
     checks: (n: number) => `${n.toLocaleString('en-US')} ${n === 1 ? 'check' : 'checks'} on the record`,
     lastCheck: (ago: string) => `Last check ${ago}`,
     noCheck: 'No check yet',
@@ -1156,35 +1156,35 @@ export const shareCopy = {
  */
 export const roomCopy = {
   open: (symbol: string) => `${symbol} Room`,
-  qualifier: 'desk owners only',
+  qualifier: 'agent owners only',
   title: (name: string) => `${name} · the Room`,
   close: 'Close',
   compose: 'Say something',
   send: 'Send',
   sending: 'Sending…',
-  holds: (symbol: string) => `Show that my desk holds ${symbol}`,
+  holds: (symbol: string) => `Show that my agent holds ${symbol}`,
   holdsBadge: 'holds it',
   you: 'you',
   empty: 'No one has said anything yet. Go first.',
-  where: 'Plain text, kept by Shijima, shown with your wallet. Your desk’s assistant never reads the Room.',
-  start: 'Start a desk',
+  where: 'Plain text, kept by Shijima, shown with your wallet. Your agent never reads the Room.',
+  start: 'Start an agent',
   states: {
     unavailable: {
       title: 'The Room is not reachable right now.',
       body: 'Its store did not answer. Everything else on this stock works.',
     },
     connect: {
-      title: 'The Room is for people with a desk.',
+      title: 'The Room is for people with an agent.',
       body: 'Connect your wallet and sign in, and the Room checks whether you own one.',
     },
     locked: {
-      title: 'You need a desk to join.',
-      body: 'The Room is for desk owners, so everyone here has put money behind their own mix. Start a desk, even in practice, and it opens.',
+      title: 'You need an agent to join.',
+      body: 'The Room is for agent owners, so everyone here has put money behind their own mix. Start an agent, even in practice, and it opens.',
     },
   },
   errors: {
     badRequest: 'That did not make sense. Nothing was posted.',
-    notMember: 'The Room is for desk owners. Sign in with the wallet that owns your desk.',
+    notMember: 'The Room is for agent owners. Sign in with the wallet that owns your agent.',
     rateLimited: 'That is a lot at once. Give it a few seconds and try again.',
     postFailed: 'That did not post. Try again.',
   },
@@ -1194,29 +1194,29 @@ export const roomCopy = {
 export const takesCopy = {
   pill: 'Take',
   postAria: 'Post a take',
-  holdsBadge: '✓ desk holds it',
-  noBadge: 'desk owner',
+  holdsBadge: '✓ agent holds it',
+  noBadge: 'agent owner',
   seeStock: (name: string) => `See ${name} →`,
   room: 'the Room ↗',
-  startDesk: 'Start a desk',
+  startDesk: 'Start an agent',
   composer: {
     title: 'Post a take',
     close: 'Close',
     where:
-      'Your words are kept by Shijima and shown with your wallet. Your desk’s assistant never reads them.',
+      'Your words are kept by Shijima and shown with your wallet. Your agent never reads them.',
     stock: 'About',
     placeholder: 'What do you make of it? Name another with $TICKER.',
-    holds: (symbol: string) => `Show that my desk holds ${symbol}`,
+    holds: (symbol: string) => `Show that my agent holds ${symbol}`,
     post: 'Post take',
     posting: 'Posting…',
     posted: 'Take posted',
     permanence: 'A take is public and stays up.',
-    connect: 'Sign in with the wallet that owns your desk to post.',
-    noDesk: 'Takes are for desk owners. Start a desk, even in practice, and you can post.',
+    connect: 'Sign in with the wallet that owns your agent to post.',
+    noDesk: 'Takes are for agent owners. Start an agent, even in practice, and you can post.',
   },
   errors: {
     badRequest: 'That did not make sense. Nothing was posted.',
-    notMember: 'Takes are for desk owners. Sign in with the wallet that owns your desk.',
+    notMember: 'Takes are for agent owners. Sign in with the wallet that owns your agent.',
     rateLimited: 'That is a lot of takes at once. Give it a minute.',
     postFailed: 'That did not post. Try again.',
   },
@@ -1239,7 +1239,7 @@ export const reelsCopy = {
     'The reference is the pool at the last regular close, or the price feed while the market is open.',
   seeStock: 'See the stock →',
   cost: (amount: string, bps: string) => `$1,000 in costs about ${amount} (${bps})`,
-  decisionMeta: (desk: string) => `${desk} · a shared desk`,
+  decisionMeta: (desk: string) => `${desk} · a shared agent`,
   readDecision: 'Read why →',
   sure: (pct: number) => `${pct}% sure`,
   swipeHint: 'Swipe up for the next card',

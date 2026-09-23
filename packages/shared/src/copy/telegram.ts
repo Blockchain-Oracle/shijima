@@ -88,7 +88,7 @@ export const telegramCopy = {
       approved: `${b('Approved')}\n${esc(what)}\nI will check the price again and act only if it is still close to what you were shown.${where ? `\nAnswered on the ${esc(where)}.` : ''}`,
       rejected: `${b('Rejected')}\n${esc(what)}\nNothing was done, and the refusal is recorded.${where ? `\nAnswered on the ${esc(where)}.` : ''}`,
       expired: `${b('Expired')}\n${esc(what)}\nYou did not answer in time, so nothing was done. It is recorded.`,
-      cancelled: `${b('Cancelled')}\n${esc(what)}\nYour settings or the desk changed, so this request no longer applies. Nothing was done.`,
+      cancelled: `${b('Cancelled')}\n${esc(what)}\nYour settings or the agent changed, so this request no longer applies. Nothing was done.`,
     })[answer],
   /** A button pressed after the request was answered elsewhere, or had lapsed. The message shows how. */
   alreadyAnswered: 'This request was already answered, or has lapsed. The message shows how it ended.',
@@ -118,15 +118,15 @@ export const telegramCopy = {
       '',
       'You choose what to hold. It decides only when to move toward it, inside limits your own account enforces, and writes every decision down where anyone can check it.',
       '',
-      'Press Start, then connect your desk from the website.',
+      'Press Start, then connect your agent from the website.',
     ].join('\n'),
     commands: [
-      { command: 'start', description: 'Your desk at a glance' },
+      { command: 'start', description: 'Your agent at a glance' },
       { command: 'portfolio', description: 'What it holds and what it is worth' },
       { command: 'record', description: 'The last few decisions' },
       { command: 'pause', description: 'Stop acting. Nothing is sold' },
       { command: 'resume', description: 'Start acting again' },
-      { command: 'ask', description: 'How to ask the desk anything' },
+      { command: 'ask', description: 'How to ask the agent anything' },
       { command: 'help', description: 'Everything I understand' },
     ],
   },
@@ -139,10 +139,10 @@ export const telegramCopy = {
       'I look after a basket of Stock Tokens while the US market is shut. I decide only when to act, never what to own, and I write every decision down.',
       '',
       canButton
-        ? 'To hear from your desk here, connect it from the website.'
-        : `To hear from your desk here, open ${esc(siteUrl)}, go to your desk, and choose Connect Telegram.`,
+        ? 'To hear from your agent here, connect it from the website.'
+        : `To hear from your agent here, open ${esc(siteUrl)}, go to your agent, and choose Connect Telegram.`,
     ].join('\n'),
-  connectButton: 'Connect my desk',
+  connectButton: 'Connect my agent',
   howButton: 'How it works',
 
   /** The main menu under /start once linked. Every view edits this one message. */
@@ -175,13 +175,13 @@ export const telegramCopy = {
     '',
     'Just write to me here. "What are you holding?", "Why did you wait last night?", "Sell half the Nvidia."',
     '',
-    'I answer in this chat. Anything that would change the desk comes back as a card for you to confirm first.',
+    'I answer in this chat. Anything that would change the agent comes back as a card for you to confirm first.',
   ].join('\n'),
 
   /** 9.10 Commands. */
   help: [
     b('What you can ask me'),
-    '/start  your desk at a glance',
+    '/start  your agent at a glance',
     '/portfolio  what it holds and what it is worth',
     '/record  the last few decisions',
     '/status  bring the pinned message up to date',
@@ -189,7 +189,7 @@ export const telegramCopy = {
     '/resume  start acting again',
     '/help  this',
     '',
-    'Or just write to me. Ask what the desk is doing and why, or tell me what you want changed. I show you a card before anything changes.',
+    'Or just write to me. Ask what the agent is doing and why, or tell me what you want changed. I show you a card before anything changes.',
     '',
     'Approving and rejecting happen on the buttons, or on the website. Either works.',
   ].join('\n'),
@@ -198,21 +198,21 @@ export const telegramCopy = {
   resumed: 'Active again. I am watching.',
   alreadyInThatState: 'Nothing changed: it was already like that.',
   notLinked:
-    'This chat is not linked to a desk. Open your desk on the website, choose Connect Telegram, and send me the code it gives you.',
+    'This chat is not linked to an agent. Open your agent on the website, choose Connect Telegram, and send me the code it gives you.',
   linkUsed: 'That code has already been used, or it has expired. Ask the website for a new one.',
-  notYourDesk: 'This desk is linked to someone else. I will not answer about it here.',
+  notYourDesk: 'This agent is linked to someone else. I will not answer about it here.',
   seeDetails: 'See the full decision',
 
   /** The chat, in Telegram. The desk's words are sent as plain text, never as HTML. */
   askSlowDown: {
     minute: 'That is a lot of messages at once. Give me a minute.',
-    day: 'That is today’s allowance of messages. I will answer again tomorrow. The desk keeps checking as usual.',
+    day: 'That is today’s allowance of messages. I will answer again tomorrow. The agent keeps checking as usual.',
   },
   askStillThinking: 'I am still working on that one. Ask again in a minute if no answer comes.',
   askThinking: 'Thinking. I will answer here in a moment.',
   unknownCommand: 'I do not know that command. /help lists the ones I do.',
   linkedElsewhere:
-    'This Telegram account already hears about another desk. Disconnect that one first, in its settings on the website, before linking this one.',
+    'This Telegram account already hears about another agent. Disconnect that one first, in its settings on the website, before linking this one.',
   /** Every clock in these messages is New York time, where the market is. */
   timesAreNewYork: 'New York time',
   askFailed: 'I could not answer just now. Nothing was changed.',

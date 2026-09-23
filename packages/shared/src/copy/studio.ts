@@ -8,7 +8,7 @@ export const studioCopy = {
   kicker: 'Strategies · Robinhood Chain',
   title: 'Give your money an AI agent.',
   lede: 'Pick a strategy, put in USDG, and your agent keeps it on plan around the clock. It decides only when to move, and your own account enforces the limits whatever it decides.',
-  tabs: { create: 'New desk', from: 'Start from a strategy', yours: 'Your desks' },
+  tabs: { create: 'New agent', from: 'Start from a strategy', yours: 'Your agents' },
   aria: 'Strategies workspace',
 
   steps: ['Pick a strategy', 'Add USDG', 'Your agent’s limits', 'Meet your agent'] as const,
@@ -23,16 +23,16 @@ export const studioCopy = {
   nextWithoutRead: 'Continue without a test read →',
 
   identity: {
-    name: 'Name your desk',
-    namePlaceholder: 'Weekend desk',
-    nameHint: 'Only you see it, unless you share the desk.',
+    name: 'Name your agent',
+    namePlaceholder: 'Weekend agent',
+    nameHint: 'Only you see it, unless you share the agent.',
     mix: 'Start from a mix',
     own: 'Set weights yourself',
     ownBody: 'Keep the mix you have and change it, or tap Stock Tokens to build one.',
     basket: 'The basket',
     total: (pct: string) => `${pct} of 100%`,
     cash: 'Kept as cash',
-    cashNote: 'Cash waits in the desk in USDG, a digital US dollar, and is what the desk buys with.',
+    cashNote: 'Cash waits in your agent’s account in USDG, a digital US dollar, and is what the agent buys with.',
     mustAddUp: 'The shares and cash must add up to 100%.',
     monthShort: '30 days',
     pick: 'Tap the Stock Tokens you want',
@@ -40,27 +40,27 @@ export const studioCopy = {
     even: 'Even split',
     adjust: 'Adjust the weights',
     ofHundred: 'of 100%',
-    cashRest: 'Cash is whatever the stocks leave. The desk buys with it.',
+    cashRest: 'Cash is whatever the stocks leave. The agent buys with it.',
   },
 
   behaviour: {
     title: 'How strict',
-    drift: 'How far a holding may wander before the desk considers acting',
+    drift: 'How far a holding may wander before the agent considers acting',
     driftHint: 'Smaller means more trades; each one costs a little.',
     position: 'The largest share any one stock may take',
     loss: 'Stop everything after a fall of',
-    lossHint: 'Measured from what you put in. The desk stops acting and tells you.',
+    lossHint: 'Measured from what you put in. The agent stops acting and tells you.',
     rulesTitle: 'Standing rules',
     limitsTitle: 'Held by your account itself',
     limitsBody:
-      'These two are written into the desk’s contract. The assistant cannot go past them whatever it decides, and changing them later needs your wallet.',
+      'These two are written into the agent’s contract. The assistant cannot go past them whatever it decides, and changing them later needs your wallet.',
     perAction: 'Most it may spend in one action',
     daily: 'Most it may spend in a day',
     large: 'Ask me first at or above',
     largeHint: 'Even when it runs on its own. Saved instantly, no wallet needed.',
     notes: 'Notes in your own words',
     notesHint:
-      'They shape when the desk acts, never how much and never what it holds. Kept private: a shared desk never shows them.',
+      'They shape when the agent acts, never how much and never what it holds. Kept private: a shared agent never shows them.',
     notesPlaceholder:
       'Prefer waiting for Monday unless something is clearly wrong.\nDo not add to Tesla in the week before its earnings.',
     count: (n: number, max: number) => `${n} / ${max}`,
@@ -68,18 +68,18 @@ export const studioCopy = {
   },
 
   read: {
-    body: 'The desk reads your settings back in its own words and says what is unclear. It is one model call; nothing is signed or saved.',
+    body: 'The agent reads your settings back in its own words and says what is unclear. It is one model call; nothing is signed or saved.',
     run: 'Hear it read back',
     again: 'Read it again',
-    reading: 'The desk is reading your settings…',
-    heard: 'How the desk understood you',
+    reading: 'The agent is reading your settings…',
+    heard: 'How the agent understood you',
     unclear: 'What it found unclear',
     edited: 'You changed the settings after this read. Read it again so it matches.',
     signIn: 'Sign in to hear the read-back. It costs nothing.',
     failed:
-      'The desk could not read it back just now. You can continue without it and read it back later from the chat.',
+      'The agent could not read it back just now. You can continue without it and read it back later from the chat.',
     skipped:
-      'Without a read-back, the desk starts on your settings as written. Ask it in the chat at any time: “read my settings back”.',
+      'Without a read-back, the agent starts on your settings as written. Ask it in the chat at any time: “read my settings back”.',
   },
 
   /** Step 4 opens with the agent introducing itself, in its own voice, before anything is signed. */
@@ -116,11 +116,11 @@ export const studioCopy = {
   },
 
   create: {
-    title: 'Create your desk',
+    title: 'Create your agent',
     body: 'This creates an account on Robinhood Chain that belongs to you. Only you can take money out. The assistant may trade inside it, within the limits above, and you can remove it at any time.',
     starts:
       'It starts in practice: it decides for real and spends nothing. It can go live after a day of practice, once you have read its report.',
-    address: 'Your desk’s address',
+    address: 'Your agent’s address',
     addressNote: 'Known before it exists, so money can be sent to it first.',
     fee: 'Network fee',
     feeValue: (usd: string) => `about ${usd}, paid by your wallet`,
@@ -128,7 +128,7 @@ export const studioCopy = {
     confirmations: 'Wallet confirmations',
     confirmationsValue: 'One',
     confirmationsFunded: 'Two: create your account, then put in your USDG',
-    button: 'Create my desk',
+    button: 'Create my agent',
     buttonFunded: (amount: string) => `Create and put in ${amount}`,
     funding: (amount: string) => `Putting in ${amount}. Confirm in your wallet…`,
     fundingNetwork: 'Waiting for the money to arrive…',
@@ -141,13 +141,13 @@ export const studioCopy = {
     wrongNetwork: 'Switch your wallet to Robinhood Chain',
     wrongWallet:
       'Your wallet has switched to a different address. Switch back to the one you signed in with.',
-    connect: 'Connect your wallet and sign in to create the desk.',
+    connect: 'Connect your wallet and sign in to create the agent.',
     connectWallet: 'Connect your wallet',
     disclosureFirst: 'Read this once before any money moves.',
     noEth: {
       title: 'Your wallet needs a little ETH on Robinhood Chain',
-      body: 'Creating the desk is paid in ETH, well under a dollar. Bring money in first: it goes straight to your desk’s address, and about $1 of ETH comes to your wallet with it. Then create the desk.',
-      after: 'When the ETH has arrived, create the desk.',
+      body: 'Creating the agent is paid in ETH, well under a dollar. Bring money in first: it goes straight to your agent’s address, and about $1 of ETH comes to your wallet with it. Then create the agent.',
+      after: 'When the ETH has arrived, create the agent.',
       check: 'Check again',
     },
   },
@@ -163,22 +163,22 @@ export const studioCopy = {
       title: 'Put money in',
       body: 'USDG you already hold on Robinhood Chain, or dollars from another network.',
       open: 'Add money',
-      funded: (amount: string) => `The desk holds ${amount}.`,
+      funded: (amount: string) => `The agent holds ${amount}.`,
     },
     telegram: {
       title: 'Connect Telegram',
-      body: 'The desk tells you what it did, and asks you there when it needs an answer.',
+      body: 'The agent tells you what it did, and asks you there when it needs an answer.',
       skip: 'Skip for now',
       skipped:
         'Skipped. Without Telegram, requests that need your answer only reach you here on the website.',
     },
     open: 'Meet your agent →',
-    another: 'Start another desk',
+    another: 'Start another agent',
   },
 
   side: {
-    kicker: 'Your desk',
-    unnamed: 'Unnamed desk',
+    kicker: 'Your agent',
+    unnamed: 'Unnamed agent',
     onlyCash: 'Only cash so far',
     split: (stocks: number, cashPct: number) =>
       `${stocks} Stock Token${stocks === 1 ? '' : 's'}, ${cashPct}% kept as cash`,
@@ -195,32 +195,32 @@ export const studioCopy = {
     readStale: 'Settings changed since',
     readNone: 'Not yet',
     approach:
-      'One approach: the desk’s own. AI judges only timing; arithmetic decides everything else, and your account holds the limits.',
+      'One approach: the agent’s own. AI judges only timing; arithmetic decides everything else, and your account holds the limits.',
   },
 
   from: {
     title: 'Start from a strategy',
     body: 'Take a basket as your starting point. Only the mix is copied: never anyone’s trades, notes or limits.',
     presets: 'Baskets',
-    shared: 'What shared desks hold',
-    sharedEmpty: 'No desk is shared yet.',
+    shared: 'What shared agents hold',
+    sharedEmpty: 'No agent is shared yet.',
     use: 'Start with this →',
     /** "+2.4% over 30 days": the basket's return from the price log, never a forecast. */
     past: (days: number) => `over ${days} days`,
     pastNone: 'Too little history yet',
     pastNote: 'Past returns, from our price log. Not a forecast.',
     suits: 'Suits',
-    watch: 'Watch this desk',
-    sharedMode: (mode: string) => `A shared desk, running in ${mode.toLowerCase()}. Only its mix is copied.`,
+    watch: 'Watch this agent',
+    sharedMode: (mode: string) => `A shared agent, running in ${mode.toLowerCase()}. Only its mix is copied.`,
     cash: (pct: string) => `${pct} cash`,
     more: (n: number) => `+${n} more`,
   },
 
   yours: {
-    title: 'Your desks',
+    title: 'Your agents',
     signIn: 'Connect the wallet that owns them.',
-    empty: 'This wallet has no desk yet.',
-    create: 'Create your first desk →',
+    empty: 'This wallet has no agent yet.',
+    create: 'Create your first agent →',
     draft: 'Not created yet',
     draftBody: (address: string) =>
       `Its address is ${address}. Money sent there is safe and waits for it. Finish creating it in the studio.`,
@@ -233,14 +233,14 @@ export const studioCopy = {
   refused: {
     signIn: 'Sign in first.',
     disclosure: 'Accept the disclosure first. It is one reading, before any money moves.',
-    notOurs: 'There is no desk of ours at that address yet.',
-    wrongOwner: 'That desk belongs to a different wallet.',
-    wrongOperator: 'That desk does not have our assistant set as its operator.',
-    notYours: 'That is not your desk.',
+    notOurs: 'There is no agent of ours at that address yet.',
+    wrongOwner: 'That agent belongs to a different wallet.',
+    wrongOperator: 'That agent does not have our assistant set as its operator.',
+    notYours: 'That is not your agent.',
   },
 
   notAdvice:
-    'Not investment advice. Stock Tokens are not shares and are not available in the US, the UK, Canada or Switzerland. The desk makes no prediction and claims no edge.',
+    'Not investment advice. Stock Tokens are not shares and are not available in the US, the UK, Canada or Switzerland. The agent makes no prediction and claims no edge.',
 } as const
 
 /**
@@ -251,14 +251,14 @@ export const tutorialCopy = {
   steps: {
     what: {
       title: 'Welcome to Shijima',
-      body: 'An AI desk for your Stock Tokens. You choose what it holds; it decides only when to move, inside limits your own account enforces, and it writes down every decision.',
+      body: 'An AI agent for your Stock Tokens. You choose what it holds; it decides only when to move, inside limits your own account enforces, and it writes down every decision.',
     },
     weekend: {
       title: 'The market sleeps. The tokens do not.',
       body: (fact: string | null) =>
         `The US market is shut most of the week. Stock Tokens on Robinhood Chain trade every hour of it. ${
           fact ?? 'Their prices drift from the last official update while it is shut.'
-        } Whether to act before the reopen, or wait for it, is the only thing the desk decides.`,
+        } Whether to act before the reopen, or wait for it, is the only thing the agent decides.`,
       fact: (who: string, pct: string, direction: 'above' | 'below', saturday: string) =>
         `On the weekend of ${saturday}, ${who} moved as far as ${pct} ${direction} its Friday reference.`,
     },
@@ -280,8 +280,8 @@ export const tutorialCopy = {
       title: 'Connect to begin',
       kicker: 'Last step',
       heading: 'Connect and sign one message',
-      note: 'It costs nothing and moves nothing. Then start a desk from a basket.',
-      fineprint: 'You can see a real desk without connecting: the markets page marks what shared desks did.',
+      note: 'It costs nothing and moves nothing. Then start an agent from a basket.',
+      fineprint: 'You can see a real agent without connecting: the markets page marks what shared agents did.',
     },
   },
   close: 'Close',

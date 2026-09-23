@@ -5,7 +5,7 @@
  */
 export const compareCopy = {
   title: 'With and without reasoning',
-  lead: 'The same question, asked two ways. On the left, the model on its own. On the right, the same model through SERV Reasoning, which is what the desk uses. Same instructions, same facts, same answer format: the only difference is SERV.',
+  lead: 'The same question, asked two ways. On the left, the model on its own. On the right, the same model through SERV Reasoning, which is what the agent uses. Same instructions, same facts, same answer format: the only difference is SERV.',
   back: 'Back to How it works',
   pickLabel: 'Saved situations',
   tag: 'Saved situation, not a live quote',
@@ -38,7 +38,7 @@ export const compareCopy = {
   },
   columns: {
     raw: { title: 'The model on its own', sub: (model: string) => `${model}, SERV’s reasoning layer off` },
-    serv: { title: 'Through SERV Reasoning', sub: (model: string) => `${model}, as the desk calls it` },
+    serv: { title: 'Through SERV Reasoning', sub: (model: string) => `${model}, as the agent calls it` },
   },
   notRun: 'Not run yet. The answer appears here once this situation has been asked.',
   options: {
@@ -60,8 +60,8 @@ export const compareCopy = {
   rules: (ids: string) => `Owner’s note applied: ${ids}`,
   noRules: 'No owner’s note applied',
   warnings: 'Warnings',
-  accepted: 'The desk’s checks would accept this answer.',
-  refused: 'The desk’s checks would throw this answer away:',
+  accepted: 'The agent’s checks would accept this answer.',
+  refused: 'The agent’s checks would throw this answer away:',
   meta: (seconds: string, tokens: string, when: string) =>
     `Answered in ${seconds} · ${tokens} tokens · asked ${when}`,
   cites: (ids: string) => `cites ${ids}`,

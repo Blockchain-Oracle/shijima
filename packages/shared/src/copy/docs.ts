@@ -98,7 +98,7 @@ export const docsCopy = {
       blocks: [
         {
           rows: [
-            ['Practice', 'Decides for real and spends nothing. Every desk starts here.'],
+            ['Practice', 'Decides for real and spends nothing. Every agent starts here.'],
             ['Ask me first', 'Asks you before each action, in Telegram or on the website.'],
             ['On its own', 'Acts inside your limits, and still asks for large actions.'],
           ],
@@ -125,7 +125,7 @@ export const docsCopy = {
           note: 'The honest worst case: the agent can never send your funds anywhere. If its key were stolen, the thief could only make bad trades, costing at most 8% of your daily limit in each 24-hour window, until you remove it.',
         },
         {
-          p: 'If this website ever disappears, your money is still yours: open your desk on the Blockscout explorer, choose Write proxy, connect your wallet and call withdraw.',
+          p: 'If this website ever disappears, your money is still yours: open your agent on the Blockscout explorer, choose Write proxy, connect your wallet and call withdraw.',
         },
       ],
     },
@@ -135,10 +135,10 @@ export const docsCopy = {
       title: 'Telegram, OpenServ and your phone',
       blocks: [
         {
-          p: 'Telegram: press Connect Telegram on your desk and the bot opens already linked. It keeps one pinned status message, sends a message when it acts or needs you, and answers anything you ask.',
+          p: 'Telegram: press Connect Telegram on your agent’s page and the bot opens already linked. It keeps one pinned status message, sends a message when it acts or needs you, and answers anything you ask.',
         },
         {
-          p: 'OpenServ: add the Shijima agent to your own OpenServ workspace. On your desk, open Settings, then Connections, and make a link code. Send it to Shijima in the workspace. From then on you can ask it anything there, in chat or as a task. Anything that moves money comes back as a link to confirm on your desk.',
+          p: 'OpenServ: add the Shijima agent to your own OpenServ workspace. On your agent’s page, open Settings, then Connections, and make a link code. Send it to Shijima in the workspace. From then on you can ask it anything there, in chat or as a task. Anything that moves money comes back as a link to confirm on your agent’s page.',
         },
         { code: 'link ABC12345\nHow is my portfolio doing?\nWhy did you wait on Nvidia?\nCheck now' },
         {
@@ -153,7 +153,7 @@ export const docsCopy = {
       blocks: [
         {
           rows: [
-            ['Desk contract', 'Solidity, one EIP-1167 clone per owner, Foundry'],
+            ['Agent contract', 'Solidity, one EIP-1167 clone per owner, Foundry'],
             ['Worker', 'Node: the watch loop, the engine, the chat, the Telegram bot and the OpenServ agent'],
             ['Engine', 'TypeScript: reconcile, value, needs, pre-gate, SERV timing, gate, commit, record'],
             ['Reasoning', 'SERV Reasoning, one strict JSON question per decision and per chat message'],
@@ -169,14 +169,14 @@ export const docsCopy = {
     {
       id: 'contract',
       group: 'Build on it',
-      title: 'The desk contract',
+      title: 'The agent contract',
       blocks: [
         {
           rows: [
             ['Chain', 'Robinhood Chain mainnet, 4663'],
             ['Factory', '0xB0Df8d1ca6eDA2700a2D145bab2675109A2e89f1'],
             ['Implementation', '0x90ff69C78014d06e3f09DC0985E83Cd8338aFe0F (verified on Blockscout)'],
-            ['Live desk', '0xC61DDE99B72add803E47B1bcA17B4bf8819618B1'],
+            ['Live agent', '0xC61DDE99B72add803E47B1bcA17B4bf8819618B1'],
           ],
         },
         {
@@ -217,7 +217,7 @@ export const docsCopy = {
           ],
         },
         {
-          p: 'The agent overrides doTask and respondToChat so its own engine answers, never the platform’s model. Our workflow’s task runs the watch pass; a task or chat from any other workspace is answered for the desk that workspace was linked to.',
+          p: 'The agent overrides doTask and respondToChat so its own engine answers, never the platform’s model. Our workflow’s task runs the watch pass; a task or chat from any other workspace is answered for the agent that workspace was linked to.',
         },
       ],
     },
