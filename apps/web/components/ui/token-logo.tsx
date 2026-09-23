@@ -1,9 +1,11 @@
-import { CASH_LOOK, lookOf } from '@desk/shared'
+import { CASH_LOOK } from '@desk/shared'
+import { AssetDisc } from '@/features/markets/marks'
 import { cn } from '@/lib/utils'
 
 /**
- * A Stock Token's face: its brand mark on a round tile, or a monogram tile for the funds and anything without a
- * mark. `symbol="CASH"` draws the cash tile. Decorative by default, because the name is always written beside it.
+ * A Stock Token's face: Agari's asset disc (`AssetDisc`, the brand's colour with its white glyph, a monogram for a
+ * fund), at any size, so the strategies, the studio, the desk and the record wear the same marks as the markets
+ * pages. `symbol="CASH"` draws cash's quiet tile. Decorative by default, because the name is written beside it.
  */
 export function TokenLogo({
   symbol,
@@ -17,39 +19,34 @@ export function TokenLogo({
   /** Set when the logo stands alone, with no name next to it. */
   title?: string
 }) {
-  const look = symbol.toUpperCase() === 'CASH' ? CASH_LOOK : lookOf(symbol)
   const a11y = title ? { role: 'img' as const, 'aria-label': title } : { 'aria-hidden': true as const }
+  if (symbol.toUpperCase() === 'CASH') {
+    return (
+      <span
+        {...a11y}
+        className={cn(
+          'inline-flex shrink-0 items-center justify-center rounded-full font-semibold',
+          className,
+        )}
+        style={{
+          width: size,
+          height: size,
+          background: CASH_LOOK.tile,
+          color: CASH_LOOK.ink,
+          fontSize: size * 0.46,
+        }}
+      >
+        {CASH_LOOK.monogram}
+      </span>
+    )
+  }
   return (
     <span
       {...a11y}
-      className={cn(
-        'relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 ring-black/10 dark:ring-white/10',
-        className,
-      )}
-      style={{ width: size, height: size, background: look.tile }}
+      className={cn('inline-flex shrink-0 rounded-full', className)}
+      style={{ width: size, height: size }}
     >
-      {look.logo ? (
-        // biome-ignore lint/performance/noImgElement: a tiny static SVG from /public; next/image adds nothing here.
-        <img src={`/tokens/${look.logo}`} alt="" width={size * 0.58} height={size * 0.58} draggable={false} />
-      ) : (
-        <span
-          className="font-[family-name:var(--font-heading)] leading-none font-semibold tracking-tight"
-          style={{
-            color: look.ink,
-            fontSize:
-              size *
-              (look.monogram.length > 3
-                ? 0.2
-                : look.monogram.length > 2
-                  ? 0.25
-                  : look.monogram.length > 1
-                    ? 0.34
-                    : 0.46),
-          }}
-        >
-          {look.monogram}
-        </span>
-      )}
+      <AssetDisc symbol={symbol.toUpperCase()} className="token-disc" />
     </span>
   )
 }

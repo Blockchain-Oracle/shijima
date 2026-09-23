@@ -97,14 +97,23 @@ function Dot({ look }: { look: { icon: LucideIcon; tone: string } }) {
 
 function Row({ item, index }: { item: TimelineItem; index: number }) {
   const reduced = useReducedMotion()
+  // The first rows appear on load, so a page captured without scrolling is never blank; later rows fade in
+  // as they scroll into view.
+  const ease = [0.16, 1, 0.3, 1] as const
   const motionProps = reduced
     ? {}
-    : {
-        initial: { opacity: 0, y: 8 },
-        whileInView: { opacity: 1, y: 0 },
-        viewport: { once: true, margin: '-20px' },
-        transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] as const, delay: Math.min(index, 8) * 0.04 },
-      }
+    : index < 8
+      ? {
+          initial: { opacity: 0, y: 8 },
+          animate: { opacity: 1, y: 0 },
+          transition: { duration: 0.35, ease, delay: index * 0.04 },
+        }
+      : {
+          initial: { opacity: 0, y: 8 },
+          whileInView: { opacity: 1, y: 0 },
+          viewport: { once: true, margin: '-20px' },
+          transition: { duration: 0.35, ease },
+        }
 
   if (item.kind === 'quiet') {
     return (

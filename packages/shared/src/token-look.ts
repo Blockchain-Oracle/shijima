@@ -1,9 +1,7 @@
 /**
- * How each Stock Token looks: its colour in charts, and the tile its logo sits on.
- *
- * Presentation only, kept apart from the chain's token list. One colour per symbol everywhere, so Nvidia is the
- * same green in the donut, the bar, the chart legend and the share card. A token with no `logo` file is drawn
- * as a monogram tile, which is how the three funds appear: their issuers publish no mark we may use.
+ * Each Stock Token's colour in charts: one per symbol, so Nvidia is the same green in the donut, the bar and the
+ * legend. Presentation only, kept apart from the chain's token list. The logos themselves are Agari's asset discs
+ * (`apps/web/features/markets/marks.tsx`); the tile and monogram here serve cash and anything unknown.
  */
 export interface TokenLook {
   /** Chart colour: donut slice, bar segment, legend dot. */
@@ -12,8 +10,6 @@ export interface TokenLook {
   tile: string
   /** Ink for the monogram. */
   ink: string
-  /** File under the web app's `public/tokens/`, when there is one. */
-  logo?: string
   /** Short text for the monogram tile. */
   monogram: string
 }
@@ -21,13 +17,13 @@ export interface TokenLook {
 export const TOKEN_LOOK: Record<string, TokenLook> = {
   SPY: { color: '#5B8DEF', tile: '#1B2A4A', ink: '#DCE6FB', monogram: 'S&P' },
   QQQ: { color: '#9B87F5', tile: '#2A2150', ink: '#E7E1FD', monogram: 'NDX' },
-  NVDA: { color: '#76B900', tile: '#0B0B0B', ink: '#76B900', logo: 'NVDA.svg', monogram: 'NV' },
-  AAPL: { color: '#B8B8B8', tile: '#FFFFFF', ink: '#111111', logo: 'AAPL.svg', monogram: 'A' },
-  MSFT: { color: '#00A4EF', tile: '#FFFFFF', ink: '#111111', logo: 'MSFT.svg', monogram: 'MS' },
-  GOOGL: { color: '#FBBC05', tile: '#FFFFFF', ink: '#111111', logo: 'GOOGL.svg', monogram: 'G' },
+  NVDA: { color: '#76B900', tile: '#0B0B0B', ink: '#76B900', monogram: 'NV' },
+  AAPL: { color: '#B8B8B8', tile: '#FFFFFF', ink: '#111111', monogram: 'A' },
+  MSFT: { color: '#00A4EF', tile: '#FFFFFF', ink: '#111111', monogram: 'MS' },
+  GOOGL: { color: '#FBBC05', tile: '#FFFFFF', ink: '#111111', monogram: 'G' },
   AMZN: { color: '#FF9900', tile: '#232F3E', ink: '#FF9900', monogram: 'a' },
-  META: { color: '#0866FF', tile: '#FFFFFF', ink: '#0866FF', logo: 'META.svg', monogram: 'M' },
-  TSLA: { color: '#E82127', tile: '#E82127', ink: '#FFFFFF', logo: 'TSLA.svg', monogram: 'T' },
+  META: { color: '#0866FF', tile: '#FFFFFF', ink: '#0866FF', monogram: 'M' },
+  TSLA: { color: '#E82127', tile: '#E82127', ink: '#FFFFFF', monogram: 'T' },
   SGOV: { color: '#2DD4BF', tile: '#0F3B36', ink: '#CCFBF1', monogram: 'T-BILL' },
 }
 
