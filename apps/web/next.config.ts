@@ -4,9 +4,10 @@ const dev = process.env.NODE_ENV !== 'production'
 
 /**
  * A content security policy for a page that shows a model's words and other people's posts. Scripts run only
- * from this site (Next's own inline bootstrap needs `unsafe-inline`; the dev server needs `eval`), nothing may
- * frame the site, forms post only here, and the browser may reach only this site, the public RPC and the
- * services the page really calls. Model text is rendered as text; this is the lock behind that.
+ * from this site (Next's own inline bootstrap needs `unsafe-inline`; the dev server needs `eval`), no other site
+ * may frame it (the landing frames our own showcase agent, features/home/landing/MockScreen), forms post only
+ * here, and the browser may reach only this site, the public RPC and the services the page really calls. Model
+ * text is rendered as text; this is the lock behind that.
  */
 /** The fork's origin when NEXT_PUBLIC_RPC_URL is a local http address, else nothing. */
 const localRpc = (() => {
@@ -27,7 +28,7 @@ const csp = [
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
-  "frame-ancestors 'none'",
+  "frame-ancestors 'self'",
 ].join('; ')
 
 const config: NextConfig = {
@@ -53,7 +54,7 @@ const config: NextConfig = {
           { key: 'Content-Security-Policy', value: csp },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
         ],
       },
     ]

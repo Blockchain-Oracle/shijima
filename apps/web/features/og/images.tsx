@@ -12,8 +12,8 @@ export async function siteImage(): Promise<ImageResponse> {
   return new ImageResponse(
     <OgFrame eyebrow={s.eyebrow}>
       <div style={{ display: 'flex', flex: 1, flexDirection: 'column', justifyContent: 'center' }}>
-        <div style={{ ...HEADLINE, color: OG.ink }}>{s.lead}</div>
-        <div style={{ ...HEADLINE, color: OG.vermilion, marginTop: 8 }}>{s.em}</div>
+        <div style={{ ...HEADLINE, fontSize: 76, color: OG.ink }}>{s.lead}</div>
+        <div style={{ ...HEADLINE, fontSize: 76, color: OG.vermilion, marginTop: 8 }}>{s.em}</div>
         <div style={{ display: 'flex', marginTop: 32, fontSize: 30, color: OG.soft, maxWidth: 820 }}>
           {s.line}
         </div>

@@ -3,7 +3,7 @@ import { onchainCopy as C, OPENSERV, short } from '@desk/shared'
 import { ArrowUpRight, Boxes, Fingerprint, type LucideIcon, UserRound, Wallet } from 'lucide-react'
 import './onchain.css'
 
-interface Fact {
+export interface Fact {
   key: string
   icon: LucideIcon
   label: string
@@ -17,7 +17,7 @@ interface Fact {
  * What is live on chain, each piece with what it is for and a link that opens it (DECISIONS F1). `account` is the
  * example agent account: the live showcase on the landing, the owner's own newest agent on the Overview.
  */
-function factsOf(factory: string, account: { address: string; mine: boolean } | undefined): Fact[] {
+export function factsOf(factory: string, account: { address: string; mine: boolean } | undefined): Fact[] {
   return [
     {
       key: 'factory',

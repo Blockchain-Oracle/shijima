@@ -9,7 +9,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: webCopy.brand.name,
     short_name: webCopy.brand.name,
-    description: webCopy.brand.description,
+    description: `${webCopy.brand.motto}. ${webCopy.brand.description}`,
     start_url: '/',
     display: 'standalone',
     background_color: '#050505',
