@@ -39,7 +39,7 @@ export function StrategyCatalog({
         </div>
       </header>
 
-      <div className="cat-chips" role="group" aria-label={c.title}>
+      <fieldset className="cat-chips" aria-label={c.title}>
         {(['all', ...PRESET_TAGS] as const).map((t) => (
           <button
             key={t}
@@ -51,7 +51,7 @@ export function StrategyCatalog({
             {t === 'all' ? c.all : (c.tags[t] ?? t)}
           </button>
         ))}
-      </div>
+      </fieldset>
 
       <div className="cat-grid">
         {shown.map((p, i) => (
