@@ -64,6 +64,13 @@
       "when": 1790139965394,
       "tag": "0008_openserv_links",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790156470991,
+      "tag": "0011_openserv_sessions",
+      "breakpoints": true
     }
   ]
 }

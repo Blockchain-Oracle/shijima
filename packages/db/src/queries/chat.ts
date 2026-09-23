@@ -297,6 +297,13 @@ export async function recentGrades(db: DbOrTx, deskId: string, limit = 8) {
 }
 
 /** A second "check now" inside this window is refused, so a desk cannot be checked into a hurry. */
+/** Which OpenServ session asked for something: the workspace's lasting key, its task, and the run. */
+export interface OpenservOrigin {
+  workspace: string
+  taskId: string | null
+  executionId: string | null
+}
+
 export const CHECK_COOLDOWN_MS = 10 * 60 * 1000
 
 export type CheckRequestResult =
@@ -309,7 +316,14 @@ export type CheckRequestResult =
  */
 export async function requestCheck(
   db: Db,
-  input: { deskId: string; requestedBy: string; via: 'web' | 'telegram' | 'chat'; proposalId?: string },
+  input: {
+    deskId: string
+    requestedBy: string
+    via: 'web' | 'telegram' | 'chat' | 'openserv'
+    proposalId?: string
+    /** The OpenServ workspace, task and execution that asked, copied onto the decisions this check writes. */
+    openserv?: OpenservOrigin
+  },
   now = new Date(),
 ): Promise<CheckRequestResult> {
   return db.transaction(async (tx) => {
@@ -345,6 +359,13 @@ export async function requestCheck(
         requestedBy: input.requestedBy.toLowerCase(),
         via: input.via,
         ...(input.proposalId ? { proposalId: input.proposalId } : {}),
+        ...(input.openserv
+          ? {
+              openservWorkspace: input.openserv.workspace,
+              openservTaskId: input.openserv.taskId,
+              openservExecutionId: input.openserv.executionId,
+            }
+          : {}),
         createdAt: now,
       })
       .returning({ id: checkRequests.id })
@@ -359,6 +380,15 @@ export async function pendingCheckRequests(db: DbOrTx) {
     .from(checkRequests)
     .where(eq(checkRequests.status, 'pending'))
     .orderBy(asc(checkRequests.createdAt))
+}
+
+/** Where one check request stands, for a caller waiting on it. */
+export async function checkRequestStatus(db: DbOrTx, id: string) {
+  const [row] = await db
+    .select({ status: checkRequests.status, refusedReason: checkRequests.refusedReason })
+    .from(checkRequests)
+    .where(eq(checkRequests.id, id))
+  return row
 }
 
 export async function finishCheckRequest(

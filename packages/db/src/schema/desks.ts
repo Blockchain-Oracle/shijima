@@ -212,6 +212,12 @@ export const openservLinks = pgTable(
     code: text('code').notNull(),
     codeExpiresAt: timestamptz('code_expires_at').notNull(),
     workspaceId: text('workspace_id'),
+    /** What the workspace calls itself (its goal line), as it was when it linked. Display only. */
+    workspaceName: text('workspace_name'),
+    /** The owner's switch "Let my workspace trigger checks". Off by default; only then may it call check_now. */
+    allowChecks: boolean('allow_checks').notNull().default(false),
+    /** An OpenServ webhook-trigger URL, AES-256-GCM encrypted (iv.tag.ciphertext, base64url). Never plain. */
+    webhookUrlEnc: text('webhook_url_enc'),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
     linkedAt: timestamptz('linked_at'),
     revokedAt: timestamptz('revoked_at'),

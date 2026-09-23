@@ -105,6 +105,10 @@ export const checkRequests = pgTable(
     status: checkRequestStatus('status').notNull().default('pending'),
     refusedReason: text('refused_reason'),
     wakeId: uuid('wake_id').references(() => wakes.id),
+    /** Set when a linked OpenServ workspace asked: copied onto every decision the check writes. */
+    openservWorkspace: text('openserv_workspace'),
+    openservTaskId: text('openserv_task_id'),
+    openservExecutionId: text('openserv_execution_id'),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
     doneAt: timestamptz('done_at'),
   },
