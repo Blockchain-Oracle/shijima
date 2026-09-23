@@ -55,6 +55,7 @@ import { type Address, formatUnits, type Hex, type PublicClient } from 'viem'
 import { runApprovedRequests } from './approved'
 import { commit, snapshotOf } from './commit'
 import { considerCandidate } from './consider'
+import { type CopySource, runCopy } from './copy'
 import { pauseOnChain } from './loss-stop'
 import { type EventSource, referenceFor } from './market'
 import { findNeeds, MAX_CANDIDATES_PER_WAKE, type Need } from './needs'
@@ -113,6 +114,11 @@ export interface WakeInput {
    * `cron` at the top of the hour), a look is watching unless the desk has gone a whole day with no record.
    */
   watch?: boolean
+  /**
+   * Copy trading (trigger `copy`): the leader's move this check copies. The follower is reconciled and valued as in
+   * any check, its approved requests are carried out, and then it makes this one move instead of looking for its own.
+   */
+  copy?: CopySource
 }
 
 export interface WakeReport {
@@ -479,6 +485,31 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
           payload: { approvalId: lapsed.id, answer: 'expired' },
         })
       }
+    }
+
+    // A copy check makes the leader's one move, and nothing of its own: no vault moves, no needs, no status message.
+    if (input.copy) {
+      records.push(
+        await runCopy(
+          deps,
+          { desk, wakeId: wake?.id, common, state, input },
+          {
+            source: input.copy,
+            mandate,
+            mandateLine: line,
+            deskState,
+            stateText,
+            valuation,
+            spent,
+            reference,
+            events,
+            now,
+            say,
+          },
+        ),
+      )
+      if (wake) await finishWake(db, wake.id, { status: 'completed', sourceHealth: { rpc: true } })
+      return { status: 'completed', records }
     }
 
     // Cash out of the savings vault, when the buys arithmetic wants need more than the desk holds outside it.

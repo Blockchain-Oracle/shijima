@@ -1,6 +1,7 @@
 export * from './banned-words'
 export * from './calendar'
 export * from './copy/compare'
+export * from './copy/copying'
 export * from './copy/docs'
 export * from './copy/engine'
 export * from './copy/home'
