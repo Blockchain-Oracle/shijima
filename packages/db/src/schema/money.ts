@@ -12,9 +12,10 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core'
-import { isAddress, isHash32, nonNegative, timestamptz, uint } from './columns'
+import { int, isAddress, isHash32, nonNegative, timestamptz, uint } from './columns'
 import { desks } from './desks'
-import { cashFlowKind, cashFlowStatus, valueSnapshotKind } from './enums'
+import { cashFlowKind, cashFlowStatus, moneyMoveKind, moneyMoveStatus, valueSnapshotKind } from './enums'
+import { owners } from './owners'
 
 /** One holding inside a value snapshot. Amounts are decimal strings of raw units, as in the record. */
 export interface SnapshotHolding {
@@ -51,6 +52,14 @@ export const deskValueSnapshots = pgTable(
     holdings: jsonb('holdings').$type<SnapshotHolding[]>().notNull(),
     priceSource: text('price_source').notNull(),
     blockNumber: bigint('block_number', { mode: 'number' }),
+    /**
+     * Money in minus money out since the desk started, in USDG, up to and including this snapshot. Signed. Charts
+     * subtract it, so an owner taking $2 out reads as no change rather than a loss. Added 23 Sep (0014) and
+     * backfilled from every earlier "changed outside the agent" event. The database has NO default: an insert
+     * that leaves it out has it filled by the trigger `desk_value_snapshots_carry_flows` with the desk's previous
+     * total, because nothing moved. The default below only makes it optional on insert.
+     */
+    flowsUsdg: int('flows_usdg').notNull().default(sql`null`),
   },
   (t) => [
     uniqueIndex('desk_value_snapshots_desk_kind_taken_key').on(t.deskId, t.kind, t.takenAt),
@@ -59,6 +68,62 @@ export const deskValueSnapshots = pgTable(
     nonNegative('desk_value_snapshots_cash_nonneg', t.cashUsdg),
     nonNegative('desk_value_snapshots_vault_nonneg', t.vaultUsdg),
     nonNegative('desk_value_snapshots_vault_shares_nonneg', t.vaultShares),
+  ],
+)
+
+/** One transaction step of a planned move, as the browser was told to sign it. */
+export interface MoneyMoveStep {
+  chainId: number
+  to: string
+  kind: 'approve' | 'swap' | 'transfer' | 'relay' | 'desk'
+  label: string
+}
+
+/**
+ * One move of money the owner started in the app: the owner's intent, in one row. The server plans it and writes
+ * it as `signing`; the browser signs each step and reports each hash; the server reads the chain (or Relay) and
+ * sets the ending. Reconcile later ties the balance change it finds in an agent to the move that caused it, which
+ * is how the record says "You added $5 from Base" instead of "changed outside the agent".
+ */
+export const moneyMoves = pgTable(
+  'money_moves',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    ownerId: uuid('owner_id')
+      .notNull()
+      .references(() => owners.id),
+    /** The agent money goes into or out of. Null for a move that only touches the owner's wallet. */
+    deskId: uuid('desk_id').references(() => desks.id),
+    kind: moneyMoveKind('kind').notNull(),
+    status: moneyMoveStatus('status').notNull().default('signing'),
+    fromChainId: integer('from_chain_id').notNull(),
+    toChainId: integer('to_chain_id').notNull(),
+    /** Lowercase token addresses; the zero address is the chain's native coin. */
+    tokenIn: text('token_in').notNull(),
+    amountIn: uint('amount_in').notNull(),
+    tokenOut: text('token_out').notNull(),
+    amountOutQuoted: uint('amount_out_quoted'),
+    amountOutActual: uint('amount_out_actual'),
+    /** What the move is worth in USDG (6 decimals) when planned: what lands, or what leaves. */
+    usdgValue: uint('usdg_value'),
+    /** Network fees and Relay's cut, in USDG (6 decimals). */
+    feeUsdg: uint('fee_usdg'),
+    recipient: text('recipient').notNull(),
+    steps: jsonb('steps').$type<MoneyMoveStep[]>().notNull().default([]),
+    /** Every hash the browser reported, in order. */
+    txHashes: text('tx_hashes').array().notNull().default(sql`'{}'::text[]`),
+    relayRequestId: text('relay_request_id'),
+    error: text('error'),
+    createdAt: timestamptz('created_at').notNull().defaultNow(),
+    updatedAt: timestamptz('updated_at').notNull().defaultNow(),
+  },
+  (t) => [
+    index('money_moves_owner_created_idx').on(t.ownerId, t.createdAt),
+    index('money_moves_desk_created_idx').on(t.deskId, t.createdAt),
+    isAddress('money_moves_token_in_format', t.tokenIn),
+    isAddress('money_moves_token_out_format', t.tokenOut),
+    isAddress('money_moves_recipient_format', t.recipient),
+    nonNegative('money_moves_amount_in_nonneg', t.amountIn),
   ],
 )
 
@@ -86,16 +151,28 @@ export const cashFlows = pgTable(
     originChainId: integer('origin_chain_id'),
     detectedAt: timestamptz('detected_at').notNull().defaultNow(),
     confirmedAt: timestamptz('confirmed_at'),
+    /** The move the owner started that caused this, when one matches. */
+    moneyMoveId: uuid('money_move_id').references(() => moneyMoves.id),
+    /**
+     * The snapshot whose check found it. Reconcile sees a balance change, never the transaction behind it, so this
+     * is what makes a row it writes traceable.
+     */
+    snapshotId: bigint('snapshot_id', { mode: 'number' }).references(() => deskValueSnapshots.id),
   },
   (t) => [
     uniqueIndex('cash_flows_tx_log_key').on(t.txHash, t.logIndex),
     uniqueIndex('cash_flows_relay_request_key').on(t.relayRequestId),
+    uniqueIndex('cash_flows_snapshot_token_key').on(t.snapshotId, t.token),
+    index('cash_flows_money_move_idx').on(t.moneyMoveId),
     index('cash_flows_desk_detected_idx').on(t.deskId, t.detectedAt),
     isAddress('cash_flows_token_format', t.token),
     isHash32('cash_flows_tx_hash_format', t.txHash),
     nonNegative('cash_flows_amount_nonneg', t.amount),
     nonNegative('cash_flows_usdg_value_nonneg', t.usdgValue),
-    check('cash_flows_is_traceable', sql`${t.txHash} is not null or ${t.relayRequestId} is not null`),
+    check(
+      'cash_flows_is_traceable',
+      sql`${t.txHash} is not null or ${t.relayRequestId} is not null or ${t.snapshotId} is not null`,
+    ),
   ],
 )
 

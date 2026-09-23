@@ -88,6 +88,37 @@ export const gradeVerdict = pgEnum('grade_verdict', ['better', 'worse', 'no_real
 export const valueSnapshotKind = pgEnum('value_snapshot_kind', ['hourly', 'close', 'open', 'manual'])
 export const cashFlowKind = pgEnum('cash_flow_kind', ['deposit', 'withdrawal', 'bridge_in_flight'])
 export const cashFlowStatus = pgEnum('cash_flow_status', ['pending', 'confirmed', 'failed'])
+/**
+ * A move of money the owner started in the app (round 4). fund: into an agent, from any token. withdraw: out of an
+ * agent to the owner. sell_some: one stock sold to cash inside an agent. send: from the owner's wallet to anyone.
+ * bridge_in / bridge_out: across chains through Relay. get_gas: a dollar of USDG swapped to ETH for the owner.
+ */
+export const moneyMoveKind = pgEnum('money_move_kind', [
+  'fund',
+  'withdraw',
+  'sell_some',
+  'send',
+  'bridge_in',
+  'bridge_out',
+  'get_gas',
+])
+/**
+ * The five honest endings, plus the moment before them.
+ * signing            planned, waiting on the owner's wallet
+ * approved_only      an approval went through, the move itself did not: nothing moved
+ * on_its_way         the origin transaction confirmed, Relay has not delivered yet
+ * done               confirmed on the chain, or Relay says it arrived
+ * nothing_sent       rejected or refused before anything was sent
+ * may_have_been_sent a transaction exists, but its outcome could not be read in time
+ */
+export const moneyMoveStatus = pgEnum('money_move_status', [
+  'signing',
+  'approved_only',
+  'on_its_way',
+  'done',
+  'nothing_sent',
+  'may_have_been_sent',
+])
 
 // Market data.
 export const referenceKind = pgEnum('reference_kind', ['close', 'open'])

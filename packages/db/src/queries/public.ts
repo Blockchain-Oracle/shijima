@@ -207,7 +207,11 @@ export type DecisionInFull = NonNullable<Awaited<ReturnType<typeof decisionInFul
 /** The desk's value as it stood at or just before a moment, for "since the market reopened" [8.9]. */
 export async function valueSnapshotAtOrBefore(db: DbOrTx, deskId: string, at: Date) {
   const [row] = await db
-    .select({ takenAt: deskValueSnapshots.takenAt, totalUsdg: deskValueSnapshots.totalUsdg })
+    .select({
+      takenAt: deskValueSnapshots.takenAt,
+      totalUsdg: deskValueSnapshots.totalUsdg,
+      flowsUsdg: deskValueSnapshots.flowsUsdg,
+    })
     .from(deskValueSnapshots)
     .where(and(eq(deskValueSnapshots.deskId, deskId), lte(deskValueSnapshots.takenAt, at)))
     .orderBy(desc(deskValueSnapshots.takenAt))
@@ -215,7 +219,6 @@ export async function valueSnapshotAtOrBefore(db: DbOrTx, deskId: string, at: Da
   return row
 }
 
-/** The desk's value over time, oldest first, for the chart. */
 /**
  * The desk this one replaced, when an owner moved a desk to a newer contract (`scripts/move-desk.sql` records
  * the move on the old desk's `closed` event). Its value history and record are the new desk's past, read-only.
@@ -232,12 +235,17 @@ export async function predecessorOf(db: DbOrTx, address: string) {
   return row
 }
 
+/**
+ * The desk's value over time, oldest first, for the chart. `flowsUsdg` is money in minus money out so far: the
+ * change between two points net of it is what the desk itself did, so a withdrawal never reads as a loss.
+ */
 export async function valueHistory(db: DbOrTx, deskId: string, limit = 400) {
   const rows = await db
     .select({
       takenAt: deskValueSnapshots.takenAt,
       totalUsdg: deskValueSnapshots.totalUsdg,
       cashUsdg: deskValueSnapshots.cashUsdg,
+      flowsUsdg: deskValueSnapshots.flowsUsdg,
     })
     .from(deskValueSnapshots)
     .where(eq(deskValueSnapshots.deskId, deskId))

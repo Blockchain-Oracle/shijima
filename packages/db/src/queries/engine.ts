@@ -20,6 +20,7 @@ import {
   wakes,
 } from '../schema'
 import type { SnapshotHolding } from '../schema/money'
+import { type FoundFlow, insertFoundFlows, latestFlowsUsdg, matchMoneyMove, settleMoneyMove } from './money'
 import { finishedDesk } from './telegram'
 
 export type DeferralRow = typeof deferrals.$inferSelect
@@ -105,14 +106,19 @@ export async function saveValueSnapshot(
     holdings: SnapshotHolding[]
     priceSource: string
     blockNumber?: number
+    /** Money in minus out so far. Absent: carried forward from the desk's previous snapshot, as nothing moved. */
+    flowsUsdg?: bigint
   },
-): Promise<void> {
-  await db
+): Promise<number | undefined> {
+  const [row] = await db
     .insert(deskValueSnapshots)
+    // Without `flowsUsdg` the column is left out, and the database's trigger carries the previous total forward.
     .values({ ...input, blockNumber: input.blockNumber ?? null })
     .onConflictDoNothing({
       target: [deskValueSnapshots.deskId, deskValueSnapshots.kind, deskValueSnapshots.takenAt],
     })
+    .returning({ id: deskValueSnapshots.id })
+  return row?.id
 }
 
 /** The first value ever recorded for a desk becomes its loss-limit baseline. Deposits and withdrawals move it. */
@@ -698,18 +704,36 @@ export async function recordOutsideChanges(
     baselineUsdg: bigint | null
     event: Record<string, unknown>
     snapshot: Parameters<typeof saveValueSnapshot>[1]
+    /** Each change, signed, with its dollars when priced. Becomes one money row each, tied to the snapshot. */
+    flows: FoundFlow[]
   },
-): Promise<void> {
-  await db.transaction(async (tx) => {
+): Promise<{ moneyMoveId: string | null }> {
+  return db.transaction(async (tx) => {
     await setDrawdownBaseline(tx, input.deskId, input.baselineUsdg)
+    // Only priced changes count, as for the baseline: a change with no dollar value is not a real number.
+    const net = input.flows.reduce((sum, f) => sum + (f.usdgValue ?? 0n), 0n)
+    const at = input.snapshot.takenAt
+    const move = await matchMoneyMove(tx, { deskId: input.deskId, netUsdg: net, at })
     await tx.insert(deskEvents).values({
       deskId: input.deskId,
       kind: 'holdings_changed_outside',
       actor: 'system',
       via: 'chain',
-      detail: input.event,
+      detail: move ? { ...input.event, moneyMoveId: move.id, moveKind: move.kind } : input.event,
     })
-    await saveValueSnapshot(tx, input.snapshot)
+    const flowsUsdg = (await latestFlowsUsdg(tx, input.deskId)) + net
+    const snapshotId = await saveValueSnapshot(tx, { ...input.snapshot, flowsUsdg })
+    if (snapshotId !== undefined)
+      await insertFoundFlows(tx, {
+        deskId: input.deskId,
+        snapshotId,
+        moneyMoveId: move?.id ?? null,
+        at,
+        flows: input.flows,
+      })
+    // A bridge still on its way has arrived: the agent holds it now.
+    if (move && move.status !== 'done') await settleMoneyMove(tx, move.id, { status: 'done' })
+    return { moneyMoveId: move?.id ?? null }
   })
 }
 
