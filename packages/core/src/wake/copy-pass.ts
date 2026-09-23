@@ -124,8 +124,10 @@ export async function copyLeaderMoves(
     say(`copy ${label} to ${p.followerDeskId}: ${side} ${share.sharePpm} ppm`)
     const report = await wakeDesk(deps, {
       deskId: p.followerDeskId,
-      // Keyed on the leader's move, never on the hour, so it can never take an hourly check's place.
-      scheduledFor: p.decision.decidedAt,
+      // The copy's own moment, never the hour, so it can never take an hourly check's place. Not the leader's
+      // decision time: one leader check can make several moves at the same instant, and each is its own copy.
+      // Copying the same move twice is stopped by the record's unique (desk, copied_from) key, not by this.
+      scheduledFor: new Date(),
       trigger: 'copy',
       copy: source,
     })
