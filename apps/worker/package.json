@@ -19,7 +19,8 @@
     "openserv:identity": "tsx --env-file-if-exists=../../.env src/openserv/identity.ts",
     "telegram-link": "tsx --env-file-if-exists=../../.env src/cli/link.ts",
     "review": "tsx --env-file-if-exists=../../.env src/cli/review.ts",
-    "ask": "tsx --env-file-if-exists=../../.env src/cli/ask.ts"
+    "ask": "tsx --env-file-if-exists=../../.env src/cli/ask.ts",
+    "prove:openserv": "tsx --env-file-if-exists=../../.env src/cli/prove-openserv.ts"
   },
   "dependencies": {
     "@coinbase/agentkit": "0.10.4",
