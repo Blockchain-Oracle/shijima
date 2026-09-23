@@ -55,7 +55,7 @@ const nameOf = (address: string) =>
  * money in the vault. One attempt: a page never waits on a slow API, it simply shows no rate.
  */
 let vaultRate: { at: number; bps: number | null } | undefined
-async function currentVaultRateBps(): Promise<number | null> {
+export async function currentVaultRateBps(): Promise<number | null> {
   if (vaultRate && Date.now() - vaultRate.at < 10 * 60 * 1000) return vaultRate.bps
   const rate = await fetchVaultRate(1)
   vaultRate = { at: Date.now(), bps: rate?.netApyBps ?? null }

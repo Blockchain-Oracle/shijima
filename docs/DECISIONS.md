@@ -530,3 +530,21 @@ Tight pick from the Glider pass.
   The markets page keeps lightweight-charts.
 - **A moved desk shows its past.** The chart prepends the earlier contract's value history and the record folds its
   decisions, linking to that contract's page on the explorer. Decision pages stay per contract.
+
+## 2026-09-23 · After the walkthrough: the agent, the home page, the decision page
+
+Made by Claude after the whole-product audit (`WHAT-IS-MISSING.md`) and the code walkthrough (`CODEBASE-WALKTHROUGH.md`).
+Abu can overrule any of these.
+
+- **Agari's own port of Shijima is the reference for desk screens.** Abu said the Agari agent "did better". Its
+  desk kit, decision page and landing (`agari-wt/w1`, S21 and S22) are ported, not redesigned.
+- **The user meets an AI agent, not a "desk".** The desk page leads with Shijima's card (what it is doing now, last
+  and next look, decisions, the latest one, Telegram), the chat speaks as it, and the phone tabs are Agent and
+  Portfolio. "Desk" stays the account's name and the code's.
+- **`/` has a home page again for visitors,** reversing FIDELITY L-11. It shows a live agent at work (the shared
+  showcase desk), the five steps with the money first, "$100 on duty" in dollars, the week in hours, the
+  strategies, the five promises with the worst case, and proof you can open. Owners still land on their desk.
+- **The decision page is pictures first:** a verdict card with a "how sure" ring, the drift against its band, the
+  price line with the in-line zone, the options as cards, the limits as a checklist, the cost as a flow, proof as
+  three steps. Every sentence it had before is still there.
+- **The site installs as an app** (manifest and icons). No native build; the Telegram Mini App waits for a domain.

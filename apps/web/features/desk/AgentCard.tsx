@@ -12,7 +12,7 @@ import './agent.css'
 const A = deskCopy.agent
 
 /** One sentence for what the agent is doing this minute, from the desk's state, its requests and its waits. */
-function doingNow(view: DeskView): string {
+export function doingNow(view: DeskView): string {
   const d = view.desk
   if (d.lifecycle === 'closed') return A.status.closed
   if (d.assistantRemoved) return A.status.removed
