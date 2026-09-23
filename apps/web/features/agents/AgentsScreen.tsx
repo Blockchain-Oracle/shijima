@@ -54,12 +54,14 @@ export function AgentsScreen({
             <div className="ag-empty">
               <div className="ag-empty-marquee" aria-hidden="true">
                 <div className="ag-empty-track">
-                  {[...live, ...live, ...live].slice(0, 12).map((a, i) => (
-                    <span key={`${a.id}-${i}`} className="ag-empty-pill">
-                      <TokenStack symbols={a.symbols.length ? a.symbols : ['CASH']} size={18} max={3} />
-                      {a.name}
-                    </span>
-                  ))}
+                  {(['a', 'b', 'c'] as const).flatMap((round) =>
+                    live.slice(0, 4).map((a) => (
+                      <span key={`${round}-${a.id}`} className="ag-empty-pill">
+                        <TokenStack symbols={a.symbols.length ? a.symbols : ['CASH']} size={18} max={3} />
+                        {a.name}
+                      </span>
+                    )),
+                  )}
                 </div>
               </div>
               <div className="ag-empty-body">
@@ -82,7 +84,9 @@ export function AgentsScreen({
                   <TokenStack symbols={a.symbols.length ? a.symbols : ['CASH']} size={24} max={3} />
                   <span className="ag-mine-name">
                     <strong>{a.name}</strong>
-                    <StatusDot tone={a.mode === 'shadow' ? 'practice' : 'live'}>{deskCopy.modes[a.mode]}</StatusDot>
+                    <StatusDot tone={a.mode === 'shadow' ? 'practice' : 'live'}>
+                      {deskCopy.modes[a.mode]}
+                    </StatusDot>
                   </span>
                   <span className="ag-mine-value">{usd(a.valueUsdg)}</span>
                 </Link>

@@ -1,7 +1,7 @@
 import { homeCopy } from '@desk/shared'
 import { HomePage } from '@/features/home/HomePage'
-import { currentDeployment } from '@/lib/chain'
 import { publicAgents } from '@/lib/agents.server'
+import { currentDeployment } from '@/lib/chain'
 import { currentVaultRateBps, loadDesk } from '@/lib/desk.server'
 import { loadWeekendFact, presetPerformance } from '@/lib/markets.server'
 
