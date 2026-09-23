@@ -315,15 +315,26 @@ export const stockCopy = {
   askQuestion: (name: string) => `What is ${name} doing right now, and does it matter for my desk?`,
   startWith: 'Start a desk with it',
   back: 'All markets',
+  /** The hero's chip, in words a person reads at a glance. */
+  chip: (bps: number | null) =>
+    bps === null
+      ? 'No reference yet'
+      : Math.abs(bps) < 50
+        ? 'In line with its reference'
+        : `${(Math.abs(bps) / 100).toFixed(2)}% ${bps > 0 ? 'above' : 'below'} its reference`,
+  heldIn: 'In these strategies',
+  heldInNone: 'In no preset strategy. Add it to your own mix.',
+  heldInCta: 'Let an agent hold it',
+  onePerShare: (m: string) => `1 token = ${m} shares`,
 
   sections: {
     alerts: {
-      index: '01',
+      index: '03',
       title: 'Price alerts',
       desc: 'One message by Telegram and in the bell when the pool moves this far from its reference. Then it stops.',
     },
     multiplier: {
-      index: '02',
+      index: '04',
       title: 'The multiplier',
       desc: 'Dividends are not paid in cash. They raise the multiplier, so one token becomes a little more than one share.',
       now: (m: string) => `One token is ${m} shares now.`,
@@ -333,13 +344,13 @@ export const stockCopy = {
       pending: (to: string, when: string) => `It changes to ${to} shares on ${when}.`,
     },
     decisions: {
-      index: '03',
-      title: 'What desks decided',
+      index: '01',
+      title: 'What agents decided',
       desc: 'From desks whose owners share them, newest first. Each opens its reason.',
       none: 'No shared desk has acted or waited on it yet.',
     },
     events: {
-      index: '04',
+      index: '02',
       title: 'Company events',
       desc: 'Report dates from Finnhub’s calendar. Prices can jump around them, and trading can pause.',
       none: 'No report is scheduled.',
