@@ -186,7 +186,7 @@ No 21st this round: Abu named one reference and said to copy its code.
 
 ## The look
 
-The reference's variable names get our values in a new `styles/zk/tokens.css`. The themes switch on `[data-theme]` as today.
+The reference's variable names get our values in a new `styles/kit/tokens.css`. The themes switch on `[data-theme]` as today.
 
 | Reference | Dark | Light |
 |---|---|---|
@@ -206,12 +206,12 @@ The reference's variable names get our values in a new `styles/zk/tokens.css`. T
 ## Build steps (each one committed and checked in the browser; the app works after every step)
 
 ### 1. Tokens and fonts
-- Add `styles/zk/tokens.css` and the reference keyframes, imported after `agari/bridge.css`.
+- Add `styles/kit/tokens.css` and the reference keyframes, imported after `agari/bridge.css`.
 - Swap the fonts in `lib/fonts.ts` without renaming the variables: Hanken Grotesk fills the Sora and Inter slots, IBM Plex Mono the JetBrains slot. Every page picks this up with no CSS changes.
 - Then an overflow pass, because the new fonts are narrower and the new numbers wider (wallet chip, tickers, stat numbers).
 
 ### 2. The reference components
-- Port `packages/ui/src` into `components/zk/`, keeping its inline styles:
+- Port `packages/ui/src` into `components/kit/`, keeping its inline styles:
   - badges, callouts, pills, chips;
   - button, amount input, segmented control;
   - review card, progress ring, step list, step tracker;
@@ -303,7 +303,7 @@ The reference's variable names get our values in a new `styles/zk/tokens.css`. T
 - **`/evidence`:** the facts list, Copy all hashes, one table per agent (step, fingerprint, Blockscout), money moves, and the fingerprint checker from `components/check-it.tsx`.
 
 ### 7. Phone chrome
-- Port `MobileChrome` into `components/shell/app/PhoneChrome.tsx`, and the phone rules into `styles/zk/phone.css`, scoped so they never touch the page.
+- Port `MobileChrome` into `components/shell/app/PhoneChrome.tsx`, and the phone rules into `styles/kit/phone.css`, scoped so they never touch the page.
 - Tabs, the More sheet, drag-to-close sheets, pull-to-refresh, the route animation.
 - It replaces today's bottom bar, `MobileBottomNav.tsx`, and the sidebar's phone sheet.
 
@@ -312,7 +312,7 @@ The reference's variable names get our values in a new `styles/zk/tokens.css`. T
 - The agent page keeps round 3's layout, restyled:
   - its money strip reads Cash · Savings · Stocks · address, with the QR code linking to Receive;
   - Fund and Withdraw open the new screens.
-- Every other page gets one class, `.zk-page`: 1040px wide, the reference's padding, and its title style.
+- Every other page gets one class, `.kit-page`: 1040px wide, the reference's padding, and its title style.
   - Full-width pages opt out: reels, `/live`, rooms.
 - Two contradictions fixed:
   - "0.5% a year" becomes "free", per D5;
@@ -332,7 +332,7 @@ The reference's variable names get our values in a new `styles/zk/tokens.css`. T
 ### 10. Clean-up and records
 - Delete the animated sidebar, `MobileBottomNav`, `Header`, `CustomCursor`, `GrainOverlay`, and dead `app-shell.css` rules.
 - DECISIONS.md gets W1–W12, noting that W1 supersedes F8.
-- New `docs/FIDELITY-ZKF.md` holds the table above.
+- New `docs/FIDELITY-REFERENCE.md` holds the table above.
 - `THIRD_PARTY_NOTICES.md` credits ZK Freighter (MIT).
 - Add the build log entry.
 - Never commit the `apps/web/CLAUDE.md` that `next dev` generates.

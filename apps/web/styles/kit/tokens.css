@@ -1,4 +1,4 @@
-/* ZK Freighter's design tokens (packages/ui/src/tokens.ts + theme.css @ 859d95f), carrying Shijima's colours.
+/* The reference wallet's design tokens (packages/ui/src/tokens.ts + theme.css @ 859d95f), carrying Shijima's colours.
  *
  * The reference sets these as inline CSS variables from a React provider; here they live on :root and flip on
  * [data-theme="light"], like every other token in this app. Names are the reference's, so its components port
@@ -45,8 +45,8 @@
   --canvas-glow-a: color-mix(in srgb, var(--ac) 9%, transparent);
   --canvas-glow-b: color-mix(in srgb, var(--ac) 6%, transparent);
 
-  --fm: var(--font-jetbrains), 'IBM Plex Mono', ui-monospace, monospace;
-  --fs: var(--font-inter), 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+  --fm: var(--font-jetbrains), "IBM Plex Mono", ui-monospace, monospace;
+  --fs: var(--font-inter), "Hanken Grotesk", system-ui, -apple-system, sans-serif;
 
   --radius-panel: 24px;
   --shadow-panel: 0 50px 130px -50px #000, 0 0 0 1px rgb(0 0 0 / 0.4);
@@ -54,12 +54,12 @@
   --shadow-glow: 0 10px 30px -12px color-mix(in srgb, var(--ac) 45%, transparent);
 
   /* Every face in the app is the reference's now (lib/fonts.ts). */
-  --font-display: var(--font-sora), 'Hanken Grotesk', system-ui, sans-serif;
-  --font-body: var(--font-inter), 'Hanken Grotesk', system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains), 'IBM Plex Mono', ui-monospace, monospace;
+  --font-display: var(--font-sora), "Hanken Grotesk", system-ui, sans-serif;
+  --font-body: var(--font-inter), "Hanken Grotesk", system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), "IBM Plex Mono", ui-monospace, monospace;
 }
 
-[data-theme='light'] {
+[data-theme="light"] {
   --panel: #fbf7ee;
   --card: #f6f0e4;
   --card2: #ece3d2;
@@ -112,16 +112,16 @@
   --color-dng: var(--dng);
   --color-pub: var(--pub);
 
-  --animate-zkSheen: zkSheen 5s linear infinite;
-  --animate-zkPulse: zkPulse 1.6s ease-in-out infinite;
-  --animate-zkSpin: zkSpin 0.8s linear infinite;
-  --animate-zkRise: zkRise 0.4s cubic-bezier(0.5, 1.2, 0.5, 1) both;
-  --animate-zkPop: zkPop 0.3s ease both;
-  --animate-zkSheetUp: zkSheetUp 0.4s ease both;
+  --animate-kitSheen: kitSheen 5s linear infinite;
+  --animate-kitPulse: kitPulse 1.6s ease-in-out infinite;
+  --animate-kitSpin: kitSpin 0.8s linear infinite;
+  --animate-kitRise: kitRise 0.4s cubic-bezier(0.5, 1.2, 0.5, 1) both;
+  --animate-kitPop: kitPop 0.3s ease both;
+  --animate-kitSheetUp: kitSheetUp 0.4s ease both;
 }
 
 /* The reference's motion (theme.css:85-165), verbatim. */
-@keyframes zkSheen {
+@keyframes kitSheen {
   0% {
     transform: translateX(-120%);
   }
@@ -129,7 +129,7 @@
     transform: translateX(120%);
   }
 }
-@keyframes zkPulse {
+@keyframes kitPulse {
   0%,
   100% {
     opacity: 1;
@@ -138,12 +138,12 @@
     opacity: 0.4;
   }
 }
-@keyframes zkSpin {
+@keyframes kitSpin {
   to {
     transform: rotate(360deg);
   }
 }
-@keyframes zkRise {
+@keyframes kitRise {
   from {
     opacity: 0;
     transform: translateY(8px);
@@ -153,7 +153,7 @@
     transform: translateY(0);
   }
 }
-@keyframes zkPop {
+@keyframes kitPop {
   0% {
     opacity: 0;
     transform: scale(0.8);
@@ -166,7 +166,7 @@
     transform: scale(1);
   }
 }
-@keyframes zkSheetUp {
+@keyframes kitSheetUp {
   from {
     transform: translateY(100%);
   }
@@ -174,7 +174,7 @@
     transform: translateY(0);
   }
 }
-@keyframes zkRouteIn {
+@keyframes kitRouteIn {
   from {
     opacity: 0.35;
     transform: translateY(9px);
@@ -186,11 +186,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-zkSheen,
-  .animate-zkPulse,
-  .animate-zkRise,
-  .animate-zkPop,
-  .animate-zkSheetUp {
-    animation: none !important;
+  .animate-kitSheen,
+  .animate-kitPulse,
+  .animate-kitRise,
+  .animate-kitPop,
+  .animate-kitSheetUp {
+    animation: none;
   }
 }
