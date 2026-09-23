@@ -180,7 +180,7 @@ export function HowItWorksPage({
           >
             <h2 className="hiw-cta-title">{howCopy.cta.title}</h2>
             <p className="hiw-cta-body">{howCopy.cta.body}</p>
-            <Link href="/strategies" className="hiw-cta-button" data-cursor="hover">
+            <Link href="/agents/new" className="hiw-cta-button" data-cursor="hover">
               {howCopy.cta.action}
             </Link>
           </section>

@@ -87,7 +87,7 @@ export function RoomStates({
       </StateIcon>
       <p className="room-state-title">{roomCopy.states.locked.title}</p>
       <p className="room-state-body">{roomCopy.states.locked.body}</p>
-      <Link href="/strategies" className="room-cta" data-cursor="hover">
+      <Link href="/agents/new" className="room-cta" data-cursor="hover">
         {roomCopy.start} <ArrowRightIcon size={15} />
       </Link>
     </div>

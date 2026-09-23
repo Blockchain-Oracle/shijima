@@ -81,3 +81,13 @@ export async function latestConfirmedActions(db: DbOrTx, limit = 10) {
     at: new Date(row.at).toISOString(),
   }))
 }
+
+/** How many open agents run each strategy right now, by preset id, for the strategies catalog. */
+export async function agentsPerPreset(db: DbOrTx): Promise<Record<string, number>> {
+  const r = await db.execute<{ preset: string; n: string }>(sql`
+    select m.preset, count(distinct m.desk_id) as n
+    from mandates m join desks d on d.id = m.desk_id
+    where m.status = 'applied' and m.preset is not null and d.lifecycle = 'running'
+    group by m.preset`)
+  return Object.fromEntries(r.rows.map((row) => [row.preset, Number(row.n)]))
+}

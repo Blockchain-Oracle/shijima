@@ -125,7 +125,7 @@ export default async function StockPage({ params, searchParams }: Props) {
             ) : (
               <dd className="sk-holders">
                 {holders.map((p) => (
-                  <Link key={p.id} href={`/strategies?preset=${p.id}` as Route} className="sk-holder">
+                  <Link key={p.id} href={`/agents/new?preset=${p.id}` as Route} className="sk-holder">
                     <TokenStack symbols={Object.keys(p.weights)} size={20} max={4} />
                     <span>{p.name}</span>
                   </Link>
@@ -133,7 +133,7 @@ export default async function StockPage({ params, searchParams }: Props) {
               </dd>
             )}
             <dd>
-              <Link href="/strategies" className="sk-cta" data-cursor="hover">
+              <Link href="/agents/new" className="sk-cta" data-cursor="hover">
                 {stockCopy.heldInCta} →
               </Link>
             </dd>

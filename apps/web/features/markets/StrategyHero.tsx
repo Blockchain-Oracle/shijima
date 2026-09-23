@@ -217,7 +217,7 @@ export function StrategyHero({
                     <p>{strategy.halted.length === 0 ? r.nothingHalted : strategy.halted.join(', ')}</p>
                     {strategy.nextReport && <p>{strategy.nextReport}</p>}
                   </div>
-                  <Button render={<Link href={`/strategies?preset=${strategy.preset.id}` as Route} />}>
+                  <Button render={<Link href={`/agents/new?preset=${strategy.preset.id}` as Route} />}>
                     {r.start}
                   </Button>
                   <p className="type-caption text-ink-muted">{r.notAdvice}</p>

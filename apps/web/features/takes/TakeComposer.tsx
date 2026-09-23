@@ -125,7 +125,7 @@ export function TakeComposer({
             ) : viewer === 'no_desk' ? (
               <div className="take-connect">
                 <p className="take-state-body">{C.noDesk}</p>
-                <Link href="/strategies" className="take-post" data-cursor="hover">
+                <Link href="/agents/new" className="take-post" data-cursor="hover">
                   {takesCopy.startDesk}
                 </Link>
               </div>

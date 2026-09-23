@@ -347,6 +347,28 @@ export const appCopy = {
     credit: 'Runs on OpenServ · decisions by SERV Reasoning',
   },
 
+  catalog: {
+    meta: 'Strategies',
+    kicker: 'Twenty ways to start',
+    title: 'Strategies',
+    intro:
+      'A strategy is a basket of Stock Tokens with a share for each, and some cash. Pick one to start your own agent; it keeps the basket on plan around the clock, inside limits you set. Every token here trades in a deep enough pool on Robinhood Chain, checked on mainnet.',
+    all: 'All',
+    tags: {
+      broad: 'Broad',
+      tech: 'Tech',
+      ai: 'AI',
+      commodities: 'Oil & metals',
+      safe: 'Safer',
+      bold: 'Bold',
+    } as Record<string, string>,
+    start: 'Start an agent with this',
+    running: (n: number) =>
+      n === 0 ? 'No agent runs it yet' : `${n} agent${n === 1 ? '' : 's'} run${n === 1 ? 's' : ''} it`,
+    own: 'Or build your own basket',
+    notAdvice: 'Past returns are shown, never promised. Nothing here is advice.',
+  },
+
   livePage: {
     meta: 'Live on mainnet',
     kicker: 'Robinhood Chain · chain 4663',

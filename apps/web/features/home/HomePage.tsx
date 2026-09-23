@@ -162,7 +162,7 @@ export function HomePage({
               </h1>
               <p className="lp-line">{H.hero.line}</p>
               <div className="lp-ctas">
-                <Link href={'/strategies' as Route} className="btn btn-primary lp-cta" data-cursor="hover">
+                <Link href={'/agents/new' as Route} className="btn btn-primary lp-cta" data-cursor="hover">
                   {H.hero.primary}
                 </Link>
                 <Link
@@ -278,7 +278,7 @@ export function HomePage({
             }
           />
           <div className="hm-strategies">
-            {PRESETS.map((p, i) => (
+            {PRESETS.slice(0, 4).map((p, i) => (
               <StrategyCard
                 key={p.id}
                 index={i}
@@ -290,7 +290,7 @@ export function HomePage({
                 tokens={TOKENS}
                 performance={performance.find((x) => x.id === p.id)}
                 action={
-                  <Link href={`/strategies?preset=${p.id}` as Route} className="hm-strategy-cta">
+                  <Link href={`/agents/new?preset=${p.id}` as Route} className="hm-strategy-cta">
                     {H.strategies.start} <ArrowRight className="size-4" aria-hidden />
                   </Link>
                 }
@@ -411,7 +411,7 @@ export function HomePage({
               <h3>{H.install.title}</h3>
               <p>{H.install.line}</p>
             </div>
-            <Link href={'/strategies' as Route} className="btn btn-primary lp-cta">
+            <Link href={'/agents/new' as Route} className="btn btn-primary lp-cta">
               {H.hero.primary}
             </Link>
           </div>

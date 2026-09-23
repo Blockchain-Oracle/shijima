@@ -216,7 +216,7 @@ export async function finishDeskAction(input: {
     await markDeskDeployed(db(), desk.id, deployTx)
     await applyMandate(db(), desk.id, draft.mandate, { actor: 'owner', via: 'web' }, readBack)
     await startDesk(db(), desk.id)
-    revalidatePath('/strategies')
+    revalidatePath('/agents/new')
     revalidatePath('/agents')
     return { ok: true, slug }
   } catch (e) {
