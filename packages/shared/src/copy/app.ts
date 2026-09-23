@@ -145,6 +145,59 @@ export const appCopy = {
     appearanceBody: 'Dark or light. It is remembered in this browser.',
   },
 
+  agentPage: {
+    by: (owner: string) => `by ${owner}`,
+    yours: 'Your agent',
+    settings: 'Agent settings',
+    decision: {
+      title: 'Latest decision',
+      none: 'No decision yet. It looks every five minutes and writes down what it decides here, first.',
+      action: (side: string, amount: string | null, symbol: string) =>
+        side === 'buy'
+          ? `Buy ${amount ? `${amount} of ` : ''}${symbol}`
+          : side === 'sell'
+            ? `Sell ${amount ? `${amount} of ` : ''}${symbol}`
+            : `${side} ${symbol}`,
+      sure: (pct: number) => `${pct}% sure`,
+      sureTitle: 'How sure the AI said it was. The account’s limits apply whatever it says.',
+      options: 'The options it weighed',
+      tx: (hash: string) => `On chain · ${hash}`,
+      sentNotConfirmed: (hash: string) => `Sent · ${hash} · waiting for the network`,
+      practice: 'Practice: decided for real, nothing sent',
+      nothingSent: 'Nothing was sent',
+      sealed: (hash: string) => `Fingerprinted on chain · ${hash}`,
+      open: 'Full record',
+    },
+    portfolio: {
+      title: 'Portfolio',
+      notYet: 'Not valued yet. Its first valuation comes with its first look, within five minutes.',
+      valued: (ago: string) => `valued ${ago}`,
+      sinceStart: 'since the money went in',
+      noHistory: 'One valuation so far. The chart starts with the second.',
+      holdings: 'What it holds',
+      cash: 'Cash (USDG)',
+      inSavings: (amount: string) => `${amount} earning in savings`,
+      stockPage: (symbol: string) => `${symbol} price, reference and reports`,
+    },
+    activity: {
+      title: 'Activity',
+      ask: 'Ask Shijima',
+      all: 'Every decision',
+    },
+    money: {
+      title: 'Your agent’s account',
+      address: 'Its address on Robinhood Chain',
+      addressNote:
+        'Send USDG on Robinhood Chain to this address from any wallet or exchange, and it arrives in this agent. Only the owner can take it out.',
+      copy: 'Copy',
+      copied: 'Copied',
+      gas: 'Who pays for what',
+      gasBody:
+        'Trades: Shijima pays the network fee, about 5¢ each. You pay only for what you sign: creating, adding money, withdrawing, a few cents each.',
+      explorer: 'See it on Blockscout',
+    },
+  },
+
   notFound: {
     meta: 'Not found',
     code: '404',

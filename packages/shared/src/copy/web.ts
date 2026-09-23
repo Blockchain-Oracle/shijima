@@ -920,7 +920,11 @@ export const controlsCopy = {
 /** Settings: Telegram, the share link, the disclosure, and how it looks. */
 export const settingsCopy = {
   title: 'Settings',
-  back: 'Back to your desk',
+  back: 'Back to your agent',
+  controls: {
+    title: 'How your agent runs',
+    body: 'Its mode, its limits, what it holds and your notes to it. Anything that touches the account on chain asks for your signature.',
+  },
   telegram: {
     bot: 'ShijimaBot',
     title: 'Telegram',

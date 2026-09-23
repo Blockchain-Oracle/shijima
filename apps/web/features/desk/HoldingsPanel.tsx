@@ -97,7 +97,13 @@ export function Holdings({ view }: { view: DeskView }) {
  * What stops the assistant touching one holding, and what is coming for it [8.16]. The assistant's limits are
  * the contract's; where it cannot act, the owner still can, and the line says so.
  */
-function HoldingFlags({ flags, owner }: { flags: DeskView['holdings'][number]['flags']; owner: boolean }) {
+export function HoldingFlags({
+  flags,
+  owner,
+}: {
+  flags: DeskView['holdings'][number]['flags']
+  owner: boolean
+}) {
   const f = deskCopy.holdings.flags
   const lines: { text: string; warn: boolean }[] = []
   if (flags.halted === true) lines.push({ text: f.halted, warn: true })

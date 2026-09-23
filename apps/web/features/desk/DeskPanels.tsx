@@ -310,7 +310,7 @@ export function NextCheck({ view }: { view: DeskView }) {
   )
 }
 
-const MARKER_KIND: Record<string, ChartMarker['kind']> = {
+export const MARKER_KIND: Record<string, ChartMarker['kind']> = {
   acted: 'acted',
   acted_in_part: 'acted',
   acted_by_override: 'acted',

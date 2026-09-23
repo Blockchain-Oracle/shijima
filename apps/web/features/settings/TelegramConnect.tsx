@@ -3,8 +3,7 @@
 import { settingsCopy } from '@desk/shared'
 import { Check, QrCode, Send } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import qrcode from 'qrcode-generator'
-import { useEffect, useMemo, useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import {
   type TelegramState,
   telegramCodeAction,
@@ -12,37 +11,11 @@ import {
   telegramUnlinkAction,
 } from '@/app/owner-actions'
 import { Button } from '@/components/ui/button'
+import { Qr as QrSvg } from '@/components/ui/qr'
 import { cn } from '@/lib/utils'
 
 const t = settingsCopy.telegram
 const POLL_MS = 2000
-
-/** The QR code as plain SVG squares, so nothing is ever injected into the page as HTML. */
-function Qr({ text }: { text: string }) {
-  const cells = useMemo(() => {
-    const qr = qrcode(0, 'M')
-    qr.addData(text)
-    qr.make()
-    const n = qr.getModuleCount()
-    const dark: [number, number][] = []
-    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) dark.push([c, r])
-    return { n, dark }
-  }, [text])
-  return (
-    <svg
-      className="settings-qr"
-      viewBox={`-2 -2 ${cells.n + 4} ${cells.n + 4}`}
-      role="img"
-      aria-label={t.scan}
-      shapeRendering="crispEdges"
-    >
-      <rect x={-2} y={-2} width={cells.n + 4} height={cells.n + 4} fill="#fff" />
-      {cells.dark.map(([x, y]) => (
-        <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill="#141210" />
-      ))}
-    </svg>
-  )
-}
 
 /**
  * Connect Telegram in one click (design brief 8.8). The one-time code is made as soon as this appears, so the
@@ -181,7 +154,7 @@ export function TelegramConnect({
             exit={reduced ? { opacity: 0 } : { opacity: 0, height: 0 }}
             className="settings-telegram overflow-hidden"
           >
-            <Qr text={link} />
+            <QrSvg label={t.scan} text={link} />
             <div className="flex flex-col gap-2">
               <p className="type-caption text-ink-secondary">{t.scan}</p>
               <p className="type-caption text-ink-muted">{t.orSend(code)}</p>

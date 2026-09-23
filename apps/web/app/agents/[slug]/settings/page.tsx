@@ -11,12 +11,17 @@ import type { Route } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import ThemeToggle from '@/components/shell/ThemeToggle'
+import { DeskControls } from '@/features/desk/DeskControls'
+import { Mandate } from '@/features/desk/DeskPanels'
 import { DeskSessionProvider } from '@/features/session/DeskSessionProvider'
+import { OwnerSessionPanel } from '@/features/session/OwnerSessionPanel'
 import { CloseDeskButton } from '@/features/settings/CloseDeskButton'
 import { Connections } from '@/features/settings/Connections'
 import { Disclosure } from '@/features/settings/Disclosure'
 import { ShareToggle } from '@/features/settings/ShareToggle'
+import { controlsOf } from '@/lib/controls'
 import { db } from '@/lib/db'
+import { loadDesk } from '@/lib/desk.server'
 import { signedInAddress } from '@/lib/session'
 
 export const dynamic = 'force-dynamic'
@@ -44,7 +49,8 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
   if (!desk || !viewer || viewer.toLowerCase() !== desk.ownerAddress.toLowerCase()) notFound()
 
   const ownerId = await ownerIdOf(db(), viewer)
-  const [telegram, accepted, openserv] = await Promise.all([
+  const [view, telegram, accepted, openserv] = await Promise.all([
+    loadDesk(slug),
     telegramForDesk(db(), desk.id),
     ownerId ? disclosureAccepted(db(), ownerId, DISCLOSURE_VERSION) : Promise.resolve(null),
     openservForDesk(db(), desk.id),
@@ -66,6 +72,13 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
         contractVersion={desk.contractVersion}
       >
         <div className="settings-grid">
+          {view && desk.lifecycle !== 'closed' && (
+            <Section title={s.controls.title} body={s.controls.body}>
+              <DeskControls view={controlsOf(view)} />
+            </Section>
+          )}
+          {view && <Mandate view={view} />}
+          {view && desk.lifecycle !== 'closed' && <OwnerSessionPanel />}
           <Section title={s.connections.title} body={s.connections.body}>
             <Connections
               deskId={desk.id}

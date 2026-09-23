@@ -1,0 +1,547 @@
+/* One agent's page, decision first. Two columns from 1024px; below that the columns dissolve (display: contents)
+ * and each block takes its reading order: needs, decision, portfolio, activity, limits, account. */
+
+.ap-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ap-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+}
+
+.ap-id {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.ap-id-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.ap-name {
+  font-family: var(--font-display, inherit);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+}
+.ap-sub {
+  font-size: 0.8rem;
+  color: var(--color-ink-muted);
+}
+
+.ap-head-side {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ap-gear {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--color-hairline);
+  border-radius: 999px;
+  color: var(--color-ink-secondary);
+}
+.ap-gear:hover {
+  color: var(--color-ink);
+  border-color: var(--color-accent-dim);
+}
+
+.ap-actions {
+  margin-top: -0.25rem;
+}
+.ap-visitor {
+  font-size: 0.8rem;
+  color: var(--color-ink-muted);
+}
+
+.ap-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.ap-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+@media (max-width: 1023px) {
+  .ap-grid {
+    display: flex;
+    flex-direction: column;
+  }
+  .ap-col {
+    display: contents;
+  }
+  .ap-o-needs {
+    order: 1;
+  }
+  .ap-o-decision {
+    order: 2;
+  }
+  .ap-o-portfolio {
+    order: 3;
+  }
+  .ap-o-activity {
+    order: 4;
+  }
+  .ap-o-limits {
+    order: 5;
+  }
+  .ap-o-money {
+    order: 6;
+  }
+}
+
+/* ── cards ─────────────────────────────────────────────────────────────── */
+.ap-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg, 16px);
+  background: var(--color-surface-1);
+  min-width: 0;
+}
+
+.ap-label {
+  font-family: var(--font-data);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.ap-muted {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--color-ink-muted);
+}
+
+.ap-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  color: var(--color-accent);
+}
+
+/* ── latest decision ───────────────────────────────────────────────────── */
+.ap-decision {
+  border-color: var(--color-accent-dim);
+  background: linear-gradient(180deg, var(--color-accent-wash), var(--color-surface-1) 55%);
+}
+.ap-decision-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.ap-decision-when {
+  font-size: 0.75rem;
+  color: var(--color-ink-muted);
+}
+.ap-decision-empty {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--color-ink-secondary);
+}
+
+.ap-decision-main {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+.ap-decision-what {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+.ap-decision-action {
+  font-family: var(--font-display, inherit);
+  font-size: clamp(1.25rem, 2.4vw, 1.6rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+
+.ap-decision-why {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--color-ink-secondary);
+}
+
+.ap-decision-facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+}
+
+.ap-confidence {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.ap-confidence-label {
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+  color: var(--color-ink);
+}
+.ap-confidence-bar {
+  position: relative;
+  width: 5rem;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--color-surface-3);
+  overflow: hidden;
+}
+.ap-confidence-bar > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--color-accent);
+}
+
+.ap-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.ap-options li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--color-hairline);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  color: var(--color-ink-muted);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--color-ink-muted) 60%, transparent);
+}
+.ap-options li.is-chosen {
+  border-color: var(--color-accent-dim);
+  color: var(--color-ink);
+  text-decoration: none;
+  background: var(--color-accent-wash);
+}
+
+.ap-decision-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-hairline);
+}
+
+.ap-proof {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-data);
+  font-size: 0.74rem;
+  color: var(--color-ink-muted);
+}
+.ap-proof.is-onchain {
+  color: var(--color-profit);
+}
+.ap-decision-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+/* ── portfolio ─────────────────────────────────────────────────────────── */
+.ap-portfolio-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.ap-portfolio-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.72rem;
+  color: var(--color-ink-muted);
+}
+.ap-next {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.1rem 0.55rem;
+  border: 1px solid var(--color-hairline);
+  border-radius: 999px;
+}
+.ap-next-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-profit);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.ap-value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 0.9rem;
+}
+.ap-value-num {
+  font-family: var(--font-data);
+  font-size: clamp(2rem, 4.5vw, 2.75rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}
+.ap-value-change {
+  font-family: var(--font-data);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+.ap-value-change.is-up {
+  color: var(--color-profit);
+}
+.ap-value-change.is-down {
+  color: var(--color-loss);
+}
+.ap-value-since {
+  margin-left: 0.4rem;
+  color: var(--color-ink-muted);
+}
+
+.ap-holdings {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--color-hairline);
+}
+.ap-holdings > li + li {
+  border-top: 1px solid var(--color-hairline);
+}
+
+.ap-holding {
+  display: block;
+  padding-block: 0.65rem;
+}
+.ap-holding summary,
+.ap-holding-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  cursor: pointer;
+}
+.ap-holding summary::-webkit-details-marker {
+  display: none;
+}
+.ap-holding summary {
+  list-style: none;
+}
+.ap-holding--cash .ap-holding-row {
+  cursor: default;
+}
+
+.ap-holding-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.ap-holding-name strong {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ap-holding-name small {
+  font-size: 0.72rem;
+  color: var(--color-ink-muted);
+}
+.ap-drift {
+  font-style: normal;
+  color: var(--color-warning, #f2b43a);
+}
+.ap-holding-spark {
+  display: none;
+}
+.ap-holding-value {
+  font-family: var(--font-data);
+  font-size: 0.88rem;
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}
+.ap-holding-chev {
+  color: var(--color-ink-muted);
+  transition: transform 160ms var(--ease-out, ease-out);
+}
+.ap-holding[open] .ap-holding-chev {
+  transform: rotate(180deg);
+}
+
+.ap-bar {
+  position: relative;
+  display: block;
+  height: 4px;
+  margin-top: 0.55rem;
+  border-radius: 999px;
+  background: var(--color-hairline);
+}
+.ap-bar > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+}
+.ap-bar > i {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: var(--color-ink);
+}
+
+.ap-holding-more {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.65rem 0 0 2.4rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--color-ink-secondary);
+}
+
+@media (min-width: 560px) {
+  .ap-holding-spark {
+    display: block;
+  }
+}
+
+/* ── activity with the chat ───────────────────────────────────────────── */
+.ap-activity--tabs {
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+.ap-activity--tabs > div[hidden] {
+  display: none;
+}
+.ap-activity--tabs .desk-panel {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* ── the account ───────────────────────────────────────────────────────── */
+.ap-money-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.ap-money-qr {
+  width: 88px;
+  height: 88px;
+  flex: none;
+  border-radius: 10px;
+}
+.ap-money-addr {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.ap-money-caption {
+  font-size: 0.72rem;
+  color: var(--color-ink-muted);
+}
+.ap-money-addr code {
+  font-family: var(--font-data);
+  font-size: 0.9rem;
+  color: var(--color-ink);
+}
+.ap-money-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.ap-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--color-hairline);
+  border-radius: 999px;
+  font-size: 0.74rem;
+  color: var(--color-ink-secondary);
+}
+.ap-chip-btn:hover {
+  color: var(--color-ink);
+  border-color: var(--color-accent-dim);
+}
+
+.ap-gas {
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border-radius: var(--radius-md, 12px);
+  background: var(--color-surface-2);
+  color: var(--color-ink-secondary);
+}
+.ap-gas strong {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--color-ink);
+}
+.ap-gas p {
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+.ap-proof-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.9rem;
+}
+.ap-proof.is-sealed {
+  color: var(--color-ink-secondary);
+}
+.ap-proof.is-sealed:hover {
+  color: var(--color-ink);
+}
+
+.ap-grid > *,
+.ap-col > * {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .ap-actions .desk-quick {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+  .ap-actions .desk-quick-btn {
+    width: 100%;
+  }
+}
