@@ -1,14 +1,21 @@
 # Shijima しじま
 
-**An after-hours desk for Stock Tokens on Robinhood Chain.** You decide what to own. It decides only *when*,
-while the US market is shut, inside limits the network itself enforces. Every decision it makes, including the
-many where it does nothing, is written down and fingerprinted on-chain so nobody can rewrite it later.
+**An AI agent that keeps your Stock Tokens on plan, around the clock, on Robinhood Chain.** Put in USDG, pick a
+strategy (a basket of US stocks such as The 7 giants), and your agent keeps it on those weights through the nights
+and weekends when New York is shut. It decides only *when* to move, inside limits your own account enforces on the
+chain. You see your portfolio and every decision with its reasons, and Telegram tells you when it acts or needs you.
+Every decision is fingerprinted on-chain so nobody can rewrite it later.
 
 *Shijima* is the stillness of deep night: the hours when nothing moves and no one is watching. Those are the
-hours this works, and stillness is most of what it does. Page after page of its record says nothing to do,
-and that is the point, because those entries are the proof it was awake and honest.
+hours this works.
 
-Built for the SERV Hackathon Edition 01, Mainnet & MCP track. It is live on Robinhood Chain mainnet today.
+Built for the SERV Hackathon Edition 01 (Mainnet & MCP track, and Open). It runs on Robinhood Chain mainnet, its
+decisions and chat run on SERV Reasoning, and it lives on OpenServ as agent 4513 with an ERC-8004 identity.
+The full manual is at `/docs` on the site.
+
+**In dollars.** You put in $100 and pick The 7 giants. Your agent buys about $12 of each of the seven and keeps
+$16 as cash, which earns interest in the Steakhouse USDG savings vault while it waits. If Nvidia jumps and its 12%
+becomes 16%, the agent notices, decides when to sell some back to plan, and tells you why.
 
 ---
 
@@ -27,7 +34,7 @@ whether to wait for the market to reopen.
 You set a **mandate**: what to hold, in what proportions, and your limits. Say you put in $10,000 and choose
 40% Nvidia, 30% an S&P 500 fund and 30% cash. The desk works toward $4,000, $3,000 and $3,000.
 
-Every hour:
+Every five minutes it looks; it wakes the model only when something moved:
 
 | Step | Who does it |
 |---|---|
@@ -44,9 +51,8 @@ timing and gives its reasons. Everything else is arithmetic and a contract.
 
 ## What makes it different
 
-- **Non-actions are recorded too.** An hourly desk makes about 160 decisions a week and most of them are
-  "nothing to do". Those are the proof it was awake and honest, so they are kept, hashed into the same chain,
-  and folded into one openable line in the record rather than hidden.
+- **Quiet is recorded honestly, not noisily.** The agent looks every five minutes but writes only what changed, and
+  on a quiet day one line that it looked and found nothing to do, hashed into the same chain and sealed on-chain.
 - **The record is checkable by a stranger.** Open any decision and press **Check it**: your own browser
   rebuilds the canonical bytes, hashes them with keccak256, asks the public RPC for the transaction and
   compares the two fingerprints. A record that did nothing has no transaction, so the browser walks the chain
@@ -63,10 +69,18 @@ timing and gives its reasons. Everything else is arithmetic and a contract.
 | | |
 |---|---|
 | Chain | Robinhood Chain mainnet (4663) |
-| Desk factory | [`0x35A40883BAD8874F8fB5592c72c4385226070958`](https://robinhoodchain.blockscout.com/address/0x35A40883BAD8874F8fB5592c72c4385226070958) |
-| Desk implementation | [`0x99a3f0DD497d60308F138f420902BbB2b6406565`](https://robinhoodchain.blockscout.com/address/0x99a3f0DD497d60308F138f420902BbB2b6406565) |
-| The live desk | [`0x51ce92E1319918Fe3d46Ee0dF09af1a9FB14461D`](https://robinhoodchain.blockscout.com/address/0x51ce92E1319918Fe3d46Ee0dF09af1a9FB14461D) |
-| OpenServ agent | `shijima` (4513), workflow "Hourly desk review", hourly cron |
+| Desk factory (v1) | [`0xB0Df8d1ca6eDA2700a2D145bab2675109A2e89f1`](https://robinhoodchain.blockscout.com/address/0xB0Df8d1ca6eDA2700a2D145bab2675109A2e89f1) |
+| Desk implementation (v1, verified) | [`0x90ff69C78014d06e3f09DC0985E83Cd8338aFe0F`](https://robinhoodchain.blockscout.com/address/0x90ff69C78014d06e3f09DC0985E83Cd8338aFe0F) |
+| The live desk | [`0xC61DDE99B72add803E47B1bcA17B4bf8819618B1`](https://robinhoodchain.blockscout.com/address/0xC61DDE99B72add803E47B1bcA17B4bf8819618B1) |
+| OpenServ agent | `shijima` (4513), workflow "Hourly desk review" (13895) |
+| ERC-8004 identity | Base, token [95396](https://www.8004scan.io/agents/base/95396) |
+
+**Reach it from OpenServ.** Add Shijima to your own OpenServ workspace, make a link code in your desk's Settings
+under Connections, and send `link CODE` to it there. From then on its chat and tasks answer for your desk, from
+the same brain as the website and the Telegram bot. Anything that moves money comes back as a link to confirm.
+
+The v0 contracts (factory `0x35A4…0958`, first desk `0x51ce…461D`) made the first real trades below and stay on
+the chain as history.
 
 Real transactions, all on mainnet:
 
@@ -105,7 +119,7 @@ createdb desk_dev && createdb desk_test
 cp .env.example .env            # Alchemy, Finnhub and SERV keys, and two dev wallets
 pnpm db:migrate
 pnpm desk:mandate --preset broad-market
-pnpm worker:start               # the clock: checks hourly, seals daily
+pnpm worker:start               # the agent: watches every five minutes, seals daily
 pnpm web:dev                    # the site, on port 3007
 ```
 
