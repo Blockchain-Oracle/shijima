@@ -83,6 +83,43 @@ export const recordPageCopy = {
 /** One decision, in full [8.11]. Section titles in the brief's order. */
 export const decisionCopy = {
   back: '← every decision',
+  /** The page's top card and its pictures (23 Sep, after Agari's S22 decision page). */
+  hero: {
+    sure: 'sure',
+    noModel: 'no AI',
+    seq: (n: number) => `#${n}`,
+    buy: (amount: string, name: string) => `Buy ${amount} of ${name}`,
+    sell: (amount: string, name: string) => `Sell ${amount} of ${name}`,
+    sweep: (amount: string) => `Park ${amount} in the savings vault`,
+    redeem: 'Take cash back from the savings vault',
+    practice: 'Practice',
+    live: 'Live',
+  },
+  strip: {
+    aria: 'The pool price against its reference and the last official update',
+    pool: 'Pool price',
+    reference: 'Reference',
+    official: 'Last official update',
+    inLine: 'In line (±0.5%)',
+  },
+  drift: {
+    aria: 'This holding against its target',
+    now: (pct: string) => `Now ${pct}`,
+    target: (pct: string) => `Target ${pct}`,
+    wander: (pct: string) => `It may wander ${pct} either way`,
+  },
+  checks: {
+    counted: 'Counts against your limits',
+    floor: 'The least it would accept',
+    passed: 'passed',
+    refused: 'refused',
+  },
+  proofSteps: {
+    written: 'Written down',
+    fingerprinted: 'Fingerprinted',
+    onChain: 'On the public network',
+    waiting: 'Waiting for the next seal',
+  },
   vault: 'the savings vault',
   sections: {
     decision: 'The decision',
@@ -97,6 +134,7 @@ export const decisionCopy = {
     now: 'How it looks now',
   },
   what: 'What',
+  when: 'When',
   mode: 'Mode',
   howSure: 'How sure',
   noModel: 'no model was asked',

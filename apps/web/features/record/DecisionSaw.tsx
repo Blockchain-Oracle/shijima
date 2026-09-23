@@ -1,20 +1,27 @@
+import { tokenByAddress } from '@desk/chain'
 import { ago, decisionCopy as c, comparedTo, money, percent, type RecordView } from '@desk/shared'
+import { ArrowRight, Check, CircleCheck, CircleX, Newspaper, OctagonAlert, X } from 'lucide-react'
+import { TokenLogo } from '@/components/ui/token-logo'
+import { PriceStrip } from './PriceStrip'
 
-/** One labelled fact on the decision page. */
+/** One labelled fact: label left, value right on a wide screen, stacked on a phone. */
 function Fact({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
+    <div className="dc-fact">
       <dt>{label}</dt>
-      <dd className="type-body text-ink">{children}</dd>
+      <dd>{children}</dd>
     </div>
   )
 }
 
-/** Sections 3 to 6 of one decision [8.11]: what it saw, the options it weighed, the limits check, the cost. */
+/**
+ * Sections 3 to 6 of one decision [8.11], drawn after Agari's S22 decision page: what it saw as one price line and
+ * a short list of facts, the options it weighed as cards with the chosen one raised, the limits as a checklist,
+ * and the cost as money flowing from one side to the other.
+ */
 export function WhatItSaw({
   body,
   now,
-  vaultMove,
   whose,
 }: {
   body: RecordView
@@ -25,61 +32,31 @@ export function WhatItSaw({
   const feeOf = (bps: number) => `${bps / 10_000}%`
   return (
     <>
-      <dl className="decision-grid is-two">
+      {body.price ? <PriceStrip price={body.price} /> : null}
+      <dl className="dc-facts">
         {body.session ? (
           <Fact label={c.session}>
             {body.session.session} · {body.session.anchored ? c.anchored : c.unanchored}
           </Fact>
         ) : null}
-        {body.price?.poolPrice ? (
-          <Fact label={c.tradingPrice}>
-            ${body.price.poolPrice}{' '}
-            <span className="text-ink-secondary">
-              ({comparedTo(body.price.gapBps)} {c.theReference})
-            </span>
-          </Fact>
-        ) : null}
         {body.price ? (
           <Fact label={c.reference(body.price.referenceLabel)}>
-            ${body.price.referencePrice}{' '}
-            <span className="text-ink-secondary">
-              {c.set(ago(new Date(body.price.referenceAt), now))}
-              {body.price.poolPrice ? '' : c.priceWas(comparedTo(body.price.gapBps))}
-            </span>
-          </Fact>
-        ) : null}
-        {body.price && body.price.referenceLabel === 'this pool at the last close' ? (
-          <Fact label={c.lastOfficial}>
-            ${body.price.lastOfficialUpdate}{' '}
-            <span className="text-ink-secondary">
-              {c.set(ago(new Date(body.price.lastOfficialUpdateAt), now))}
-              {c.poolIs(comparedTo(body.price.gapToLastOfficialUpdateBps, 1))}
-            </span>
+            ${body.price.referencePrice} · {c.set(ago(new Date(body.price.referenceAt), now))}
+            {body.price.poolPrice ? ` · the pool was ${comparedTo(body.price.gapBps)} it` : ''}
           </Fact>
         ) : null}
         {body.cost ? (
           <Fact label={c.costLabel}>
-            {percent(body.cost.costBps, 2)}{' '}
-            <span className="text-ink-secondary">
-              {body.cost.measured
-                ? c.costMeasured(feeOf(body.cost.feeTierBps))
-                : c.costTable(feeOf(body.cost.feeTierBps))}
-            </span>
+            {percent(body.cost.costBps, 2)} ·{' '}
+            {body.cost.measured
+              ? c.costMeasured(feeOf(body.cost.feeTierBps))
+              : c.costTable(feeOf(body.cost.feeTierBps))}
           </Fact>
         ) : null}
         {body.status ? (
           <Fact label={c.status}>
             {body.status.tradingHalt === null ? c.haltUnknown : body.status.tradingHalt ? c.halted : c.open}
             {body.status.oraclePaused ? c.oraclePaused : ''}
-          </Fact>
-        ) : null}
-        {body.position ? (
-          <Fact label={c.holding}>
-            {c.holdingLine(
-              percent(body.position.weightBps),
-              percent(body.position.targetBps),
-              percent(body.position.thresholdBps),
-            )}
           </Fact>
         ) : null}
         {body.event ? (
@@ -98,7 +75,6 @@ export function WhatItSaw({
               ? c.vaultRateUnknown
               : c.vaultRate(percent(body.vault.netApyBps, 2))}
             {body.vault.liquidityUsdg ? c.vaultLiquidity(money(body.vault.liquidityUsdg)) : ''}
-            {body.vault.roundTripFeeUsdg ? c.vaultFee(money(body.vault.roundTripFeeUsdg)) : ''}
             {c.vaultKeep(money(body.vault.keepUsdg))}
           </Fact>
         ) : null}
@@ -113,24 +89,33 @@ export function WhatItSaw({
         ) : null}
       </dl>
       {body.news ? (
-        <div className="flex flex-col gap-1">
-          <p className="type-caption text-ink-muted">
+        <div className="flex flex-col gap-2">
+          <span className="dc-subhead">
             {body.news.available ? c.headlines(body.news.count) : c.newsUnavailable}
-          </p>
-          <ul className="flex flex-col gap-1">
-            {body.news.items.slice(0, 3).map((h) => (
-              <li key={h.id} className="type-caption">
-                <a href={h.url} className="text-accent hover:underline" rel="noreferrer noopener">
-                  {h.source}
+          </span>
+          {body.news.items.length > 0 ? (
+            <div className="dc-news">
+              {body.news.items.slice(0, 3).map((h) => (
+                <a key={h.id} href={h.url} rel="noreferrer noopener" target="_blank">
+                  <Newspaper className="size-3.5" aria-hidden />
+                  {h.source} · {ago(new Date(h.publishedAt), now)}
                 </a>
-                <span className="text-ink-muted"> · {ago(new Date(h.publishedAt), now)}</span>
-              </li>
-            ))}
-          </ul>
+              ))}
+            </div>
+          ) : null}
           {body.news.count > 0 ? <p className="type-caption text-ink-muted">{c.noHeadlineText}</p> : null}
         </div>
       ) : null}
-      {vaultMove ? null : null}
+      {body.blockers?.length ? (
+        <div className="dc-blockers">
+          {body.blockers.map((b) => (
+            <p key={b.rule} className="dc-blocker">
+              <OctagonAlert aria-hidden />
+              {b.text}
+            </p>
+          ))}
+        </div>
+      ) : null}
     </>
   )
 }
@@ -151,83 +136,148 @@ export function Options({
         {c.noModelAsked} {vaultMove ? c.vaultNoModel : (body?.blockers?.[0]?.text ?? summary)}
       </p>
     )
+  const headline = 'headline' in model && typeof model.headline === 'string' ? model.headline : null
   return (
-    <>
-      <ul className="flex flex-col gap-2">
-        <li className="decision-option is-chosen">
-          <span className="type-body-strong text-acted">{c.options[model.option] ?? model.option}</span>
-          <span className="type-caption text-ink-muted"> · {c.chosen}</span>
-          <ul className="mt-1 flex flex-col gap-1">
+    <div className="dc-options">
+      <div className="dc-option" data-chosen="">
+        <span className="dc-option-head">
+          <span className="dc-option-name">
+            {c.options[model.option] ?? model.option}
+            {model.partPercent ? ` · ${model.partPercent}%` : ''}
+          </span>
+          <span className="dc-badge" data-tone="chosen">
+            <Check aria-hidden />
+            {c.chosen}
+          </span>
+        </span>
+        {headline ? <p className="dc-option-headline">{headline}</p> : null}
+        {model.reasons.length > 0 ? (
+          <ul className="dc-reasons">
             {model.reasons.map((r) => (
-              <li key={r.text} className="type-body text-ink-secondary">
-                {r.text}
-              </li>
+              <li key={r.text}>{r.text}</li>
             ))}
           </ul>
-        </li>
-        {model.rejected.map((r) => (
-          <li key={r.option} className="decision-option">
-            <span className="type-body-strong text-ink-secondary">{c.options[r.option] ?? r.option}</span>
-            <span className="type-caption text-ink-muted"> · {c.turnedDown}</span>
-            <p className="mt-1 type-body text-ink-secondary">{r.reason}</p>
-          </li>
-        ))}
-      </ul>
-      {model.warnings.length ? (
-        <ul className="flex flex-col gap-1">
-          {model.warnings.map((w) => (
-            <li key={w} className="type-caption text-blocked">
-              {w}
-            </li>
+        ) : null}
+      </div>
+      {model.rejected.length > 0 ? (
+        <div className="dc-options-rest">
+          {model.rejected.map((r) => (
+            <div key={r.option} className="dc-option">
+              <span className="dc-option-head">
+                <span className="dc-option-name">{c.options[r.option] ?? r.option}</span>
+                <span className="dc-badge">
+                  <X aria-hidden />
+                  {c.turnedDown}
+                </span>
+              </span>
+              <p className="type-caption text-ink-secondary">{r.reason}</p>
+            </div>
           ))}
-        </ul>
+        </div>
       ) : null}
-    </>
+      {model.warnings.length ? (
+        <div className="dc-blockers">
+          {model.warnings.map((w) => (
+            <p key={w} className="dc-blocker">
+              <OctagonAlert aria-hidden />
+              {w}
+            </p>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function CheckRow({ ok, label, value }: { ok: boolean; label: string; value: string }) {
+  return (
+    <li className="dc-check" data-ok={ok ? '' : undefined}>
+      {ok ? <CircleCheck aria-hidden /> : <CircleX aria-hidden />}
+      <span>{label}</span>
+      <b>{value}</b>
+    </li>
   )
 }
 
 export function LimitsCheck({ body, vaultMove }: { body: RecordView | undefined; vaultMove: boolean }) {
+  const g = body?.gate
   return (
     <>
       <p className="type-caption text-ink-muted">{c.arithmetic}</p>
-      {body?.gate ? (
-        <p className={body.gate.result === 'allow' ? 'type-body text-acted' : 'type-body text-blocked'}>
-          {body.gate.result === 'allow'
-            ? vaultMove
-              ? c.vaultNoLimits
-              : c.everyLimitPassed
-            : c.refused(body.gate.reasons.join('; '))}
-        </p>
-      ) : (
+      {!g ? (
         <p className="type-body text-ink-secondary">{c.nothingToCheck}</p>
+      ) : (
+        <>
+          <p className="dc-gate" data-ok={g.result === 'allow' ? '' : undefined}>
+            {g.result === 'allow' ? <CircleCheck aria-hidden /> : <CircleX aria-hidden />}
+            {g.result === 'allow'
+              ? vaultMove
+                ? c.vaultNoLimits
+                : c.everyLimitPassed
+              : c.refused(g.reasons.join('; '))}
+          </p>
+          <ul className="dc-checks">
+            {g.reasons.map((r) => (
+              <CheckRow key={r} ok={false} label={r} value={c.checks.refused} />
+            ))}
+            {!vaultMove ? (
+              <CheckRow ok={g.result === 'allow'} label={c.checks.counted} value={money(g.countedUsdg)} />
+            ) : null}
+          </ul>
+        </>
       )}
-      {body?.blockers?.length ? (
-        <ul className="flex flex-col gap-1">
-          {body.blockers.map((b) => (
-            <li key={b.rule} className="type-body text-blocked">
-              {b.text}
-            </li>
-          ))}
-        </ul>
-      ) : null}
     </>
+  )
+}
+
+/** A token amount a person can read: six significant figures, never sixteen decimals. Exact bytes stay in the record. */
+const amount = (decimal: string) => {
+  const n = Number(decimal)
+  return Number.isFinite(n) ? n.toLocaleString('en-US', { maximumSignificantDigits: 6 }) : decimal
+}
+
+function Leg({ symbol, label, value }: { symbol: string; label: string; value: string }) {
+  return (
+    <div className="dc-leg">
+      <TokenLogo symbol={symbol} size={36} />
+      <span className="dc-leg-text">
+        <span className="dc-leg-label">{label}</span>
+        <b>{value}</b>
+      </span>
+    </div>
   )
 }
 
 export function CostShown({ body, vaultMove }: { body: RecordView; vaultMove: boolean }) {
   const p = body.preview
-  if (!p) return null
+  const cand = body.candidate
+  if (!p || !cand) return null
+  const name = tokenByAddress(cand.token)?.displayName ?? cand.symbol
+  const sell = cand.side === 'sell'
+  const spend =
+    sell || cand.side === 'redeem' ? `${amount(p.amountIn)} ${cand.amountInUnit}` : money(p.amountIn)
+  const receive = vaultMove
+    ? cand.side === 'sweep'
+      ? `${amount(p.expectedOut)} ${c.vaultShares}`
+      : `${money(p.expectedOut)} USDG`
+    : sell
+      ? `${money(p.expectedOut)} USDG`
+      : `${amount(p.expectedOut)} ${name}`
   return (
-    <dl className="decision-grid is-two">
-      <Fact label={c.spend}>
-        {p.amountIn} {body.candidate?.amountInUnit}
-      </Fact>
-      <Fact label={c.receive}>
-        {p.expectedOut}
-        {vaultMove ? (body.candidate?.side === 'sweep' ? ` ${c.vaultShares}` : ' USDG') : ''}
-      </Fact>
-      <Fact label={c.least}>{vaultMove ? c.vaultLeast : p.minOut}</Fact>
-      <Fact label={c.slippage}>{vaultMove ? c.vaultSlippage : percent(p.slippageBps, 2)}</Fact>
-    </dl>
+    <div className="dc-cost">
+      <div className="dc-flow">
+        <Leg symbol={sell ? cand.symbol : 'CASH'} label={c.spend} value={spend} />
+        <span className="dc-flow-arrow" aria-hidden>
+          <ArrowRight />
+        </span>
+        <Leg symbol={sell || vaultMove ? 'CASH' : cand.symbol} label={c.receive} value={receive} />
+      </div>
+      <dl className="dc-facts">
+        <Fact label={c.least}>
+          {vaultMove ? c.vaultLeast : sell ? money(p.minOut) : `${amount(p.minOut)} ${name}`}
+        </Fact>
+        <Fact label={c.slippage}>{vaultMove ? c.vaultSlippage : percent(p.slippageBps, 2)}</Fact>
+      </dl>
+    </div>
   )
 }

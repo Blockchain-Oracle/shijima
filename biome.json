@@ -21,7 +21,9 @@
       "!packages/db/drizzle",
       "!**/deployments.json",
       "!apps/web/styles/yosuku",
-      "!apps/web/styles/agari"
+      "!apps/web/styles/agari",
+      "!apps/web/components/ui/desk-kit/desk-kit.css",
+      "!apps/web/features/record/decision.css"
     ]
   },
   "formatter": {
