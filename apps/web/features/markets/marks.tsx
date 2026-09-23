@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils'
 import { glyphTransform, MARK_GLYPHS } from './mark-paths'
 
 /**
- * Agari's asset disc (`features/markets/hero/asset-mark.tsx` and `AssetMarkSvg.tsx`), for our ten Stock Tokens:
+ * Agari's asset disc (`features/markets/hero/asset-mark.tsx` and `AssetMarkSvg.tsx`), for our Stock Tokens:
  * the brand's colour with its white glyph, or a typed monogram for a fund. The fills live in `icons.css`.
  */
 export const BRANDS: Record<string, { slug: string; monogram: string }> = {
@@ -16,10 +16,16 @@ export const BRANDS: Record<string, { slug: string; monogram: string }> = {
   SPY: { slug: 'spdr', monogram: 'S' },
   QQQ: { slug: 'invesco', monogram: 'Q' },
   SGOV: { slug: 'ishares', monogram: 'T' },
+  SPCX: { slug: 'spacex', monogram: 'S' },
+  CRCL: { slug: 'circle', monogram: 'C' },
+  MU: { slug: 'micron', monogram: 'M' },
+  GME: { slug: 'gamestop', monogram: 'G' },
+  USO: { slug: 'uscf', monogram: 'O' },
+  SLV: { slug: 'ishares', monogram: 'Ag' },
 }
 
 /** The funds: no company, so no reports, and a monogram rather than a mark. */
-export const FUNDS = new Set(['SPY', 'QQQ', 'SGOV'])
+export const FUNDS = new Set(['SPY', 'QQQ', 'SGOV', 'USO', 'SLV'])
 
 function MarkSvg({ slug, monogram }: { slug: string; monogram: string }) {
   const glyph = MARK_GLYPHS[slug]

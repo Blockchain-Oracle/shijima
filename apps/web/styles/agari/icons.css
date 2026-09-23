@@ -27,6 +27,12 @@
   --brand-kalshi: #00C389;
   --brand-polymarket: #1652F0;
   --brand-figure: #F26522;
+  /* Added for the 23 Sep token scan. iShares (SGOV, SLV) had no fill until now, so its disc drew black. */
+  --brand-ishares: #3D4450;
+  --brand-uscf: #8A5A12;
+  --brand-circle: #6E4F9A;
+  --brand-micron: #0B4F9C;
+  --brand-gamestop: #D2202F;
 }
 .mark-tesla-disc { fill: var(--brand-tesla); }
 .mark-nvidia-disc { fill: var(--brand-nvidia); }
@@ -46,6 +52,11 @@
 .mark-kalshi-disc { fill: var(--brand-kalshi); }
 .mark-polymarket-disc { fill: var(--brand-polymarket); }
 .mark-figure-disc { fill: var(--brand-figure); }
+.mark-ishares-disc { fill: var(--brand-ishares); }
+.mark-uscf-disc { fill: var(--brand-uscf); }
+.mark-circle-disc { fill: var(--brand-circle); }
+.mark-micron-disc { fill: var(--brand-micron); }
+.mark-gamestop-disc { fill: var(--brand-gamestop); }
 /* The glyph and the typed monogram are white on the brand disc, as Bitcoin's ₿ is. */
 .mark-glyph { fill: #fff; }
 .mark-monogram { fill: #fff; font-family: var(--font-display); font-weight: 800; font-size: 17px; text-anchor: middle; dominant-baseline: central; }

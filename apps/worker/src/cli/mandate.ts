@@ -10,7 +10,14 @@
  */
 import { APPROVED_TOKENS } from '@desk/chain'
 import { applyMandate, currentMandate, startDesk } from '@desk/db'
-import { checkMandate, DEFAULT_LIMITS, errorText, Mandate, presetById } from '@desk/shared'
+import {
+  checkMandate,
+  DEFAULT_LIMITS,
+  errorText,
+  Mandate,
+  presetById,
+  presetMaxPositionBps,
+} from '@desk/shared'
 import { formatUnits, parseUnits } from 'viem'
 import { openCli, readDevDesk, registerDevDesk } from './context'
 
@@ -69,7 +76,9 @@ try {
         tokens: pairs.map(([symbol, weightBps]) => ({ token: bySymbol(symbol).address, weightBps })),
       },
       driftToleranceBps: Number(arg('tolerance') ?? DEFAULT_LIMITS.driftToleranceBps),
-      maxPositionBps: Number(arg('max-position') ?? DEFAULT_LIMITS.maxPositionBps),
+      maxPositionBps: Number(
+        arg('max-position') ?? (preset ? presetMaxPositionBps(preset) : DEFAULT_LIMITS.maxPositionBps),
+      ),
       lossStopBps: Number(arg('loss-stop') ?? DEFAULT_LIMITS.lossStopBps),
       perActionCapUsdg: usd('per-action', '5'),
       dailyCapUsdg: usd('daily', '15'),

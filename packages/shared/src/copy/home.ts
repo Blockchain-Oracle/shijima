@@ -40,8 +40,8 @@ export const homeCopy = {
       {
         kicker: 'You',
         title: 'Pick a strategy',
-        body: 'A basket of US stocks at target weights: the 7 giants, the whole US market, the companies building AI, or your own mix. Some stays as cash.',
-        art: ['The 7 giants', 'S&P 500', 'your own'],
+        body: 'A basket of US stocks at target weights: the giants, the whole US market, the companies building AI, or your own mix. Some stays as cash.',
+        art: ['The giants', 'S&P 500', 'your own'],
       },
       {
         kicker: 'Your agent',

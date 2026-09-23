@@ -5,7 +5,14 @@
  * Percentages and dollars are kept as the strings the owner typed. Weights are basis points by symbol, because a
  * symbol is what the owner sees; the conversion resolves each one against the approved list.
  */
-import { checkMandate, DEFAULT_LIMITS, Mandate, type Preset, studioCopy } from '@desk/shared'
+import {
+  checkMandate,
+  DEFAULT_LIMITS,
+  Mandate,
+  type Preset,
+  presetMaxPositionBps,
+  studioCopy,
+} from '@desk/shared'
 
 export interface StudioDraft {
   name: string
@@ -50,7 +57,7 @@ export function initialDraft(preset?: Preset): StudioDraft {
     weights: preset ? { ...preset.weights } : {},
     cashBps: preset?.cashBps ?? 10_000,
     driftPct: String(DEFAULT_LIMITS.driftToleranceBps / 100),
-    maxPositionPct: String(DEFAULT_LIMITS.maxPositionBps / 100),
+    maxPositionPct: String((preset ? presetMaxPositionBps(preset) : DEFAULT_LIMITS.maxPositionBps) / 100),
     lossStopPct: String(DEFAULT_LIMITS.lossStopBps / 100),
     perAction: '10',
     daily: '50',
@@ -66,6 +73,8 @@ export const withPreset = (draft: StudioDraft, preset: Preset): StudioDraft => (
   preset: preset.id,
   weights: { ...preset.weights },
   cashBps: preset.cashBps,
+  // A one-fund preset holds 90%: the largest holding allowed rises to fit it, and never falls below 50%.
+  maxPositionPct: String(presetMaxPositionBps(preset) / 100),
 })
 
 export const draftTotalBps = (d: StudioDraft) =>

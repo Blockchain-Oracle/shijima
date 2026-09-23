@@ -69,6 +69,12 @@ export async function priceSlotWritten(db: DbOrTx, at: Date): Promise<boolean> {
   return Boolean(row)
 }
 
+/** The tokens (lowercase addresses) that already have a row for this moment. */
+export async function tokensPricedAt(db: DbOrTx, at: Date): Promise<Set<string>> {
+  const rows = await db.select({ token: pricePoints.token }).from(pricePoints).where(eq(pricePoints.at, at))
+  return new Set(rows.map((r) => r.token))
+}
+
 /** One token's prices between two moments, oldest first: what a chart draws. */
 export async function priceSeries(db: DbOrTx, token: string, from: Date, to: Date): Promise<PricePointRow[]> {
   return db

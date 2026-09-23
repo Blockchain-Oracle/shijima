@@ -75,7 +75,7 @@ function LiveAgent({ view }: { view: DeskView | undefined }) {
   )
 }
 
-/** "$100 in The 7 giants", split into what each stock and the cash get, with the logos in their colours. */
+/** "$100 in The giants", split into what each stock and the cash get, with the logos in their colours. */
 function DollarSplit({ vaultRateBps }: { vaultRateBps: number | null }) {
   const preset = PRESETS.find((p) => p.id === 'mag-seven') ?? PRESETS[0]
   if (!preset) return null

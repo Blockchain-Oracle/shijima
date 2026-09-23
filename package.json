@@ -12,6 +12,7 @@
     "typecheck": "pnpm -r --parallel typecheck && tsc -p scripts/tsconfig.json",
     "test": "vitest run",
     "tokens:build": "tsx --env-file-if-exists=.env scripts/build-tokens.ts",
+    "strategies:verify": "tsx --env-file-if-exists=.env scripts/verify-strategies.ts",
     "worker:dev": "pnpm --filter @desk/worker dev",
     "worker:start": "pnpm --filter @desk/worker start",
     "dev:funds": "tsx --env-file-if-exists=.env scripts/dev-funds.ts",

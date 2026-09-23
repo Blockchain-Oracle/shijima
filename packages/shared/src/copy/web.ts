@@ -468,7 +468,7 @@ export const deskCopy = {
       'Ask what I hold and why I waited, or tell me what to change. I show you a card, and nothing changes until you confirm.',
     placeholder: 'Ask Shijima, or tell it what to change…',
     send: 'Send',
-    starters: ['How am I doing?', 'Why did you wait?', 'Move me into The 7 giants', 'Check now'],
+    starters: ['How am I doing?', 'Why did you wait?', 'Move me into The giants', 'Check now'],
     thinking: 'Thinking…',
     slow: 'Still thinking. Shijima answers in about ten seconds.',
     failed: 'I could not answer just now. Nothing was changed.',

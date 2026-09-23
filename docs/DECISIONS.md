@@ -548,3 +548,24 @@ Abu can overrule any of these.
   price line with the in-line zone, the options as cards, the limits as a checklist, the cost as a flow, proof as
   three steps. Every sentence it had before is still there.
 - **The site installs as an app** (manifest and icons). No native build; the Telegram Mini App waits for a domain.
+
+## 2026-09-23 · The token rescan and the 20 strategies
+
+Made by Claude while building step 7 of `PLAN-ROUND-3.md`. Abu can overrule any of these.
+
+- **The rescan of 23 Sep passed 15 tokens, not 18.** In: SPY, QQQ, NVDA, AAPL, MSFT, GOOGL, AMZN, TSLA, SGOV, MU,
+  SPCX, CRCL, USO, SLV and GME (new, $319k pool, 0.11% round trip). Out: INTC (0.84% round trip), BABA ($56k pool),
+  PLTR ($89k pool) and META ($95k pool). Evidence: `packages/chain/tokens.scan.json`.
+- **A listed token is never dropped, and a pin never moves while its pool passes.** META stays on the list with a
+  `watch` note, because desks read balances only for listed tokens and would lose sight of a real holding. SGOV
+  keeps its 0.3% pool, though the 0.05% one now passes too: the gate refuses a trade whose on-chain pin differs
+  (POOL_MISMATCH), so moving it would stop every desk trading SGOV. The list is 16 tokens, Desk.sol's limit.
+- **No strategy uses a token on watch.** So Meta leaves Big tech, The companies building AI and the 7 giants, which
+  becomes "The giants". The ids stay. China tech had only Alibaba, so "Crowd favourites" (GameStop, Tesla) takes its
+  place. Chips is Nvidia and Micron, Space and frontier is SpaceX and Tesla, AI software is Microsoft and Alphabet,
+  Consumer giants is Amazon and Apple.
+- **"Momentum names" is "Where the trading is":** the three single companies with over $1M of USDG in their pools on
+  23 Sep (Nvidia, SpaceX, Circle). A rule anyone can check, and no claim about past returns.
+- **A one-fund strategy holds 90%,** so choosing it raises the largest holding allowed to fit (never lowers it).
+- **`pnpm strategies:verify` is the gate.** It fails on a feed past its 24h heartbeat in market time, a pinned pool
+  under $100k or 30 observations, or a round trip at $1,000 over 0.75%.

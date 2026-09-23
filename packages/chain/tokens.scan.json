@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-20T06:51:53.389Z",
+  "generatedAt": "2026-09-23T09:42:39.451Z",
   "candidates": [
     {
       "symbol": "DELL",
@@ -7,15 +7,15 @@
       "feed": "0x1C6c8cADBe02E19129c39dDB92281cE4c0bf206b",
       "qualifies": false,
       "reasons": [
-        "round trip at $1,000 is 206.84 bps, over 75"
+        "round trip at $1,000 is 206.32 bps, over 75"
       ],
       "tiers": [
         {
           "fee": 10000,
           "pool": "0xc30c89cB7815A1488b7998D15eEC73961707Fc5a",
-          "usdgInPool": 201442,
-          "roundTripBps100": 199.78,
-          "roundTripBps1000": 206.84,
+          "usdgInPool": 157638,
+          "roundTripBps100": 199.73,
+          "roundTripBps1000": 206.32,
           "cardinality": 1500
         }
       ]
@@ -30,25 +30,25 @@
         {
           "fee": 500,
           "pool": "0xc61284332117c3FB23A2A56cceFFD07F7aF60029",
-          "usdgInPool": 1628642,
-          "roundTripBps100": 10,
-          "roundTripBps1000": 10.11,
+          "usdgInPool": 1769463,
+          "roundTripBps100": 10.02,
+          "roundTripBps1000": 10.23,
           "cardinality": 3100
         },
         {
           "fee": 3000,
           "pool": "0xEb07d9587eFD1778dFb9c385Ec43EF6d5F9fE401",
-          "usdgInPool": 473550,
-          "roundTripBps100": 60.12,
-          "roundTripBps1000": 62.03,
+          "usdgInPool": 486751,
+          "roundTripBps100": 60.14,
+          "roundTripBps1000": 62.27,
           "cardinality": 1500
         },
         {
           "fee": 10000,
           "pool": "0xfbB32C09488e3fc33fe6fD84fe6aE442B4d13a31",
-          "usdgInPool": 18145,
+          "usdgInPool": 18645,
           "roundTripBps100": 202.28,
-          "roundTripBps1000": 231.76,
+          "roundTripBps1000": 231.73,
           "cardinality": 1
         }
       ]
@@ -63,17 +63,17 @@
         {
           "fee": 500,
           "pool": "0xa7Bb1AC63BBaB0C44316E6c8C455213441689167",
-          "usdgInPool": 220260,
-          "roundTripBps100": 10.07,
-          "roundTripBps1000": 10.79,
+          "usdgInPool": 267696,
+          "roundTripBps100": 10.09,
+          "roundTripBps1000": 11,
           "cardinality": 1801
         },
         {
           "fee": 3000,
           "pool": "0xA43b424Bc609495AED4BCD88d654934b510B0aD9",
-          "usdgInPool": 17310,
-          "roundTripBps100": 62.21,
-          "roundTripBps1000": 82.89,
+          "usdgInPool": 24054,
+          "roundTripBps100": 62.36,
+          "roundTripBps1000": 84.28,
           "cardinality": 1500
         }
       ]
@@ -88,17 +88,17 @@
         {
           "fee": 500,
           "pool": "0xD60A5d14dB690B7Afad71F76B108071D7175597d",
-          "usdgInPool": 801999,
+          "usdgInPool": 1148520,
           "roundTripBps100": 10.01,
-          "roundTripBps1000": 10.15,
-          "cardinality": 1800
+          "roundTripBps1000": 10.14,
+          "cardinality": 1801
         },
         {
           "fee": 3000,
           "pool": "0xEbD78dcfc8a6b3A696f1E191aD1ff321f9579f79",
-          "usdgInPool": 12381,
-          "roundTripBps100": 69.84,
-          "roundTripBps1000": 152.22,
+          "usdgInPool": 11531,
+          "roundTripBps100": 106.7,
+          "roundTripBps1000": 852.14,
           "cardinality": 1500
         }
       ]
@@ -109,16 +109,16 @@
       "feed": "0x874cF94aa8eC88Fd9560094dD065f2fB3E41Fc2F",
       "qualifies": false,
       "reasons": [
-        "pinned pool holds $73529 of USDG, under $100000",
-        "round trip at $1,000 is 210.78 bps, over 75"
+        "pinned pool holds $93475 of USDG, under $100000",
+        "round trip at $1,000 is 217.52 bps, over 75"
       ],
       "tiers": [
         {
           "fee": 10000,
           "pool": "0x07e8Ea83D4C1340774c8965125e26e12bf943bf1",
-          "usdgInPool": 73529,
-          "roundTripBps100": 200.17,
-          "roundTripBps1000": 210.78,
+          "usdgInPool": 93475,
+          "roundTripBps100": 200.81,
+          "roundTripBps1000": 217.52,
           "cardinality": 1801
         }
       ]
@@ -127,15 +127,17 @@
       "symbol": "INTC",
       "address": "0xc72b96e0E48ecd4DC75E1e45396e26300BC39681",
       "feed": "0x3f390C5C24628Ac7C489515402235FeAD71D1913",
-      "qualifies": true,
-      "reasons": [],
+      "qualifies": false,
+      "reasons": [
+        "round trip at $1,000 is 83.74 bps, over 75"
+      ],
       "tiers": [
         {
           "fee": 3000,
           "pool": "0x2e5a92f5013a64661A49312111be2e8aBd33F56a",
-          "usdgInPool": 143508,
-          "roundTripBps100": 60.7,
-          "roundTripBps1000": 67.81,
+          "usdgInPool": 184368,
+          "roundTripBps100": 62.29,
+          "roundTripBps1000": 83.74,
           "cardinality": 1500
         }
       ]
@@ -150,9 +152,9 @@
         {
           "fee": 3000,
           "pool": "0xeb60bCD1D920ad6E102690CCFC6fB488899E1510",
-          "usdgInPool": 284802,
-          "roundTripBps100": 60.04,
-          "roundTripBps1000": 61.22,
+          "usdgInPool": 447396,
+          "roundTripBps100": 59.99,
+          "roundTripBps1000": 60.78,
           "cardinality": 1801
         }
       ]
@@ -171,16 +173,18 @@
       "symbol": "META",
       "address": "0xc0D6457C16Cc70d6790Dd43521C899C87ce02f35",
       "feed": "0x7C38C00C30BEe9378381E7B6135d7283356D71b1",
-      "qualifies": true,
-      "reasons": [],
+      "qualifies": false,
+      "reasons": [
+        "pinned pool holds $95295 of USDG, under $100000"
+      ],
       "tiers": [
         {
           "fee": 3000,
           "pool": "0x107a7Cb40d8665360ba10E59471Af06150A50922",
-          "usdgInPool": 102547,
-          "roundTripBps100": 60.31,
-          "roundTripBps1000": 63.92,
-          "cardinality": 1400
+          "usdgInPool": 95295,
+          "roundTripBps100": 60.49,
+          "roundTripBps1000": 65.71,
+          "cardinality": 1801
         }
       ]
     },
@@ -190,16 +194,16 @@
       "feed": "0xfb133Fa4B7b385802B693a293606682Df47109A3",
       "qualifies": false,
       "reasons": [
-        "pinned pool holds $43561 of USDG, under $100000",
-        "round trip at $1,000 is 232.82 bps, over 75"
+        "pinned pool holds $46917 of USDG, under $100000",
+        "round trip at $1,000 is 251.02 bps, over 75"
       ],
       "tiers": [
         {
           "fee": 10000,
           "pool": "0xA1e1C9519cD5ae47e9A935645E1A7b935b944559",
-          "usdgInPool": 43561,
-          "roundTripBps100": 202.39,
-          "roundTripBps1000": 232.82,
+          "usdgInPool": 46917,
+          "roundTripBps100": 204.22,
+          "roundTripBps1000": 251.02,
           "cardinality": 1400
         }
       ]
@@ -214,9 +218,9 @@
         {
           "fee": 3000,
           "pool": "0x8AC92DA74AB5F3b1d024Dc1943Ad7e15Dc4179Ef",
-          "usdgInPool": 497984,
-          "roundTripBps100": 59.96,
-          "roundTripBps1000": 60.41,
+          "usdgInPool": 437393,
+          "roundTripBps100": 59.98,
+          "roundTripBps1000": 60.62,
           "cardinality": 1801
         }
       ]
@@ -231,10 +235,10 @@
         {
           "fee": 3000,
           "pool": "0x654E4143e82a5824445Ade0824351C2A9ACD95a8",
-          "usdgInPool": 927114,
-          "roundTripBps100": 60.08,
-          "roundTripBps1000": 61.66,
-          "cardinality": 1801
+          "usdgInPool": 1180785,
+          "roundTripBps100": 60.03,
+          "roundTripBps1000": 61.19,
+          "cardinality": 1860
         }
       ]
     },
@@ -244,16 +248,16 @@
       "feed": "0xA994d3684e8400A6c8078226925779FdeE682DD9",
       "qualifies": false,
       "reasons": [
-        "pinned pool holds $36334 of USDG, under $100000",
-        "round trip at $1,000 is 81.99 bps, over 75"
+        "pinned pool holds $50259 of USDG, under $100000",
+        "round trip at $1,000 is 87.5 bps, over 75"
       ],
       "tiers": [
         {
           "fee": 3000,
           "pool": "0x04391780F519B7d3ba59c9590459D76e23d225C4",
-          "usdgInPool": 36334,
-          "roundTripBps100": 62.12,
-          "roundTripBps1000": 81.99,
+          "usdgInPool": 50259,
+          "roundTripBps100": 62.95,
+          "roundTripBps1000": 87.5,
           "cardinality": 1400
         }
       ]
@@ -268,10 +272,18 @@
         {
           "fee": 500,
           "pool": "0x34D0dC122CF9A8Eb296fC5e0D3A233625D7d19b7",
-          "usdgInPool": 703557,
-          "roundTripBps100": 10.06,
-          "roundTripBps1000": 10.66,
+          "usdgInPool": 593080,
+          "roundTripBps100": 10.03,
+          "roundTripBps1000": 10.32,
           "cardinality": 1801
+        },
+        {
+          "fee": 3000,
+          "pool": "0x553e9a453425CD9B90919F317061FbC3794CC57a",
+          "usdgInPool": 11108,
+          "roundTripBps100": 64.91,
+          "roundTripBps1000": 108.97,
+          "cardinality": 1500
         }
       ]
     },
@@ -285,17 +297,17 @@
         {
           "fee": 500,
           "pool": "0x6Ba50150B17Ffd0972915Aaf04fFd5E8f4Fa49b4",
-          "usdgInPool": 96944,
-          "roundTripBps100": 10.01,
-          "roundTripBps1000": 10.16,
+          "usdgInPool": 138292,
+          "roundTripBps100": 10.1,
+          "roundTripBps1000": 10.23,
           "cardinality": 50
         },
         {
           "fee": 3000,
           "pool": "0xfAb520051f96F4D2a32c22B6a3dD7fFfdf231bFe",
-          "usdgInPool": 2175859,
+          "usdgInPool": 1522102,
           "roundTripBps100": 59.91,
-          "roundTripBps1000": 59.93,
+          "roundTripBps1000": 59.94,
           "cardinality": 1800
         }
       ]
@@ -304,16 +316,18 @@
       "symbol": "BABA",
       "address": "0xad25Ac6C84D497db898fa1E8387bf6Af3532a1c4",
       "feed": "0x62Cc8F9b5f56a33c9C8A60c8B92779f523c4E984",
-      "qualifies": true,
-      "reasons": [],
+      "qualifies": false,
+      "reasons": [
+        "pinned pool holds $56352 of USDG, under $100000"
+      ],
       "tiers": [
         {
           "fee": 3000,
           "pool": "0xa57ab582b310dd6f9e934EA1EEEa152741545E6A",
-          "usdgInPool": 113363,
-          "roundTripBps100": 60.45,
-          "roundTripBps1000": 65.32,
-          "cardinality": 1800
+          "usdgInPool": 56352,
+          "roundTripBps100": 60.8,
+          "roundTripBps1000": 68.83,
+          "cardinality": 1801
         }
       ]
     },
@@ -331,15 +345,17 @@
       "symbol": "PLTR",
       "address": "0x894E1EC2D74FFE5AEF8Dc8A9e84686acCB964F2A",
       "feed": "0x820ABedFF239034956B7A9d2F0a331f9F075eB4c",
-      "qualifies": true,
-      "reasons": [],
+      "qualifies": false,
+      "reasons": [
+        "pinned pool holds $88746 of USDG, under $100000"
+      ],
       "tiers": [
         {
           "fee": 3000,
           "pool": "0x851680416A4f4E1c463d45171d61ACDdBc8554c0",
-          "usdgInPool": 102767,
-          "roundTripBps100": 60.39,
-          "roundTripBps1000": 64.78,
+          "usdgInPool": 88746,
+          "roundTripBps100": 60.89,
+          "roundTripBps1000": 70.78,
           "cardinality": 1801
         }
       ]
@@ -354,9 +370,9 @@
         {
           "fee": 3000,
           "pool": "0xd057B1Bc54917855BBee58eAd58647f47caB35E5",
-          "usdgInPool": 491562,
-          "roundTripBps100": 60.04,
-          "roundTripBps1000": 61.23,
+          "usdgInPool": 612549,
+          "roundTripBps100": 60.14,
+          "roundTripBps1000": 62.23,
           "cardinality": 1860
         }
       ]
@@ -387,23 +403,23 @@
       "feed": "0x943A29E7ae51A4798823ca9eEd2ed533B2A22C72",
       "qualifies": false,
       "reasons": [
-        "round trip at $1,000 is 77.21 bps, over 75"
+        "round trip at $1,000 is 81.37 bps, over 75"
       ],
       "tiers": [
         {
           "fee": 3000,
           "pool": "0x48D284A2A4d3DC1b3Da08231Fe44317e7e7Aa51f",
-          "usdgInPool": 119791,
-          "roundTripBps100": 61.64,
-          "roundTripBps1000": 77.21,
+          "usdgInPool": 136425,
+          "roundTripBps100": 62.06,
+          "roundTripBps1000": 81.37,
           "cardinality": 1400
         },
         {
           "fee": 10000,
           "pool": "0xD6aF1dcB75cdAE4F2efc403A58eF023A51edC686",
-          "usdgInPool": 11203,
-          "roundTripBps100": 215.12,
-          "roundTripBps1000": 358.3,
+          "usdgInPool": 7077,
+          "roundTripBps100": 215.36,
+          "roundTripBps1000": 352.18,
           "cardinality": 1400
         }
       ]
@@ -428,17 +444,17 @@
         {
           "fee": 500,
           "pool": "0xd4EB21209C4D6093f80B5b84f5C45cc093EA14a3",
-          "usdgInPool": 3070455,
-          "roundTripBps100": 10,
-          "roundTripBps1000": 10.09,
+          "usdgInPool": 4667769,
+          "roundTripBps100": 10.01,
+          "roundTripBps1000": 10.15,
           "cardinality": 6000
         },
         {
           "fee": 3000,
           "pool": "0xB944cec30Bd4175855215D767ADC81F39e5f7E2B",
-          "usdgInPool": 30683,
-          "roundTripBps100": 61.94,
-          "roundTripBps1000": 80.23,
+          "usdgInPool": 22324,
+          "roundTripBps100": 63.97,
+          "roundTripBps1000": 97.8,
           "cardinality": 1500
         }
       ]
@@ -453,17 +469,17 @@
         {
           "fee": 3000,
           "pool": "0x02175608F1b5E6b5ed221cCFdC7Be197D111D915",
-          "usdgInPool": 888321,
-          "roundTripBps100": 59.95,
-          "roundTripBps1000": 60.39,
-          "cardinality": 1801
+          "usdgInPool": 564613,
+          "roundTripBps100": 59.96,
+          "roundTripBps1000": 60.46,
+          "cardinality": 1860
         },
         {
           "fee": 10000,
           "pool": "0x6ED11C7DfD8e2ca5620eed29a7B9b53AE90dD0D2",
-          "usdgInPool": 76548,
-          "roundTripBps100": 203.43,
-          "roundTripBps1000": 243.18,
+          "usdgInPool": 65493,
+          "roundTripBps100": 203.46,
+          "roundTripBps1000": 242.75,
           "cardinality": 1400
         }
       ]
@@ -518,25 +534,25 @@
         {
           "fee": 500,
           "pool": "0xAae0d815EE56e4092a5E5C2911E676Fea50B2d6D",
-          "usdgInPool": 299909,
-          "roundTripBps100": 10.04,
-          "roundTripBps1000": 10.49,
+          "usdgInPool": 313519,
+          "roundTripBps100": 10.06,
+          "roundTripBps1000": 10.64,
           "cardinality": 1801
         },
         {
           "fee": 3000,
           "pool": "0x783C9bbB765047CFdD2b84b92b2Ca9F11D34b7Ed",
-          "usdgInPool": 105098,
-          "roundTripBps100": 60.7,
-          "roundTripBps1000": 67.82,
+          "usdgInPool": 75676,
+          "roundTripBps100": 61.96,
+          "roundTripBps1000": 80.48,
           "cardinality": 1500
         },
         {
           "fee": 10000,
           "pool": "0x3714aa8105DE1f384481B425788Af413748C1837",
-          "usdgInPool": 5824,
-          "roundTripBps100": 656.12,
-          "roundTripBps1000": 7366.81,
+          "usdgInPool": 6394,
+          "roundTripBps100": 637.69,
+          "roundTripBps1000": 7555.14,
           "cardinality": 1500
         }
       ]
@@ -545,34 +561,32 @@
       "symbol": "GME",
       "address": "0x1b0E319c6A659F002271B69dB8A7df2F911c153E",
       "feed": "0x27C71df6A64fB476468EdF256CF72c038baB5B67",
-      "qualifies": false,
-      "reasons": [
-        "round trip at $1,000 is 200.68 bps, over 75"
-      ],
+      "qualifies": true,
+      "reasons": [],
       "tiers": [
         {
           "fee": 500,
           "pool": "0xE2b46c905E12Ab8E2f864e4821a4325884C1B126",
-          "usdgInPool": 34434,
-          "roundTripBps100": 10.65,
-          "roundTripBps1000": 16.08,
+          "usdgInPool": 318963,
+          "roundTripBps100": 10.13,
+          "roundTripBps1000": 11.33,
+          "cardinality": 1860
+        },
+        {
+          "fee": 10000,
+          "pool": "0xE9713f453aDB9245B19559790c96F470a18F2fDF",
+          "usdgInPool": 543394,
+          "roundTripBps100": 199.19,
+          "roundTripBps1000": 200.97,
           "cardinality": 1860
         },
         {
           "fee": 3000,
           "pool": "0x0A0675689C2Ad2a3aDe86539BCbD27B6c0764e9d",
-          "usdgInPool": 8934,
-          "roundTripBps100": 61.2,
-          "roundTripBps1000": 73.15,
+          "usdgInPool": 16945,
+          "roundTripBps100": 80.29,
+          "roundTripBps1000": 254.6,
           "cardinality": 1500
-        },
-        {
-          "fee": 10000,
-          "pool": "0xE9713f453aDB9245B19559790c96F470a18F2fDF",
-          "usdgInPool": 842528,
-          "roundTripBps100": 199.16,
-          "roundTripBps1000": 200.68,
-          "cardinality": 1860
         }
       ]
     },
@@ -582,23 +596,23 @@
       "feed": "0x396118bdFB181e6240E74D243F266B061c0edc3D",
       "qualifies": false,
       "reasons": [
-        "round trip at $1,000 is 204.01 bps, over 75"
+        "round trip at $1,000 is 203.62 bps, over 75"
       ],
       "tiers": [
         {
           "fee": 10000,
           "pool": "0x17578C0e0D15da44f31677263114F71aE76653EA",
-          "usdgInPool": 417365,
-          "roundTripBps100": 199.5,
-          "roundTripBps1000": 204.01,
+          "usdgInPool": 520135,
+          "roundTripBps100": 199.46,
+          "roundTripBps1000": 203.62,
           "cardinality": 1500
         },
         {
           "fee": 3000,
           "pool": "0x2C08bCEf714bc8124972B7181494FC598e8Ed111",
-          "usdgInPool": 7020,
-          "roundTripBps100": 264.97,
-          "roundTripBps1000": 4241.06,
+          "usdgInPool": 5587,
+          "roundTripBps100": 100.21,
+          "roundTripBps1000": 448.77,
           "cardinality": 1
         }
       ]
@@ -613,25 +627,25 @@
         {
           "fee": 500,
           "pool": "0xc4f0172D6ac8DD294Dd1137D047d5E1893760236",
-          "usdgInPool": 17503,
-          "roundTripBps100": 13.95,
-          "roundTripBps1000": 49.42,
+          "usdgInPool": 20529,
+          "roundTripBps100": 13.27,
+          "roundTripBps1000": 42.94,
           "cardinality": 8
         },
         {
           "fee": 3000,
           "pool": "0xf4ACdAEEB7022862A763C9B1B885e11191c889E3",
-          "usdgInPool": 425756,
-          "roundTripBps100": 60.05,
-          "roundTripBps1000": 61.37,
+          "usdgInPool": 486180,
+          "roundTripBps100": 60.16,
+          "roundTripBps1000": 62.49,
           "cardinality": 1801
         },
         {
           "fee": 10000,
           "pool": "0xB349FB08C2712f3A70Bad40a4d006b68d67e888b",
-          "usdgInPool": 5080,
-          "roundTripBps100": 2757.93,
-          "roundTripBps1000": 9275.79,
+          "usdgInPool": 5120,
+          "roundTripBps100": 6323.65,
+          "roundTripBps1000": 9632.36,
           "cardinality": 1
         }
       ]
@@ -646,17 +660,17 @@
         {
           "fee": 3000,
           "pool": "0x8cB787e6c315D464775289BaD00FDD67d53Ecb3D",
-          "usdgInPool": 286132,
-          "roundTripBps100": 60.09,
-          "roundTripBps1000": 61.8,
+          "usdgInPool": 206187,
+          "roundTripBps100": 60.11,
+          "roundTripBps1000": 61.99,
           "cardinality": 1801
         },
         {
           "fee": 10000,
           "pool": "0x0Fa7BC480885DCf58Ad2ef63eC7289cF2481D51c",
-          "usdgInPool": 12035,
-          "roundTripBps100": 207.98,
-          "roundTripBps1000": 284.69,
+          "usdgInPool": 10310,
+          "roundTripBps100": 204.33,
+          "roundTripBps1000": 254.44,
           "cardinality": 1500
         }
       ]
@@ -667,16 +681,25 @@
       "feed": "0xB4106147E8cce40b7d46124090d373A71b70f87D",
       "qualifies": false,
       "reasons": [
-        "pinned pool holds $14200 of USDG, under $100000",
-        "round trip at $1,000 is 235.07 bps, over 75"
+        "pinned pool holds $6692 of USDG, under $100000",
+        "round trip at $1,000 is 197.47 bps, over 75",
+        "pool keeps 1 observations, too few for a 30 minute average"
       ],
       "tiers": [
         {
+          "fee": 3000,
+          "pool": "0xce79c1B7b5f9Ae1aab3B1796e7Fcd2F5F24cF265",
+          "usdgInPool": 6692,
+          "roundTripBps100": 73.67,
+          "roundTripBps1000": 197.47,
+          "cardinality": 1
+        },
+        {
           "fee": 10000,
           "pool": "0xedb22516B14Eb2d1C86927Db373B0E8bF70F5cD1",
-          "usdgInPool": 14200,
-          "roundTripBps100": 202.61,
-          "roundTripBps1000": 235.07,
+          "usdgInPool": 24187,
+          "roundTripBps100": 203.87,
+          "roundTripBps1000": 247.54,
           "cardinality": 1500
         }
       ]

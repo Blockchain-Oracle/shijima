@@ -39,8 +39,9 @@ operator key and the SERV key, picks them up.
 ### 2. `packages/shared`: rules everyone agrees on (4,405 lines)
 - `schemas/mandate.ts`: what the owner wants (targets in bps, caps, drift tolerance, loss stop, notes, and
   structured `price_move_sell` rules). `checkMandate` gives the problems in plain sentences.
-- `presets.ts`: the five baskets (The whole US market, Big tech, The 7 giants, The companies building AI,
-  Play it safe).
+- `presets.ts`: the 20 baskets, each with a "who it's for" line and filter tags. The first five ids (The whole
+  US market, Big tech, The giants, The companies building AI, Play it safe) are stored in mandates and never
+  change. `pnpm strategies:verify` re-checks every token they use on mainnet.
 - `schemas/timing.ts`: the one AI question. SERV answers `ACT_NOW | ACT_PART | WAIT_REOPEN | DECLINE`, with
   confidence, reasons citing evidence ids, rejected options, and warnings. Checked by `checkTimingDecision`.
 - `schemas/record.ts`: the record, versions 0/1/2, append-only. It holds the valuation, the need, the

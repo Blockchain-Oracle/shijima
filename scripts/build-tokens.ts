@@ -7,7 +7,7 @@
  *
  * What it does. Takes every active Stock Token that has a Chainlink feed, scans all four Uniswap v3 fee
  * tiers, measures real round-trip cost at $100 and $1,000 through QuoterV2, reads the pool's TWAP
- * capacity, and keeps about ten names. Read-only. Sends no transaction. Safe to rerun at any time.
+ * capacity, and keeps every name that passes. Read-only. Sends no transaction. Safe to rerun at any time.
  *
  * Run: pnpm tokens:build   Reads ALCHEMY_KEY from .env when present, otherwise uses the public RPC.
  */
@@ -38,13 +38,11 @@ const SIZES = { s100: 100_000_000n, s1000: 1_000_000_000n } // USDG has 6 decima
 const MIN_POOL_USDG = 100_000 // dollars on the USDG side of the pinned pool
 const MAX_ROUND_TRIP_BPS = 75 // the 0.3% tier costs about 60 bps in fees alone
 const MIN_CARDINALITY = 30 // observations needed for a 30 minute TWAP to be meaningful
-const TARGET_COUNT = 10
 const MUST_CONSIDER = ['SPY', 'QQQ'] // the "Broad market" preset depends on these
 /**
- * Depth decides who MAY be on the list. This order decides who IS. Ranking by depth alone picked a private
- * company, a stablecoin issuer and an oil fund over Microsoft, Meta and Tesla, which is wrong for a desk a
- * careful person trusts overnight. Broad funds first, then the largest companies, then a Treasury bill fund
- * as a near-cash holding. Anything else that qualifies stays in tokens.scan.json for later.
+ * Depth decides who MAY be on the list, and since round 3 every token that passes is on it (the 20 strategies
+ * need all of them). This order only sorts the list: broad funds first, then the largest companies, then a
+ * Treasury bill fund, then the rest. A desk allows at most 16 of them on-chain (`deskTokenSet`).
  */
 const PREFERRED = [
   'SPY',
@@ -61,6 +59,11 @@ const PREFERRED = [
   'PLTR',
   'MU',
   'INTC',
+  'SPCX',
+  'CRCL',
+  'BABA',
+  'USO',
+  'SLV',
 ]
 const DISPLAY: Record<string, string> = {
   NVDA: 'Nvidia',
@@ -87,6 +90,7 @@ const DISPLAY: Record<string, string> = {
   USO: 'Oil fund',
   GME: 'GameStop',
   CRCL: 'Circle',
+  SPCX: 'SpaceX',
 }
 
 // Alchemy first when a key is present, with the public RPC as the fallback transport.
@@ -99,6 +103,20 @@ const client = makePublicClient(
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const CHAIN_DIR = resolve(import.meta.dirname, '../packages/chain')
 const FEEDS_SNAPSHOT = resolve(CHAIN_DIR, 'feeds.snapshot.json')
+const TOKENS_FILE = resolve(CHAIN_DIR, 'tokens.json')
+
+/**
+ * The list before this run. Two rules protect desks already on mainnet, which store their pins on-chain:
+ * 1. A pin never moves while the pinned pool still passes. The gate refuses any trade whose on-chain fee differs
+ *    from ours (POOL_MISMATCH), so moving SGOV to a cheaper tier would silently stop every desk trading it.
+ * 2. A token already listed is never dropped. Desks read balances only for listed tokens, so dropping one would
+ *    hide a real holding. It stays with a `watch` note, and no strategy may use it (`pnpm strategies:verify`).
+ */
+type Listed = { symbol: string; address: string; pinnedFee: number; watch?: string } & Record<string, unknown>
+const previous: Listed[] = existsSync(TOKENS_FILE)
+  ? (JSON.parse(readFileSync(TOKENS_FILE, 'utf8')) as { tokens: Listed[] }).tokens
+  : []
+const previousPin = new Map(previous.map((t) => [t.address.toLowerCase(), t.pinnedFee]))
 
 /** The network this is built on drops connections. Retry with backoff, never fail on the first timeout. */
 async function fetchJson<T>(url: string, attempts = 5): Promise<T> {
@@ -290,7 +308,8 @@ async function main() {
       a.roundTripBps1000 - b.roundTripBps1000 || b.usdgInPool - a.usdgInPool
     const tiers = measured.filter((m) => m.c.symbol === c.symbol).sort(byCost)
     const deep = tiers.filter((t) => t.usdgInPool >= MIN_POOL_USDG && t.cardinality >= MIN_CARDINALITY)
-    const best = deep[0] ?? tiers[0]
+    const pinned = tiers.find((t) => t.fee === previousPin.get(c.address.toLowerCase()))
+    const best = pinned ?? deep[0] ?? tiers[0]
     const f = facts.get(c.symbol)
     const reasons: string[] = []
     if (!best) reasons.push('no pool with at least $5,000 of USDG')
@@ -305,12 +324,12 @@ async function main() {
   })
 
   const qualified = scan.filter((s) => s.qualifies)
+  const listedBefore = (s: (typeof scan)[number]) => previousPin.has(s.c.address.toLowerCase())
+  const watched = scan.filter((s) => !s.qualifies && listedBefore(s) && s.best && s.f)
   const rank = (sym: string) => (PREFERRED.indexOf(sym) === -1 ? PREFERRED.length : PREFERRED.indexOf(sym))
-  const chosen = [...qualified]
-    .sort(
-      (a, b) => rank(a.c.symbol) - rank(b.c.symbol) || (b.best?.usdgInPool ?? 0) - (a.best?.usdgInPool ?? 0),
-    )
-    .slice(0, TARGET_COUNT)
+  const chosen = [...qualified, ...watched].sort(
+    (a, b) => rank(a.c.symbol) - rank(b.c.symbol) || (b.best?.usdgInPool ?? 0) - (a.best?.usdgInPool ?? 0),
+  )
   const note = (rt: number) =>
     rt <= 15 ? 'Very easy to trade' : rt <= 35 ? 'Easy to trade' : 'Costs more to trade'
 
@@ -333,8 +352,20 @@ async function main() {
       observationCardinality: b.cardinality,
       uiMultiplier: f.uiMultiplier.toString(),
       tradability: note(b.roundTripBps1000),
+      ...(s.qualifies ? {} : { watch: s.reasons.join('; ') }),
     }
   })
+  const lost = previous.filter(
+    (p) => !tokens.some((t) => t.address.toLowerCase() === p.address.toLowerCase()),
+  )
+  if (lost.length) {
+    // No fresh numbers for it at all (no pool left above $5,000). Keep the last entry so balances stay visible.
+    for (const p of lost)
+      tokens.push({
+        ...(p as unknown as (typeof tokens)[number]),
+        watch: 'no pool with at least $5,000 of USDG',
+      })
+  }
 
   const generatedAt = new Date().toISOString()
   const dir = CHAIN_DIR
@@ -381,7 +412,14 @@ async function main() {
     )}\n`,
   )
 
-  console.log(`\nqualified ${qualified.length} of ${candidates.length}. chosen ${tokens.length}:\n`)
+  console.log(
+    `\nqualified ${qualified.length} of ${candidates.length}. listed ${tokens.length}, of which on watch: ${
+      tokens
+        .filter((t) => t.watch)
+        .map((t) => t.symbol)
+        .join(', ') || 'none'
+    }\n`,
+  )
   console.table(
     tokens.map((t) => ({
       symbol: t.symbol,
@@ -391,9 +429,11 @@ async function main() {
       rt100: t.roundTripBps100,
       rt1000: t.roundTripBps1000,
       obs: t.observationCardinality,
-      note: t.tradability,
+      note: t.watch ? `WATCH: ${t.watch}` : t.tradability,
     })),
   )
+  // Desk.sol MAX_TOKENS: a new desk allows every listed token at creation, so a 17th would make createDesk revert.
+  if (tokens.length > 16) console.warn(`WARNING: ${tokens.length} tokens listed, a desk can allow only 16.`)
   const missed = MUST_CONSIDER.filter((m) => !tokens.some((t) => t.symbol === m))
   if (missed.length)
     console.warn(`WARNING: ${missed.join(', ')} did not qualify. The "Broad market" preset needs a rethink.`)

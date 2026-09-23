@@ -53,7 +53,7 @@ export const docsCopy = {
         {
           steps: [
             'Connect a wallet on Robinhood Chain and sign one message. Signing costs nothing.',
-            'Pick a strategy: The 7 giants, the whole US market, the companies building AI, or your own mix.',
+            'Pick one of 20 strategies, such as The giants, the whole US market or Oil and silver, or your own mix.',
             'Choose how much USDG to put in. You see what that amount buys of each stock, in dollars. You can also start in practice with no money.',
             'Set your agent’s limits: the most per trade, the most per day, and the loss at which everything stops.',
             'Meet your agent, read the one-page disclosure, and confirm. Your wallet signs twice: once to create your account, once to put in your USDG.',

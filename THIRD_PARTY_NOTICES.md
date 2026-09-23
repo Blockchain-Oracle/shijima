@@ -54,7 +54,8 @@ covers the vectorization, not the trademark.
 
 | Mark | Source | Terms |
 | --- | --- | --- |
-| Tesla, NVIDIA, Apple, Meta, Google | [simple-icons](https://github.com/simple-icons/simple-icons) **16.31.0** (`icons/<slug>.svg`) | CC0 1.0 Universal |
+| Tesla, NVIDIA, Apple, Meta, Google, SpaceX, Circle | [simple-icons](https://github.com/simple-icons/simple-icons) **16.31.0** (`icons/<slug>.svg`) | CC0 1.0 Universal |
 | Amazon | simple-icons **14.15.0**, the last release to carry `amazon.svg` | CC0 1.0 at publication. Removed in 15.0.0 pending permission, not on a request from Amazon. |
 | Microsoft | Own geometry: four rectangles, no third-party artwork | simple-icons removed its Microsoft icons on Microsoft's trademark terms, so none is vendored. |
-| SPDR S&P 500, Invesco QQQ, iShares 0-3 Month Treasury Bond | None: a monogram typed on the fund house's colour | — |
+| SPDR S&P 500, Invesco QQQ, iShares 0-3 Month Treasury Bond, iShares Silver Trust, United States Oil Fund | None: a monogram typed on the fund house's colour | — |
+| Micron, GameStop | None: no mark in simple-icons or svgl, so a monogram typed on the brand colour | — |
