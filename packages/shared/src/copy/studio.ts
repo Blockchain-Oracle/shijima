@@ -244,51 +244,6 @@ export const studioCopy = {
     'Not investment advice. Stock Tokens are not shares and are not available in the US, the UK, Canada or Switzerland. The agent makes no prediction and claims no edge.',
 } as const
 
-/**
- * The five screens a first visit sees over the markets (design brief 8.1 to 8.3), ending on Connect. The weekend
- * fact is filled in from the price log, so the number is real.
- */
-export const tutorialCopy = {
-  steps: {
-    what: {
-      title: 'Welcome to Shijima',
-      body: 'An AI agent for your Stock Tokens. You choose what it holds; it decides only when to move, inside limits your own account enforces, and it writes down every decision.',
-    },
-    weekend: {
-      title: 'The market sleeps. The tokens do not.',
-      body: (fact: string | null) =>
-        `The US market is shut most of the week. Stock Tokens on Robinhood Chain trade every hour of it. ${
-          fact ?? 'Their prices drift from the last official update while it is shut.'
-        } Whether to act before the reopen, or wait for it, is the only thing the agent decides.`,
-      fact: (who: string, pct: string, direction: 'above' | 'below', saturday: string) =>
-        `On the weekend of ${saturday}, ${who} moved as far as ${pct} ${direction} its Friday reference.`,
-    },
-    promises: {
-      title: 'Five promises',
-      items: [
-        'Your money sits in an account only you can withdraw from.',
-        'The assistant can trade inside it, never send it anywhere.',
-        'Your limits are held by the account itself, whatever the AI decides.',
-        'Every decision is written down, including the choice to wait, and fingerprinted on the chain.',
-        'You can remove the assistant at any time, in one confirmation.',
-      ],
-    },
-    region: {
-      title: 'Who may not hold Stock Tokens',
-      body: 'People in the US, the UK, Canada, Switzerland and some other places may not hold them. A Stock Token follows a stock’s price; it is not the share. Reading this site stays open to everyone.',
-    },
-    connect: {
-      title: 'Connect to begin',
-      kicker: 'Last step',
-      heading: 'Connect and sign one message',
-      note: 'It costs nothing and moves nothing. Then start an agent from a basket.',
-      fineprint:
-        'You can see a real agent without connecting: the markets page marks what shared agents did.',
-    },
-  },
-  close: 'Close',
-  skip: 'Skip',
-  next: 'Next',
-  done: 'Start',
-  progress: (step: number, total: number) => `Step ${step} of ${total}`,
-} as const
+/** The weekend fact the landing page and How it works show, filled in from the price log so the number is real. */
+export const weekendFactCopy = (who: string, pct: string, direction: 'above' | 'below', saturday: string) =>
+  `On the weekend of ${saturday}, ${who} moved as far as ${pct} ${direction} its Friday reference.`

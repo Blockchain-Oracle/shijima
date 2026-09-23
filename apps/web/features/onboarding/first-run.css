@@ -1,0 +1,451 @@
+/* The first-run tour. The stage, the mark's pop and its halo rings, the Continue-paced steps and the dots are the
+ * reference wallet's intro (packages/ui/src/onboarding.tsx + intro.tsx + theme.css @ 859d95f), painted with our
+ * kit tokens so it reads right in both themes. A framed panel on a desk; a bottom sheet on a phone. */
+
+.first-run-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--mask);
+  animation: kitShade 0.2s ease both;
+}
+
+.first-run {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(460px, 100%);
+  height: min(760px, calc(100dvh - 48px));
+  padding: 20px 24px 24px;
+  border: 1px solid var(--bd2);
+  border-radius: var(--radius-panel);
+  background: radial-gradient(520px 420px at 50% 34%, var(--canvas-glow-a), transparent 70%), var(--panel);
+  color: var(--tx);
+  box-shadow: var(--shadow-pop);
+  outline: none;
+  overflow: hidden;
+  touch-action: pan-y;
+  animation: kitRise 0.32s cubic-bezier(0.2, 0.9, 0.24, 1) both;
+}
+
+.first-run-grabber {
+  display: none;
+}
+
+.first-run-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+}
+.first-run-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.first-run-brand .kit-brand-tile {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+}
+.first-run-count {
+  font: 600 10px / 1 var(--fm);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tx3);
+}
+.first-run-tools {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+.first-run-icon,
+.first-run-skip {
+  display: inline-grid;
+  place-items: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--tx3);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+.first-run-icon svg {
+  width: 16px;
+  height: 16px;
+}
+.first-run-icon:hover,
+.first-run-skip:hover {
+  color: var(--tx);
+  background: var(--card);
+}
+
+.first-run:focus,
+.first-run:focus-visible {
+  outline: none;
+}
+.first-run :focus-visible {
+  outline: 2px solid var(--ac);
+  outline-offset: 2px;
+}
+
+.first-run-bar {
+  height: 3px;
+  margin-top: 12px;
+  border-radius: 999px;
+  background: var(--bd);
+  overflow: hidden;
+}
+.first-run-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ac);
+  transition: width 0.35s ease;
+}
+
+.first-run-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  padding: 12px 0;
+}
+.first-run-body::-webkit-scrollbar {
+  display: none;
+}
+
+.first-run-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  width: 100%;
+}
+.first-run-words {
+  max-width: 360px;
+  text-align: center;
+}
+.first-run-title {
+  font-size: 25px;
+  font-weight: 820;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  animation: kitRise 0.5s ease 0.05s both;
+}
+.first-run-sub {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--tx2);
+  animation: kitRise 0.5s ease 0.14s both;
+}
+.first-run-tag {
+  margin-top: 12px;
+  font: 700 10.5px / 1 var(--fm);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--tx3);
+  animation: kitRise 0.5s ease 0.22s both;
+}
+
+/* The mark pops onto the stage with two halo rings (intro.tsx / onboarding-slides.tsx BrandHero). */
+.first-run-hero {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 128px;
+}
+.first-run-ring {
+  position: absolute;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--ac) 55%, transparent);
+  animation: firstRunRing 1.6s ease-out both;
+  pointer-events: none;
+}
+.first-run-coin {
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  border-radius: 26px;
+  border: 1px solid var(--bd2);
+  background: var(--card);
+  color: var(--tx);
+  box-shadow: var(--shadow-glow);
+  animation: firstRunCoin 1s cubic-bezier(0.3, 1.4, 0.4, 1) both;
+}
+.first-run-coin svg {
+  width: 48px;
+  height: 48px;
+}
+.first-run-coin .dot {
+  fill: var(--ac);
+}
+
+/* The three beats: the reference's balance rows, one per idea. */
+.first-run-beats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 360px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.first-run-beat {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 15px;
+  border: 1px solid var(--bd);
+  border-radius: 15px;
+  background: var(--card);
+  animation: kitRise 0.45s ease both;
+}
+.first-run-beat-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--ac) 14%, transparent);
+  color: var(--ac2);
+}
+.first-run-beat-icon svg {
+  width: 15px;
+  height: 15px;
+}
+.first-run-beat-words {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.first-run-beat-top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.first-run-beat-top strong {
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.first-run-beat-top em {
+  font: 600 9.5px / 1 var(--fm);
+  font-style: normal;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ac2);
+}
+.first-run-beat-note {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--tx2);
+}
+
+.first-run-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 360px;
+}
+.first-run-signin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 220px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--ac);
+  color: var(--on-accent);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  box-shadow: var(--shadow-glow);
+  cursor: pointer;
+}
+.first-run-signin:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.first-run-panel > .relative {
+  align-items: center;
+}
+.first-run-connected {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--pos) 40%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--pos) 8%, transparent);
+  color: var(--pos);
+  font-size: 13px;
+  font-weight: 700;
+}
+.first-run-connected code {
+  font: 600 12px / 1 var(--fm);
+  color: var(--tx);
+}
+.first-run-fine {
+  max-width: 340px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--tx3);
+  text-align: center;
+}
+.first-run-left {
+  font: 700 10.5px / 1 var(--fm);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ac2);
+}
+.first-run-panel .gift-card {
+  width: 100%;
+}
+
+.first-run-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+.first-run-dots {
+  display: flex;
+  gap: 8px;
+}
+.first-run-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--bd2);
+  transition:
+    width 0.3s ease,
+    background 0.3s ease;
+}
+.first-run-dots span[data-on] {
+  width: 22px;
+  background: var(--ac);
+}
+.first-run-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+.first-run-actions--stack {
+  flex-direction: column;
+}
+
+/* The later steps' smaller tile, one icon on it. */
+.first-run-hero--small {
+  height: 88px;
+}
+.first-run-hero--small .first-run-coin {
+  width: 68px;
+  height: 68px;
+  border-radius: 20px;
+  color: var(--ac2);
+}
+.first-run-hero--small .first-run-coin svg {
+  width: 30px;
+  height: 30px;
+}
+
+@keyframes firstRunCoin {
+  0% {
+    transform: scale(0.3) rotate(-30deg);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(1.12) rotate(4deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+@keyframes firstRunRing {
+  from {
+    transform: scale(0.72);
+    opacity: 0.85;
+  }
+  to {
+    transform: scale(2.7);
+    opacity: 0;
+  }
+}
+
+/* A phone gets the reference's bottom sheet: docked to the bottom edge, with a grabber. */
+@media (max-width: 767px) {
+  .first-run-layer {
+    place-items: end center;
+    padding: 0;
+  }
+  .first-run {
+    width: 100%;
+    height: min(640px, 94dvh);
+    padding: 10px 18px calc(18px + env(safe-area-inset-bottom));
+    border-bottom: 0;
+    border-radius: 25px 25px 0 0;
+    animation: kitSheetUp 0.3s cubic-bezier(0.2, 0.9, 0.24, 1) both;
+  }
+  .first-run-grabber {
+    display: block;
+    width: 38px;
+    height: 4px;
+    margin: 0 auto 10px;
+    border-radius: 999px;
+    background: var(--bd2);
+  }
+  .first-run-title {
+    font-size: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .first-run-layer,
+  .first-run,
+  .first-run-title,
+  .first-run-sub,
+  .first-run-tag,
+  .first-run-beat,
+  .first-run-coin {
+    animation: none;
+  }
+  .first-run-ring {
+    display: none;
+  }
+  .first-run-bar span,
+  .first-run-dots span {
+    transition: none;
+  }
+}

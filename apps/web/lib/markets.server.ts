@@ -20,7 +20,7 @@ import {
   sharedDecisionsOn,
   sharedDesks,
 } from '@desk/db'
-import { ago, marketsCopy, newYorkTime, PRESETS, type Preset, stockCopy, tutorialCopy } from '@desk/shared'
+import { ago, marketsCopy, newYorkTime, PRESETS, type Preset, stockCopy, weekendFactCopy } from '@desk/shared'
 import type { Route } from 'next'
 import { db } from './db'
 import { signedInAddress } from './session'
@@ -331,7 +331,7 @@ export interface MarketsView {
   marks: DeskMark[]
   desks: Awaited<ReturnType<typeof sharedDesks>>
   viewer: Viewer
-  /** For the first-run tutorial. Null when the price log has no weekend in it yet. */
+  /** The weekend fact. Null when the price log has no weekend in it yet. */
   weekendFact: string | null
 }
 
@@ -494,14 +494,14 @@ export async function loadWeekendFact(): Promise<string | null> {
   return weekendFact(await latestWeekendMove(db()).catch(() => undefined))
 }
 
-/** The first-run tutorial's real number: the largest weekend move from the Friday reference, in words. */
+/** The weekend fact: the largest weekend move from the Friday reference, in words. */
 function weekendFact(w: Awaited<ReturnType<typeof latestWeekendMove>>): string | null {
   const token = w ? APPROVED_TOKENS.find((t) => t.address.toLowerCase() === w.token.toLowerCase()) : undefined
   if (!w || !token || w.gapBps === 0) return null
   const sat = new Date(`${w.saturday}T12:00:00Z`)
   const sun = new Date(sat.getTime() + DAY)
   const days = `${sat.getUTCDate()}–${sun.getUTCDate()} ${sun.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' })}`
-  return tutorialCopy.steps.weekend.fact(
+  return weekendFactCopy(
     `${token.displayName}’s token`,
     `${(Math.abs(w.gapBps) / 100).toFixed(1)}%`,
     w.gapBps > 0 ? 'above' : 'below',

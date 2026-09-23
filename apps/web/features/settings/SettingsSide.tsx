@@ -1,11 +1,12 @@
 'use client'
 
-import { appCopy } from '@desk/shared'
+import { appCopy, firstRunCopy } from '@desk/shared'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useDisconnect } from 'wagmi'
-import { BoundaryBadge } from '@/components/kit'
+import { BoundaryBadge, Button } from '@/components/kit'
+import { openTour } from '@/features/onboarding/tour'
 
 /**
  * The right column of the reference wallet's Settings (SettingsScreen.tsx:124-145): the "Verify it yourself" card,
@@ -89,6 +90,10 @@ export function SettingsSide({ verifyHref }: { verifyHref: string }) {
       >
         {c.realMoney}
       </div>
+
+      <Button variant="secondary" onClick={openTour} title={firstRunCopy.tourNote}>
+        {firstRunCopy.tour}
+      </Button>
 
       <button
         type="button"

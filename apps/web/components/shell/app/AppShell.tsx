@@ -9,6 +9,7 @@ import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { hapticTap, usePullToRefresh } from '@/components/kit/gestures'
 import { BottomSheet } from '@/components/kit/sheet'
 import { GiftCard } from '@/features/gift/GiftCard'
+import { FirstRun } from '@/features/onboarding/FirstRun'
 import Footer from '../Footer'
 import { HeaderAccount } from '../HeaderAccount'
 import { HeaderInbox } from '../HeaderInbox'
@@ -86,6 +87,7 @@ export function AppShell({ children, signedInAs, unread, agents }: AppShellProps
       <BottomSheet open={more} onClose={() => setMore(false)} label={appCopy.nav.moreTitle} tall>
         <MoreSheet signedInAs={signedInAs} agents={agents} onNavigate={() => setMore(false)} />
       </BottomSheet>
+      <FirstRun signedInAs={signedInAs} hasAgents={agents.length > 0} />
     </div>
   )
 }

@@ -193,12 +193,7 @@ export function WithdrawScreen({
                 {what === 'everything' ? (
                   <TicketQuoted text={(cashAndSavings + stocksUsd).toFixed(2)} />
                 ) : (
-                  <TicketAmount
-                    value={amount}
-                    onChange={setAmount}
-                    label={c.amountLabel}
-                    invalid={tooMuch}
-                  />
+                  <TicketAmount value={amount} onChange={setAmount} label={c.amountLabel} invalid={tooMuch} />
                 )}
                 {what === 'stock' && stock ? (
                   <AssetPill
