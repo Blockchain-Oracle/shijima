@@ -46,10 +46,15 @@ export function CopySettings({
 
   return (
     <div className="copyset">
-      <label className="copyset-row">
-        <Switch checked={copyable} onCheckedChange={(v) => save(v)} disabled={pending || !shared} />
+      <div className="copyset-row">
+        <Switch
+          checked={copyable}
+          onCheckedChange={(v) => save(v)}
+          disabled={pending || !shared}
+          aria-label={c.title}
+        />
         <span>{copyable ? c.on : c.off}</span>
-      </label>
+      </div>
       {!shared && <p className="copy-muted">{appCopy.copy.refused.missing}</p>}
       <label className="copyset-fee">
         <span>{c.fee}</span>
