@@ -532,3 +532,48 @@
     display: none !important;
   }
 }
+
+/* The asset picker of the money flows, after the reference's AssetSelector (packages/ui/src/inputs.tsx). */
+.kit-asset-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.kit-asset {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--bd);
+  background: var(--card);
+  color: var(--tx);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.kit-asset[data-on] {
+  border-color: var(--ac);
+  background: color-mix(in srgb, var(--ac) 8%, var(--card));
+}
+.kit-asset-name,
+.kit-asset-held {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.kit-asset-name strong {
+  font-size: 14px;
+}
+.kit-asset-name em,
+.kit-asset-held em {
+  font: normal 500 10.5px / 1.2 var(--fm);
+  color: var(--tx3);
+}
+.kit-asset-held {
+  margin-left: auto;
+  align-items: flex-end;
+}
+.kit-asset-held b {
+  font: 700 13px / 1 var(--fm);
+}
