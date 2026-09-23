@@ -20,7 +20,9 @@ import { db } from './db'
 const DAY_MS = 24 * 60 * 60 * 1000
 
 const symbolOf = (address: string | null) =>
-  address ? (APPROVED_TOKENS.find((t) => t.address.toLowerCase() === address.toLowerCase())?.symbol ?? null) : null
+  address
+    ? (APPROVED_TOKENS.find((t) => t.address.toLowerCase() === address.toLowerCase())?.symbol ?? null)
+    : null
 
 export interface PublicAgent {
   id: string
@@ -31,7 +33,14 @@ export interface PublicAgent {
   symbols: string[]
   valueUsdg: string | null
   dayBps: number | null
-  latest: { seq: number; summary: string; outcome: string; shadow: boolean; symbol: string | null; at: string } | null
+  latest: {
+    seq: number
+    summary: string
+    outcome: string
+    shadow: boolean
+    symbol: string | null
+    at: string
+  } | null
   graded: number
   better: number
   followers: number

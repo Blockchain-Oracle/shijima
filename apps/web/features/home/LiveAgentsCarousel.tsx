@@ -69,7 +69,7 @@ export function LiveAgentsCarousel({ agents }: { agents: PublicAgent[] }) {
           </button>
         </span>
       </div>
-      <section ref={track} className="lac-track" tabIndex={0} aria-label={c.aria}>
+      <section ref={track} className="lac-track" aria-label={c.aria}>
         {agents.map((a) => (
           <article key={a.id} className={cn('lac-card', a.mode !== 'shadow' && 'is-live')}>
             <Link href={`/agents/${a.slug}` as Route} className="lac-card-link" aria-label={a.name} />
