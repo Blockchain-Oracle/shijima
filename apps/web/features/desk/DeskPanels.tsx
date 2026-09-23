@@ -6,6 +6,7 @@ import { Answer } from '@/components/answer'
 import { AllocationDonut } from '@/components/ui/allocation-donut'
 import { TokenLogo } from '@/components/ui/token-logo'
 import { When } from '@/components/when'
+import { TelegramConnect } from '@/features/settings/TelegramConnect'
 import type { DeskView } from '@/lib/desk.server'
 import { cn } from '@/lib/utils'
 import { type DeskNote, noteLabel, noteText } from './notes'
@@ -64,12 +65,10 @@ export function NeedsYou({ view }: { view: DeskView }) {
             </div>
           ))}
       {view.desk.telegramLinked === false && (
-        <p className="type-caption text-ink-muted">
-          {deskCopy.telegramOff}{' '}
-          <Link href={`/desk/${view.slug}/settings` as Route} className="text-accent hover:underline">
-            {deskCopy.settingsLink} →
-          </Link>
-        </p>
+        <div className="flex flex-col gap-2 rounded-[var(--radius-md)] border border-border bg-[var(--color-surface-2)] p-3">
+          <p className="type-caption text-ink-secondary">{deskCopy.telegramOff}</p>
+          <TelegramConnect deskId={view.desk.id} compact />
+        </div>
       )}
     </Panel>
   )

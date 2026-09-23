@@ -71,6 +71,8 @@ export default async function DeskPage({
           desk={
             <>
               <NeedsYou view={view} />
+              <Plate view={view} />
+              <ValueChart view={view} />
               {view.isOwner && (
                 <DeskControls
                   view={{
@@ -105,11 +107,9 @@ export default async function DeskPage({
                   }}
                 />
               )}
-              {view.isOwner && <OwnerSessionPanel />}
-              <Plate view={view} />
-              <ValueChart view={view} />
               <Allocation view={view} />
               <Holdings view={view} />
+              {view.isOwner && <OwnerSessionPanel />}
               <NextCheck view={view} />
               <Limits view={view} />
               <Mandate view={view} />
