@@ -202,6 +202,29 @@ export const appCopy = {
     },
     none: 'No agents yet.',
     agentSettings: 'Agent settings',
+    sub: 'Your account, connections, who can act for your agents, and what you agreed to.',
+    groups: {
+      account: 'Account',
+      connections: 'Connections',
+      access: 'Agents & access',
+      agreed: 'What you agreed to',
+    },
+    address: 'Your wallet',
+    gas: 'Gas for what you sign',
+    getGas: 'Get gas',
+    verify: {
+      title: 'Verify it yourself',
+      badge: 'ON CHAIN',
+      rows: [
+        'Every decision, with its fingerprint',
+        'The live numbers on mainnet',
+        'The contracts, on Blockscout',
+      ],
+      open: 'Open ›',
+    },
+    realMoney:
+      'Real money, on Robinhood Chain mainnet. Your agents trade inside the limits you set; only your wallet can take money out.',
+    disconnect: 'Disconnect',
   },
 
   agentPage: {

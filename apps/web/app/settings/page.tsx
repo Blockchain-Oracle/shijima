@@ -1,16 +1,16 @@
 import { deskAbi } from '@desk/chain'
 import { desksOfOwner, disclosureAccepted, ensureOwner, telegramForOwner } from '@desk/db'
-import { appCopy, DISCLOSURE_VERSION, deskCopy, settingsCopy, short } from '@desk/shared'
-import { ArrowRight, Link2, ScrollText, Wallet, Workflow } from 'lucide-react'
+import { appCopy, DISCLOSURE_VERSION, deskCopy, short } from '@desk/shared'
 import type { Route } from 'next'
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
-import type { ReactNode } from 'react'
 import type { Address } from 'viem'
+import { Group, Row, Screen, ScreenTitle } from '@/components/kit'
 import { WalletChip } from '@/components/shell/app/WalletChip'
 import { TokenLogo } from '@/components/ui/token-logo'
+import { SignedOutCard } from '@/features/money/SignedOutCard'
 import { AccountConnections } from '@/features/settings/Connections'
 import { Disclosure } from '@/features/settings/Disclosure'
+import { SettingsSide } from '@/features/settings/SettingsSide'
 import { pub } from '@/lib/chain-build.server'
 import { db } from '@/lib/db'
 import { signedInAddress } from '@/lib/session'
@@ -19,15 +19,6 @@ export const dynamic = 'force-dynamic'
 export const metadata = { title: appCopy.settings.meta }
 
 const ZERO = '0x0000000000000000000000000000000000000000'
-
-function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
-  return (
-    <section id={id} className="set-section">
-      <h2 className="set-title">{title}</h2>
-      {children}
-    </section>
-  )
-}
 
 /**
  * Who may act for one agent, read from its contract: the operator key (Shijima's agent, or nobody once removed)
@@ -60,7 +51,7 @@ async function accessOf(address: string, version: string) {
  */
 export default async function AccountSettings() {
   const address = await signedInAddress().catch(() => undefined)
-  if (!address) redirect('/agents')
+  if (!address) return <SignedOutCard />
   const c = appCopy.settings
   const a = c.access
 
@@ -72,131 +63,134 @@ export default async function AccountSettings() {
     Promise.all(open.map((d) => accessOf(d.address, d.contractVersion))),
   ])
 
-  const nav = [
-    { id: 'connections', label: c.nav.connections, icon: Link2 },
-    { id: 'wallet', label: c.nav.wallet, icon: Wallet },
-    { id: 'agents', label: c.nav.agents, icon: Workflow },
-    { id: 'disclosure', label: c.nav.disclosure, icon: ScrollText },
-  ]
+  const agentsList =
+    desks.length === 0 ? (
+      <Row
+        top
+        label={
+          <>
+            {c.none}{' '}
+            <Link href="/agents/new" style={{ color: 'var(--ac2)' }}>
+              {appCopy.sidebar.newAgent} →
+            </Link>
+          </>
+        }
+      />
+    ) : (
+      desks.map((d, index) => {
+        const i = open.indexOf(d)
+        const acc = i >= 0 ? access[i] : undefined
+        return (
+          <div key={d.id} style={{ borderTop: index === 0 ? 'none' : '1px solid var(--bd)' }}>
+            <Link
+              href={`/agents/${d.shareSlug ?? d.id}/settings` as Route}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '14px 18px 6px',
+                color: 'var(--tx)',
+                textDecoration: 'none',
+                fontWeight: 700,
+                fontSize: 13.5,
+              }}
+            >
+              <TokenLogo symbol="CASH" size={22} />
+              {d.name ?? 'Agent'}
+              <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--ac2)', fontWeight: 600 }}>
+                {c.agentSettings} →
+              </span>
+            </Link>
+            {acc ? (
+              <dl className="kit-dl">
+                <div>
+                  <dt>{a.mode}</dt>
+                  <dd>{deskCopy.modes[d.mode]}</dd>
+                </div>
+                <div>
+                  <dt>{a.trades}</dt>
+                  <dd>
+                    {acc.operator === null
+                      ? '—'
+                      : acc.operator === ZERO
+                        ? a.removed
+                        : a.trader(short(acc.operator, 6, 4))}
+                  </dd>
+                </div>
+                <div>
+                  <dt>{a.session}</dt>
+                  <dd>
+                    {acc.session
+                      ? a.sessionUntil(
+                          short(acc.session.key, 6, 4),
+                          acc.session.until.toLocaleString('en-GB', {
+                            dateStyle: 'medium',
+                            timeStyle: 'short',
+                          }),
+                        )
+                      : a.noSession}
+                  </dd>
+                </div>
+                <div>
+                  <dt>{a.withdraw}</dt>
+                  <dd>{a.onlyYou}</dd>
+                </div>
+              </dl>
+            ) : (
+              <p style={{ margin: 0, padding: '0 18px 14px', fontSize: 12.5, color: 'var(--tx3)' }}>
+                {a.closed}
+              </p>
+            )}
+          </div>
+        )
+      })
+    )
 
   return (
-    <div className="app-container">
-      <header className="ov-head">
-        <div>
-          <p className="ov-kicker">{c.kicker}</p>
-          <h1 className="ov-title">{c.title}</h1>
-        </div>
-      </header>
-
-      <div className="set-layout">
-        <nav className="set-nav" aria-label={c.title}>
-          {nav.map((n) => {
-            const Icon = n.icon
-            return (
-              <a key={n.id} href={`#${n.id}`} className="set-nav-link">
-                <Icon aria-hidden="true" className="size-4" />
-                {n.label}
-              </a>
-            )
-          })}
-        </nav>
-
-        <div className="set-main">
-          <Section id="connections" title={c.nav.connections}>
-            <AccountConnections
-              telegram={{
-                linked: telegram.linked ? { username: telegram.linked.username } : null,
-                pending: telegram.pending
-                  ? { code: telegram.pending.code, expiresAt: telegram.pending.codeExpiresAt.toISOString() }
-                  : null,
-              }}
-              agents={open.map((d) => ({ id: d.id, name: d.name ?? 'Agent' }))}
-            />
-          </Section>
-
-          <Section id="wallet" title={c.nav.wallet}>
-            <div className="set-wallet">
+    <Screen width={960} gap={8}>
+      <ScreenTitle title={c.title} sub={c.sub} />
+      <div className="kit-settings">
+        <div className="kit-settings-main">
+          <Group title={c.groups.account} id="wallet">
+            <Row top label={c.address}>
+              <span style={{ fontFamily: 'var(--fm)' }}>{short(address, 6, 4)}</span>
+            </Row>
+            <div style={{ padding: '4px 18px 16px', borderTop: '1px solid var(--bd)' }}>
+              <p style={{ margin: '12px 0 10px', fontSize: 12.5, color: 'var(--tx2)' }}>{c.gas}</p>
               <WalletChip address={address} />
             </div>
-          </Section>
+          </Group>
 
-          <Section id="agents" title={c.nav.agents}>
-            {desks.length === 0 ? (
-              <p className="set-body">
-                {c.none}{' '}
-                <Link href="/agents/new" className="text-accent">
-                  {appCopy.sidebar.newAgent} →
-                </Link>
-              </p>
-            ) : (
-              <ul className="set-agents">
-                {desks.map((d) => {
-                  const i = open.indexOf(d)
-                  const acc = i >= 0 ? access[i] : undefined
-                  return (
-                    <li key={d.id} className="set-access">
-                      <Link
-                        href={`/agents/${d.shareSlug ?? d.id}/settings` as Route}
-                        className="set-agent-row"
-                      >
-                        <TokenLogo symbol="CASH" size={22} />
-                        <span className="set-agent-label">{d.name ?? 'Agent'}</span>
-                        <span className="set-agent-go">
-                          {c.agentSettings} <ArrowRight aria-hidden="true" className="size-3.5" />
-                        </span>
-                      </Link>
-                      {acc ? (
-                        <dl className="set-access-rows">
-                          <div>
-                            <dt>{a.mode}</dt>
-                            <dd>{deskCopy.modes[d.mode]}</dd>
-                          </div>
-                          <div>
-                            <dt>{a.trades}</dt>
-                            <dd>
-                              {acc.operator === null
-                                ? '—'
-                                : acc.operator === ZERO
-                                  ? a.removed
-                                  : a.trader(short(acc.operator, 6, 4))}
-                            </dd>
-                          </div>
-                          <div>
-                            <dt>{a.session}</dt>
-                            <dd>
-                              {acc.session
-                                ? a.sessionUntil(
-                                    short(acc.session.key, 6, 4),
-                                    acc.session.until.toLocaleString('en-GB', {
-                                      dateStyle: 'medium',
-                                      timeStyle: 'short',
-                                    }),
-                                  )
-                                : a.noSession}
-                            </dd>
-                          </div>
-                          <div>
-                            <dt>{a.withdraw}</dt>
-                            <dd>{a.onlyYou}</dd>
-                          </div>
-                        </dl>
-                      ) : (
-                        <p className="set-body">{a.closed}</p>
-                      )}
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
-          </Section>
+          <Group title={c.groups.connections} id="connections">
+            <div style={{ padding: 16 }}>
+              <AccountConnections
+                telegram={{
+                  linked: telegram.linked ? { username: telegram.linked.username } : null,
+                  pending: telegram.pending
+                    ? { code: telegram.pending.code, expiresAt: telegram.pending.codeExpiresAt.toISOString() }
+                    : null,
+                }}
+                agents={open.map((d) => ({ id: d.id, name: d.name ?? 'Agent' }))}
+              />
+            </div>
+          </Group>
 
-          <Section id="disclosure" title={settingsCopy.disclosure.title}>
-            <Disclosure
-              acceptedOn={accepted ? accepted.toLocaleDateString('en-GB', { dateStyle: 'medium' }) : null}
-            />
-          </Section>
+          <Group title={c.groups.access} id="agents">
+            {agentsList}
+          </Group>
+
+          <Group title={c.groups.agreed} id="disclosure">
+            <div style={{ padding: 16 }}>
+              <Disclosure
+                acceptedOn={accepted ? accepted.toLocaleDateString('en-GB', { dateStyle: 'medium' }) : null}
+              />
+            </div>
+          </Group>
+        </div>
+        <div className="kit-settings-side">
+          <SettingsSide verifyHref="/live" />
         </div>
       </div>
-    </div>
+    </Screen>
   )
 }
