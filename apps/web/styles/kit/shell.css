@@ -673,3 +673,63 @@
     position: static;
   }
 }
+
+/* Evidence tables, as the reference's digest lays them out: step, evidence, explorer. */
+.kit-evidence {
+  border: 1px solid var(--bd);
+  border-radius: 16px;
+  background: var(--panel);
+  overflow: hidden;
+}
+.kit-evidence-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 190px 150px;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 18px;
+  border-top: 1px solid var(--bd);
+  font-size: 12.5px;
+}
+.kit-evidence-head {
+  border-top: 0;
+  padding-block: 11px;
+  font: 600 9px / 1 var(--fm);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tx3);
+}
+.kit-evidence-step a {
+  color: var(--tx);
+  text-decoration: none;
+  line-height: 1.45;
+}
+.kit-evidence-step a:hover {
+  color: var(--ac2);
+}
+.kit-evidence-row code {
+  font-family: var(--fm);
+  font-size: 11.5px;
+  color: var(--tx2);
+}
+.kit-evidence-row small {
+  font-size: 10.5px;
+  color: var(--tx3);
+  font-family: var(--fm);
+}
+.kit-evidence-row a[target="_blank"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ac2);
+  font: 600 11.5px / 1 var(--fm);
+  text-decoration: none;
+}
+@media (max-width: 767px) {
+  .kit-evidence-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+  .kit-evidence-head {
+    display: none;
+  }
+}

@@ -188,7 +188,7 @@ export default async function AccountSettings() {
           </Group>
         </div>
         <div className="kit-settings-side">
-          <SettingsSide verifyHref="/live" />
+          <SettingsSide verifyHref="/evidence" />
         </div>
       </div>
     </Screen>
