@@ -37,6 +37,8 @@ export function SignInButton({
         address,
         chainId: robinhood.id,
         domain: window.location.host,
+        // The server pins the scheme too (a message signed for http must not pass on https), so say it.
+        scheme: window.location.protocol.replace(':', ''),
         nonce,
         uri: window.location.origin,
         version: '1',
