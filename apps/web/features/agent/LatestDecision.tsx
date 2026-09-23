@@ -86,6 +86,11 @@ export function LatestDecision({
           </div>
         )}
         {model && (
+          <Link href={'/compare' as Route} className="ap-serv" title={c.servTitle}>
+            {c.serv}
+          </Link>
+        )}
+        {model && (
           <ul className="ap-options" aria-label={c.options}>
             <li className="is-chosen">
               <Check aria-hidden="true" className="size-3" />

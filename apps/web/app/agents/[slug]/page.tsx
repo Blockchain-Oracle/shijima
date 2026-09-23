@@ -1,4 +1,4 @@
-import { decisionInFull, leaderOf } from '@desk/db'
+import { decisionInFull, gradeTally, leaderOf } from '@desk/db'
 import { appCopy, deskCopy, engineCopy, short, viewRecord } from '@desk/shared'
 import { Settings } from 'lucide-react'
 import type { Route } from 'next'
@@ -53,7 +53,7 @@ export default async function AgentPage({
   const full = latestSeq !== undefined ? await decisionInFull(db(), d.id, latestSeq) : undefined
   const body = full ? viewRecord(full.decision.record) : undefined
   const symbols = view.mandate?.targets.map((t) => t.symbol) ?? []
-  const leader = await leaderOf(db(), d.id)
+  const [leader, tally] = await Promise.all([leaderOf(db(), d.id), gradeTally(db(), d.id)])
   const signedIn = (await signedInAddress().catch(() => undefined)) !== undefined
 
   return (
@@ -67,6 +67,10 @@ export default async function AgentPage({
               {view.mandate?.preset ?? deskCopy.ownBasket}
               {' · '}
               {view.isOwner ? c.yours : c.by(short(view.owner, 6, 4))}
+              {' · '}
+              <span className="ap-record" title={appCopy.agents.recordTitle}>
+                {c.record(tally.better, tally.graded)}
+              </span>
             </p>
           </div>
           <span className="desk-badge" data-mode={d.mode}>

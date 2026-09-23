@@ -330,6 +330,27 @@ export function HomePage({
       <section className="lp-section" aria-label={H.proof.title}>
         <div className="container">
           <SectionHeader index={H.proof.index} title={H.proof.title} desc={H.proof.desc} className="mb-10" />
+          <div className="lp-credit">
+            {/* biome-ignore lint/performance/noImgElement: a small static brand mark, drawn as the theme asks */}
+            <img
+              src="/brand/openserv-logo-white-for-dark-bg.svg"
+              alt="OpenServ"
+              className="osc-logo osc-logo--dark"
+            />
+            {/* biome-ignore lint/performance/noImgElement: as above, for the light theme */}
+            <img
+              src="/brand/openserv-logo-black-for-light-bg.svg"
+              alt=""
+              className="osc-logo osc-logo--light"
+            />
+            <p>{appCopy.credit.line}</p>
+            <Link href={'/compare' as Route} className="lp-link">
+              {appCopy.credit.compare} →
+            </Link>
+            <Link href={'/live' as Route} className="lp-link">
+              {appCopy.credit.live} →
+            </Link>
+          </div>
           <div className="lp-proof">
             <dl className="lp-proof-ids">
               {showcase ? (

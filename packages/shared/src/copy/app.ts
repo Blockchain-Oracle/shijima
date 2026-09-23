@@ -174,7 +174,12 @@ export const appCopy = {
       nothingSent: 'Nothing was sent',
       sealed: (hash: string) => `Fingerprinted on chain · ${hash}`,
       open: 'Full record',
+      serv: 'Reasoned with SERV',
+      servTitle:
+        'This call was made by a model through OpenServ’s SERV Reasoning. See the same model with and without it.',
     },
+    record: (better: number, graded: number) =>
+      graded === 0 ? 'Timing not graded yet' : `${better} of ${graded} timing calls beat the alternative`,
     portfolio: {
       title: 'Portfolio',
       notYet: 'Not valued yet. Its first valuation comes with its first look, within five minutes.',
@@ -404,6 +409,12 @@ export const appCopy = {
     factory: 'Agent factory',
     implementation: 'Agent account (every agent is a copy of this)',
     operator: 'Shijima’s operator (trades inside each agent’s limits, pays the gas)',
+  },
+
+  credit: {
+    line: 'Shijima’s agent runs on OpenServ, and every timing call is made with SERV Reasoning.',
+    compare: 'The same model, with and without SERV',
+    live: 'Live on mainnet: every number, checked',
   },
 
   receive: {
