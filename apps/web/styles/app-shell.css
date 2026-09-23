@@ -2227,5 +2227,19 @@ a.act-row:hover {
   padding: 0;
   min-width: 0;
 }
-.lp-credit { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1.2rem; margin-bottom: 1.6rem; padding: 1rem 1.2rem; border: 1px solid var(--color-hairline); border-radius: var(--radius-lg, 16px); background: var(--color-surface-1); }
-.lp-credit p { flex: 1 1 20rem; font-size: 0.9rem; color: var(--color-ink-secondary); }
+.lp-credit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1.2rem;
+  margin-bottom: 1.6rem;
+  padding: 1rem 1.2rem;
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg, 16px);
+  background: var(--color-surface-1);
+}
+.lp-credit p {
+  flex: 1 1 20rem;
+  font-size: 0.9rem;
+  color: var(--color-ink-secondary);
+}
