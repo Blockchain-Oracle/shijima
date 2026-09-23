@@ -11,7 +11,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
  */
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const address = await signedInAddress()
-  if (!address) return Response.json({ error: 'Sign in to talk to your desk.' }, { status: 401 })
+  if (!address) return Response.json({ error: 'Sign in to talk to your agent.' }, { status: 401 })
   const { id } = await params
   if (!UUID.test(id)) return Response.json({ error: 'No such message.' }, { status: 404 })
   const row = await askRequestForOwner(db(), id, address)

@@ -49,7 +49,7 @@ export async function proposeAction(input: {
 }): Promise<ProposeResult> {
   try {
     const owner = await ownerOf(input.deskId)
-    if (!owner) return { ok: false, why: 'That is not your desk.' }
+    if (!owner) return { ok: false, why: 'That is not your agent.' }
     if (!(BUTTON_KINDS as readonly string[]).includes(input.kind))
       return { ok: false, why: 'That is not something a button can do.' }
     const fields = Object.fromEntries(
@@ -103,9 +103,9 @@ export async function telegramCodeAction(
   deskId: string,
 ): Promise<{ ok: true; code: string } | { ok: false; why: string }> {
   try {
-    if (!(await ownerOf(deskId))) return { ok: false, why: 'That is not your desk.' }
+    if (!(await ownerOf(deskId))) return { ok: false, why: 'That is not your agent.' }
     const t = await telegramForDesk(db(), deskId)
-    if (t.linked) return { ok: false, why: 'This desk is already connected.' }
+    if (t.linked) return { ok: false, why: 'This agent is already connected.' }
     if (t.pending) return { ok: true, code: t.pending.code }
     const code = randomBytes(4).toString('hex')
     await createTelegramLink(db(), deskId, code)
@@ -123,7 +123,7 @@ export async function openservCodeAction(
   deskId: string,
 ): Promise<{ ok: true; code: string; expiresAt: string } | { ok: false; why: string }> {
   try {
-    if (!(await ownerOf(deskId))) return { ok: false, why: 'That is not your desk.' }
+    if (!(await ownerOf(deskId))) return { ok: false, why: 'That is not your agent.' }
     const o = await openservForDesk(db(), deskId)
     if (o.pending) return { ok: true, code: o.pending.code, expiresAt: o.pending.codeExpiresAt.toISOString() }
     const code = randomBytes(4).toString('hex').toUpperCase()
@@ -203,7 +203,7 @@ export async function inboxAction(): Promise<InboxItem[]> {
   return rows.map((r) => ({
     id: r.id,
     deskId: r.deskId,
-    deskName: r.deskName ?? 'Your desk',
+    deskName: r.deskName ?? 'Your agent',
     kind: r.kind,
     text: words(r.payload),
     decisionSeq: r.decisionSeq,

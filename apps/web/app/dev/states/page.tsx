@@ -21,10 +21,10 @@ export default function StatesPage() {
         <SectionHeader
           index="01"
           title="Awkward states"
-          desc="Design brief 8.16: where trust is won or lost. Each is the component the desk page uses."
+          desc="Design brief 8.16: where trust is won or lost. Each is the component the agent page uses."
         />
         <Grid>
-          <Fixture label="Desk paused by you">
+          <Fixture label="Agent paused by you">
             <NextCheck view={desk({ desk: { state: 'paused_by_owner' } })} />
           </Fixture>
           <Fixture label="Stopped by your loss limit">
@@ -38,7 +38,7 @@ export default function StatesPage() {
             />
             <NextCheck view={desk({ desk: { state: 'stopped_by_loss_limit' } })} />
           </Fixture>
-          <Fixture label="The desk has not checked in on time">
+          <Fixture label="The agent has not checked in on time">
             <NextCheck view={desk({ desk: { lastCheckAt: iso(3) } })} />
           </Fixture>
           <Fixture label="Trading paused in a token">
@@ -81,7 +81,7 @@ export default function StatesPage() {
               })}
             />
           </Fixture>
-          <Fixture label="Your holdings changed outside the desk">
+          <Fixture label="Your holdings changed outside the agent">
             <Record
               view={desk({
                 notes: [
@@ -161,14 +161,14 @@ export default function StatesPage() {
               diagnosis={{ kind: 'chain-unreachable', technical: 'HTTP request failed. Status: 503' }}
             />
           </Fixture>
-          <Fixture label="Empty desk, no money yet">
+          <Fixture label="Empty agent, no money yet">
             <Plate view={desk({ plate: null })} />
             <EmptyState
               why={controlsCopy.addMoney.body}
               nextAction={{ label: webCopy.nav.strategies.name, href: '/strategies' }}
             />
           </Fixture>
-          <Fixture label="Brand-new desk, no decisions yet">
+          <Fixture label="Brand-new agent, no decisions yet">
             <NextCheck
               view={desk({
                 desk: { lastCheckAt: null, shadowChecks: 0, reportOpened: false, mode: 'shadow' },

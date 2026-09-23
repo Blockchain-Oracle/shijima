@@ -117,7 +117,7 @@ export async function finishChainProposal(proposalId: string, owner: string, txH
   if (!proposal?.deskId || proposal.status !== 'confirmed')
     return { ok: false as const, text: 'No such card.' }
   const desk = await deskById(db(), proposal.deskId)
-  if (!desk) return { ok: false as const, text: 'No such desk.' }
+  if (!desk) return { ok: false as const, text: 'No such agent.' }
   const [receipt, tx] = await Promise.all([
     pub().waitForTransactionReceipt({ hash: txHash, timeout: 60_000 }),
     pub().getTransaction({ hash: txHash }),
@@ -136,7 +136,7 @@ export async function finishChainProposal(proposalId: string, owner: string, txH
   }
   const target = targetOf(proposal.kind, deskAddress).toLowerCase()
   if (!signer || receipt.to?.toLowerCase() !== target)
-    return { ok: false as const, text: 'That transaction was not this desk’s owner acting on it.' }
+    return { ok: false as const, text: 'That transaction was not this agent’s owner acting on it.' }
   if (receipt.status !== 'success') {
     const text = 'The transaction was refused by the chain. Nothing moved.'
     await finishProposal(db(), proposal.id, { status: 'failed', result: { text }, txHash })
@@ -151,11 +151,15 @@ export async function finishChainProposal(proposalId: string, owner: string, txH
         l.args.to.toLowerCase() === deskAddress.toLowerCase() &&
         l.args.value === BigInt(String(proposal.args.amountUsdg)),
     )
-    if (!moved) return { ok: false as const, text: 'That transaction did not move this money into the desk.' }
+    if (!moved)
+      return {
+        ok: false as const,
+        text: 'That transaction did not move this money into the agent’s account.',
+      }
   }
 
   const by = byOf(proposal)
-  let text = 'Done. It is on the chain, and the desk’s record picks it up at its next check.'
+  let text = 'Done. It is on the chain, and the agent’s record picks it up at its next check.'
   if (proposal.kind === 'remove_assistant') {
     await markAssistantRemoved(db(), desk.id, by, txHash)
     text = 'Done. The assistant has no access now, and your money stays in your account.'
@@ -166,14 +170,14 @@ export async function finishChainProposal(proposalId: string, owner: string, txH
     ])
     if (!paused && (operator as string).toLowerCase() === desk.operator.toLowerCase()) {
       await markAssistantBack(db(), desk.id, by, txHash)
-      text = 'Done. The desk is running again, and carries on from its next check.'
+      text = 'Done. The agent is running again, and carries on from its next check.'
     }
   } else if (proposal.kind === 'close_desk') {
     await closeDesk(db(), desk.id, by, txHash)
     text =
       'Done. Everything went to your wallet, the assistant is removed and the checks have stopped. The record stays readable.'
   } else if (proposal.kind === 'add_money') {
-    text = 'Done. The money is in the desk. It is valued and put to work at the next check.'
+    text = 'Done. The money is in the agent’s account. It is valued and put to work at the next check.'
   }
   await finishProposal(db(), proposal.id, { status: 'done', result: { text, signer }, txHash })
   return { ok: true as const, text }

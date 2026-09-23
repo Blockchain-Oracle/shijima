@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   if (!sameOrigin(request))
     return Response.json({ error: 'That request came from another site.' }, { status: 403 })
   const address = await signedInAddress()
-  if (!address) return Response.json({ error: 'Sign in to talk to your desk.' }, { status: 401 })
+  if (!address) return Response.json({ error: 'Sign in to talk to your agent.' }, { status: 401 })
 
   let body: { question?: unknown; deskId?: unknown; kind?: unknown; payload?: unknown }
   try {
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
 
   try {
     if (deskId && !(await ownsDesk(db(), deskId, address))) {
-      return Response.json({ error: 'That is not your desk.' }, { status: 403 })
+      return Response.json({ error: 'That is not your agent.' }, { status: 403 })
     }
     const allowed = await askAllowed(db(), address)
     if (!allowed.ok) {
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
           error:
             allowed.reason === 'minute'
               ? 'That is a lot of messages at once. Give it a minute.'
-              : 'That is today’s allowance of messages. The desk keeps checking as usual.',
+              : 'That is today’s allowance of messages. The agent keeps checking as usual.',
         },
         { status: 429 },
       )

@@ -113,7 +113,7 @@ export function decisionCard(
     tone: grade?.verdict === 'better' ? 'better' : grade?.verdict === 'worse' ? 'worse' : 'plain',
     proof,
     mode: shareCopy.mode[decision.mode],
-    tweetParts: [desk.name ?? 'A Shijima desk', name, hero.replace(/\.$/, ''), when].filter(
+    tweetParts: [desk.name ?? 'A Shijima agent', name, hero.replace(/\.$/, ''), when].filter(
       (p): p is string => Boolean(p),
     ),
     tweetGrade,

@@ -18,16 +18,16 @@ const WORKFLOW_NAME = 'Hourly desk review'
 const CATEGORY_IDS = [5, 3]
 
 const USAGE = [
-  'Shijima runs from its own web app, not from a chat here: open the app, sign in with your wallet, and create a',
-  'desk in one signature. The desk is a contract in your own account on Robinhood Chain; you pick the Stock Tokens',
+  'Shijima runs from its own web app, not from a chat here: open the app, sign in with your wallet, and create an',
+  'agent in one signature. Its account is a contract you own on Robinhood Chain; you pick the Stock Tokens',
   'and their weights, and the limits it can never pass are set in that contract.',
-  'Every hour this agent checks each running desk and decides only when to act: now, in part, at the reopen, or',
+  'Every hour Shijima checks each running agent and decides only when to act: now, in part, at the reopen, or',
   'not at all. Every decision, including doing nothing, is recorded, fingerprinted on-chain, and graded at the',
   'reopen. Start in Shadow (it only says what it would do), then Ask first (Telegram approvals), then On its own.',
 ].join(' ')
 
 const EXPECTED =
-  'One recorded decision per desk per hour, with the reasons, the alternatives it turned down and its confidence, plus the on-chain transaction when it acts.'
+  'One recorded decision per agent per hour, with the reasons, the alternatives it turned down and its confidence, plus the on-chain transaction when it acts.'
 
 const userApiKey = process.env.OPENSERV_USER_API_KEY
 if (!userApiKey) {

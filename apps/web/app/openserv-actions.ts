@@ -34,7 +34,7 @@ export interface LinkedWorkspace {
 }
 
 const SIGNED_OUT = 'Sign in first.'
-const NOT_YOURS = 'That workspace is not linked to any of your desks.'
+const NOT_YOURS = 'That workspace is not linked to any of your agents.'
 const PREFLIGHT_TIMEOUT_MS = 8_000
 
 /** The workspaces linked to the signed-in owner's desks, newest first. */

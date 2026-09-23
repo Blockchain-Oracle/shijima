@@ -86,7 +86,7 @@ export default async function Markets({
                     data-cursor="hover"
                   >
                     <div className="flex items-baseline justify-between gap-3">
-                      <span className="type-body-strong text-ink">{d.name ?? 'A desk'}</span>
+                      <span className="type-body-strong text-ink">{d.name ?? 'An agent'}</span>
                       <span className="type-caption text-ink-muted">
                         {d.startedAt ? marketsCopy.running(ago(d.startedAt)) : ''}
                       </span>

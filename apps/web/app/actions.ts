@@ -39,7 +39,7 @@ export async function answerApprovalAction(formData: FormData): Promise<ActionRe
   const answer = formData.get('answer') === 'approve' ? 'approved' : 'rejected'
   try {
     const owner = await asOwner(deskId)
-    if (!owner) return { ok: false, message: 'That is not your desk.' }
+    if (!owner) return { ok: false, message: 'That is not your agent.' }
     // The request must still belong to this desk. An id from elsewhere is not enough.
     const waiting = await pendingApprovals(db(), deskId)
     if (!waiting.some((a) => a.id === approvalId)) {
@@ -55,7 +55,7 @@ export async function answerApprovalAction(formData: FormData): Promise<ActionRe
           ok: true,
           message:
             answer === 'approved'
-              ? 'Approved. The desk will re-read the price on its next check and act only if it is still close to what you were shown.'
+              ? 'Approved. The agent will re-read the price on its next check and act only if it is still close to what you were shown.'
               : 'Rejected. Nothing will be done, and the refusal is recorded.',
         }
       : { ok: false, message: 'That request is no longer waiting: it expired, or it was already answered.' }
@@ -69,16 +69,16 @@ export async function pauseAction(formData: FormData): Promise<ActionResult> {
   const resume = formData.get('resume') === 'true'
   try {
     const owner = await asOwner(deskId)
-    if (!owner) return { ok: false, message: 'That is not your desk.' }
+    if (!owner) return { ok: false, message: 'That is not your agent.' }
     const by = { actor: 'owner', via: 'web' } as const
     const done = resume ? await resumeDesk(db(), deskId, by) : await pauseDesk(db(), deskId, by)
     revalidatePath('/agents')
-    if (!done) return { ok: false, message: 'Nothing changed: the desk was already in that state.' }
+    if (!done) return { ok: false, message: 'Nothing changed: the agent was already in that state.' }
     return {
       ok: true,
       message: resume
-        ? 'The desk is active again.'
-        : 'The desk is paused. Nothing will happen until you resume it. Nothing was sold.',
+        ? 'The agent is active again.'
+        : 'The agent is paused. Nothing will happen until you resume it. Nothing was sold.',
     }
   } catch (e) {
     return { ok: false, message: errorText(e) }

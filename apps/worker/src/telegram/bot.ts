@@ -158,7 +158,7 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
     if (canLinkButton(deps.siteUrl)) kb.row().url(telegramCopy.menu.open, siteDesk)
     return [
       telegramCopy.menu.title(
-        desk?.name ?? 'Your desk',
+        desk?.name ?? 'Your agent',
         status?.mode ?? 'Practice',
         status?.state ?? 'active',
       ),
@@ -372,7 +372,7 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
     }
     const linked = await deskOf(from.id)
     log('telegram_linked', { desk: linked?.desk.address, user: from.id })
-    await ctx.reply(telegramCopy.firstContact(linked?.desk.name ?? 'your desk'), { parse_mode: 'HTML' })
+    await ctx.reply(telegramCopy.firstContact(linked?.desk.name ?? 'your agent'), { parse_mode: 'HTML' })
     // Pin the status straight away. A desk that has been checking for hours should not greet its owner with
     // "it has not checked yet" and then say nothing until the next hour turns.
     if (linked) {
