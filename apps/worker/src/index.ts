@@ -13,6 +13,7 @@ import { recordWorkerPass, startWorkerBeat, sweepInterruptedWakes } from '@desk/
 import { errorText } from '@desk/shared'
 import { startAskLoop } from './ask'
 import { openCli } from './cli/context'
+import { startGiftLoop } from './gift'
 import { tryBecomeLeader } from './leader'
 import { startAgentIfProvisioned } from './openserv/serve'
 import { type ReviewSummary, reviewAllDesksExclusive } from './review'
@@ -68,6 +69,7 @@ const stop = async (signal: string) => {
   log('stopping', { signal, note: 'finishing the check in progress first' })
   await running
   await ask.stop()
+  await gifts.stop()
   await agent?.stop()
   await telegram?.stop()
   await leader.release()
@@ -82,6 +84,8 @@ const agent = await startAgentIfProvisioned(cli, log)
 // The chat answers beside the clock, never inside it: a person typing should not wait for a check.
 const ask = await startAskLoop(cli, log)
 const telegram = startTelegram(cli, log, ask)
+// The free $1 goes out beside the clock too, from its own wallet, so a slow receipt never delays a check.
+const gifts = startGiftLoop(cli, log)
 await startWorkerBeat(cli.db, {
   operator: cli.wallet.account.address,
   rehearsal: cli.env.isRehearsal,

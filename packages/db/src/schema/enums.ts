@@ -154,3 +154,10 @@ export const askProposalStatus = pgEnum('ask_proposal_status', [
 export const checkRequestStatus = pgEnum('check_request_status', ['pending', 'done', 'refused'])
 export const priceAlertKind = pgEnum('price_alert_kind', ['above_reference', 'below_reference', 'either_way'])
 export const priceAlertStatus = pgEnum('price_alert_status', ['active', 'fired', 'cancelled'])
+
+/**
+ * The free $1. queued: claimed on the website, nothing sent. sending: the worker has journaled at least one
+ * transfer. sent: both transfers confirmed. failed: refused or reverted, nothing still in flight; a retry
+ * re-queues it and only the leg that never paid is sent again.
+ */
+export const giftStatus = pgEnum('gift_status', ['queued', 'sending', 'sent', 'failed'])

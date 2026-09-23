@@ -12,8 +12,8 @@ import { mixSlices } from './StrategyCard'
 
 const M = studioCopy.money
 const CHOICES = ['10', '20', '50', '100'] as const
-/** A direct deposit costs cents in network fees; below $5 a single trade's fee would still be too large a share. */
-export const MIN_USDG = 5
+/** The free $1 (PLAN-ROUND-3 D3) must be able to trade, so $1 is the floor. Our gas on a small trade is our cost. */
+export const MIN_USDG = 1
 
 const dollars = (n: number) =>
   `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`

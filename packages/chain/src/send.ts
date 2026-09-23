@@ -214,7 +214,10 @@ export async function deadlineIn(pub: PublicClient, seconds: number): Promise<nu
   return Math.max(Number(block.timestamp), Math.floor(Date.now() / 1000)) + seconds
 }
 
-export async function broadcast(pub: PublicClient, signed: SignedDeskCall): Promise<void> {
+export async function broadcast(
+  pub: PublicClient,
+  signed: Pick<SignedDeskCall, 'serialized' | 'txHash'>,
+): Promise<void> {
   const reported = await pub.sendRawTransaction({ serializedTransaction: signed.serialized })
   if (reported.toLowerCase() !== signed.txHash.toLowerCase()) {
     throw new Error(`the network reported hash ${reported}, but the saved hash is ${signed.txHash}`)

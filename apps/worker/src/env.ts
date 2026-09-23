@@ -14,6 +14,13 @@ const Env = z.object({
   TELEGRAM_BOT_TOKEN: z.string().min(20).optional(),
   /** Where the decision pages live, for the link on a request. */
   SITE_URL: z.string().url().optional(),
+  /** The web app that draws the share cards Telegram sends as pictures. Defaults to the local dev server. */
+  PUBLIC_WEB_URL: z.string().url().optional(),
+  /** Optional. The gift wallet that sends the free $1. Without it the gift sender is off and claims wait. */
+  GIFT_PRIVATE_KEY: z
+    .string()
+    .regex(/^0x[0-9a-fA-F]{64}$/, 'must be a 32 byte hex private key')
+    .optional(),
 })
 
 export function loadEnv() {
