@@ -5,9 +5,10 @@ import Link from 'next/link'
 import { Countdown, CountUp } from '@/components/ui/count-up'
 import { Sparkline } from '@/components/ui/sparkline'
 import { TokenLogo } from '@/components/ui/token-logo'
+import { chartPoints, flowMarkers } from '@/features/desk/chart-points'
 import { MARKER_KIND } from '@/features/desk/DeskPanels'
 import { HoldingFlags } from '@/features/desk/HoldingsPanel'
-import { type ChartMarker, PortfolioChart, type ValuePoint } from '@/features/desk/PortfolioChart'
+import { type ChartMarker, PortfolioChart } from '@/features/desk/PortfolioChart'
 import type { DeskView } from '@/lib/desk.server'
 
 const pct = (bps: number) => `${(bps / 100).toFixed(bps % 100 === 0 ? 0 : 1)}%`
@@ -31,18 +32,14 @@ export function Portfolio({ view }: { view: DeskView }) {
   const total = BigInt(p.totalUsdg)
   const base = p.baselineUsdg ? BigInt(p.baselineUsdg) : null
 
-  const toPoint =
-    (earlier: boolean) =>
-    (h: { at: string; totalUsdg: string }): ValuePoint => ({
-      t: new Date(h.at).getTime(),
-      value: Number(h.totalUsdg) / 1e6,
-      ...(earlier ? { earlier: true } : {}),
-    })
-  const points = [...(view.earlier?.history.map(toPoint(true)) ?? []), ...view.history.map(toPoint(false))]
-  const markers: ChartMarker[] = view.markers.flatMap((m) => {
-    const kind = MARKER_KIND[m.outcome]
-    return kind ? [{ t: new Date(m.at).getTime(), kind }] : []
-  })
+  const points = chartPoints(view)
+  const markers: ChartMarker[] = [
+    ...view.markers.flatMap((m) => {
+      const kind = MARKER_KIND[m.outcome]
+      return kind ? [{ t: new Date(m.at).getTime(), kind }] : []
+    }),
+    ...flowMarkers(view),
+  ]
   const drift = view.mandate?.driftToleranceBps ?? 300
   const cash = BigInt(p.cashUsdg) + BigInt(p.vaultUsdg)
   const running = view.desk.state === 'active' && view.desk.lifecycle === 'running'

@@ -17,6 +17,7 @@ import {
   valueSnapshotAtOrBefore,
 } from '@desk/db'
 import { db } from './db'
+import { netChangeBps, netSeries } from './money/flows'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -78,10 +79,7 @@ export async function publicAgents(): Promise<PublicAgent[]> {
           .sort((a, b) => b.weightBps - a.weightBps)
           .flatMap((t) => symbolOf(t.token) ?? []),
         valueUsdg: now ? now.totalUsdg.toString() : null,
-        dayBps:
-          now && dayAgo && dayAgo.totalUsdg > 0n
-            ? Number(((now.totalUsdg - dayAgo.totalUsdg) * 10_000n) / dayAgo.totalUsdg)
-            : null,
+        dayBps: now && dayAgo ? netChangeBps(now, dayAgo) : null,
         latest: latest
           ? {
               seq: latest.seq,
@@ -95,7 +93,7 @@ export async function publicAgents(): Promise<PublicAgent[]> {
         graded: tally.graded,
         better: tally.better,
         followers: followers.filter((f) => f.link.status !== 'stopped').length,
-        spark: recent.filter((_, i) => i % step === 0).map((h) => Number(h.totalUsdg) / 1e6),
+        spark: netSeries(recent.filter((_, i) => i % step === 0)),
         startedAt: d.startedAt?.toISOString() ?? null,
       }
     }),

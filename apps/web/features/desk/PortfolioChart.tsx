@@ -18,10 +18,18 @@ export interface ValuePoint {
   value: number
   /** True for a point from the desk's earlier contract, drawn in the same line. */
   earlier?: boolean
+  /**
+   * Money the owner put in minus money taken out so far, in dollars. When points carry it, every change the chart
+   * reads out is NET of it: taking $2 out reads as no change, not a loss.
+   */
+  flow?: number
 }
 export interface ChartMarker {
   t: number
-  kind: 'acted' | 'would' | 'waited'
+  /** A decision, or money the owner moved: `in` added, `out` taken out. */
+  kind: 'acted' | 'would' | 'waited' | 'in' | 'out'
+  /** Read on hover, and in the legend for money: "You took out $2". */
+  label?: string
 }
 
 const HOUR = 3_600_000
@@ -37,7 +45,13 @@ type RangeKey = (typeof RANGES)[number]['key']
 const PAD = { top: 10, right: 58, bottom: 22, left: 4 }
 const DD_SHARE = 0.22
 const GAP = 12
-const MARKER_COLOR = { acted: 'var(--profit)', would: 'var(--color-accent)', waited: 'var(--color-info)' }
+const MARKER_COLOR = {
+  acted: 'var(--profit)',
+  would: 'var(--color-accent)',
+  waited: 'var(--color-info)',
+  in: 'var(--color-ink)',
+  out: 'var(--color-ink-muted)',
+}
 
 function useWidth<T extends HTMLElement>() {
   const ref = useRef<T | null>(null)
@@ -129,13 +143,17 @@ export function PortfolioChart({
   }, [points, range])
   const n = view.length
 
+  // With flows, the agent's own performance is its value less the money the owner moved: that is what the drawdown
+  // and the change are measured on, so a withdrawal is never a fall.
+  const netted = points.some((p) => p.flow !== undefined)
+  const perf = useCallback((p: ValuePoint) => p.value - (p.flow ?? 0), [])
   const drawdowns = useMemo(() => {
     let peak = Number.NEGATIVE_INFINITY
     return view.map((p) => {
-      peak = Math.max(peak, p.value)
-      return peak > 0 ? ((p.value - peak) / peak) * 100 : 0
+      peak = Math.max(peak, perf(p))
+      return peak > 0 ? ((perf(p) - peak) / peak) * 100 : 0
     })
-  }, [view])
+  }, [view, perf])
   const maxDd = Math.min(0, ...drawdowns)
 
   const w = Math.max(width, 260)
@@ -179,8 +197,18 @@ export function PortfolioChart({
   const earlierEnd = view.filter((p) => p.earlier).at(-1)?.t
 
   const active = view[hover ?? n - 1]
-  const change = active && baseline ? active.value - baseline : null
-  const changePct = change !== null && baseline ? (change / baseline) * 100 : null
+  // Net: what the agent did since the first point in view, over what was at work (the start plus money added).
+  const first = view[0]
+  const added = active && first ? Math.max(0, (active.flow ?? 0) - (first.flow ?? 0)) : 0
+  const change = netted
+    ? active && first
+      ? perf(active) - perf(first)
+      : null
+    : active && baseline
+      ? active.value - baseline
+      : null
+  const changeBase = netted ? (first ? first.value + added : 0) : (baseline ?? 0)
+  const changePct = change !== null && changeBase > 0 ? (change / changeBase) * 100 : null
   const up = (change ?? 0) >= 0
   const tone = up ? 'var(--profit)' : 'var(--loss)'
   const ticks = [lo + (hi - lo) * 0.15, (lo + hi) / 2, hi - (hi - lo) * 0.15]
@@ -358,16 +386,19 @@ export function PortfolioChart({
                   (b, p) => (Math.abs(p.t - m.t) < Math.abs(b.t - m.t) ? p : b),
                   view[0] as ValuePoint,
                 )
+                const isMoney = m.kind === 'in' || m.kind === 'out'
                 return (
                   <circle
                     key={`${m.t}-${m.kind}`}
                     cx={cx(m.t)}
                     cy={vy(near.value)}
-                    r="3.5"
-                    fill={MARKER_COLOR[m.kind]}
-                    stroke="var(--color-surface-1)"
-                    strokeWidth="1.5"
-                  />
+                    r={isMoney ? '4.5' : '3.5'}
+                    fill={isMoney ? 'var(--color-surface-1)' : MARKER_COLOR[m.kind]}
+                    stroke={isMoney ? MARKER_COLOR[m.kind] : 'var(--color-surface-1)'}
+                    strokeWidth={isMoney ? '2' : '1.5'}
+                  >
+                    {m.label && <title>{m.label}</title>}
+                  </circle>
                 )
               })}
 
@@ -444,6 +475,18 @@ export function PortfolioChart({
                 style={{ background: MARKER_COLOR[k] }}
               />{' '}
               {c.legend[k]}
+            </span>
+          ))}
+        {markers
+          .filter((m) => (m.kind === 'in' || m.kind === 'out') && m.label && m.t >= tFirst && m.t <= tLast)
+          .slice(-3)
+          .map((m) => (
+            <span key={`flow-${m.t}`} className="inline-flex items-center gap-1.5">
+              <span
+                className="inline-block size-2 rounded-full border-2"
+                style={{ borderColor: MARKER_COLOR[m.kind] }}
+              />{' '}
+              {m.label}
             </span>
           ))}
       </div>

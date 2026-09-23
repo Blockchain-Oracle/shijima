@@ -40,6 +40,7 @@ export const moneyCopy = {
     atLeast: (amount: string) => `At least ${amount}, or nothing moves`,
     youGet: (amount: string) => `You receive about ${amount}`,
     cost: (amount: string) => `Cost, network and Relay together: about ${amount}`,
+    networkFee: (amount: string) => `Network fee: about ${amount}`,
     takes: (seconds: number) =>
       `Takes about ${seconds < 60 ? `${Math.max(1, seconds)} second${seconds <= 1 ? '' : 's'}` : `${Math.round(seconds / 60)} minute${Math.round(seconds / 60) === 1 ? '' : 's'}`}`,
     quoteFresh: 'The price holds for 60 seconds; after that it is checked again.',

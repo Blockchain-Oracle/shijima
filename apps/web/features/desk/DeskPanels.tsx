@@ -10,8 +10,9 @@ import { When } from '@/components/when'
 import { TelegramConnect } from '@/features/settings/TelegramConnect'
 import type { DeskView } from '@/lib/desk.server'
 import { cn } from '@/lib/utils'
+import { chartPoints, flowMarkers } from './chart-points'
 import { type DeskNote, noteLabel, noteText } from './notes'
-import { type ChartMarker, PortfolioChart, type ValuePoint } from './PortfolioChart'
+import { type ChartMarker, PortfolioChart } from './PortfolioChart'
 import { RecordTimeline, type TimelineItem } from './RecordTimeline'
 import { SessionLine } from './SessionLine'
 
@@ -319,18 +320,14 @@ export const MARKER_KIND: Record<string, ChartMarker['kind']> = {
 }
 
 export function ValueChart({ view }: { view: DeskView }) {
-  const toPoint =
-    (earlier: boolean) =>
-    (h: { at: string; totalUsdg: string }): ValuePoint => ({
-      t: new Date(h.at).getTime(),
-      value: Number(h.totalUsdg) / 1e6,
-      ...(earlier ? { earlier: true } : {}),
-    })
-  const points = [...(view.earlier?.history.map(toPoint(true)) ?? []), ...view.history.map(toPoint(false))]
-  const markers: ChartMarker[] = view.markers.flatMap((m) => {
-    const kind = MARKER_KIND[m.outcome]
-    return kind ? [{ t: new Date(m.at).getTime(), kind }] : []
-  })
+  const points = chartPoints(view)
+  const markers: ChartMarker[] = [
+    ...view.markers.flatMap((m) => {
+      const kind = MARKER_KIND[m.outcome]
+      return kind ? [{ t: new Date(m.at).getTime(), kind }] : []
+    }),
+    ...flowMarkers(view),
+  ]
   const baseline = view.plate?.baselineUsdg ? Number(view.plate.baselineUsdg) / 1e6 : null
   return (
     <Panel title={deskCopy.chart.title}>

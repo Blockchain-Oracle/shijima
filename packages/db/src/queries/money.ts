@@ -19,6 +19,8 @@ export const SETTLED_MOVE: readonly MoneyMoveStatus[] = ['done', 'nothing_sent',
 const MATCH_TOLERANCE_BPS = 200n
 /** A move older than this is never matched: a change a week later is something else. */
 const MATCH_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
+/** USDG on Robinhood Chain, lower case, as money rows store it. */
+const USDG_ADDRESS = '0x5fc5360d0400a0fd4f2af552add042d716f1d168'
 
 export async function createMoneyMove(
   db: DbOrTx,
@@ -150,7 +152,9 @@ export async function matchMoneyMove(
     .orderBy(desc(moneyMoves.createdAt))
     .limit(10)
   return candidates.find((m) => {
-    const planned = m.amountOutActual ?? m.usdgValue
+    // What landed, when it landed as USDG; otherwise (a stock put in as it is) what it was worth when planned.
+    const planned =
+      m.tokenOut === USDG_ADDRESS && m.amountOutActual !== null ? m.amountOutActual : m.usdgValue
     if (planned === null || planned === 0n) return false
     const gap = planned > size ? planned - size : size - planned
     return gap * 10_000n <= planned * MATCH_TOLERANCE_BPS
