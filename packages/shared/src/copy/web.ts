@@ -13,10 +13,10 @@ export const webCopy = {
     name: 'Shijima',
     ja: 'しじま',
     /** The motto (PLAN-ROUND-4): the sidebar, the footer, the share image, the manifest and the meta tags. */
-    motto: 'Shijima · AI agents for Robinhood Chain stocks',
-    tagline: 'AI agents for Robinhood Chain stocks',
+    motto: 'Shijima · AI agents that trade Stock Tokens 24/7 on Robinhood Chain',
+    tagline: 'AI agents that trade Stock Tokens 24/7 on Robinhood Chain',
     description:
-      'Give your stocks an AI agent. It trades a basket of Robinhood Chain Stock Tokens around the clock, inside limits you set. Only you can take money out.',
+      'Wall Street closes. Your agent doesn’t. It trades your basket of Stock Tokens on Robinhood Chain around the clock, inside limits the chain enforces. Only you can take money out.',
   },
 
   nav: {
@@ -1066,10 +1066,10 @@ export const disclosureCopy = {
  */
 export const ogCopy = {
   site: {
-    alt: 'Shijima · AI agents for Robinhood Chain stocks. Give your stocks an AI agent. It trades. You own it.',
-    eyebrow: 'AI agents for Robinhood Chain stocks',
-    lead: 'Give your stocks an AI agent.',
-    em: 'It trades. You own it.',
+    alt: 'Shijima · AI agents that trade Stock Tokens 24/7 on Robinhood Chain. Wall Street closes. Your agent doesn’t.',
+    eyebrow: 'AI agents · Stock Tokens · 24/7',
+    lead: 'Wall Street closes.',
+    em: 'Your agent doesn’t.',
     line: 'Inside limits you set. Only you can take money out.',
   },
   honesty: 'Stock Tokens are not shares · nothing here is advice',

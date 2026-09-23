@@ -688,3 +688,16 @@ copy its code, keep only Shijima's light and dark colours. Plan: `docs/PLAN-ROUN
 - **R5. First run.** Five steps with the reference's intro and chime for anyone with no agent: welcome, how it
   works, connect, the free $1, create. Reopened from Settings.
 
+- **R6. `/` is the landing page for everyone.** Signed in or not. The app's home stays `/wallet`, and the landing's
+  buttons open it. This replaces the redirect half of W1 (Abu: "I should be able to go to my landing page").
+- **R7. The motto.** Hero: "Wall Street closes. Your agent doesn't." Motto: "Shijima · AI agents that trade Stock
+  Tokens 24/7 on Robinhood Chain". Why:
+  - Robinhood's own Agentic Trading already means "connect your AI model", so "an AI agent on Robinhood" alone is
+    not ours.
+  - Glider owns "on autopilot"; xStocks owns "no broker, no KYC, no borders".
+  - What only Shijima says: Stock Tokens trade around the clock while New York is shut, and an agent keeps your
+    basket on plan in those hours. The limits are held by a contract only you can withdraw from, and every
+    decision is on chain. The name fits it too: しじま is the stillness of night.
+  - No "first" claim, because none can be proven.
+  Sources: Robinhood newsroom (Robinhood Chain mainnet, Stock Tokens, Agentic Trading, 1 July 2026); Glider
+  (glider.fi, "Crypto assets, on autopilot"); xStocks (xstocks.fi).

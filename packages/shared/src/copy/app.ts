@@ -7,7 +7,7 @@ export const appCopy = {
   nav: {
     brand: 'SHIJIMA',
     tagline: 'AI AGENTS · ROBINHOOD',
-    motto: 'Shijima · AI agents for Robinhood Chain stocks',
+    motto: 'Shijima · AI agents that trade Stock Tokens 24/7 on Robinhood Chain',
     wallet: 'Wallet',
     activity: 'Activity',
     send: 'Send',

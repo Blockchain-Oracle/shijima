@@ -3,17 +3,17 @@
  * how the money moves, what is live, the strategies, how to check it, and where to get it. Written in dollars,
  * never in basis points, because that is how a person thinks about their own money.
  */
-const MOTTO = 'Shijima · AI agents for Robinhood Chain stocks'
+const MOTTO = 'Shijima · AI agents that trade Stock Tokens 24/7 on Robinhood Chain'
 const HERO_LINE =
-  'Put in any token from Base, Arbitrum, Ethereum, BNB or Robinhood Chain. Pick a basket of Stock Tokens. Your agent trades it around the clock inside limits you set, and idle cash can earn. Only you can take money out.'
+  'Stock Tokens trade on Robinhood Chain around the clock, through the nights and weekends New York is shut. Pick a basket, put in any token from $1, and your AI agent keeps it on plan inside limits the chain enforces. Every decision is written on chain. Only you can take money out.'
 
 export const homeCopy = {
   motto: MOTTO,
   /** The motto without the name, for places that already show the name beside it. */
-  mottoLine: 'AI agents for Robinhood Chain stocks',
+  mottoLine: 'AI agents that trade Stock Tokens 24/7 on Robinhood Chain',
   meta: {
     title: MOTTO,
-    description: `Give your stocks an AI agent. It trades. You own it. ${HERO_LINE}`,
+    description: `Wall Street closes. Your agent doesn't. ${HERO_LINE}`,
   },
 
   nav: {
@@ -27,8 +27,8 @@ export const homeCopy = {
 
   hero: {
     aria: MOTTO,
-    titleLead: 'Give your stocks an AI agent.',
-    titleEm: 'It trades. You own it.',
+    titleLead: 'Wall Street closes.',
+    titleEm: 'Your agent doesn’t.',
     line: HERO_LINE,
     primary: 'Open the app',
     secondary: 'Watch a live agent',

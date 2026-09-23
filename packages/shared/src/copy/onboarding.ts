@@ -13,8 +13,8 @@ export const firstRunCopy = {
   soundOn: 'Sound on',
   soundOff: 'Sound off',
   welcome: {
-    title: 'Give your stocks an AI agent.',
-    sub: 'It trades. You own it.',
+    title: 'Wall Street closes.',
+    sub: 'Your agent doesn’t.',
     tag: 'Stock Tokens on Robinhood Chain',
   },
   how: {
