@@ -8,6 +8,7 @@
 @import "./yosuku/index.css";
 @import "tw-animate-css";
 @import "./agari/bridge.css";
+@import "./zk/tokens.css";
 @import "./agari/tokens.css";
 @import "./agari/shell.css";
 @import "./agari/navigation.css";

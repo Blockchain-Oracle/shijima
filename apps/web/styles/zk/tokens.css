@@ -1,0 +1,196 @@
+/* ZK Freighter's design tokens (packages/ui/src/tokens.ts + theme.css @ 859d95f), carrying Shijima's colours.
+ *
+ * The reference sets these as inline CSS variables from a React provider; here they live on :root and flip on
+ * [data-theme="light"], like every other token in this app. Names are the reference's, so its components port
+ * as written. Values are ours: Robin Neon on near-black, deep green on cream. Profit (--pos) stays a different
+ * green from the accent (--ac), and text on the accent is always --on-accent (dark on neon, white on green).
+ *
+ * --bg already exists (yosuku) with the same values; it is the canvas behind the framed app. */
+
+:root {
+  --panel: #0a0a0a;
+  --card: #171717;
+  --card2: #262626;
+  --side: #070707;
+  --page: #050505;
+
+  --bd: rgb(255 255 255 / 0.08);
+  --bd2: rgb(255 255 255 / 0.15);
+
+  --tx: #f5f5f5;
+  --tx2: #a3a3a3;
+  --tx3: #8a8a8a;
+
+  --ac: var(--vermilion);
+  --ac2: color-mix(in srgb, var(--vermilion) 78%, #ffffff);
+  --pos: var(--profit);
+  --warn: #f2994a;
+  --dng: var(--loss);
+  --pub: #8a8a8a;
+  --mask: rgb(5 5 5 / 0.72);
+
+  /* "Your agents": the reference's shielded surface, in our accent. */
+  --sh-grad: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--ac) 22%, transparent),
+    color-mix(in srgb, var(--ac) 3%, transparent) 70%
+  );
+  --sh-hatch: rgb(255 255 255 / 0.05);
+  --sh-border: color-mix(in srgb, var(--ac) 34%, transparent);
+  /* "Your wallet": the reference's public surface, amber and dashed. */
+  --pub-grad: linear-gradient(150deg, rgb(242 153 74 / 0.1), rgb(242 153 74 / 0.02) 70%);
+  --pub-bd: rgb(242 153 74 / 0.42);
+
+  /* The canvas behind the framed app: two soft glows, as in the reference (theme.tsx:63-67), in green. */
+  --canvas-glow-a: color-mix(in srgb, var(--ac) 9%, transparent);
+  --canvas-glow-b: color-mix(in srgb, var(--ac) 6%, transparent);
+
+  --fm: var(--font-jetbrains), 'IBM Plex Mono', ui-monospace, monospace;
+  --fs: var(--font-inter), 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+
+  --radius-panel: 24px;
+  --shadow-panel: 0 50px 130px -50px #000, 0 0 0 1px rgb(0 0 0 / 0.4);
+  --shadow-pop: 0 40px 90px -34px #000, 0 0 0 1px rgb(0 0 0 / 0.4);
+  --shadow-glow: 0 10px 30px -12px color-mix(in srgb, var(--ac) 45%, transparent);
+
+  /* Every face in the app is the reference's now (lib/fonts.ts). */
+  --font-display: var(--font-sora), 'Hanken Grotesk', system-ui, sans-serif;
+  --font-body: var(--font-inter), 'Hanken Grotesk', system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+[data-theme='light'] {
+  --panel: #fbf7ee;
+  --card: #f6f0e4;
+  --card2: #ece3d2;
+  --side: #f4eee3;
+  --page: #efe8da;
+
+  --bd: rgb(20 18 16 / 0.1);
+  --bd2: rgb(20 18 16 / 0.18);
+
+  --tx: #141210;
+  --tx2: #5e574b;
+  --tx3: #7c7466;
+
+  --ac2: var(--vermilion-d);
+  --warn: #a2741f;
+  --pub: #7c7466;
+  --mask: rgb(244 238 227 / 0.82);
+
+  --sh-grad: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--ac) 16%, transparent),
+    color-mix(in srgb, var(--ac) 3%, transparent) 70%
+  );
+  --sh-hatch: color-mix(in srgb, var(--ac) 8%, transparent);
+  --pub-grad: linear-gradient(150deg, rgb(162 116 31 / 0.14), rgb(162 116 31 / 0.04) 70%);
+  --pub-bd: rgb(162 116 31 / 0.45);
+
+  --canvas-glow-a: color-mix(in srgb, var(--ac) 7%, transparent);
+  --canvas-glow-b: color-mix(in srgb, var(--ac) 4%, transparent);
+
+  --shadow-panel: 0 40px 110px -60px rgb(40 30 10 / 0.45), 0 0 0 1px rgb(20 18 16 / 0.06);
+  --shadow-pop: 0 30px 80px -40px rgb(40 30 10 / 0.45), 0 0 0 1px rgb(20 18 16 / 0.06);
+}
+
+/* The reference's Tailwind names (theme.css:13-47). `inline` keeps each one resolving at the element, so the
+ * theme flips them. --color-bg and --color-card already exist here with the same values. */
+@theme inline {
+  --color-panel: var(--panel);
+  --color-card2: var(--card2);
+  --color-side: var(--side);
+  --color-tx: var(--tx);
+  --color-tx2: var(--tx2);
+  --color-tx3: var(--tx3);
+  --color-bd: var(--bd);
+  --color-bd2: var(--bd2);
+  --color-ac: var(--ac);
+  --color-ac2: var(--ac2);
+  --color-pos: var(--pos);
+  --color-warn: var(--warn);
+  --color-dng: var(--dng);
+  --color-pub: var(--pub);
+
+  --animate-zkSheen: zkSheen 5s linear infinite;
+  --animate-zkPulse: zkPulse 1.6s ease-in-out infinite;
+  --animate-zkSpin: zkSpin 0.8s linear infinite;
+  --animate-zkRise: zkRise 0.4s cubic-bezier(0.5, 1.2, 0.5, 1) both;
+  --animate-zkPop: zkPop 0.3s ease both;
+  --animate-zkSheetUp: zkSheetUp 0.4s ease both;
+}
+
+/* The reference's motion (theme.css:85-165), verbatim. */
+@keyframes zkSheen {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+@keyframes zkPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+@keyframes zkSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes zkRise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes zkPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  60% {
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes zkSheetUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes zkRouteIn {
+  from {
+    opacity: 0.35;
+    transform: translateY(9px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-zkSheen,
+  .animate-zkPulse,
+  .animate-zkRise,
+  .animate-zkPop,
+  .animate-zkSheetUp {
+    animation: none !important;
+  }
+}

@@ -1,29 +1,31 @@
-import { Inter, JetBrains_Mono, Noto_Serif_JP, Sora } from 'next/font/google'
+import { Hanken_Grotesk, IBM_Plex_Mono, Noto_Serif_JP } from 'next/font/google'
 
 /**
- * Yosuku's four faces, with the same variable names and weights as the reference
- * (reference/yosuku/app/layout.tsx @ 3c56ef5). The ported design system addresses
- * these variables directly, so the names are part of the contract — not a preference.
+ * ZK Freighter's two faces (packages/ui/src/tokens.ts: Hanken Grotesk and IBM Plex Mono), loaded under the
+ * variable names the rest of the design system already reads. `--font-sora` (display) and `--font-inter`
+ * (body) are both Hanken Grotesk now, and `--font-jetbrains` (numbers) is IBM Plex Mono, so every page takes the
+ * reference's type without a CSS change. Noto Serif JP stays for the しじま mark.
  */
 
-export const sora = Sora({
+export const display = Hanken_Grotesk({
   variable: '--font-sora',
   subsets: ['latin'],
   display: 'swap',
-  weight: ['400', '600', '700', '800'],
+  weight: ['400', '500', '600', '700', '800'],
 })
 
-export const inter = Inter({
+export const body = Hanken_Grotesk({
   variable: '--font-inter',
   subsets: ['latin'],
   display: 'swap',
+  weight: ['400', '500', '600', '700', '800'],
 })
 
-export const jetbrainsMono = JetBrains_Mono({
+export const mono = IBM_Plex_Mono({
   variable: '--font-jetbrains',
   subsets: ['latin'],
   display: 'swap',
-  weight: ['400', '500', '600'],
+  weight: ['400', '500', '600', '700'],
 })
 
 export const notoSerifJp = Noto_Serif_JP({
@@ -33,9 +35,4 @@ export const notoSerifJp = Noto_Serif_JP({
   weight: ['500', '700'],
 })
 
-export const fontVariables = [
-  sora.variable,
-  inter.variable,
-  jetbrainsMono.variable,
-  notoSerifJp.variable,
-].join(' ')
+export const fontVariables = [display.variable, body.variable, mono.variable, notoSerifJp.variable].join(' ')
