@@ -27,7 +27,8 @@ export function useWelcomeSound(active: boolean) {
   useEffect(() => {
     if (!active) return
     const a = new Audio(SRC)
-    a.volume = 0.7
+    // Soft on purpose (Abu, 23 Sep): a chime under the voice of the page, never over it.
+    a.volume = 0.22
     a.preload = 'auto'
     audio.current = a
     started.current = false
