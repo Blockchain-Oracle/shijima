@@ -718,12 +718,15 @@ export async function planMove(
           : await planGetGas(address, input)
   if ('why' in built) return { ok: false, why: built.why, ...(built.hint ? { hint: built.hint } : {}) }
 
-  // The Robinhood Chain side is simulated for its fee; Relay's quote already counts the origin chain's.
+  // The Robinhood Chain side is simulated, so a transaction the chain would refuse is never offered. Its fee is
+  // added for our own swaps and transfers; Relay's quote already counts the network fee on its origin chain.
   if (built.fromChainId === CHAIN_ID) {
     const fee = await feeOf(address, built.steps)
     if ('why' in fee) return { ok: false, why: fee.why }
-    built.feeUsdg += fee.usdg
-    if (built.relayRequestId === null && fee.usdg > 0n) built.lines.push(c.lines.cost(usd(fee.usdg)))
+    if (built.relayRequestId === null) {
+      built.feeUsdg += fee.usdg
+      if (fee.usdg > 0n) built.lines.push(c.lines.networkFee(usd(fee.usdg)))
+    }
   }
 
   const row = await createMoneyMove(db(), {
