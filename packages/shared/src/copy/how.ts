@@ -265,8 +265,8 @@ export const howCopy = {
 
   fee: {
     yearly: {
-      title: '0.5% a year, waived during the beta',
-      body: 'A small yearly share of what the agent holds, counted as it goes, for example “Fee so far: $0.03, waived.” Practice mode is always free.',
+      title: 'Free to trade',
+      body: 'Shijima takes nothing from your trades or from what your agent holds. A creator may ask a one-time fee of $0 to $5 to copy their agent, shown before you sign.',
     },
     perTrade: {
       title: 'No fee per trade',

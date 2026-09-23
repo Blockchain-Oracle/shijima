@@ -1,0 +1,902 @@
+/* The reference landing's sections (sections.css): reveal, the built-on strip, the section chrome, the cards,
+ * the money model, Get, the footer CTA and the site footer. Our facts (on chain now, live agents, strategies,
+ * check it yourself) are written in the same grammar at the end. */
+
+/* ── Scroll reveal ── */
+
+.landing-shell .reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.65s ease,
+    transform 0.65s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.landing-shell .reveal.is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+.landing-shell .reveal .platform-card,
+.landing-shell .reveal .privacy-step {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.55s ease,
+    transform 0.55s cubic-bezier(0.2, 0.7, 0.2, 1),
+    border-color 0.22s ease,
+    box-shadow 0.25s ease;
+}
+
+.landing-shell .reveal.is-revealed .platform-card,
+.landing-shell .reveal.is-revealed .privacy-step {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── Built-on strip ── */
+
+.landing-shell .built-on {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  flex-wrap: wrap;
+  width: min(1180px, calc(100% - 40px));
+  margin: 74px auto 0;
+  border-top: 1px solid var(--bd);
+  border-bottom: 1px solid var(--bd);
+  padding: 22px 4px;
+}
+
+.landing-shell .built-on-label {
+  color: var(--tx3);
+  font: 800 10.5px / 1 var(--fm);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.landing-shell .built-on-names {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+
+.landing-shell .built-on-names span {
+  color: var(--tx2);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.landing-shell .built-on-stats {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-left: auto;
+  color: var(--tx3);
+  font: 600 12px / 1 var(--fm);
+}
+
+.landing-shell .built-on-stats b {
+  color: var(--ac2);
+  font-weight: 800;
+}
+
+/* The live prices ride the strip as its second line. */
+.landing-shell .built-on-prices {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-basis: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border-top: 1px dashed var(--bd);
+  padding-top: 16px;
+  color: var(--tx3);
+  font: 600 11.5px / 1 var(--fm);
+  mask-image: linear-gradient(90deg, #000 85%, transparent);
+}
+
+.landing-shell .built-on-prices > span:first-child {
+  flex: none;
+}
+
+.landing-shell .built-on-prices ul {
+  display: flex;
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  white-space: nowrap;
+}
+
+.landing-shell .built-on-prices li b {
+  margin-right: 6px;
+  color: var(--tx);
+  font-weight: 700;
+}
+
+/* ── Shared section chrome ── */
+
+.landing-shell .land-section,
+.landing-shell .footer-cta,
+.landing-shell .get {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 96px 0 30px;
+}
+
+.landing-shell .section-label {
+  display: block;
+  margin-bottom: 13px;
+  color: var(--ac2);
+  font: 800 11px / 1 var(--fm);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.landing-shell .land-section h2,
+.landing-shell .get h2,
+.landing-shell .footer-cta h2 {
+  margin: 0;
+  max-width: 700px;
+  font-size: clamp(32px, 4.6vw, 52px);
+  font-weight: 850;
+  line-height: 1.03;
+  letter-spacing: -0.028em;
+}
+
+.landing-shell .section-sub {
+  max-width: 560px;
+  margin: 18px 0 0;
+  color: var(--tx2);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.landing-shell .section-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 18px;
+  color: var(--ac2);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.landing-shell .section-link:hover {
+  text-decoration: underline;
+}
+
+/* ── Cards (the reference's Platforms) ── */
+
+.landing-shell .platform-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 38px;
+}
+
+.landing-shell .platform-grid.is-four {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.landing-shell .platform-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--bd);
+  border-radius: 18px;
+  background: linear-gradient(180deg, var(--lx-wash), transparent 55%), var(--panel);
+  padding: 26px 24px 28px;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color 0.22s ease,
+    transform 0.22s ease,
+    box-shadow 0.25s ease;
+}
+
+.landing-shell .platform-card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--ac) 40%, transparent);
+  box-shadow: 0 30px 60px -34px color-mix(in srgb, var(--ac) 18%, transparent);
+}
+
+.landing-shell .platform-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--tx3);
+  font: 700 10.5px / 1.2 var(--fm);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.landing-shell .platform-meta .go {
+  margin-left: auto;
+  color: var(--tx3);
+}
+
+.landing-shell .platform-card h3 {
+  margin: 13px 0 9px;
+  font-size: 21px;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.landing-shell .platform-card p {
+  margin: 0;
+  color: var(--tx2);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.landing-shell .platform-spec {
+  display: inline-flex;
+  align-self: flex-start;
+  margin-top: 18px;
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  background: var(--lx-chip);
+  padding: 6px 10px;
+  color: var(--tx3);
+  font: 700 9.5px / 1.2 var(--fm);
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.landing-shell .platform-card .card-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 18px;
+}
+
+/* ── Money in, agent trades, only you take it out (the reference's privacy model) ── */
+
+.landing-shell .privacy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 38px;
+}
+
+.landing-shell .privacy-step {
+  border: 1px solid var(--bd);
+  border-radius: 18px;
+  background: var(--panel);
+  padding: 25px 24px 28px;
+}
+
+.landing-shell .privacy-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font: 800 10.5px / 1 var(--fm);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.landing-shell .tone-in .privacy-tag {
+  border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent);
+  background: color-mix(in srgb, var(--warn) 8%, transparent);
+  color: var(--warn);
+}
+
+.landing-shell .tone-agent {
+  border-color: color-mix(in srgb, var(--ac) 42%, transparent);
+  background:
+    radial-gradient(320px 200px at 50% 0%, color-mix(in srgb, var(--ac) 7%, transparent), transparent 70%),
+    var(--panel);
+}
+
+.landing-shell .tone-agent .privacy-tag {
+  border: 1px solid color-mix(in srgb, var(--ac) 45%, transparent);
+  background: color-mix(in srgb, var(--ac) 12%, transparent);
+  color: var(--ac2);
+}
+
+.landing-shell .tone-out .privacy-tag {
+  border: 1px solid color-mix(in srgb, var(--pos) 40%, transparent);
+  background: color-mix(in srgb, var(--pos) 8%, transparent);
+  color: var(--pos);
+}
+
+.landing-shell .privacy-step h3 {
+  margin: 17px 0 9px;
+  font-size: 19px;
+  font-weight: 850;
+  letter-spacing: -0.015em;
+}
+
+.landing-shell .privacy-step p {
+  margin: 0;
+  color: var(--tx2);
+  font-size: 14px;
+  line-height: 1.62;
+}
+
+.landing-shell .privacy-step .step-note {
+  margin-top: 12px;
+  border-top: 1px dashed var(--bd);
+  padding-top: 12px;
+  color: var(--tx3);
+  font-size: 12.5px;
+}
+
+.landing-shell .promises {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.landing-shell .promises ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: promise;
+}
+
+.landing-shell .promises li {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--bd);
+  color: var(--tx2);
+  font-size: 14px;
+  line-height: 1.55;
+  counter-increment: promise;
+}
+
+.landing-shell .promises li:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.landing-shell .promises li::before {
+  content: counter(promise, decimal-leading-zero);
+  flex: none;
+  color: var(--ac2);
+  font: 700 11px / 1.9 var(--fm);
+}
+
+.landing-shell .panel-title {
+  margin: 0 0 14px;
+  color: var(--tx3);
+  font: 800 10.5px / 1.2 var(--fm);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.landing-shell .promises .worst p {
+  margin: 0 0 12px;
+  color: var(--tx2);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── Footer CTA ── */
+
+.landing-shell .footer-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 90px;
+  text-align: center;
+}
+
+.landing-shell .footer-cta h2 {
+  margin-top: 22px;
+}
+
+.landing-shell .footer-cta p {
+  max-width: 470px;
+  margin: 16px 0 0;
+  color: var(--tx2);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.landing-shell .mainnet-flag {
+  margin-top: 30px;
+  border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--warn) 7%, transparent);
+  padding: 8px 14px;
+  color: var(--warn);
+  font: 700 10.5px / 1.3 var(--fm);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ── Site footer ── */
+
+.landing-shell .site-footer {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  border-top: 1px solid var(--bd);
+  padding: 26px 4px 34px;
+}
+
+.landing-shell .site-footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.landing-shell .site-footer-brand strong {
+  display: block;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+}
+
+.landing-shell .site-footer-brand span {
+  display: block;
+  color: var(--tx3);
+  font-size: 11.5px;
+}
+
+.landing-shell .site-footer nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-left: auto;
+  color: var(--tx2);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.landing-shell .site-footer nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.18s ease;
+}
+
+.landing-shell .site-footer nav a:hover {
+  color: var(--tx);
+}
+
+.landing-shell .site-footer-note {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--tx3);
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-shell .reveal,
+  .landing-shell .reveal .platform-card,
+  .landing-shell .reveal .privacy-step {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .landing-shell .platform-card:hover {
+    transform: none;
+  }
+}
+
+/* ── Get Shijima ── */
+
+.landing-shell .get-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 18px;
+  margin-top: 44px;
+}
+
+.landing-shell .get-card {
+  --get-tx: #ffffff;
+  --get-tx2: rgb(255 255 255 / 0.78);
+  --get-tx3: rgb(255 255 255 / 0.6);
+  position: relative;
+  min-width: 0;
+  min-height: 320px;
+  border: 1px solid var(--lx-line);
+  border-radius: 24px;
+  padding: 30px 30px 28px;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 130% at 82% -10%, color-mix(in srgb, var(--ac) 16%, transparent), transparent 60%),
+    radial-gradient(110% 120% at 10% 110%, color-mix(in srgb, var(--ac) 12%, transparent), transparent 62%),
+    linear-gradient(160deg, #171717, #0c0c0c 70%);
+  box-shadow: 0 50px 110px -60px var(--lx-shade);
+}
+
+[data-theme="light"] .landing-shell .get-card {
+  --get-tx: #141210;
+  --get-tx2: rgb(20 18 16 / 0.74);
+  --get-tx3: rgb(20 18 16 / 0.58);
+  background:
+    radial-gradient(120% 130% at 82% -10%, color-mix(in srgb, var(--ac) 14%, transparent), transparent 60%),
+    radial-gradient(110% 120% at 10% 110%, color-mix(in srgb, var(--ac) 10%, transparent), transparent 62%),
+    linear-gradient(160deg, #fbf7ee, #ece3d2 70%);
+}
+
+.landing-shell .get-card-copy {
+  position: relative;
+  z-index: 1;
+  max-width: 56%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 13px;
+}
+
+.landing-shell .get-card h3 {
+  margin: 0;
+  color: var(--get-tx);
+  font-size: 25px;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+}
+
+.landing-shell .get-card p {
+  margin: 0;
+  color: var(--get-tx2);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.landing-shell .get-actions {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.landing-shell .get-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 999px;
+  background: var(--lx-pill-bg);
+  border: 1px solid var(--lx-line-3);
+  padding: 11px 17px;
+  color: var(--get-tx);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  backdrop-filter: blur(8px);
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.landing-shell a.get-pill:hover {
+  transform: translateY(-2px);
+  border-color: var(--lx-line-hover);
+}
+
+.landing-shell .get-card small {
+  color: var(--get-tx3);
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+.landing-shell .get-qr {
+  position: absolute;
+  left: 30px;
+  bottom: 28px;
+  z-index: 1;
+  display: none;
+  border-radius: 14px;
+  background: #fff;
+  padding: 10px;
+  box-shadow: 0 20px 44px -20px var(--lx-shade);
+}
+
+.landing-shell .get-qr svg {
+  display: block;
+  width: 92px;
+  height: 92px;
+}
+
+.landing-shell .get-shot {
+  position: absolute;
+  right: 26px;
+  bottom: -1px;
+  overflow: hidden;
+  border-radius: 18px 18px 0 0;
+}
+
+/* live screens: cropped by the card, peeking out of its bottom */
+.landing-shell .get-shot .mock-screen,
+.landing-shell .get-shot .chat-card {
+  border-bottom: none;
+  border-radius: 18px 18px 0 0 !important;
+}
+
+.landing-shell .get-shot-phone {
+  width: 200px;
+  max-height: 396px;
+}
+
+.landing-shell .get-shot-chat {
+  width: 226px;
+  max-height: 300px;
+}
+
+.landing-shell .get-shot-chat .chat-card {
+  height: 300px;
+}
+
+@media (min-width: 980px) {
+  .landing-shell .get-qr {
+    display: block;
+  }
+
+  .landing-shell .get-card {
+    min-height: 356px;
+    padding-bottom: 150px;
+  }
+}
+
+@media (max-width: 979px) {
+  .landing-shell .get-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-shell .get-card-copy {
+    max-width: 100%;
+  }
+
+  .landing-shell .get-shot {
+    display: none;
+  }
+}
+
+/* ── Our facts, in the same grammar ── */
+
+.landing-shell .agent-card h3 {
+  margin-top: 12px;
+}
+
+.landing-shell .agent-card .mode {
+  border-radius: 999px;
+  border: 1px solid var(--bd);
+  padding: 3px 7px;
+  font-size: 9px;
+}
+
+.landing-shell .agent-card .mode.is-live {
+  border-color: color-mix(in srgb, var(--ac) 45%, transparent);
+  color: var(--ac2);
+}
+
+.landing-shell .agent-card .card-foot {
+  flex-wrap: wrap;
+  color: var(--tx3);
+  font: 600 11.5px / 1.3 var(--fm);
+}
+
+.landing-shell .agent-card .card-foot b {
+  color: var(--tx);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.landing-shell .agent-card .copy-link {
+  position: relative;
+  z-index: 1;
+  margin-left: auto;
+  color: var(--ac2);
+  font: 700 12.5px / 1 var(--fs);
+  text-decoration: none;
+}
+
+.landing-shell .agent-card .copy-link:hover {
+  text-decoration: underline;
+}
+
+.landing-shell .card-cover {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.landing-shell .strategy-card .change {
+  font-weight: 800;
+}
+
+.landing-shell .strategy-card .change.up {
+  color: var(--pos);
+}
+
+.landing-shell .strategy-card .change.down {
+  color: var(--dng);
+}
+
+.landing-shell .strategy-card .start {
+  color: var(--ac2);
+  font-size: 13.5px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+/* "$100 in The giants": the split bar and its rows */
+.landing-shell .dollars {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 28px;
+  margin-top: 14px;
+  border: 1px solid var(--bd);
+  border-radius: 18px;
+  background: var(--panel);
+  padding: 26px 24px 28px;
+}
+
+.landing-shell .dollars h3 {
+  margin: 0 0 12px;
+  font-size: 21px;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+}
+
+.landing-shell .dollars p {
+  margin: 0 0 8px;
+  color: var(--tx2);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.landing-shell .split-bar {
+  display: flex;
+  height: 30px;
+  overflow: hidden;
+  border-radius: 9px;
+}
+
+.landing-shell .split-bar span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  color: #0a0a0a;
+  font: 700 10.5px / 1 var(--fm);
+}
+
+.landing-shell .split-rows {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 18px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-shell .split-rows li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  color: var(--tx2);
+  font-size: 13px;
+}
+
+.landing-shell .split-rows li > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.landing-shell .split-rows b {
+  margin-left: auto;
+  color: var(--tx);
+  font: 700 12.5px / 1 var(--fm);
+}
+
+/* Check it yourself: the steps, the latest decisions, and who runs it */
+.landing-shell .proof-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.landing-shell .proof-panel {
+  min-width: 0;
+  border: 1px solid var(--bd);
+  border-radius: 18px;
+  background: var(--panel);
+  padding: 24px;
+}
+
+.landing-shell .proof-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-shell .proof-list a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  border-top: 1px solid var(--bd);
+  padding: 11px 0;
+  color: var(--tx2);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.landing-shell .proof-list li:first-child a {
+  border-top: none;
+  padding-top: 0;
+}
+
+.landing-shell .proof-list a:hover {
+  color: var(--tx);
+}
+
+.landing-shell .proof-list small {
+  flex: none;
+  color: var(--tx3);
+  font: 700 11px / 1 var(--fm);
+}
+
+.landing-shell .proof-list .text {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.landing-shell .proof-os img {
+  display: block;
+  height: 22px;
+  width: auto;
+  margin-bottom: 12px;
+}
+
+.landing-shell .proof-os .osc-light {
+  display: none;
+}
+
+[data-theme="light"] .landing-shell .proof-os .osc-dark {
+  display: none;
+}
+
+[data-theme="light"] .landing-shell .proof-os .osc-light {
+  display: block;
+}
+
+.landing-shell .proof-os p {
+  margin: 0 0 12px;
+  color: var(--tx2);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.landing-shell .proof-os nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.landing-shell .proof-os nav .section-link {
+  margin-top: 8px;
+}
+
+.landing-shell .land-note {
+  color: var(--tx3);
+  font-size: 13px;
+}

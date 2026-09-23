@@ -2,20 +2,18 @@
 
 import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
+import { WebsiteShell } from '@/features/home/landing/WebsiteShell'
 import { AppShell } from './app/AppShell'
 import type { SidebarAgent } from './app/types'
-import CustomCursor from './CustomCursor'
-import Footer from './Footer'
-import GrainOverlay from './GrainOverlay'
-import Header, { type HeaderProps } from './Header'
-import Marquee, { type TickerCell } from './Marquee'
-import { WrongNetworkBanner } from './WrongNetworkBanner'
+import type { HeaderProps } from './Header'
+import type { TickerCell } from './Marquee'
 
 /**
- * Two shells. The website (the landing page, How it works, the docs) keeps its top header and ticker: it is read
- * before anyone signs in, and it stays reachable after. Everything else is the app, with its sidebar.
+ * Two shells. The website (the landing page at / and /home, How it works, the docs) is the reference landing's
+ * nav pill, the page and its footer: it is read before anyone signs in, and it stays reachable after. Everything
+ * else is the app, with its sidebar. The live prices ride the landing's Built-on strip now, not a ticker here.
  */
-const WEBSITE = ['/', '/how-it-works', '/docs']
+const WEBSITE = ['/', '/home', '/how-it-works', '/docs']
 
 function isWebsite(pathname: string | null) {
   if (!pathname) return false
@@ -24,25 +22,12 @@ function isWebsite(pathname: string | null) {
 
 export function ShellSwitch({
   children,
-  ticker,
   agents,
   ...header
 }: HeaderProps & { children: ReactNode; ticker: TickerCell[]; agents: SidebarAgent[] }) {
   const pathname = usePathname()
   if (isWebsite(pathname)) {
-    return (
-      <>
-        <Marquee initial={ticker} />
-        <Header {...header} />
-        <GrainOverlay />
-        <CustomCursor />
-        <main className="page-shell">
-          <WrongNetworkBanner />
-          {children}
-        </main>
-        <Footer />
-      </>
-    )
+    return <WebsiteShell signedIn={Boolean(header.signedInAs)}>{children}</WebsiteShell>
   }
   return (
     <AppShell signedInAs={header.signedInAs} unread={header.unread} agents={agents}>

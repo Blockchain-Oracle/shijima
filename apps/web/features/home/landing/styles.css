@@ -1,0 +1,453 @@
+/* The reference landing's shell, nav pill, hero band and buttons (apps/landing/src/styles.css), in Shijima's
+ * colours. The reference is dark only; every white or near-black literal it used is a variable here, with a
+ * cream twin for the light theme. Periwinkle became our accent, the purple glow is gone, and every glow runs at
+ * about half the reference's strength, because neon is twice as bright. */
+
+.landing-shell {
+  /* The reference's literals, named. Dark first; the light twins follow. */
+  --lx-band: #080808;
+  --lx-veil: 8 8 8;
+  --lx-line: rgb(255 255 255 / 0.1);
+  --lx-line-2: rgb(255 255 255 / 0.14);
+  --lx-line-3: rgb(255 255 255 / 0.16);
+  --lx-line-hover: rgb(255 255 255 / 0.42);
+  --lx-hatch: rgb(255 255 255 / 0.014);
+  --lx-nav-bg: rgb(10 10 10 / 0.82);
+  --lx-nav-line: rgb(255 255 255 / 0.09);
+  --lx-pill-bg: rgb(16 16 16 / 0.82);
+  --lx-pill-hover: rgb(24 24 24 / 0.92);
+  --lx-h1: #ffffff;
+  --lx-h1-shadow: rgb(8 8 8 / 0.55);
+  --lx-solid: #ffffff;
+  --lx-solid-tx: #0a0a0a;
+  --lx-solid-glow: rgb(255 255 255 / 0.45);
+  --lx-shade: #000;
+  --lx-wash: rgb(255 255 255 / 0.015);
+  --lx-chip: rgb(255 255 255 / 0.025);
+  --lx-coin-dark: #111111;
+  --lx-em: linear-gradient(
+    100deg,
+    var(--ac2) 5%,
+    color-mix(in srgb, var(--ac) 45%, #ffffff) 50%,
+    var(--ac) 95%
+  );
+
+  min-height: 100dvh;
+  background:
+    radial-gradient(
+      1100px 540px at 50% -180px,
+      color-mix(in srgb, var(--ac) 8%, transparent),
+      transparent 66%
+    ),
+    var(--bg);
+  color: var(--tx);
+  font-family: var(--fs);
+  overflow-x: hidden;
+}
+
+[data-theme="light"] .landing-shell {
+  --lx-band: #efe8da;
+  --lx-veil: 239 232 218;
+  --lx-line: rgb(20 18 16 / 0.1);
+  --lx-line-2: rgb(20 18 16 / 0.14);
+  --lx-line-3: rgb(20 18 16 / 0.16);
+  --lx-line-hover: rgb(20 18 16 / 0.42);
+  --lx-hatch: rgb(20 18 16 / 0.022);
+  --lx-nav-bg: rgb(251 247 238 / 0.86);
+  --lx-nav-line: rgb(20 18 16 / 0.1);
+  --lx-pill-bg: rgb(251 247 238 / 0.86);
+  --lx-pill-hover: rgb(255 255 255 / 0.95);
+  --lx-h1: #141210;
+  --lx-h1-shadow: rgb(239 232 218 / 0.6);
+  --lx-solid: #141210;
+  --lx-solid-tx: #fbf7ee;
+  --lx-solid-glow: rgb(20 18 16 / 0.35);
+  --lx-shade: rgb(40 30 10 / 0.5);
+  --lx-wash: rgb(20 18 16 / 0.015);
+  --lx-chip: rgb(20 18 16 / 0.03);
+  --lx-coin-dark: #d6cab0;
+  --lx-em: linear-gradient(
+    100deg,
+    var(--ac) 5%,
+    color-mix(in srgb, var(--ac) 70%, var(--pos)) 50%,
+    var(--ac2) 95%
+  );
+}
+
+.landing-shell *,
+.landing-shell *::before,
+.landing-shell *::after {
+  box-sizing: border-box;
+}
+
+.landing-shell > main {
+  position: relative;
+  overflow-x: clip;
+}
+
+/* faint diagonal hatch, the agents card's texture */
+.landing-shell > main::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(135deg, var(--lx-hatch) 0 1px, transparent 1px 9px);
+  pointer-events: none;
+}
+
+.landing-shell .nav-brand,
+.landing-shell .nav-pill a,
+.landing-shell .site-footer a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ── The mark in a tile (the reference's Logo slot) ── */
+
+.landing-shell .land-logo {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--lx-line);
+  background: var(--card);
+  color: var(--tx);
+}
+
+.landing-shell .land-logo svg {
+  width: 62%;
+  height: 62%;
+  display: block;
+  overflow: visible;
+}
+
+.landing-shell .land-logo .dot {
+  fill: var(--ac);
+}
+
+.landing-shell .land-logo.is-glow {
+  box-shadow: 0 8px 22px -8px color-mix(in srgb, var(--ac) 30%, transparent);
+}
+
+/* ── Nav ─────────────────────────────────────────── */
+
+.landing-shell .nav-pill {
+  position: sticky;
+  top: 14px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: min(760px, calc(100% - 32px));
+  margin: 16px auto 0;
+  border: 1px solid var(--lx-nav-line);
+  border-radius: 999px;
+  background: var(--lx-nav-bg);
+  backdrop-filter: blur(14px);
+  padding: 9px 10px 9px 16px;
+  box-shadow: 0 22px 70px -44px var(--lx-shade);
+}
+
+.landing-shell .nav-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.landing-shell .nav-brand .ja {
+  color: var(--tx3);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.landing-shell .nav-pill nav {
+  display: flex;
+  gap: 19px;
+  margin-left: auto;
+  color: var(--tx2);
+  font-size: 13.5px;
+}
+
+.landing-shell .nav-pill nav a {
+  transition: color 0.18s ease;
+}
+
+.landing-shell .nav-pill nav a:hover,
+.landing-shell .nav-pill nav a[aria-current="page"] {
+  color: var(--tx);
+}
+
+.landing-shell .nav-theme {
+  display: inline-flex;
+}
+
+.landing-shell .nav-theme .theme-toggle {
+  width: 34px;
+  height: 34px;
+}
+
+.landing-shell .nav-download {
+  border-radius: 999px;
+  background: var(--lx-solid);
+  padding: 10px 17px;
+  color: var(--lx-solid-tx) !important;
+  font-size: 13.5px;
+  font-weight: 850;
+  white-space: nowrap;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.landing-shell .nav-download:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px -12px var(--lx-solid-glow);
+}
+
+/* ── Hero ────────────────────────────────────────── */
+
+.landing-shell .land-hero {
+  position: relative;
+  width: min(1240px, calc(100% - 32px));
+  margin: 18px auto 0;
+  text-align: center;
+}
+
+/* The band: a near-black stage. Behind the screens a giant disc, dark half and hatched green half, rises like a
+ * sun and turns slowly. */
+.landing-shell .hero-band {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--lx-line);
+  border-radius: 28px;
+  background: var(--lx-band);
+  padding: 72px 40px 0;
+  min-height: 620px;
+  box-shadow: 0 60px 140px -80px var(--lx-shade);
+}
+
+/* the disc */
+.landing-shell .hero-band::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: min(920px, 120vw);
+  aspect-ratio: 1;
+  transform: translate(-50%, 42%);
+  border-radius: 50%;
+  border: 1px solid var(--lx-line-2);
+  background:
+    linear-gradient(90deg, var(--lx-coin-dark) 0 50%, transparent 50%),
+    repeating-linear-gradient(120deg, transparent 0 16px, rgb(255 255 255 / 0.28) 16px 19px),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--ac) 78%, #ffffff),
+      var(--ac) 70%,
+      color-mix(in srgb, var(--ac) 72%, #000000)
+    );
+  box-shadow:
+    0 0 120px color-mix(in srgb, var(--ac) 19%, transparent),
+    0 0 340px color-mix(in srgb, var(--ac) 11%, transparent);
+  animation: landCoinTurn 90s linear infinite;
+  pointer-events: none;
+}
+
+/* a soft veil, so the copy zone stays dark and legible */
+.landing-shell .hero-band::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgb(var(--lx-veil) / 0.9) 6%,
+    rgb(var(--lx-veil) / 0.45) 44%,
+    rgb(var(--lx-veil) / 0) 78%
+  );
+  pointer-events: none;
+}
+
+@keyframes landCoinTurn {
+  from {
+    transform: translate(-50%, 42%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, 42%) rotate(360deg);
+  }
+}
+
+@keyframes landRise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes landSheen {
+  0% {
+    transform: translateX(-120%) skewX(-14deg);
+  }
+  100% {
+    transform: translateX(120%) skewX(-14deg);
+  }
+}
+
+.landing-shell .hero-copy {
+  position: relative;
+  z-index: 2;
+  max-width: 1060px;
+  margin: 0 auto;
+  animation: landRise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.landing-shell .land-hero h1 {
+  margin: 0;
+  color: var(--lx-h1);
+  font-size: clamp(40px, 6.4vw, 74px);
+  font-weight: 850;
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+  text-shadow: 0 10px 60px var(--lx-h1-shadow);
+}
+
+.landing-shell .land-hero h1 em {
+  font-style: normal;
+  background: var(--lx-em);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.landing-shell .hero-line {
+  max-width: 640px;
+  margin: 22px auto 0;
+  color: var(--tx2);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.landing-shell .land-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 46px;
+  border-radius: 999px;
+  border: 1px solid var(--lx-line-3);
+  background: var(--lx-pill-bg);
+  padding: 0 21px;
+  color: var(--lx-h1);
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+  backdrop-filter: blur(8px);
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+
+.landing-shell .land-pill:hover {
+  transform: translateY(-2px);
+  border-color: var(--lx-line-hover);
+  background: var(--lx-pill-hover);
+}
+
+.landing-shell .land-pill .live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ac);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ac) 18%, transparent);
+}
+
+.landing-shell .hero-actions {
+  display: flex;
+  justify-content: center;
+  gap: 11px;
+  flex-wrap: wrap;
+  margin-top: 28px;
+}
+
+.landing-shell .land-cta,
+.landing-shell .land-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 48px;
+  padding: 0 22px;
+  border-radius: 13px;
+  font-weight: 800;
+  font-size: 14.5px;
+  text-decoration: none;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.22s ease,
+    border-color 0.18s ease;
+}
+
+.landing-shell .land-cta {
+  position: relative;
+  overflow: hidden;
+  background: var(--ac);
+  color: var(--on-accent) !important;
+  box-shadow: 0 16px 34px -14px color-mix(in srgb, var(--ac) 40%, transparent);
+}
+
+.landing-shell .land-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 22px 44px -14px color-mix(in srgb, var(--ac) 45%, transparent);
+}
+
+.landing-shell .cta-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgb(255 255 255 / 0.22) 50%, transparent 70%);
+  transform: translateX(-120%) skewX(-14deg);
+  animation: landSheen 4.2s ease-in-out infinite;
+}
+
+.landing-shell .land-secondary {
+  border: 1px solid var(--bd2);
+  background: var(--card);
+  color: var(--tx);
+}
+
+.landing-shell .land-secondary:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--ac) 50%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-shell .hero-copy {
+    animation: none;
+  }
+
+  .landing-shell .hero-band::before {
+    animation: none;
+  }
+
+  .landing-shell .land-pill:hover {
+    transform: none;
+  }
+
+  .landing-shell .cta-sheen::after {
+    animation: none;
+  }
+
+  .landing-shell .land-cta:hover,
+  .landing-shell .land-secondary:hover,
+  .landing-shell .nav-download:hover {
+    transform: none;
+  }
+}
