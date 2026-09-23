@@ -57,6 +57,8 @@ export function PriceChart({
         autoSize: true,
         layout: {
           background: { color: 'transparent' },
+          // Credited in the footer instead, as the licence allows.
+          attributionLogo: false,
           textColor: v('--color-ink-muted', '#737373'),
           fontFamily: v('--font-data', 'monospace'),
         },

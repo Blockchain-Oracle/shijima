@@ -203,7 +203,7 @@ export async function loadAskContext(
     const total = snapshot.totalUsdg
     const share = (v: bigint) => (total === 0n ? 0 : Number((v * 10_000n) / total))
     lines.push(
-      `Valued at ${nyTime(snapshot.takenAt)} on ${snapshot.priceSource}. Total ${usd(total)}. Cash ${usd(snapshot.cashUsdg)} (${pct(share(snapshot.cashUsdg))}, target ${pct(mandate.targets.cashBps)}).`,
+      `Valued at ${nyTime(snapshot.takenAt)}, at each stock's average price over the half hour before. Total ${usd(total)}. Cash ${usd(snapshot.cashUsdg)} (${pct(share(snapshot.cashUsdg))}, target ${pct(mandate.targets.cashBps)}).`,
     )
     if (snapshot.vaultUsdg > 0n) lines.push(`Earning in the vault: ${usd(snapshot.vaultUsdg)}.`)
     for (const h of snapshot.holdings) {

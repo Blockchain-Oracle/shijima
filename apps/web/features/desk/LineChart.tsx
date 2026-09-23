@@ -67,7 +67,12 @@ export function LineChart({
       chart = createChart(el, {
         height,
         autoSize: true,
-        layout: { background: { color: 'transparent' }, textColor: c.text, fontFamily: 'var(--font-data)' },
+        layout: {
+          attributionLogo: false,
+          background: { color: 'transparent' },
+          textColor: c.text,
+          fontFamily: 'var(--font-data)',
+        },
         grid: { vertLines: { visible: false }, horzLines: { color: c.grid } },
         rightPriceScale: { borderVisible: false },
         timeScale: { borderVisible: false, timeVisible: true, secondsVisible: false },

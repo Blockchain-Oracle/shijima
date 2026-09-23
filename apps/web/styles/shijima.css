@@ -118,9 +118,11 @@
   .desk-frame[data-tab="record"] [data-panel="desk"] {
     display: none;
   }
+  /* Fills what is left above the floating pill nav: the header, title and tabs take about 200px and the pill
+     about 85px with its margin. A fixed 420px minimum used to push the text box under the pill on short phones. */
   .desk-chat {
-    height: calc(100dvh - var(--appstrip) - 66px - 250px);
-    min-height: 420px;
+    height: calc(100dvh - var(--appstrip) - 290px);
+    min-height: 280px;
   }
 }
 

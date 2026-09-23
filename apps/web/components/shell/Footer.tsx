@@ -21,6 +21,9 @@ export default function Footer() {
             <Link href="/status" data-cursor="hover">
               {webCopy.footer.status}
             </Link>
+            <a href="https://www.tradingview.com/" target="_blank" rel="noreferrer" data-cursor="hover">
+              {webCopy.footer.charts}
+            </a>
           </nav>
         </div>
       </div>

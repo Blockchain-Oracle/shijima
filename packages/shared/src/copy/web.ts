@@ -111,6 +111,8 @@ export const webCopy = {
     withdraw: 'Withdraw without this website',
     status: 'Status',
     source: 'Source',
+    /** The chart library's licence asks for a visible link to TradingView; this is it, so the charts carry no logo. */
+    charts: 'Charts by TradingView',
   },
 
   states: {
@@ -415,13 +417,13 @@ export const deskCopy = {
     /** The desk's side of an exchange started from a button: the card is the answer. */
     fromButton: 'Here it is. Check the card, and nothing happens until you confirm.',
     fromButtonLabel: 'from a button',
-    relies: 'Relies on',
+    relies: 'Based on',
     cite: {
-      record: (n: string) => `record ${n}`,
+      record: (n: string) => `decision #${n}`,
       approval: 'a waiting request',
       wait: 'a standing wait',
       note: (n: string) => `your note ${n}`,
-      price: (symbol: string) => `${symbol} price`,
+      price: (symbol: string) => `the ${symbol} price`,
     },
   },
 

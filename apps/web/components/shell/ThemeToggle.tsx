@@ -15,8 +15,14 @@ export default function ThemeToggle() {
     setMounted(true)
   }, [])
 
-  // A stable placeholder until mounted, so the server and the browser draw the same thing.
-  if (!mounted) return <button type="button" className="theme-toggle" aria-hidden="true" tabIndex={-1} />
+  // A stable placeholder until mounted, so the server and the browser draw the same thing. It carries the dark
+  // theme's icon, the default, so the button is never an empty circle while the page loads.
+  if (!mounted)
+    return (
+      <button type="button" className="theme-toggle" aria-hidden="true" tabIndex={-1}>
+        <Sun aria-hidden="true" />
+      </button>
+    )
 
   const isDark = theme === 'dark'
   return (

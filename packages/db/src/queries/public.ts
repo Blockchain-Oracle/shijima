@@ -303,17 +303,21 @@ export function groupQuietRuns(newestFirst: PublicDecision[], minRun = 3): Recor
  * chain says so, and the studio shows it on its own as "finish creating it".
  */
 export async function desksOfOwner(db: DbOrTx, ownerAddress: string) {
-  return db
-    .select(publicDeskColumns)
-    .from(desks)
-    .innerJoin(owners, eq(desks.ownerId, owners.id))
-    .where(
-      and(
-        eq(owners.address, ownerAddress.toLowerCase()),
-        sql`not (${desks.lifecycle} = 'onboarding' and ${desks.deployedAt} is null)`,
-      ),
-    )
-    .orderBy(desks.createdAt)
+  return (
+    db
+      .select(publicDeskColumns)
+      .from(desks)
+      .innerJoin(owners, eq(desks.ownerId, owners.id))
+      .where(
+        and(
+          eq(owners.address, ownerAddress.toLowerCase()),
+          sql`not (${desks.lifecycle} = 'onboarding' and ${desks.deployedAt} is null)`,
+        ),
+      )
+      // Callers that want "the owner's desk" take the first row, so the one they are using comes first: a closed
+      // desk last, then the newest. Oldest-first sent the owner to a desk they had already closed.
+      .orderBy(sql`${desks.lifecycle} = 'closed'`, desc(desks.createdAt))
+  )
 }
 
 /**
