@@ -3,7 +3,7 @@ import { OPENSERV, settingsCopy, short } from '@desk/shared'
 import { ArrowUpRight, Bot, Send, Wallet } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { TelegramState } from '@/app/owner-actions'
-import { OpenservLink } from './OpenservLink'
+import { OpenservConnect } from './OpenservConnect'
 import { TelegramConnect } from './TelegramConnect'
 
 const c = settingsCopy.connections
@@ -85,7 +85,7 @@ export function Connections({
         </dl>
         <Out href={`${EXPLORER}/address/${deskAddress}`}>{c.view}</Out>
       </Card>
-      <Card icon={<Bot className="size-5" />} title={c.agent} body={c.agentBody}>
+      <Card wide icon={<Bot className="size-5" />} title={c.agent} body={c.agentBody}>
         <dl className="connection-rows">
           <div>
             <dt>OpenServ</dt>
@@ -100,7 +100,7 @@ export function Connections({
           <Out href={OPENSERV.agentUrl}>{c.openAgent}</Out>
           <Out href={OPENSERV.identity.url}>{c.openIdentity}</Out>
         </div>
-        <OpenservLink deskId={deskId} linked={openservLinked} />
+        <OpenservConnect deskId={deskId} />
       </Card>
     </div>
   )

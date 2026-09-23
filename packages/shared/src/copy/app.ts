@@ -297,6 +297,48 @@ export const appCopy = {
     },
   },
 
+  openserv: {
+    title: 'OpenServ',
+    tagline: 'Your agent, inside your own OpenServ workspace.',
+    what: 'Linked, your workspace can talk to your agent, ask what it holds and why, and, if you allow it, ask it to look now. It can never move money: anything that would is sent back here for your signature.',
+    steps: {
+      add: {
+        title: '1. Add Shijima to OpenServ',
+        body: 'Open Shijima on the OpenServ platform and add it to a workflow in your workspace.',
+        cta: 'Open Shijima on OpenServ',
+        pending: 'Listed on OpenServ; public once their review approves it.',
+      },
+      link: {
+        title: '2. Link your workspace',
+        body: 'Make a one-time code and send it to Shijima in your workspace chat.',
+        make: 'Make a link code',
+        making: 'Making…',
+        send: 'Send this in your OpenServ workspace:',
+        copy: 'Copy',
+        copied: 'Copied',
+        expires: (left: string) => `Works once, for ${left}.`,
+        expired: 'That code has expired. Make a new one.',
+        waiting: 'Waiting for your workspace to send it…',
+      },
+      push: {
+        title: '3. Send decisions to your workspace (optional)',
+        body: 'Paste a webhook trigger URL from your OpenServ workspace, and every decision your agent makes starts that workflow.',
+        placeholder: 'https://api.openserv.ai/webhooks/trigger/…',
+        save: 'Save',
+        remove: 'Remove',
+        on: 'Decisions go to this workspace.',
+      },
+    },
+    linkedTitle: 'Linked workspaces',
+    none: 'No workspace linked yet.',
+    workspace: (name: string | null) => name ?? 'A workspace',
+    since: (when: string) => `linked ${when}`,
+    allowChecks: 'Let it ask for a look now',
+    allowChecksNote: 'Its agents can then wake yours. Your limits still decide; it can never withdraw or raise them.',
+    unlink: 'Unlink',
+    credit: 'Runs on OpenServ · decisions by SERV Reasoning',
+  },
+
   receive: {
     title: 'Or send it from anywhere',
     copy: (addr: string) => `Copy ${addr}`,
