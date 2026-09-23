@@ -224,4 +224,45 @@ export const moneyCopy = {
       'Create an agent first: it is the account your money goes into, and only you can take it out.',
     create: 'Create an agent',
   },
+
+  withdraw: {
+    meta: 'Withdraw',
+    title: 'Withdraw',
+    sub: 'From an agent back to your own wallet: the only place its account will pay.',
+    fromWhich: 'From which agent',
+    what: 'What to take out',
+    whats: { cash: 'Cash', stock: 'One stock', everything: 'Everything' },
+    cardTitle: (name: string) => `Out of ${name}`,
+    toYourWallet: 'TO YOUR WALLET',
+    onlyYouTitle: 'To your wallet only.',
+    onlyYou: 'The agent’s contract pays its owner and nobody else: not Shijima, not the agent.',
+    cashHeld: (cash: string, savings: string | null) =>
+      savings
+        ? `${cash} in cash, and ${savings} in savings that comes out first when needed`
+        : `${cash} in cash`,
+    tooMuch:
+      'That is more than the agent holds in cash and savings. Take out everything to sell its stocks first.',
+    noStocks: 'This agent holds no Stock Tokens right now.',
+    whichStock: 'WHICH STOCK',
+    how: 'How',
+    asIs: 'Take it as it is',
+    sellToCash: 'Sell it to cash',
+    blankIsAll: 'Leave it empty for all of it',
+    sellNote:
+      'Selling keeps the cash in the agent, at no worse than 1% under the quote. Take the cash out after.',
+    everythingCash: 'As cash, selling first',
+    everythingAsIs: 'As it is, stocks and all',
+    review: 'Review',
+    sendOn: 'Send it on',
+    bridgeOut: 'Bridge it out',
+    another: 'Something else',
+    noAgent: 'No agent to withdraw from yet.',
+    words: {
+      cash: (amount: string) => `Withdraw $${amount}`,
+      everything: (asCash: boolean) =>
+        asCash ? 'Withdraw everything as cash' : 'Withdraw everything as it is',
+      sell: (symbol: string) => `Sell ${symbol} to cash`,
+      stock: (symbol: string) => `Withdraw ${symbol} as it is`,
+    },
+  },
 } as const

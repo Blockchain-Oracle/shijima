@@ -38,6 +38,7 @@ const BUILT = new Set<string>([
   '/wallet',
   '/receive',
   '/fund',
+  '/withdraw',
   '/evidence',
   '/activity',
   '/agents',
