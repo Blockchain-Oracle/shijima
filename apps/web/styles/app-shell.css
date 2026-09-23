@@ -2243,3 +2243,11 @@ a.act-row:hover {
   font-size: 0.9rem;
   color: var(--color-ink-secondary);
 }
+.gift-slider-wrap {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+.money-gift .gift-slider-wrap {
+  justify-content: flex-start;
+}

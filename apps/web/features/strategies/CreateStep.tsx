@@ -2,7 +2,7 @@
 
 import { USDG } from '@desk/chain'
 import { type Mandate, money, short, studioCopy } from '@desk/shared'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { type Address, encodeFunctionData, erc20Abi, type Hex, parseEther } from 'viem'
 import { robinhood } from 'viem/chains'
 import { useAccount, useConnect, useSendTransaction, useSwitchChain } from 'wagmi'
@@ -94,11 +94,15 @@ export function CreateStep({
     [units, amount, sendTransactionAsync],
   )
 
+  // Once this agent exists, the studio clears its draft; that must not prepare a second, orphan agent.
+  const created = useRef(false)
+
   const finish = useCallback(
     async (deskId: string, desk: Address, txHash: Hex | null) => {
       setPhase('recording')
       const done = await finishDeskAction({ deskId, txHash, mandate: mandateJson(mandate), readRequestId })
       if (done.ok) {
+        created.current = true
         const fundedUsdg = await fund(desk)
         onCreated({ deskId, slug: done.slug, address: desk, txHash, fundedUsdg })
       } else {
@@ -111,7 +115,7 @@ export function CreateStep({
 
   // Once signed in and the disclosure is read, the server writes the desk's row and builds its one transaction.
   useEffect(() => {
-    if (!signedIn || !accepted) return
+    if (!signedIn || !accepted || created.current) return
     let live = true
     prepareDeskAction({ name, mandate: mandateJson(mandate) }).then((p) => {
       if (!live) return

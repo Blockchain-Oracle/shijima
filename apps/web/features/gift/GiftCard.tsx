@@ -16,6 +16,7 @@ import { claimGiftAction, type GiftState, giftStateAction } from '@/app/gift-act
 import { cn } from '@/lib/utils'
 
 const POLL_MS = 4000
+const GIFT_EVENT = 'shijima:gift'
 
 /**
  * The free $1 to try, on 21st's Reward Card (5247): a gift tile and "slide to claim". The handle is also a
@@ -38,11 +39,19 @@ export function GiftCard({ compact = false, className }: { compact?: boolean; cl
         .catch(() => undefined)
     read()
     const timer = moving ? setInterval(read, POLL_MS) : undefined
+    window.addEventListener(GIFT_EVENT, read)
     return () => {
       stopped = true
       if (timer) clearInterval(timer)
+      window.removeEventListener(GIFT_EVENT, read)
     }
   }, [moving])
+
+  // When this card's claim moves, the other gift cards on the page (the sidebar's) read it again.
+  const state = gift?.state
+  useEffect(() => {
+    if (state) window.dispatchEvent(new Event(GIFT_EVENT))
+  }, [state])
 
   const claim = () =>
     start(async () => {
@@ -79,7 +88,12 @@ export function GiftCard({ compact = false, className }: { compact?: boolean; cl
 
       <AnimatePresence mode="wait" initial={false}>
         {claimable ? (
-          <motion.div key="slider" exit={{ opacity: 0, y: 12 }} transition={{ duration: 0.25 }}>
+          <motion.div
+            key="slider"
+            className="gift-slider-wrap"
+            exit={{ opacity: 0, y: 12 }}
+            transition={{ duration: 0.25 }}
+          >
             <SlideToClaim onClaim={claim} disabled={pending} />
           </motion.div>
         ) : (

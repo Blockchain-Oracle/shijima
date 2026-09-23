@@ -315,7 +315,8 @@ export async function reviewAllDesks(
           follower: c.follower,
           leaderDecision: c.leaderDecision,
           record: c.seq,
-          outcome: c.outcome,
+          // What the copy wake planned. Whether the send then landed is on the record itself.
+          planned: c.outcome,
           summary: c.summary,
         })
         if (c.seq !== null) summary.copies++

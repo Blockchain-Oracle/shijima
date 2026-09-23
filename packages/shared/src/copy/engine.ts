@@ -22,6 +22,7 @@ export const engineCopy = {
   } satisfies Record<DeskStateName, string>,
 
   nothingToDo: 'Nothing to do. Every holding is within its allowed range.',
+  followingOnly: 'Nothing to do. This agent copies another and moves only when that one does.',
   priceUnreadable: (name: string, why: string) => `The price of ${name} could not be read: ${why}`,
   notLooking: (state: string) => `The agent is ${state}, so it did not look for anything to do.`,
   pausedMeanwhile: (state: string) =>

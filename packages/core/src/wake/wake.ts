@@ -548,7 +548,13 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
     if (needs.length === 0 && watching) {
       say('nothing to do: a watching look, so nothing is recorded')
     } else if (needs.length === 0) {
-      const summary = deskState === 'active' ? engineCopy.nothingToDo : engineCopy.notLooking(stateText)
+      // A follower keeps no plan of its own to drift from: it moves only when the agent it copies does.
+      const summary =
+        deskState !== 'active'
+          ? engineCopy.notLooking(stateText)
+          : mandate.follow
+            ? engineCopy.followingOnly
+            : engineCopy.nothingToDo
       const seq = dry
         ? null
         : (
