@@ -13,8 +13,7 @@ Vercel is needed now.
 - [x] ~~Say go for contract v1 on mainnet~~ Given 22 Sep with the $5 decision. (about $1 of gas). With it, Claude also publishes v1's source on
       Blockscout, so "Write proxy" appears for the withdraw-without-our-website steps.
 - [x] ~~Fund the dev wallet for the first real trade.~~ Done 20 Sep.
-- [ ] **Turn on data collection** at https://console.openserv.ai/settings/organization . This is a hackathon
-      eligibility rule.
+- [x] ~~**Turn on data collection**~~ Done (Abu, 23 Sep).
 - [x] ~~Say when the worker may run again.~~ Running again since 22 Sep 19:03 UTC. It graded the backlog and sealed.
 - [x] ~~Money for the demo desk.~~ Not needed: the dev desk's $5 is enough (Abu, 22 Sep).
 
