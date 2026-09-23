@@ -10,6 +10,7 @@ import type { Bot } from 'grammy'
 import type { AskLoop } from '../ask'
 import type { Cli, Log } from '../review'
 import { createBot, deliverAskReply } from './bot'
+import { createCardSender } from './cards'
 import { drainOutbox, refreshStatus } from './outbox'
 import { ensureProfile } from './profile'
 
@@ -36,7 +37,13 @@ export function startTelegram(cli: Cli, log: Log, ask?: AskLoop): Telegram | und
     refreshStatus: (deskId) => refreshStatus(deps, deskId),
     ...(ask ? { kickAsk: ask.kick } : {}),
   })
-  deps = { db: cli.db, bot, log, siteUrl }
+  // The pictures are drawn by the web app's own card route, which a local worker reaches on the dev server.
+  const cards = createCardSender(
+    bot,
+    cli.env.PUBLIC_WEB_URL ?? cli.env.SITE_URL ?? 'http://localhost:3007',
+    log,
+  )
+  deps = { db: cli.db, bot, log, siteUrl, cards }
   // A message typed in Telegram is answered here, when the chat's loop has the answer. The handler that took
   // the message returned long ago, so no owner's question ever holds another owner's /pause.
   ask?.onAnswered(async (row) => {
@@ -68,6 +75,9 @@ export function startTelegram(cli: Cli, log: Log, ask?: AskLoop): Telegram | und
       })
       if (sent > 0) log('telegram_sent', { messages: sent })
     },
-    stop: () => bot.stop(),
+    stop: async () => {
+      await bot.stop()
+      await cards.idle()
+    },
   }
 }

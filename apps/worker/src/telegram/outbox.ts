@@ -24,6 +24,7 @@ import { errorText, telegramCopy } from '@desk/shared'
 import { type Bot, InlineKeyboard } from 'grammy'
 import type { Log } from '../review'
 import { approvalKeyboard, deskPath } from './bot'
+import type { CardSender } from './cards'
 import { buildStatus, nyClock } from './status'
 
 export interface OutboxDeps {
@@ -31,6 +32,8 @@ export interface OutboxDeps {
   bot: Bot
   log: Log
   siteUrl: string
+  /** Pictures after a trade and with the report. Optional: without it only the words go. */
+  cards?: CardSender
 }
 
 type Payload = Record<string, unknown>
@@ -116,6 +119,10 @@ export async function drainOutbox(deps: OutboxDeps): Promise<number> {
       })
       await markNotificationSent(db, row.id, { status: 'sent', messageId: message.message_id })
       sent++
+      // The share card under a trade or a report. Queued, never awaited: the next row may be a request.
+      if ((row.kind === 'acted' || row.kind === 'monday_report') && desk?.shareEnabled && desk.shareSlug) {
+        deps.cards?.send(chatId, desk.shareSlug, message.message_id)
+      }
     } catch (e) {
       const error = errorText(e)
       // Tried again later, with a longer wait each time. Failed for good only after the last attempt.
