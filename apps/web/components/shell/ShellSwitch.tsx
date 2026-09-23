@@ -5,8 +5,8 @@ import type { ReactNode } from 'react'
 import { WebsiteShell } from '@/features/home/landing/WebsiteShell'
 import { AppShell } from './app/AppShell'
 import type { SidebarAgent } from './app/types'
-import type { HeaderProps } from './Header'
 import type { TickerCell } from './Marquee'
+import type { HeaderProps } from './types'
 
 /**
  * Two shells. The website (the landing page at / and /home, How it works, the docs) is the reference landing's

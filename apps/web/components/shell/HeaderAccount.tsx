@@ -7,8 +7,8 @@ import { useRouter } from 'next/navigation'
 import { type RefObject, useRef, useState } from 'react'
 import { useDisconnect } from 'wagmi'
 import { TelegramConnect } from '@/features/settings/TelegramConnect'
-import type { HeaderTelegram } from './Header'
 import { SignInButton } from './SignInButton'
+import type { HeaderTelegram } from './types'
 import { useFloatingMenus } from './useFloatingMenus'
 
 /**
