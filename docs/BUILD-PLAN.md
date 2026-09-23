@@ -848,6 +848,13 @@ and light, with no console errors and no sideways scroll:
 - `motion` 12.43.0 added (reverses FIDELITY §3; see DECISIONS). Lint, typecheck, 98 checks and the build pass.
 - **Not done, on the cut list:** trade and portfolio images rendered by a web route; Settings "Connections" cards;
   Telegram connect in the header menu. Log in with Telegram and a Mini App wait for a public domain.
+- **Second pass, when Abu asked "are you sure":** a line-by-line check against the plan found gaps, now closed:
+  `21st review` had not been run (two focus-ring errors fixed); I had built a second logo system beside Agari's
+  `AssetDisc` (now one: `TokenLogo` draws the disc); the states gallery's timelines looked blank until scrolled
+  (first rows now show on load); Your desks rows, the value count-up, a live next-check chip, dollar sliders and
+  the decision logo were missing; the Strategies switch overflowed on a phone. **And I had introduced a 500 on the
+  desk page** (functions passed to client components) that typecheck could not see: fixed, and every changed page
+  is now loaded after each change.
 
 ## 6. Schedule
 
