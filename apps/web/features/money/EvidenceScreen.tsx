@@ -33,13 +33,41 @@ export interface EvidenceAgent {
   rows: EvidenceRow[]
 }
 
+export interface EvidenceMove {
+  id: string
+  kind: string
+  where: string
+  usd: number | null
+  status: 'signing' | 'approved_only' | 'on_its_way' | 'done' | 'nothing_sent' | 'may_have_been_sent'
+  at: string
+  hash: string | null
+  href: string | null
+}
+
+const PILL = {
+  signing: 'pending',
+  approved_only: 'pending',
+  on_its_way: 'onItsWay',
+  done: 'done',
+  nothing_sent: 'failed',
+  may_have_been_sent: 'pending',
+} as const
+
 /**
  * Evidence, after the reference wallet's "Verify it yourself" (WalletShell.tsx:44-67) and its evidence digest
  * (DemoEvidencePanel.tsx): what is on chain as a short list, a button that copies every hash as text, then one
  * table per agent (the decision, its fingerprint, the transaction that sealed it) and how to check one yourself.
  * Every row opens the decision, whose Check it recomputes the fingerprint in your own browser.
  */
-export function EvidenceScreen({ facts, agents }: { facts: EvidenceFact[]; agents: EvidenceAgent[] }) {
+export function EvidenceScreen({
+  facts,
+  agents,
+  moves,
+}: {
+  facts: EvidenceFact[]
+  agents: EvidenceAgent[]
+  moves: EvidenceMove[]
+}) {
   const c = moneyCopy.evidence
   const [copied, setCopied] = useState(false)
 
@@ -49,6 +77,7 @@ export function EvidenceScreen({ facts, agents }: { facts: EvidenceFact[]; agent
         `# ${a.name} · ${a.address}`,
         ...a.rows.map((r) => `#${r.seq} ${r.outcome} ${r.recordHash} ${r.sealedByTx ?? 'unsealed'}`),
       ])
+      .concat(moves.filter((m) => m.hash).map((m) => `${m.kind} ${m.where} ${m.status} ${m.hash}`))
       .concat(facts.map((f) => `${f.label}: ${f.value}`))
       .join('\n')
 
@@ -178,6 +207,50 @@ export function EvidenceScreen({ facts, agents }: { facts: EvidenceFact[]; agent
           )}
         </section>
       ))}
+
+      <section style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800, letterSpacing: '-.01em' }}>{c.movesTitle}</h2>
+        {moves.length === 0 ? (
+          <div
+            style={{
+              padding: 18,
+              border: '1px dashed var(--bd2)',
+              borderRadius: 13,
+              textAlign: 'center',
+              fontSize: 12,
+              color: 'var(--tx3)',
+            }}
+          >
+            {c.movesNone}
+          </div>
+        ) : (
+          <div className="kit-evidence">
+            {moves.map((m) => (
+              <div className="kit-evidence-row" key={m.id}>
+                <span className="kit-evidence-step">
+                  <strong>
+                    {m.kind} · {m.where}
+                  </strong>
+                  <span style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 5 }}>
+                    <StatusPill status={PILL[m.status]} label={c.moveStatus[m.status]} />
+                    <small>{m.at}</small>
+                  </span>
+                </span>
+                <span>
+                  <code>{m.usd === null ? '—' : `$${m.usd.toFixed(2)}`}</code>
+                </span>
+                <span>
+                  {m.href ? (
+                    <a href={m.href} target="_blank" rel="noreferrer noopener">
+                      <ExternalLink aria-hidden="true" size={14} /> {m.hash ? short(m.hash, 6, 4) : c.open}
+                    </a>
+                  ) : null}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       <section
         style={{

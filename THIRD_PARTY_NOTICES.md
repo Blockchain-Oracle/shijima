@@ -24,6 +24,15 @@ the same author's own projects. Masayume's interface is itself a source-led port
   badge to point at. No MIT grant is inferred from the badge or from this notice. The question stays open for
   public redistribution, as it was for Agari.
 
+## ZK Freighter: the wallet screens
+
+The app's frame, sidebar, wallet, money screens, settings, phone chrome and landing page follow **ZK Freighter**
+([Blockchain-Oracle/zk-freighter](https://github.com/Blockchain-Oracle/zk-freighter), pinned at `859d95f`), the same
+author's own wallet project. Its components were ported into `apps/web/components/kit/`, `apps/web/styles/kit/`,
+`apps/web/components/shell/app/`, `apps/web/features/money/`, `apps/web/features/wallet/` and
+`apps/web/features/home/landing/`, with Shijima's colours and copy. The author asked for its code to be reused on
+23 September 2026. Its tree at that commit has no licence file, so no licence grant is inferred here.
+
 ## Fonts
 
 | Font | Terms | Where |
@@ -31,6 +40,8 @@ the same author's own projects. Masayume's interface is itself a source-led port
 | Sora | Copyright 2019 The Sora Project Authors. SIL Open Font License 1.1. | `apps/web/lib/fonts.ts`, through `next/font/google`; the SemiBold TTF is vendored with its licence in `apps/web/features/og/fonts/` for link previews, as Agari does |
 | Inter | Copyright 2020 The Inter Project Authors. SIL Open Font License 1.1. | the same |
 | JetBrains Mono | Copyright 2020 The JetBrains Mono Project Authors. SIL Open Font License 1.1. | the same |
+| Hanken Grotesk | Copyright 2021 The Hanken Grotesk Project Authors. SIL Open Font License 1.1. | `apps/web/lib/fonts.ts`, through `next/font/google`: the display and body face since round 4 |
+| IBM Plex Mono | Copyright 2017 IBM Corp. SIL Open Font License 1.1. | the same: the mono face since round 4 |
 | Noto Serif JP | Copyright 2012 Google Inc. SIL Open Font License 1.1. It sets しじま in the wordmark. | the same |
 
 ## Packaged libraries

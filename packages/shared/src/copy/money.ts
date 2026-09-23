@@ -125,6 +125,17 @@ export const moneyCopy = {
     open: 'Open ↗',
     check: 'Check it',
     unsealed: 'sealed with the next trade',
+    movesTitle: 'Money in and out',
+    movesNone: 'No money has moved through the app yet.',
+    moveStatus: {
+      signing: 'WAITING',
+      approved_only: 'APPROVED ONLY',
+      on_its_way: 'ON ITS WAY',
+      done: 'DONE',
+      nothing_sent: 'NOTHING SENT',
+      may_have_been_sent: 'CHECK LINK',
+    },
+    yourWallet: 'Your wallet',
     none: 'No decisions yet. The first one appears here with its fingerprint.',
     howTitle: 'How to check one yourself',
     how: [

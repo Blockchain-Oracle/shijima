@@ -36,7 +36,10 @@ export const docsCopy = {
         },
         {
           rows: [
-            ['You put in', 'USDG, a digital dollar, from $1 (a few people get their first $1 free)'],
+            [
+              'You put in',
+              'Any token from $1: USDG, ETH or a Stock Token on Robinhood Chain, or ETH, USDC and more from another chain. It lands as USDG, a digital dollar (a few people get their first $1 free)',
+            ],
             ['You choose', 'A strategy: a basket of US stocks at target weights, plus cash'],
             ['Your agent', 'Watches every five minutes and wakes when something moves'],
             ['You see', 'Your portfolio, and every decision with its reasons'],
@@ -61,7 +64,7 @@ export const docsCopy = {
           ],
         },
         {
-          p: 'Your USDG on another network? Bring it from Base, Arbitrum, Ethereum or BNB Chain in one step at the last screen. Crossing networks has a fixed fee, so it works best from $20.',
+          p: 'Your money on another network? Bring it from Base, Arbitrum, Ethereum or BNB Chain in one step at the last screen, or later from Fund. Relay carries it for about 1% all in.',
         },
       ],
     },
@@ -71,13 +74,35 @@ export const docsCopy = {
       title: 'Money in, money out, and who pays gas',
       blocks: [
         {
-          p: 'Your agent is its own account on Robinhood Chain, with its own address. Money reaches it three ways: a USDG transfer from your wallet (one signature), USDC bridged from Base, Arbitrum, Ethereum or BNB Chain in one step, or USDG sent to the agent’s address from any wallet or exchange. Add money shows all three, with the address as a QR code.',
+          p: 'Your agent is its own account on Robinhood Chain, with its own address. Fund puts money in from any token, and you see what lands before you sign:',
+        },
+        {
+          rows: [
+            ['USDG in your wallet', 'goes straight in, one signature'],
+            [
+              'ETH in your wallet',
+              'swapped to USDG on Uniswap on the way in, never worse than 1% under the quote',
+            ],
+            ['A Stock Token your agent trades', 'goes in as it is'],
+            ['Any other Stock Token', 'sold to USDG on the way in'],
+            [
+              'ETH, USDC, USDT and more on Base, Arbitrum, Ethereum or BNB Chain',
+              'Relay brings it in as USDG, about 1% all in, usually within a minute',
+            ],
+            ['Any wallet or exchange', 'send USDG to the agent’s address, shown as a QR code'],
+          ],
+        },
+        {
+          p: 'Withdraw takes cash (some or all), one stock (as it is or sold to cash), or everything (as cash or as it is). It always lands in your own wallet. From there, Send moves it to any address on Robinhood Chain, and Bridge takes USDG out to your same wallet on another chain as USDC or its own coin.',
         },
         {
           rows: [
             ['A trade your agent makes', 'about 5¢ of network fee, paid by Shijima, never by you'],
             ['Creating your agent', 'a few cents of ETH, from your wallet'],
-            ['Adding money or withdrawing', 'a few cents of ETH each, from your wallet'],
+            [
+              'Adding money, withdrawing, sending or bridging',
+              'a few cents of ETH each, from your wallet. Out of ETH? Get gas, on the Bridge page, swaps $1 of USDG or brings ETH from another chain',
+            ],
             ['Trading on Shijima', 'free: no fee on trades or on what you hold'],
           ],
         },
@@ -195,6 +220,89 @@ export const docsCopy = {
         { code: 'link ABC12345\nHow is my portfolio doing?\nWhy did you wait on Nvidia?\nCheck now' },
         {
           p: 'Your phone: open Shijima in your phone’s browser and add it to your home screen. It opens full screen, like an app.',
+        },
+      ],
+    },
+    {
+      id: 'evidence',
+      group: 'Use it',
+      title: 'Evidence: check it yourself',
+      blocks: [
+        {
+          p: 'Evidence, in the sidebar, lists every decision your agents wrote on chain, with its fingerprint and the transaction that sealed it, and every money move with its transaction. Open any decision and press Check it: your browser rebuilds the fingerprint from the record and compares it with the one on chain, so you can see nothing was changed after the fact.',
+        },
+        {
+          list: [
+            'Copy all hashes, to check them in any explorer.',
+            'The on-chain facts: the agent factory, your agent’s contract, and the OpenServ agent’s identity on Base.',
+            'Money in and out is recorded apart from trading, so a $2 withdrawal shows as $2 out, not as a $2 loss.',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'troubleshooting',
+      group: 'Use it',
+      title: 'When something goes wrong',
+      blocks: [
+        {
+          rows: [
+            [
+              '“No ETH for the network fee”',
+              'Open Bridge and use Get gas, or claim the free $1, which includes some.',
+            ],
+            ['“That price has expired”', 'Prices hold for a minute. Review again for a fresh one.'],
+            [
+              'It says “On its way”',
+              'Relay is still delivering. It usually lands within a minute; the link follows it.',
+            ],
+            [
+              'It says “May have been sent”',
+              'Your wallet sent it but the app lost track. Open the transaction link before trying again.',
+            ],
+            [
+              '“Approval given, nothing moved”',
+              'The approval is only for that exact amount. Review again to finish.',
+            ],
+            [
+              '“That address is a token contract”',
+              'Money sent to a token contract is lost. Use the wallet address instead.',
+            ],
+            [
+              'The site is down',
+              'Withdraw on Blockscout: open your agent, Write proxy, connect your wallet, call withdraw.',
+            ],
+          ],
+        },
+      ],
+    },
+    {
+      id: 'glossary',
+      group: 'Use it',
+      title: 'Glossary',
+      blocks: [
+        {
+          rows: [
+            ['USDG', 'A digital dollar on Robinhood Chain. Your agent keeps its cash in it.'],
+            [
+              'Stock Token',
+              'A token that follows a US stock’s price. Not a share: no ownership of the company and no shareholder rights.',
+            ],
+            ['Agent account', 'Your own contract on Robinhood Chain. It holds the money and pays only you.'],
+            [
+              'Savings',
+              'Idle cash in the Steakhouse USDG vault on Morpho, earning its live rate until a buy needs it.',
+            ],
+            ['Relay', 'The service that moves money between chains, used for Fund, Bridge and Get gas.'],
+            [
+              'Gas',
+              'The network fee, paid in ETH. Shijima pays it for your agent’s trades; you pay it for what you sign.',
+            ],
+            [
+              'Fingerprint',
+              'A hash of a decision, written on chain when it is made, so anyone can check it later.',
+            ],
+          ],
         },
       ],
     },

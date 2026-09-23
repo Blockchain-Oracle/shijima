@@ -892,6 +892,21 @@ doc-promise audit, then built with four parallel builders on branches plus the s
   vermilion; a new mark (moon, still line, one neon point) in the app, icons, previews and the bot.
 Waiting on Abu: fund the gift wallet; switch the showcase to live; data collection on; deploy go.
 
+**Wed 23 Sep, evening. ROUND 4 (`docs/PLAN-ROUND-4.md`): THE WALLET.**
+Abu asked for Shijima to take the UX of his own wallet project (ledger: `docs/FIDELITY-REFERENCE.md`, decisions
+W1–W13) and for money to go in as any token and come out properly. Built in main with two teammates on branches:
+- The frame over a green canvas, the reference's sidebar and phone chrome, Hanken Grotesk and IBM Plex Mono, the
+  `kit` components. `/wallet` is home; `/overview` redirects there.
+- Money: migration 0014 (`money_moves`, flows on snapshots), `readWallet`, one plan → sign → settle pattern with
+  five endings. Fund from USDG, ETH, any Stock Token or another chain; Withdraw cash, one stock or everything;
+  Send with Scan; Bridge out; Get gas. Proven on a fork by the money teammate (ETH fund, NVDA as it is, TSLA
+  swapped, $2 withdraw showing $0.00 net change, sell, send, gas). Relay checked live, read-only: 0.003 ETH on
+  Base quoted as $7.83 USDG; 0.0005 ETH on Base as $1.31 of gas for about $0.03.
+- Evidence, Receive, Activity and Settings rebuilt; the agent page shows Cash · Savings · Stocks · Total and opens
+  the new screens; docs gain Evidence, troubleshooting and a glossary; the old header, grain, cursor, bottom bar,
+  animated sidebar and 87 unused CSS classes are gone.
+Waiting on Abu: a $1 fund and a $1 withdraw on mainnet, by his own hand, if he wants them on the record.
+
 ## 6. Schedule
 
 | Day | Work | Must be true by end of day |

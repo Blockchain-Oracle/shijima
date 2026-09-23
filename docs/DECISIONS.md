@@ -636,6 +636,40 @@ Made by Claude after Abu said "run what I raised" (agenda: `docs/ABU-FEEDBACK-20
   creating one; every agent you have, and every agent you create later, reports to the same chat.
 - **F7. One idea on the landing page:** your own AI agent keeps your stock basket on plan while New York is
   closed, and it can trade but can never take your money out.
-- **F8. `/` for an owner opens their agent.** Signed in with an open agent, `/` goes to the newest one; everyone
+- **F8. `/` for an owner opens their agent.** *(Superseded by W1, round 4.)* Signed in with an open agent, `/` goes to the newest one; everyone
   else gets the landing page, which stays reachable at `/home` from the app.
 - **F9. The proof section** is rebuilt around the on-chain facts in F1 and the OpenServ agent, not a list of IDs.
+
+## 2026-09-23 · Round 4: the wallet, taken from Abu's own wallet app
+
+Abu asked for Shijima to feel like his wallet project ZK Freighter (`Blockchain-Oracle/zk-freighter` @ `859d95f`):
+copy its code, keep only Shijima's light and dark colours. Plan: `docs/PLAN-ROUND-4.md`. Ledger:
+`docs/FIDELITY-REFERENCE.md`. Code never carries the reference's name.
+
+- **W1. The wallet is home.** Signed in, `/` opens `/wallet`; `/overview` redirects there. Supersedes F8: Abu asked
+  to see his wallet and everything in it first. Signed out, `/` is the landing page.
+- **W2. The reference's nav order:** Wallet · Activity (with the Needs-you count) · Send · Receive · Fund · Withdraw
+  · Bridge · Evidence, then Your agents, Discover (Agents, Markets, Strategies, Reels, Live) and Settings.
+- **W3. The balance card** has three parts: all your agents' money, a strip with Fund, Withdraw and Bridge, and your
+  own wallet with every token priced and a total. On a phone it is a swipe rail with two dots.
+- **W4. Fund takes any token.** USDG goes straight in; ETH and Stock Tokens the agent does not trade are swapped to
+  USDG on Uniswap on the way in; a Stock Token it trades goes in as it is; other chains arrive through Relay; any
+  wallet can pay the agent's address from its QR. $1 minimum.
+- **W5. Withdraw is a screen:** cash (some or all), one stock (as it is or sold), or everything (as cash or as it
+  is). It always pays the owner's wallet, because the contract pays nobody else.
+- **W6. Send, Receive, Scan, Bridge.** Send moves USDG, ETH or a Stock Token from your wallet, refuses token
+  contracts, and points your own agents to Fund. Scan reads an address QR on the device. Bridge takes USDG out to
+  your same wallet on Base, Arbitrum, Ethereum or BNB, and Get gas swaps $1 of USDG to ETH or brings ETH over Relay.
+- **W7. Evidence is a page:** every on-chain decision and money move with its fingerprint, and a checker.
+- **W8. Colours stay ours; everything else follows the reference:** Hanken Grotesk and IBM Plex Mono, its radii,
+  shadows, sheen, hatch and route animation. The canvas glows are green.
+- **W9. One app on phones.** No "use the phone app" wall; below 768px the reference's phone chrome: header, four
+  tabs (Wallet, Agents, Fund, More), sheets that drag closed, pull to refresh.
+- **W10. Settings are the reference's groups** in two columns, with Verify it yourself, Real money on mainnet and
+  Disconnect on the right. No theme row.
+- **W11. Our extras stay:** Ask Shijima (⌘J), the bell, the market clock, the LIVE block line, Runs on OpenServ. The
+  grain and custom cursor go; the reference has neither.
+- **W12. The landing follows the reference's order,** with our copy: "Give your stocks an AI agent. It trades. You
+  own it." Motto: "Shijima · AI agents for Robinhood Chain stocks".
+- **W13. Creating an agent keeps its own bridge step.** Its money step runs before the agent is recorded, and the
+  Fund screen needs a recorded agent, so the studio's Relay step stays. Every other money path uses the new screens.
