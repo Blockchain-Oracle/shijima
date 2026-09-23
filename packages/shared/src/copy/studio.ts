@@ -11,12 +11,13 @@ export const studioCopy = {
   tabs: { create: 'New desk', from: 'Start from a strategy', yours: 'Your desks' },
   aria: 'Strategies workspace',
 
-  steps: ['Basket', 'Behaviour & limits', 'Test read', 'Create'] as const,
+  steps: ['Pick a strategy', 'Add USDG', 'Your agent’s limits', 'Meet your agent'] as const,
   stepsAria: 'Creation progress',
   counter: (n: number, total: number) => `Step ${n} of ${total}`,
-  studioKicker: 'Desk studio',
-  studioTitle: 'Tell the desk what to hold.',
-  studioBody: 'Your draft is kept in this browser. You sign only at the last step.',
+  studioKicker: 'Your AI agent',
+  studioTitle: 'Give your money an agent.',
+  studioBody:
+    'Pick what to hold, put in USDG, and your agent keeps it on plan. Your draft stays in this browser; you sign only at the last step.',
   back: '← Back',
   next: 'Continue →',
   nextWithoutRead: 'Continue without a test read →',
@@ -81,6 +82,39 @@ export const studioCopy = {
       'Without a read-back, the desk starts on your settings as written. Ask it in the chat at any time: “read my settings back”.',
   },
 
+  /** Step 4 opens with the agent introducing itself, in its own voice, before anything is signed. */
+  meet: {
+    kicker: 'Your AI agent',
+    name: 'Shijima',
+    look: (amount: string, basket: string) => `I will look after ${amount} in ${basket}.`,
+    lookPractice: (basket: string) => `I will run ${basket} in practice, with no money, until you add some.`,
+    when: 'I decide only when to move toward your plan: now, in part, after New York reopens, or not at all.',
+    limits: (perAction: string, daily: string) =>
+      `I never spend more than ${perAction} in one trade or ${daily} in a day. Your account itself refuses anything more.`,
+    practice: 'I start in practice: I decide for real and spend nothing until you let me go live.',
+    tell: 'I write down every decision, and tell you on Telegram when I act or need you.',
+  },
+
+  /** Step 2: the money first, in dollars, as Glider's onboarding does. */
+  money: {
+    lead: 'How much USDG do you want your agent to look after?',
+    balance: (amount: string) => `Your wallet holds ${amount} of USDG on Robinhood Chain.`,
+    balanceNone:
+      'Your wallet holds no USDG on Robinhood Chain yet. You can bring it from Base, Arbitrum, Ethereum or BNB Chain at the last step.',
+    balanceSignedOut: 'Sign in at the last step and we will read your wallet’s USDG.',
+    custom: 'Another amount',
+    min: 'At least $5 from this wallet. Bringing it from another network works best from $20, because the crossing has a fixed fee.',
+    split: 'What that buys, at your strategy’s weights',
+    cash: 'Cash, kept aside',
+    practice: 'Start in practice with no money',
+    practiceNote: 'Your agent decides for real and spends nothing. Add money whenever you like.',
+    practiceOn: 'Practice with no money. You can add USDG later.',
+    tooLow: 'Put in at least $5, or start in practice with no money.',
+    tooMuch: (amount: string) => `That is more than your wallet holds (${amount}).`,
+    side: (amount: string) => `Putting in ${amount}`,
+    sideNone: 'Practice, no money yet',
+  },
+
   create: {
     title: 'Create your desk',
     body: 'This creates an account on Robinhood Chain that belongs to you. Only you can take money out. The assistant may trade inside it, within the limits above, and you can remove it at any time.',
@@ -93,7 +127,12 @@ export const studioCopy = {
     feeUnknown: 'under a dollar, paid by your wallet',
     confirmations: 'Wallet confirmations',
     confirmationsValue: 'One',
+    confirmationsFunded: 'Two: create your account, then put in your USDG',
     button: 'Create my desk',
+    buttonFunded: (amount: string) => `Create and put in ${amount}`,
+    funding: (amount: string) => `Putting in ${amount}. Confirm in your wallet…`,
+    fundingNetwork: 'Waiting for the money to arrive…',
+    fundSkipped: 'Your account exists. The money was not sent: you can add it on the next screen.',
     wallet: 'Confirm in your wallet…',
     network: 'Waiting for the network…',
     recording: 'Recording it…',
@@ -114,9 +153,10 @@ export const studioCopy = {
   },
 
   done: {
-    kicker: 'Created on Robinhood Chain',
-    title: (name: string) => `${name} exists.`,
-    body: 'It belongs to your wallet. It checks every hour, in practice, until you choose otherwise.',
+    kicker: 'You are all set',
+    title: (name: string) => `${name} is on duty.`,
+    body: 'Shijima, your AI agent, starts in practice: it decides for real and spends nothing until you let it go live. The account belongs to your wallet, and only you can take money out.',
+    funded: (amount: string) => `${amount} of USDG is in your account.`,
     tx: 'See the transaction ↗',
     firstSteps: 'First steps',
     money: {
@@ -132,7 +172,7 @@ export const studioCopy = {
       skipped:
         'Skipped. Without Telegram, requests that need your answer only reach you here on the website.',
     },
-    open: 'Open your desk →',
+    open: 'Meet your agent →',
     another: 'Start another desk',
   },
 

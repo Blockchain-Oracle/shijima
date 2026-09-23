@@ -42,9 +42,12 @@ export async function loadShell() {
   }
 }
 
-/** The owner's desks at their last check, summed. Null when none has been valued yet: never a false zero. */
+/**
+ * The owner's open desks at their last check, summed. Null when none has been valued yet: never a false zero. A
+ * closed desk is left out: its last snapshot is money that has since moved on, so counting it counts it twice.
+ */
 async function desksTotal(address: string): Promise<string | null> {
-  const desks = await desksOfOwner(db(), address)
+  const desks = (await desksOfOwner(db(), address)).filter((d) => d.lifecycle !== 'closed')
   const snapshots = await Promise.all(desks.map((d) => latestValueSnapshot(db(), d.id)))
   const valued = snapshots.filter((s) => s !== undefined)
   if (valued.length === 0) return null
@@ -56,7 +59,8 @@ async function desksTotal(address: string): Promise<string | null> {
  * that is still open: the one an owner with one desk means by "my Telegram". Null with no open desk.
  */
 async function deskTelegram(address: string): Promise<HeaderTelegram | null> {
-  const open = (await desksOfOwner(db(), address)).filter((d) => d.lifecycle !== 'closed').at(-1)
+  // Newest first (desksOfOwner's order), so this is the newest desk still open.
+  const open = (await desksOfOwner(db(), address)).find((d) => d.lifecycle !== 'closed')
   if (!open) return null
   const { linked } = await telegramForDesk(db(), open.id)
   return { deskId: open.id, linked: linked ? { username: linked.username } : null }

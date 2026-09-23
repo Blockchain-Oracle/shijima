@@ -1,8 +1,9 @@
 'use client'
 
-import { type Mandate, short, studioCopy } from '@desk/shared'
+import { USDG } from '@desk/chain'
+import { type Mandate, money, short, studioCopy } from '@desk/shared'
 import { useCallback, useEffect, useState } from 'react'
-import { type Address, type Hex, parseEther } from 'viem'
+import { type Address, encodeFunctionData, erc20Abi, type Hex, parseEther } from 'viem'
 import { robinhood } from 'viem/chains'
 import { useAccount, useConnect, useSendTransaction, useSwitchChain } from 'wagmi'
 import { finishDeskAction, type PreparedDesk, prepareDeskAction } from '@/app/studio-actions'
@@ -11,7 +12,7 @@ import { BridgeIn } from '@/features/desk/BridgeIn'
 import { browserClient } from '@/features/session/useDeskSession'
 import { Disclosure } from '@/features/settings/Disclosure'
 import { cn } from '@/lib/utils'
-import { mandateJson } from './draft'
+import { dollarsToUnits, mandateJson } from './draft'
 
 const C = studioCopy.create
 /**
@@ -26,9 +27,11 @@ export interface Created {
   slug: string
   address: Address
   txHash: Hex | null
+  /** The USDG put in straight after creation, in dollars, or null when none was sent. */
+  fundedUsdg: string | null
 }
 
-type Phase = 'idle' | 'wallet' | 'network' | 'recording'
+type Phase = 'idle' | 'wallet' | 'network' | 'recording' | 'funding' | 'arriving'
 
 /**
  * Step 4 (design brief 8.4): read the disclosure once, then one wallet confirmation creates the desk. The desk's
@@ -36,6 +39,7 @@ type Phase = 'idle' | 'wallet' | 'network' | 'recording'
  * address, with about $1 of ETH to their own wallet, and then creates it. Both orders are this one screen.
  */
 export function CreateStep({
+  amount,
   name,
   mandate,
   signedIn,
@@ -43,6 +47,8 @@ export function CreateStep({
   readRequestId,
   onCreated,
 }: {
+  /** Dollars to put in right after creating, as typed in the money step. '0' creates a practice desk with no money. */
+  amount: string
   name: string
   mandate: Mandate
   signedIn: string | null
@@ -61,17 +67,46 @@ export function CreateStep({
   const [problem, setProblem] = useState<string | null>(null)
   const rightWallet = Boolean(signedIn && address?.toLowerCase() === signedIn.toLowerCase())
 
+  const units = amount === '0' ? null : dollarsToUnits(amount)
+
+  /**
+   * The second confirmation: the chosen USDG from the owner's wallet straight into the new desk. A plain transfer,
+   * so it lands in the owner's own account and nowhere else. Refused or failed, the desk still exists and the
+   * next screen offers Add money; nothing is lost.
+   */
+  const fund = useCallback(
+    async (desk: Address): Promise<string | null> => {
+      if (units === null) return null
+      try {
+        setPhase('funding')
+        const hash = await sendTransactionAsync({
+          to: USDG,
+          data: encodeFunctionData({ abi: erc20Abi, functionName: 'transfer', args: [desk, units] }),
+          chainId: robinhood.id,
+        })
+        setPhase('arriving')
+        const receipt = await browserClient.waitForTransactionReceipt({ hash, timeout: 180_000 })
+        return receipt.status === 'success' ? amount : null
+      } catch {
+        return null
+      }
+    },
+    [units, amount, sendTransactionAsync],
+  )
+
   const finish = useCallback(
     async (deskId: string, desk: Address, txHash: Hex | null) => {
       setPhase('recording')
       const done = await finishDeskAction({ deskId, txHash, mandate: mandateJson(mandate), readRequestId })
-      if (done.ok) onCreated({ deskId, slug: done.slug, address: desk, txHash })
-      else {
+      if (done.ok) {
+        const fundedUsdg = await fund(desk)
+        onCreated({ deskId, slug: done.slug, address: desk, txHash, fundedUsdg })
+      } else {
         setProblem(done.why)
         setPhase('idle')
       }
     },
-    [mandate, readRequestId, onCreated],
+    [mandate, readRequestId, onCreated, fund],
   )
 
   // Once signed in and the disclosure is read, the server writes the desk's row and builds its one transaction.
@@ -110,7 +145,9 @@ export function CreateStep({
     return (
       <div className="space-y-4">
         <p className="strat-choice-body">{C.disclosureFirst}</p>
-        <Disclosure acceptedOn={null} onAccepted={() => setAccepted(true)} />
+        <div className="studio-disclosure">
+          <Disclosure acceptedOn={null} onAccepted={() => setAccepted(true)} />
+        </div>
       </div>
     )
   }
@@ -158,7 +195,7 @@ export function CreateStep({
         </div>
         <div>
           <dt>{C.confirmations}</dt>
-          <dd>{C.confirmationsValue}</dd>
+          <dd>{units !== null ? C.confirmationsFunded : C.confirmationsValue}</dd>
         </div>
       </dl>
       <p className="studio-hint">{C.addressNote}</p>
@@ -204,9 +241,15 @@ export function CreateStep({
               ? C.network
               : phase === 'recording'
                 ? C.recording
-                : chainId !== robinhood.id
-                  ? C.wrongNetwork
-                  : C.button}
+                : phase === 'funding'
+                  ? C.funding(money(amount))
+                  : phase === 'arriving'
+                    ? C.fundingNetwork
+                    : chainId !== robinhood.id
+                      ? C.wrongNetwork
+                      : units !== null
+                        ? C.buttonFunded(money(amount))
+                        : C.button}
         </button>
       )}
       {problem && (

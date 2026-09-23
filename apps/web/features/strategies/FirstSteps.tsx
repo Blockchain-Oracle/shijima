@@ -88,6 +88,9 @@ export function FirstSteps({
           <h2 className="strat-h2 mt-2 text-ink">{D.title(name)}</h2>
         </div>
         <p className="strat-choice-body">{D.body}</p>
+        {created.fundedUsdg ? (
+          <p className="font-semibold text-[15px] text-gain">{D.funded(money(created.fundedUsdg))}</p>
+        ) : null}
         {created.txHash && (
           <a
             className="strat-sensei justify-self-start"

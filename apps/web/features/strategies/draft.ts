@@ -22,6 +22,8 @@ export interface StudioDraft {
   notes: string
   /** Protective rules, as typed: a symbol, a fall in percent, a cut in percent. Older saved drafts have none. */
   rules?: DraftRule[]
+  /** The USDG to put in at creation, in dollars as typed. '0' starts in practice with no money. Older drafts have none. */
+  amount?: string
 }
 
 export interface DraftRule {
@@ -55,6 +57,7 @@ export function initialDraft(preset?: Preset): StudioDraft {
     large: '100',
     notes: '',
     rules: [],
+    amount: '20',
   }
 }
 

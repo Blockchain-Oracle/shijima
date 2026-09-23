@@ -11,6 +11,8 @@ import { cn } from '@/lib/utils'
 import { type Created, CreateStep } from './CreateStep'
 import { type DraftToken, draftToMandate, draftTotalBps, mandateKey, type StudioDraft } from './draft'
 import { FirstSteps } from './FirstSteps'
+import { MeetAgent } from './MeetAgent'
+import { amountProblem, MoneyStep, useUsdgBalance } from './MoneyStep'
 import { ReadStep, useTestRead } from './ReadStep'
 import { mixSlices, type Performance } from './StrategyCard'
 import { BasketStep, LimitsStep } from './StudioFields'
@@ -54,6 +56,7 @@ export function Studio({
   const [created, setCreated] = useState<Created | null>(null)
   const [createdAs, setCreatedAs] = useState({ name: '', perAction: '0', daily: '0' })
   const { read, run } = useTestRead()
+  const balance = useUsdgBalance(signedIn)
 
   const result = useMemo(() => draftToMandate(draft, tokens), [draft, tokens])
   const mandate = result.ok ? result.mandate : null
@@ -63,7 +66,9 @@ export function Studio({
 
   const advance = () => {
     if (step === 1 && draftTotalBps(draft) !== 10_000) return setProblem(S.identity.mustAddUp)
-    if (step === 2 && !result.ok) return setProblem(`${result.problems.join('. ')}.`)
+    const short = step === 2 ? amountProblem(draft.amount, balance) : null
+    if (short) return setProblem(short)
+    if (step === 3 && !result.ok) return setProblem(`${result.problems.join('. ')}.`)
     setProblem(null)
     setDir(1)
     setStep((s) => Math.min(4, s + 1))
@@ -143,17 +148,37 @@ export function Studio({
                   performance={performance}
                 />
               )}
-              {step === 2 && <LimitsStep draft={draft} setDraft={setDraft} tokens={tokens} />}
-              {step === 3 && (
-                <ReadStep
-                  read={read}
-                  currentKey={key}
-                  signedIn={Boolean(signedIn)}
-                  onRun={() => mandate && key && run(mandate, key)}
+              {step === 2 && (
+                <MoneyStep
+                  draft={draft}
+                  setDraft={setDraft}
+                  tokens={tokens}
+                  signedIn={signedIn}
+                  balance={balance}
                 />
+              )}
+              {step === 3 && <LimitsStep draft={draft} setDraft={setDraft} tokens={tokens} />}
+              {step === 4 && (
+                <MeetAgent
+                  amount={draft.amount && draft.amount !== '0' ? money(draft.amount) : null}
+                  basket={preset?.name ?? SIDE.own.toLowerCase()}
+                  perAction={mandate ? money(formatUnits(mandate.perActionCapUsdg, 6)) : '—'}
+                  daily={mandate ? money(formatUnits(mandate.dailyCapUsdg, 6)) : '—'}
+                />
+              )}
+              {step === 4 && (
+                <div className="mb-6">
+                  <ReadStep
+                    read={read}
+                    currentKey={key}
+                    signedIn={Boolean(signedIn)}
+                    onRun={() => mandate && key && run(mandate, key)}
+                  />
+                </div>
               )}
               {step === 4 && mandate && (
                 <CreateStep
+                  amount={draft.amount ?? '0'}
                   name={name}
                   mandate={mandate}
                   signedIn={signedIn}
@@ -179,7 +204,7 @@ export function Studio({
             )}
             {step < 4 && (
               <button type="button" onClick={advance} className="strat-confirm strat-confirm--live">
-                {step === 3 && !heard ? S.nextWithoutRead : S.next}
+                {S.next}
               </button>
             )}
           </div>
@@ -189,6 +214,9 @@ export function Studio({
           <p className="strat-micro text-ink-muted">{SIDE.kicker}</p>
           <h3 className="strat-choice-title mt-3 break-words text-ink">{name}</h3>
           <p className="strat-mono-11 mt-1 text-ink-muted">{preset?.name ?? SIDE.own}</p>
+          <p className="mt-2 font-semibold text-[14px] text-ink">
+            {draft.amount && draft.amount !== '0' ? S.money.side(money(draft.amount)) : S.money.sideNone}
+          </p>
           <div className="mt-4 flex items-center gap-4">
             <AllocationDonut slices={slices} size={72} thickness={9} />
             <div className="min-w-0">
