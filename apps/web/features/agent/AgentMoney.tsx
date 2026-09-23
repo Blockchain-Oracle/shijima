@@ -3,8 +3,6 @@
 import { EXPLORER } from '@desk/chain'
 import { appCopy, short } from '@desk/shared'
 import { Check, Copy, ExternalLink, QrCode, Wallet } from 'lucide-react'
-import type { Route } from 'next'
-import Link from 'next/link'
 import { useState } from 'react'
 import { Qr } from '@/components/ui/qr'
 
@@ -27,11 +25,9 @@ const dollars = (raw: bigint) =>
 
 export function AgentMoney({
   address,
-  slug,
   balances,
 }: {
   address: string
-  slug: string
   /** The agent's last check: cash, savings and total. Stocks are what remains. */
   balances: AgentBalances | null
 }) {
@@ -94,9 +90,6 @@ export function AgentMoney({
             <code className="ap-wallet-full">{address}</code>
             <p>{c.addressNote}</p>
             <p className="ap-muted">{c.gasBody}</p>
-            <Link href={`/receive?agent=${slug}` as Route} className="ap-chip-btn self-start">
-              {c.receive} →
-            </Link>
           </div>
         </div>
       )}

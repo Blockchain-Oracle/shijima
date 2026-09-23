@@ -577,3 +577,407 @@
 .kit-asset-held b {
   font: 700 13px / 1 var(--fm);
 }
+
+/* ── The money ticket: you pay, the arrow, what arrives; the route summary beside it. ── */
+.kit-ticket {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.kit-ticket-box {
+  border: 1px solid var(--bd);
+  border-radius: 18px;
+  background: var(--card);
+  padding: 14px 16px 13px;
+  transition: border-color 0.2s ease;
+}
+.kit-ticket-box:focus-within {
+  border-color: color-mix(in srgb, var(--ac) 55%, var(--bd2));
+}
+.kit-ticket-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  font: 600 10.5px / 1 var(--fm);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tx3);
+}
+.kit-ticket-side {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+  font-size: 11.5px;
+}
+.kit-ticket-side button {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ac) 45%, transparent);
+  color: var(--ac2);
+  font: 700 10px / 1.4 var(--fm);
+  letter-spacing: 0.08em;
+  background: transparent;
+  cursor: pointer;
+}
+.kit-ticket-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.kit-ticket-amount {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--tx);
+  font: 600 34px / 1.15 var(--fm);
+  letter-spacing: -0.02em;
+  padding: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kit-ticket-amount::placeholder {
+  color: var(--tx3);
+}
+.kit-ticket-amount[data-invalid] {
+  color: var(--warn);
+}
+.kit-ticket-quoted {
+  color: var(--tx2);
+}
+.kit-ticket-quoted[data-loading] {
+  opacity: 0.5;
+  animation: kitPulse 1.1s ease-in-out infinite;
+}
+.kit-ticket-foot {
+  margin-top: 7px;
+  font-size: 12px;
+  color: var(--tx3);
+}
+.kit-ticket-arrow {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  margin: -14px 0;
+}
+.kit-ticket-arrow span {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: 4px solid var(--panel);
+  background: var(--card2);
+  color: var(--tx2);
+}
+.kit-pill-btn:hover {
+  border-color: var(--tx3) !important;
+}
+.kit-pill-btn:focus-visible {
+  outline: 2px solid var(--ac2);
+  outline-offset: 2px;
+}
+
+.kit-summary {
+  border: 1px solid var(--bd);
+  border-radius: 18px;
+  background: var(--card);
+  padding: 16px 18px;
+}
+.kit-summary-path {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 14px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--bd);
+}
+.kit-summary-path span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.kit-summary-path em {
+  font-style: normal;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--tx);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kit-summary-path i {
+  flex: 1;
+  min-width: 18px;
+  height: 0;
+  border-top: 1.5px dashed var(--bd2);
+}
+.kit-summary[data-loading] .kit-summary-path i {
+  border-top-color: var(--ac2);
+  animation: kitPulse 1.1s ease-in-out infinite;
+}
+.kit-summary-empty {
+  margin: 12px 0 2px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--tx3);
+}
+.kit-summary-rows {
+  margin: 0;
+}
+.kit-summary-rows > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--bd) 60%, transparent);
+  font-size: 12.5px;
+}
+.kit-summary-rows > div:last-child {
+  border-bottom: 0;
+}
+.kit-summary-rows dt {
+  color: var(--tx3);
+}
+.kit-summary-rows dd {
+  margin: 0;
+  text-align: right;
+  color: var(--tx);
+  font-family: var(--fm);
+  font-size: 12px;
+}
+.kit-summary-rows > div[data-strong] dd {
+  color: var(--ac2);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* The picker: chain chips with logos, then rows. */
+.kit-picker-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--bd2);
+  background: var(--card);
+  color: var(--tx3);
+}
+.kit-picker-search input {
+  flex: 1;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--tx);
+  font-size: 13px;
+}
+.kit-picker-chains {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.kit-picker-chains button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--bd2);
+  background: var(--card);
+  color: var(--tx2);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.kit-picker-chains button[aria-pressed="true"] {
+  border-color: var(--ac2);
+  color: var(--tx);
+  background: color-mix(in srgb, var(--ac) 10%, var(--card));
+}
+.kit-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: min(52dvh, 420px);
+  overflow-y: auto;
+}
+.kit-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px;
+  border-radius: 13px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--tx);
+  text-align: left;
+  cursor: pointer;
+}
+.kit-picker-row:hover,
+.kit-picker-row[aria-pressed="true"] {
+  background: var(--card);
+  border-color: var(--bd);
+}
+.kit-picker-name {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.kit-picker-name strong {
+  font-size: 14px;
+}
+.kit-picker-name em,
+.kit-picker-held em {
+  font-style: normal;
+  font-size: 11.5px;
+  color: var(--tx3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kit-picker-held {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: var(--fm);
+  font-size: 12.5px;
+}
+.kit-picker-none {
+  margin: 8px 0;
+  font-size: 12.5px;
+  color: var(--tx3);
+  text-align: center;
+}
+
+/* The money screens: the ticket on the left, the summary and the action on the right. */
+.kit-money {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+.kit-money-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: 12px;
+}
+.kit-money-locked {
+  pointer-events: none;
+  opacity: 0.55;
+}
+@media (max-width: 900px) {
+  .kit-money {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .kit-money-side {
+    position: static;
+  }
+}
+@media (max-width: 767px) {
+  .kit-ticket-amount {
+    font-size: 28px;
+  }
+}
+.kit-ticket-address {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--tx);
+  font: 500 15px / 1.4 var(--fm);
+  padding: 4px 0;
+}
+.kit-ticket-address::placeholder {
+  color: var(--tx3);
+}
+.kit-ticket-address[data-invalid] {
+  color: var(--warn);
+}
+.kit-presets {
+  display: inline-flex;
+  gap: 6px;
+}
+.kit-presets button {
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--bd2);
+  background: var(--panel);
+  color: var(--tx2);
+  font: 600 11.5px / 1.4 var(--fm);
+  cursor: pointer;
+}
+.kit-presets button:hover {
+  color: var(--tx);
+  border-color: var(--tx3);
+}
+.kit-address-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--bd);
+  border-radius: 14px;
+  background: var(--card);
+}
+.kit-address-line code {
+  flex: 1;
+  min-width: 0;
+  font: 500 12.5px / 1.45 var(--fm);
+  color: var(--tx);
+  word-break: break-all;
+}
+.kit-address-line button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--bd2);
+  background: var(--panel);
+  color: var(--tx2);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.kit-chain-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 5px;
+  border-radius: 999px;
+  border: 1px solid var(--bd);
+  background: var(--panel);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--tx2);
+}
+.kit-bal-qr {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 9px;
+  border: 1px solid var(--pub-bd, var(--bd2));
+  background: var(--panel);
+  color: var(--tx2);
+  cursor: pointer;
+}
+.kit-bal-qr:hover {
+  color: var(--tx);
+}

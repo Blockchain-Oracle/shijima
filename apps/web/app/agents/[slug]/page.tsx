@@ -101,7 +101,7 @@ export default async function AgentPage({
         desk={d.address as `0x${string}`}
         contractVersion={d.contractVersion}
       >
-        <AgentMoney address={d.address} slug={view.slug} balances={view.plate} />
+        <AgentMoney address={d.address} balances={view.plate} />
         {view.isOwner && (
           <div className="ap-actions">
             <QuickActions view={controlsOf(view)} />

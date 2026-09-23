@@ -3,11 +3,17 @@
   "project": {
     "name": "@desk/web",
     "productType": "fintech web app: an agent that keeps a Stock Token basket on Robinhood Chain",
-    "stack": ["nextjs", "react", "tailwind-v4"]
+    "stack": [
+      "nextjs",
+      "react",
+      "tailwind-v4"
+    ]
   },
   "sources": {
     "tokens": [],
-    "components": ["components/ui"],
+    "components": [
+      "components/ui"
+    ],
     "assets": [],
     "instructions": []
   },
@@ -42,10 +48,12 @@
   "constraints": {
     "must": [
       "Use the shadcn-named tokens from bridge.css (bg-card, text-muted-foreground, border-border, primary) so 21st components inherit the Masayume look",
-      "Numbers in JetBrains Mono; money always with its unit",
-      "Token logos from public/tokens via TokenLogo",
+      "Numbers in IBM Plex Mono (var(--fm)); money always with its unit",
+      "Token logos via TokenLogo (Stock Tokens as discs; USDG/ETH/USDC/USDT/BNB/WETH/DAI from public/logos/tokens), chain logos via ChainLogo (public/logos/chains)",
       "Work at 390px with no horizontal scroll",
-      "Plain words: no finance jargon in labels"
+      "Plain words: no finance jargon in labels",
+      "Money screens use the two-panel money ticket (components/kit/ticket.tsx + features/money/MoveFlow.tsx): ticket left, live summary and action right; never a narrow centred column",
+      "Receive is a sheet (features/money/ReceiveSheet.tsx), never a page"
     ],
     "avoid": [
       "glass or blur panels",
@@ -60,6 +68,10 @@
     {
       "date": "2026-09-23",
       "decision": "UX overhaul per docs/UX-PLAN.md; 21st components picked: 29532 portfolio chart, 20086 donut, 28340 timeline, 10156 radio cards, 29518 stepper, 28355 avatar stack, 28181 number flow, 23552 segmented control, 9659 slider bar, 20110/8034 holdings, 5214 hero, 28170 connections"
+    },
+    {
+      "date": "2026-09-23",
+      "decision": "Round 5 (Abu): money ticket after 21st 16251 Multi-chain Swap on kit tokens \u2014 you pay / arrow / you get with token+chain pills, logo picker with chain chips, live quote (quoteMoveAction), summary + Review on the right; Get gas is a Bridge tab; Receive became a sheet on /wallet; real token and chain logos vendored from Relay"
     }
   ],
   "evidence": [

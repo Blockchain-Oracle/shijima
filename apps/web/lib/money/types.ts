@@ -79,6 +79,21 @@ export type PlanResult =
       hint?: { kind: 'use_fund'; deskId: string; deskSlug: string | null } | { kind: 'need_origin' }
     }
 
+/** What the screen shows while the owner types: nothing saved, nothing signed. */
+export interface MoveQuote {
+  receive: { symbol: string; amountRaw: string; decimals: number; minimumRaw: string }
+  usdgValue: string
+  feeUsdg: string
+  timeEstimate: number | null
+  /** How it moves: Relay across chains, a Uniswap swap, or a plain transfer. */
+  route: 'relay' | 'uniswap' | 'direct'
+  signatures: number
+}
+
+export type QuoteResult =
+  | { ok: true; quote: MoveQuote }
+  | { ok: false; why: string; hint?: Extract<PlanResult, { ok: false }>['hint'] }
+
 /** A link a person can open to see a transaction for themselves. */
 export interface TxLink {
   chainId: number

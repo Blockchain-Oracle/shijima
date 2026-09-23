@@ -7,13 +7,14 @@ import {
   ArrowLeftRight,
   ArrowUpFromLine,
   ArrowUpRight,
+  QrCode,
   RefreshCw,
   ShieldCheck,
 } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { type ReactNode, useRef, useState, useTransition } from 'react'
+import { type ReactNode, useEffect, useRef, useState, useTransition } from 'react'
 import {
   AgentsCard,
   Button,
@@ -31,6 +32,7 @@ import { TokenLogo, TokenStack } from '@/components/ui/token-logo'
 import { When } from '@/components/when'
 import { PortfolioChart } from '@/features/desk/PortfolioChart'
 import { GiftCard } from '@/features/gift/GiftCard'
+import { ReceiveSheet, type ReceiveTarget } from '@/features/money/ReceiveSheet'
 
 export interface WalletViewHolding {
   kind: 'usdg' | 'eth' | 'stock'
@@ -43,6 +45,7 @@ export interface WalletViewHolding {
 export interface WalletViewAgent {
   id: string
   slug: string
+  address: string
   name: string
   mode: 'shadow' | 'ask_first' | 'on_its_own'
   state: string
@@ -102,10 +105,24 @@ const c = moneyCopy.wallet
  * combined chart and the free $1 below. On a phone the two sides become a swipeable pair with dots
  * (apps/mobile/src/MobileHome.tsx:84-116) and the actions become four tiles.
  */
-export function WalletHome({ view }: { view: WalletView }) {
+export function WalletHome({ view, initialReceive }: { view: WalletView; initialReceive: string | null }) {
   const router = useRouter()
   const [syncing, startSync] = useTransition()
   const [face, setFace] = useState<'agents' | 'wallet'>('agents')
+  const [receive, setReceive] = useState<string | null>(null)
+  // A link to Receive (`/wallet?receive=…`) opens the sheet once the page is live; it draws through a portal, so
+  // it cannot be part of the server's HTML.
+  useEffect(() => {
+    if (initialReceive) setReceive(initialReceive)
+  }, [initialReceive])
+  const closeReceive = () => {
+    setReceive(null)
+    if (initialReceive) router.replace('/wallet' as Route, { scroll: false })
+  }
+  const receiveTargets: ReceiveTarget[] = [
+    { key: 'wallet', name: moneyCopy.receive.tabWallet, address: view.address, kind: 'wallet' },
+    ...view.agents.map((a) => ({ key: a.slug, name: a.name, address: a.address, kind: 'agent' as const })),
+  ]
   const rail = useRef<HTMLDivElement>(null)
 
   const cash = view.agents.reduce((s, a) => s + a.cashUsd, 0)
@@ -182,7 +199,7 @@ export function WalletHome({ view }: { view: WalletView }) {
         <div className="kit-bal-assets">
           {view.wallet.holdings.slice(0, 4).map((h) => (
             <div key={h.symbol} className="kit-bal-asset">
-              <TokenLogo symbol={h.kind === 'usdg' ? 'CASH' : h.symbol} size={20} />
+              <TokenLogo symbol={h.symbol} size={20} />
               <span className="kit-bal-asset-amount">{h.amount}</span>
               <span className="kit-bal-asset-symbol">{h.symbol}</span>
               <span className="kit-bal-asset-value">{h.valueUsd === null ? '—' : usd(h.valueUsd)}</span>
@@ -198,6 +215,15 @@ export function WalletHome({ view }: { view: WalletView }) {
           {view.wallet ? c.walletTotal(usd(view.wallet.totalUsd)) : null}
           <code>{short(view.address, 6, 4)}</code>
         </span>
+        <button
+          type="button"
+          className="kit-bal-qr"
+          aria-label={moneyCopy.receive.title}
+          title={moneyCopy.receive.title}
+          onClick={() => setReceive('wallet')}
+        >
+          <QrCode aria-hidden="true" size={15} />
+        </button>
         <Link href={'/fund' as Route} className="kit-bal-cta">
           {c.fundAgent}
         </Link>
@@ -309,9 +335,14 @@ export function WalletHome({ view }: { view: WalletView }) {
         >
           <ArrowDownToLine aria-hidden="true" size={16} /> {c.actions.fund}
         </Link>
-        <Link href={'/receive' as Route} style={buttonStyle('secondary')} className="kit-action">
+        <button
+          type="button"
+          onClick={() => setReceive('wallet')}
+          style={buttonStyle('secondary')}
+          className="kit-action"
+        >
           <ArrowDown aria-hidden="true" size={16} /> {c.actions.receive}
-        </Link>
+        </button>
         <Link href={'/withdraw' as Route} style={buttonStyle('secondary')} className="kit-action">
           <ArrowUpFromLine aria-hidden="true" size={16} /> {c.actions.withdraw}
         </Link>
@@ -450,6 +481,13 @@ export function WalletHome({ view }: { view: WalletView }) {
       ) : null}
 
       <GiftCard />
+      <ReceiveSheet
+        key={receive ?? 'closed'}
+        open={receive !== null}
+        onClose={closeReceive}
+        targets={receiveTargets}
+        initial={receive ?? 'wallet'}
+      />
     </Screen>
   )
 }

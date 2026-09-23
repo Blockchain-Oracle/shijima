@@ -7,6 +7,22 @@ import { cn } from '@/lib/utils'
  * fund), at any size, so the strategies, the studio, the desk and the record wear the same marks as the markets
  * pages. `symbol="CASH"` draws cash's quiet tile. Decorative by default, because the name is written beside it.
  */
+/** Crypto tokens wear their own published logos, kept in public/logos so nothing loads from another site. */
+const CRYPTO: Record<string, string> = {
+  USDG: '/logos/tokens/usdg.png',
+  ETH: '/logos/tokens/eth.png',
+  WETH: '/logos/tokens/weth.png',
+  USDC: '/logos/tokens/usdc.png',
+  'USDC.E': '/logos/tokens/usdc.png',
+  USDT: '/logos/tokens/usdt.png',
+  BNB: '/logos/tokens/bnb.png',
+  WBNB: '/logos/tokens/bnb.png',
+  DAI: '/logos/tokens/dai.png',
+}
+
+/** Whether a symbol has a real logo here (a crypto token), as opposed to a Stock Token's disc. */
+export const hasCryptoLogo = (symbol: string) => symbol.toUpperCase() in CRYPTO
+
 export function TokenLogo({
   symbol,
   size = 28,
@@ -20,6 +36,21 @@ export function TokenLogo({
   title?: string
 }) {
   const a11y = title ? { role: 'img' as const, 'aria-label': title } : { 'aria-hidden': true as const }
+  const crypto = CRYPTO[symbol.toUpperCase()]
+  if (crypto) {
+    return (
+      // biome-ignore lint/performance/noImgElement: a fixed local 150px logo; next/image adds nothing here
+      <img
+        alt={title ?? ''}
+        aria-hidden={title ? undefined : true}
+        src={crypto}
+        width={size}
+        height={size}
+        className={cn('inline-block shrink-0 rounded-full object-cover', className)}
+        style={{ width: size, height: size }}
+      />
+    )
+  }
   if (symbol.toUpperCase() === 'CASH') {
     return (
       <span

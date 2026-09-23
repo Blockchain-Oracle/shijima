@@ -1,24 +1,26 @@
 'use client'
 
 import { moneyCopy } from '@desk/shared'
-import { ArrowDownToLine } from 'lucide-react'
+import { ArrowDownToLine, Copy } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import { type Address, formatUnits, parseUnits } from 'viem'
+import { type Address, formatUnits } from 'viem'
+import { BoundaryBadge, Callout, FlowCard, QrCard, Screen, ScreenTitle, Segmented } from '@/components/kit'
 import {
-  AmountInput,
-  BoundaryBadge,
-  Callout,
-  Chip,
-  Eyebrow,
-  QrCard,
-  Screen,
-  ScreenTitle,
-  Segmented,
-} from '@/components/kit'
-import { TokenLogo } from '@/components/ui/token-logo'
+  AssetPicker,
+  AssetPill,
+  dollars,
+  readable,
+  TicketAmount,
+  TicketArrow,
+  TicketBox,
+  TicketQuoted,
+} from '@/components/kit/ticket'
+import { CHAIN_LOGOS } from '@/components/ui/chain-logo'
+import { hasCryptoLogo } from '@/components/ui/token-logo'
 import { MoveFlow } from './MoveFlow'
+import { toRaw, worthOf } from './SendScreen'
 
 export interface FundAgent {
   id: string
@@ -46,22 +48,16 @@ export interface FundChain {
 
 const ROBINHOOD = 4663
 const c = moneyCopy.fund
+const t = moneyCopy.ticket
 const PRESETS = ['5', '20', '100']
-
-function toRaw(amount: string, decimals: number): bigint | null {
-  if (!/^\d*\.?\d*$/.test(amount) || amount === '' || amount === '.') return null
-  try {
-    const raw = parseUnits(amount, decimals)
-    return raw > 0n ? raw : null
-  } catch {
-    return null
-  }
-}
+/** The tokens offered per other chain: the chain's own coin and its featured tokens come first from Relay. */
+const PER_CHAIN = 8
 
 /**
- * Fund an agent (W4). The reference wallet's Shield · deposit, opened to any token: from your own wallet on
- * Robinhood Chain (USDG straight in, ETH swapped, a Stock Token as it is or swapped), from another chain through
- * Relay, or from anywhere to the agent's address. The server plans each case; your wallet signs it.
+ * Fund an agent (W4) on the money ticket. You pay any token, from your own wallet on Robinhood Chain (USDG straight
+ * in, ETH swapped, a Stock Token as it is or swapped) or from another chain through Relay; your agent gets USDG,
+ * or the stock itself, and the summary beside it says what lands, the least it can be, the cost and the time.
+ * "From anywhere" shows the agent's address as a QR code instead.
  */
 export function FundScreen({
   owner,
@@ -81,21 +77,25 @@ export function FundScreen({
   const [agentKey, setAgentKey] = useState(
     agents.find((a) => a.slug === initialAgent || a.id === initialAgent)?.id ?? agents[0]?.id ?? '',
   )
-  const [source, setSource] = useState<'wallet' | 'chain' | 'anywhere'>(initialSource)
+  const [source, setSource] = useState<'wallet' | 'chain' | 'anywhere'>(
+    initialSource === 'wallet' && assets.length === 0 ? 'chain' : initialSource,
+  )
   const [assetToken, setAssetToken] = useState<string>(assets[0]?.token ?? '')
-  const [chainId, setChainId] = useState<number>(chains[0]?.id ?? 8453)
-  const chain = chains.find((ch) => ch.id === chainId)
-  const [chainToken, setChainToken] = useState<string>(chain?.tokens[0]?.address ?? '')
+  const [origin, setOrigin] = useState<string>(
+    chains[0]?.tokens[0] ? `${chains[0].id}:${chains[0].tokens[0].address}` : '',
+  )
   const [amount, setAmount] = useState('')
+  const [picking, setPicking] = useState<'asset' | 'agent' | null>(null)
   const agent = agents.find((a) => a.id === agentKey)
-
   const asset = assets.find((a) => a.token === assetToken)
-  const originToken = chain?.tokens.find((t) => t.address === chainToken) ?? chain?.tokens[0]
+  const [originChainId, originAddress] = origin.split(':')
+  const originChain = chains.find((ch) => ch.id === Number(originChainId))
+  const originToken = originChain?.tokens.find((tk) => tk.address === originAddress)
 
   const { input, invalid } = useMemo(() => {
     if (!agent) return { input: null, invalid: null }
     if (source === 'wallet') {
-      if (!asset) return { input: null, invalid: c.nothingHeld }
+      if (!asset) return { input: null, invalid: null }
       const raw = toRaw(amount, asset.decimals)
       if (raw === null) return { input: null, invalid: null }
       if (raw > BigInt(asset.balanceRaw)) return { input: null, invalid: c.moreThanHeld(asset.symbol) }
@@ -108,25 +108,24 @@ export function FundScreen({
         invalid: null,
       }
     }
-    if (source === 'chain') {
-      if (!originToken) return { input: null, invalid: null }
+    if (source === 'chain' && originChain && originToken) {
       const raw = toRaw(amount, originToken.decimals)
       if (raw === null) return { input: null, invalid: null }
       return {
         input: {
           kind: 'fund' as const,
           deskId: agent.id,
-          source: { chainId, token: originToken.address, amountRaw: raw.toString() },
+          source: { chainId: originChain.id, token: originToken.address, amountRaw: raw.toString() },
         },
         invalid: null,
       }
     }
     return { input: null, invalid: null }
-  }, [agent, source, asset, amount, originToken, chainId])
+  }, [agent, source, asset, amount, originChain, originToken])
 
-  if (agents.length === 0) {
+  if (agents.length === 0 || !agent) {
     return (
-      <Screen width={560}>
+      <Screen width={1100}>
         <ScreenTitle title={c.title} sub={c.sub} />
         <Callout tone="info" title={c.noAgentTitle}>
           {c.noAgentBody}{' '}
@@ -138,199 +137,238 @@ export function FundScreen({
     )
   }
 
-  const unit = source === 'wallet' ? (asset?.symbol ?? '') : (originToken?.symbol ?? '')
-  const held = source === 'wallet' && asset ? formatUnits(BigInt(asset.balanceRaw), asset.decimals) : null
-
-  const form = (
-    <>
-      {source === 'wallet' ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <Eyebrow>{c.fromWallet}</Eyebrow>
-          {assets.length === 0 ? (
-            <Callout tone="wallet">
-              {c.emptyWallet}{' '}
-              <button type="button" className="kit-link" onClick={() => setSource('chain')}>
-                {c.bringIn}
-              </button>
-            </Callout>
-          ) : (
-            <div className="kit-asset-list">
-              {assets.map((a) => {
-                const on = a.token === assetToken
-                return (
-                  <button
-                    key={a.token}
-                    type="button"
-                    aria-pressed={on}
-                    className="kit-asset"
-                    data-on={on || undefined}
-                    onClick={() => {
-                      setAssetToken(a.token)
-                      setAmount('')
-                    }}
-                  >
-                    <TokenLogo symbol={a.kind === 'usdg' ? 'CASH' : a.symbol} size={26} />
-                    <span className="kit-asset-name">
-                      <strong>{a.symbol}</strong>
-                      <em>{a.kind === 'usdg' ? c.goesStraight : a.kind === 'eth' ? c.swapped : c.stockIn}</em>
-                    </span>
-                    <span className="kit-asset-held">
-                      <b>
-                        {Number(formatUnits(BigInt(a.balanceRaw), a.decimals)).toLocaleString('en-US', {
-                          maximumFractionDigits: 5,
-                        })}
-                      </b>
-                      <em>{a.valueUsd === null ? '—' : `$${a.valueUsd.toFixed(2)}`}</em>
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <Eyebrow>{c.sourceChain}</Eyebrow>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {chains.map((ch) => (
-              <Chip
-                key={ch.id}
-                label={ch.name}
-                active={ch.id === chainId}
-                onClick={() => {
-                  setChainId(ch.id)
-                  setChainToken(ch.tokens[0]?.address ?? '')
-                  setAmount('')
-                }}
-              />
-            ))}
-          </div>
-          <Eyebrow>{c.token}</Eyebrow>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {chain?.tokens.slice(0, 10).map((t) => (
-              <Chip
-                key={t.address}
-                label={t.symbol}
-                active={t.address === originToken?.address}
-                onClick={() => {
-                  setChainToken(t.address)
-                  setAmount('')
-                }}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {assets.length > 0 || source === 'chain' ? (
-        <div
-          style={{
-            border: '1px solid var(--bd2)',
-            borderRadius: 14,
-            background: 'var(--card)',
-            padding: '20px 16px',
-          }}
-        >
-          <AmountInput
-            value={amount}
-            onChange={setAmount}
-            unit={unit}
-            autoFocus
-            invalid={Boolean(invalid)}
-            {...(held && Number(held) > 0 ? { onMax: () => setAmount(held) } : {})}
-            {...(unit === 'USDG' || unit === 'USDC'
-              ? { presets: PRESETS.map((p) => `$${p}`), onPreset: (p: string) => setAmount(p.slice(1)) }
-              : {})}
-            caption={
-              held !== null
-                ? c.available(Number(held).toLocaleString('en-US', { maximumFractionDigits: 6 }), unit)
-                : c.relayNote
-            }
-          />
-        </div>
-      ) : null}
-    </>
+  const paying =
+    source === 'wallet' && asset
+      ? { symbol: asset.symbol, chainId: ROBINHOOD }
+      : originChain && originToken
+        ? { symbol: originToken.symbol, chainId: originChain.id }
+        : null
+  const stable = paying !== null && /^(USDG|USDC|USDT|DAI)$/i.test(paying.symbol)
+  const sourceTabs = (
+    <Segmented
+      label={c.from}
+      fullWidth
+      options={[
+        { value: 'wallet', label: c.sources.wallet },
+        { value: 'chain', label: c.sources.chain },
+        { value: 'anywhere', label: c.sources.anywhere },
+      ]}
+      value={source}
+      onChange={(v) => {
+        setSource(v as typeof source)
+        setAmount('')
+      }}
+    />
+  )
+  const agentPill = (receiving: string) => (
+    <AssetPill
+      symbol={receiving}
+      chainId={ROBINHOOD}
+      label={agent.name}
+      {...(agents.length > 1 ? { onClick: () => setPicking('agent') } : {})}
+    />
+  )
+  const agentPicker = (
+    <AssetPicker
+      open={picking === 'agent'}
+      onClose={() => setPicking(null)}
+      title={t.pickAgent}
+      selected={agent.id}
+      options={agents.map((a) => ({
+        key: a.id,
+        symbol: 'USDG',
+        name: a.name,
+        chainId: ROBINHOOD,
+        note: a.name,
+      }))}
+      onPick={setAgentKey}
+    />
   )
 
-  return (
-    <Screen width={560} gap={8}>
-      <ScreenTitle title={c.title} sub={c.sub} />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, margin: '8px 0 8px' }}>
-        {agents.length > 1 ? (
-          <Segmented
-            label={c.intoWhich}
-            options={agents.map((a) => ({ value: a.id, label: a.name }))}
-            value={agentKey}
-            onChange={setAgentKey}
-            size="sm"
-          />
-        ) : null}
-        <Segmented
-          label={c.from}
-          fullWidth
-          options={[
-            { value: 'wallet', label: c.sources.wallet },
-            { value: 'chain', label: c.sources.chain },
-            { value: 'anywhere', label: c.sources.anywhere },
-          ]}
-          value={source}
-          onChange={(v) => {
-            setSource(v as typeof source)
-            setAmount('')
-          }}
-        />
-      </div>
-
-      {source === 'anywhere' && agent ? (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-          <QrCard
-            text={agent.address}
-            label={c.anywhereCaption}
+  if (source === 'anywhere') {
+    return (
+      <Screen width={1100} gap={8}>
+        <ScreenTitle title={c.title} sub={c.sub} />
+        <div className="kit-money">
+          <FlowCard
+            icon={<ArrowDownToLine size={16} />}
+            title={c.cardTitle(agent.name)}
             badge={<BoundaryBadge kind="agent" label={agent.name.toUpperCase()} />}
-            caption={c.anywhereCaption}
-          />
-          <code
-            style={{
-              fontFamily: 'var(--fm)',
-              fontSize: 12,
-              color: 'var(--tx2)',
-              wordBreak: 'break-all',
-              textAlign: 'center',
-            }}
           >
-            {agent.address}
-          </code>
-          <Callout tone="agent" title={moneyCopy.receive.agentCalloutTitle}>
-            {moneyCopy.receive.agentCallout}
-          </Callout>
-          <Link
-            href={`/receive?agent=${agent.slug}` as Route}
-            style={{ fontSize: 12.5, color: 'var(--ac2)', fontWeight: 600 }}
-          >
-            {c.openReceive} →
-          </Link>
+            {sourceTabs}
+            <TicketBox label={c.sendTo}>{agentPill('USDG')}</TicketBox>
+            <div className="kit-address-line">
+              <code>{agent.address}</code>
+              <button type="button" onClick={() => void navigator.clipboard?.writeText(agent.address)}>
+                <Copy aria-hidden="true" size={14} /> {moneyCopy.receive.copy}
+              </button>
+            </div>
+            <Callout tone="agent" title={moneyCopy.receive.agentCalloutTitle}>
+              {moneyCopy.receive.agentCallout}
+            </Callout>
+            {agentPicker}
+          </FlowCard>
+          <div className="kit-money-side" style={{ alignItems: 'center' }}>
+            <QrCard
+              text={agent.address}
+              label={c.anywhereCaption}
+              badge={<BoundaryBadge kind="agent" label={agent.name.toUpperCase()} />}
+              caption={c.anywhereCaption}
+            />
+          </div>
         </div>
-      ) : agent ? (
-        <MoveFlow
-          title={c.cardTitle(agent.name)}
-          icon={<ArrowDownToLine size={16} />}
-          badge={<BoundaryBadge kind="agent" label={agent.name.toUpperCase()} />}
-          owner={owner}
-          input={input}
-          form={form}
-          invalid={invalid}
-          reviewLabel={c.review}
-          doneTitle={c.done}
-          after={
-            <Link
-              href={`/agents/${agent.slug}` as Route}
-              style={{ fontSize: 12.5, color: 'var(--ac2)', fontWeight: 600, textAlign: 'center' }}
-            >
-              {c.openAgent(agent.name)} →
-            </Link>
-          }
-        />
-      ) : null}
+      </Screen>
+    )
+  }
+
+  const walletOptions = assets.map((a) => ({
+    key: a.token,
+    symbol: a.symbol,
+    name: a.name,
+    chainId: ROBINHOOD,
+    held: readable(a.balanceRaw, a.decimals),
+    usd: a.valueUsd === null ? null : dollars(a.valueUsd),
+    note: a.kind === 'usdg' ? c.goesStraight : a.kind === 'eth' ? c.swapped : c.stockIn,
+  }))
+  const chainOptions = chains.flatMap((ch) =>
+    ch.tokens
+      .filter((tk) => hasCryptoLogo(tk.symbol))
+      .slice(0, PER_CHAIN)
+      .map((tk) => ({
+        key: `${ch.id}:${tk.address}`,
+        symbol: tk.symbol,
+        name: tk.name,
+        chainId: ch.id,
+      })),
+  )
+  const worth = source === 'wallet' && asset ? worthOf(asset, amount) : null
+  const arriving =
+    source === 'wallet' && asset
+      ? asset.kind === 'usdg'
+        ? c.goesStraight
+        : asset.kind === 'eth'
+          ? c.swapped
+          : c.stockIn
+      : ' '
+
+  return (
+    <Screen width={1100} gap={8}>
+      <ScreenTitle title={c.title} sub={c.sub} />
+      <MoveFlow
+        title={c.cardTitle(agent.name)}
+        icon={<ArrowDownToLine size={16} />}
+        badge={<BoundaryBadge kind="agent" label={agent.name.toUpperCase()} />}
+        owner={owner}
+        input={input}
+        invalid={invalid}
+        reviewLabel={c.review}
+        doneTitle={c.done}
+        route={{
+          from: {
+            chainId: paying?.chainId ?? ROBINHOOD,
+            label:
+              source === 'wallet'
+                ? c.sources.wallet
+                : (CHAIN_LOGOS[paying?.chainId ?? 0]?.name ?? c.sources.chain),
+          },
+          to: { chainId: ROBINHOOD, label: agent.name },
+        }}
+        after={
+          <Link
+            href={`/agents/${agent.slug}` as Route}
+            style={{ fontSize: 12.5, color: 'var(--ac2)', fontWeight: 600, textAlign: 'center' }}
+          >
+            {c.openAgent(agent.name)} →
+          </Link>
+        }
+        ticket={(q) => (
+          <>
+            {sourceTabs}
+            {source === 'wallet' && assets.length === 0 ? (
+              <Callout tone="wallet">
+                {c.emptyWallet}{' '}
+                <button type="button" className="kit-link" onClick={() => setSource('chain')}>
+                  {c.bringIn}
+                </button>
+              </Callout>
+            ) : (
+              <>
+                <TicketBox
+                  label={t.youPay}
+                  side={
+                    source === 'wallet' && asset ? (
+                      <>
+                        {t.held(`${readable(asset.balanceRaw, asset.decimals)} ${asset.symbol}`)}
+                        <button
+                          type="button"
+                          onClick={() => setAmount(formatUnits(BigInt(asset.balanceRaw), asset.decimals))}
+                        >
+                          {t.max}
+                        </button>
+                      </>
+                    ) : undefined
+                  }
+                  foot={
+                    stable ? (
+                      <span className="kit-presets">
+                        {PRESETS.map((p) => (
+                          <button key={p} type="button" onClick={() => setAmount(p)}>
+                            ${p}
+                          </button>
+                        ))}
+                      </span>
+                    ) : worth ? (
+                      t.worth(worth)
+                    ) : source === 'chain' ? (
+                      c.relayNote
+                    ) : (
+                      ' '
+                    )
+                  }
+                >
+                  <TicketAmount
+                    value={amount}
+                    onChange={setAmount}
+                    label={`${paying?.symbol ?? ''} amount`}
+                    invalid={Boolean(invalid && amount)}
+                  />
+                  {paying ? (
+                    <AssetPill
+                      symbol={paying.symbol}
+                      chainId={paying.chainId}
+                      onClick={() => setPicking('asset')}
+                    />
+                  ) : null}
+                </TicketBox>
+                <TicketArrow />
+                <TicketBox
+                  label={t.agentGets}
+                  foot={q.quote ? t.worth(dollars(Number(q.quote.usdgValue) / 1e6)) : arriving}
+                >
+                  <TicketQuoted
+                    text={q.quote ? readable(q.quote.receive.amountRaw, q.quote.receive.decimals) : null}
+                    loading={q.loading}
+                  />
+                  {agentPill(q.quote?.receive.symbol ?? 'USDG')}
+                </TicketBox>
+              </>
+            )}
+            <AssetPicker
+              open={picking === 'asset'}
+              onClose={() => setPicking(null)}
+              title={source === 'wallet' ? t.pickToken : t.pickChainToken}
+              selected={source === 'wallet' ? assetToken : origin}
+              options={source === 'wallet' ? walletOptions : chainOptions}
+              onPick={(key) => {
+                if (source === 'wallet') setAssetToken(key)
+                else setOrigin(key)
+                setAmount('')
+              }}
+            />
+            {agentPicker}
+          </>
+        )}
+      />
     </Screen>
   )
 }

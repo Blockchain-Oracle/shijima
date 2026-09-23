@@ -27,7 +27,7 @@ function amountOf(h: WalletHolding): string {
  * The signed-in home (W1): your agents' money and your own wallet, both read from the chain at the moment you
  * look, with what they did and what waits on you.
  */
-export default async function WalletPage() {
+export default async function WalletPage({ searchParams }: { searchParams: Promise<{ receive?: string }> }) {
   const address = await signedInAddress().catch(() => undefined)
   if (!address) return <SignedOutCard />
   const [w, activity, overview] = await Promise.all([
@@ -55,6 +55,7 @@ export default async function WalletPage() {
       return {
         id: a.id,
         slug: a.slug,
+        address: a.address,
         name: a.name,
         mode: a.mode,
         state: a.state,
@@ -92,5 +93,6 @@ export default async function WalletPage() {
     needs: overview.needs.length,
     combined: overview.combined,
   }
-  return <WalletHome view={view} />
+  const { receive } = await searchParams
+  return <WalletHome view={view} initialReceive={receive ?? null} />
 }

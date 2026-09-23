@@ -39,7 +39,7 @@ import { type Address, encodeFunctionData, formatUnits, getAddress, type Hex, is
 import { pub } from '../chain-build.server'
 import { db } from '../db'
 import { relayQuote, relayToken } from './relay.server'
-import type { MoveInput, MoveKind, MovePlan, MoveStep, PlanResult } from './types'
+import type { MoveInput, MoveKind, MovePlan, MoveStep, PlanResult, QuoteResult } from './types'
 
 const c = moneyCopy
 /** Money into an agent, or out across a bridge: at least $1 of USDG. */
@@ -694,6 +694,60 @@ async function planGetGas(owner: Address, input: Extract<MoveInput, { kind: 'get
 // ---------------------------------------------------------------- the one entry point
 
 /**
+ * Builds a move without saving it: the steps, what lands, the cost. The live quote on each money screen uses this
+ * as the owner types; Review uses it too, then saves the move.
+ */
+async function buildMove(address: Address, input: MoveInput): Promise<Built> {
+  const built =
+    input.kind === 'fund'
+      ? await planFund(address, input)
+      : input.kind === 'send'
+        ? await planSend(address, input)
+        : input.kind === 'bridge_out'
+          ? await planBridgeOut(address, input)
+          : await planGetGas(address, input)
+  if ('why' in built) return built
+
+  // The Robinhood Chain side is simulated, so a transaction the chain would refuse is never offered. Its fee is
+  // added for our own swaps and transfers; Relay's quote already counts the network fee on its origin chain.
+  if (built.fromChainId === CHAIN_ID) {
+    const fee = await feeOf(address, built.steps)
+    if ('why' in fee) return { why: fee.why }
+    if (built.relayRequestId === null) {
+      built.feeUsdg += fee.usdg
+      if (fee.usdg > 0n) built.lines.push(c.lines.networkFee(usd(fee.usdg)))
+    }
+  }
+  return built
+}
+
+/** A live quote for the screen: what lands, the least it can be, the cost and the time. Nothing is saved. */
+export async function quoteMove(ownerAddress: string, input: MoveInput): Promise<QuoteResult> {
+  const built = await buildMove(getAddress(ownerAddress), input)
+  if ('why' in built) return { ok: false, why: built.why, ...(built.hint ? { hint: built.hint } : {}) }
+  return {
+    ok: true,
+    quote: {
+      receive: {
+        symbol: built.receive.symbol,
+        amountRaw: built.receive.amountRaw.toString(),
+        decimals: built.receive.decimals,
+        minimumRaw: built.receive.minimumRaw.toString(),
+      },
+      usdgValue: built.usdgValue.toString(),
+      feeUsdg: built.feeUsdg.toString(),
+      timeEstimate: built.timeEstimate,
+      route: built.relayRequestId
+        ? 'relay'
+        : built.steps.some((s) => s.kind === 'swap')
+          ? 'uniswap'
+          : 'direct',
+      signatures: built.steps.length,
+    },
+  }
+}
+
+/**
  * Plans one move for a signed-in owner and saves it as `signing`. `replaces` is the plan it refreshes after the
  * 60 seconds ran out: that one is closed as nothing sent, if nothing was.
  */
@@ -708,26 +762,8 @@ export async function planMove(
     if (old && old.status === 'signing' && old.txHashes.length === 0)
       await settleMoneyMove(db(), old.id, { status: 'nothing_sent', error: 'replaced by a fresh price' })
   }
-  const built =
-    input.kind === 'fund'
-      ? await planFund(address, input)
-      : input.kind === 'send'
-        ? await planSend(address, input)
-        : input.kind === 'bridge_out'
-          ? await planBridgeOut(address, input)
-          : await planGetGas(address, input)
+  const built = await buildMove(address, input)
   if ('why' in built) return { ok: false, why: built.why, ...(built.hint ? { hint: built.hint } : {}) }
-
-  // The Robinhood Chain side is simulated, so a transaction the chain would refuse is never offered. Its fee is
-  // added for our own swaps and transfers; Relay's quote already counts the network fee on its origin chain.
-  if (built.fromChainId === CHAIN_ID) {
-    const fee = await feeOf(address, built.steps)
-    if ('why' in fee) return { ok: false, why: fee.why }
-    if (built.relayRequestId === null) {
-      built.feeUsdg += fee.usdg
-      if (fee.usdg > 0n) built.lines.push(c.lines.networkFee(usd(fee.usdg)))
-    }
-  }
 
   const row = await createMoneyMove(db(), {
     ownerId: owner.ownerId,

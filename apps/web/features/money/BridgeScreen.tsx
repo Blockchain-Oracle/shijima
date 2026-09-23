@@ -4,41 +4,61 @@ import { moneyCopy } from '@desk/shared'
 import { ArrowLeftRight, Fuel } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
-import { formatUnits, parseUnits } from 'viem'
+import { type ReactNode, useMemo, useState } from 'react'
+import { formatUnits } from 'viem'
+import { BoundaryBadge, Button, Callout, FlowCard, Screen, ScreenTitle, Segmented } from '@/components/kit'
 import {
-  AmountInput,
-  BoundaryBadge,
-  Button,
-  Callout,
-  Card,
-  Chip,
-  Eyebrow,
-  FlowCard,
-  Screen,
-  ScreenTitle,
-  Segmented,
-} from '@/components/kit'
+  AssetPicker,
+  AssetPill,
+  dollars,
+  readable,
+  TicketAmount,
+  TicketArrow,
+  TicketBox,
+  TicketQuoted,
+} from '@/components/kit/ticket'
+import { CHAIN_LOGOS, ChainLogo } from '@/components/ui/chain-logo'
 import type { FundChain } from './FundScreen'
 import { MoveFlow } from './MoveFlow'
+import { toRaw } from './SendScreen'
 
 const c = moneyCopy.bridge
+const t = moneyCopy.ticket
+const ROBINHOOD = 4663
 const USDG_DECIMALS = 6
 
-function toRaw(amount: string, decimals: number): bigint | null {
-  if (!/^\d*\.?\d*$/.test(amount) || amount === '' || amount === '.') return null
-  try {
-    const raw = parseUnits(amount, decimals)
-    return raw > 0n ? raw : null
-  } catch {
-    return null
-  }
+type Dir = 'out' | 'in' | 'gas'
+
+/** How a bridge moves, beside the ticket: the three steps, and the chains Relay reaches from here. */
+function HowItMoves() {
+  return (
+    <div className="kit-summary">
+      <strong style={{ fontSize: 13.5 }}>{c.howTitle}</strong>
+      <ol
+        style={{ margin: '10px 0 12px', paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 6 }}
+      >
+        {c.how.map((line) => (
+          <li key={line} style={{ fontSize: 12.5, color: 'var(--tx2)', lineHeight: 1.5 }}>
+            {line}
+          </li>
+        ))}
+      </ol>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {[4663, 8453, 42161, 1, 56].map((id) => (
+          <span key={id} className="kit-chain-chip">
+            <ChainLogo chainId={id} size={16} /> {CHAIN_LOGOS[id]?.name}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 /**
- * Bridge (W6), the reference wallet's two-panel bridge (BridgeScreen.tsx:190-269): the move on the left, how it
- * moves and Get gas on the right. Out sends USDG from your wallet to your same wallet on another chain as USDC or
- * its native coin; In opens Fund on its other-chain source, since money coming in belongs to an agent.
+ * Bridge (W6), after the reference wallet's two-panel bridge and 21st's Multi-chain Swap (16251): the ticket on the
+ * left, the route and Review on the right. Out sends USDG from your wallet to your same wallet on Base, Arbitrum,
+ * Ethereum or BNB Chain as USDC or the chain's coin. In opens Fund, since money coming in belongs to an agent. Gas
+ * swaps a dollar of USDG to ETH, or brings ETH from another chain when there is nothing here to pay for a swap.
  */
 export function BridgeScreen({
   owner,
@@ -49,136 +69,165 @@ export function BridgeScreen({
   gasChains,
 }: {
   owner: string
-  initialDir: 'out' | 'in'
+  initialDir: Dir
   usdgRaw: string
   eth: string
   outChains: FundChain[]
   gasChains: FundChain[]
 }) {
-  const [dir, setDir] = useState(initialDir)
-  const [chainId, setChainId] = useState(outChains[0]?.id ?? 8453)
-  const chain = outChains.find((ch) => ch.id === chainId)
-  const [token, setToken] = useState(chain?.tokens[0]?.address ?? '')
+  const [dir, setDir] = useState<Dir>(initialDir)
+  const tabs = (
+    <Segmented
+      label={c.direction}
+      fullWidth
+      options={[
+        { value: 'out', label: c.dirs.out },
+        { value: 'in', label: c.dirs.in },
+        { value: 'gas', label: c.dirs.gas },
+      ]}
+      value={dir}
+      onChange={(v) => setDir(v as Dir)}
+    />
+  )
+  return (
+    <Screen width={1100} gap={8}>
+      <ScreenTitle title={c.title} sub={c.sub} />
+      {dir === 'out' ? (
+        <BridgeOut owner={owner} usdgRaw={usdgRaw} chains={outChains} tabs={tabs} />
+      ) : dir === 'gas' ? (
+        <GetGas owner={owner} eth={eth} usdgRaw={usdgRaw} chains={gasChains} tabs={tabs} />
+      ) : (
+        <div className="kit-money">
+          <FlowCard
+            icon={<ArrowLeftRight size={16} />}
+            title={c.inTitle}
+            badge={<BoundaryBadge kind="agent" />}
+          >
+            {tabs}
+            <p style={{ margin: 0, fontSize: 13.5, color: 'var(--tx2)', lineHeight: 1.55 }}>{c.inBody}</p>
+            <Link href={'/fund?from=chain' as Route} style={{ textDecoration: 'none' }}>
+              <Button fullWidth>{c.inCta} →</Button>
+            </Link>
+          </FlowCard>
+          <div className="kit-money-side">
+            <HowItMoves />
+          </div>
+        </div>
+      )}
+    </Screen>
+  )
+}
+
+function BridgeOut({
+  owner,
+  usdgRaw,
+  chains,
+  tabs,
+}: {
+  owner: string
+  usdgRaw: string
+  chains: FundChain[]
+  tabs: ReactNode
+}) {
+  const first = chains[0]
+  const [dest, setDest] = useState(first?.tokens[0] ? `${first.id}:${first.tokens[0].address}` : '')
   const [amount, setAmount] = useState('')
-  const dest = chain?.tokens.find((t) => t.address === token) ?? chain?.tokens[0]
+  const [picking, setPicking] = useState(false)
+  const [chainId, tokenAddress] = dest.split(':')
+  const chain = chains.find((ch) => ch.id === Number(chainId))
+  const token = chain?.tokens.find((tk) => tk.address === tokenAddress)
   const held = formatUnits(BigInt(usdgRaw), USDG_DECIMALS)
 
   const { input, invalid } = useMemo(() => {
     const raw = toRaw(amount, USDG_DECIMALS)
-    if (raw === null || !dest) return { input: null, invalid: null }
+    if (raw === null || !chain || !token) return { input: null, invalid: null }
     if (raw > BigInt(usdgRaw)) return { input: null, invalid: moneyCopy.fund.moreThanHeld('USDG') }
     return {
-      input: { kind: 'bridge_out' as const, amountRaw: raw.toString(), to: { chainId, token: dest.address } },
+      input: {
+        kind: 'bridge_out' as const,
+        amountRaw: raw.toString(),
+        to: { chainId: chain.id, token: token.address },
+      },
       invalid: null,
     }
-  }, [amount, dest, usdgRaw, chainId])
+  }, [amount, chain, token, usdgRaw])
 
   return (
-    <Screen width={1040} gap={8}>
-      <ScreenTitle title={c.title} sub={c.sub} />
-      <div style={{ maxWidth: 520, margin: '8px 0' }}>
-        <Segmented
-          label={c.direction}
-          fullWidth
-          options={[
-            { value: 'out', label: c.dirs.out },
-            { value: 'in', label: c.dirs.in },
-          ]}
-          value={dir}
-          onChange={(v) => setDir(v as 'out' | 'in')}
-        />
-      </div>
-      <div className="kit-two">
-        <div>
-          {dir === 'in' ? (
-            <FlowCard
-              icon={<ArrowLeftRight size={16} />}
-              title={c.inTitle}
-              badge={<BoundaryBadge kind="agent" />}
-            >
-              <p style={{ margin: 0, fontSize: 13.5, color: 'var(--tx2)', lineHeight: 1.55 }}>{c.inBody}</p>
-              <Link href={'/fund?from=chain' as Route} style={{ textDecoration: 'none' }}>
-                <Button fullWidth>{c.inCta} →</Button>
-              </Link>
-            </FlowCard>
-          ) : (
-            <MoveFlow
-              title={c.outTitle}
-              icon={<ArrowLeftRight size={16} />}
-              badge={<BoundaryBadge kind="wallet" />}
-              owner={owner}
-              input={input}
-              invalid={invalid}
-              reviewLabel={c.review}
-              doneTitle={c.done}
-              form={
-                <>
-                  <Eyebrow>{c.toChain}</Eyebrow>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    {outChains.map((ch) => (
-                      <Chip
-                        key={ch.id}
-                        label={ch.name}
-                        active={ch.id === chainId}
-                        onClick={() => {
-                          setChainId(ch.id)
-                          setToken(ch.tokens[0]?.address ?? '')
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <Eyebrow>{c.receiveAs}</Eyebrow>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    {chain?.tokens.map((t) => (
-                      <Chip
-                        key={t.address}
-                        label={t.symbol}
-                        active={t.address === dest?.address}
-                        onClick={() => setToken(t.address)}
-                      />
-                    ))}
-                  </div>
-                  <div
-                    style={{
-                      border: '1px solid var(--bd2)',
-                      borderRadius: 14,
-                      background: 'var(--card)',
-                      padding: '20px 16px',
-                    }}
-                  >
-                    <AmountInput
-                      prefix="$"
-                      unit="USDG"
-                      value={amount}
-                      onChange={setAmount}
-                      invalid={Boolean(invalid)}
-                      {...(Number(held) > 0 ? { onMax: () => setAmount(held) } : {})}
-                      caption={c.held(Number(held).toLocaleString('en-US', { maximumFractionDigits: 2 }))}
-                    />
-                  </div>
-                  <Callout tone="wallet">{c.toYou}</Callout>
-                </>
-              }
+    <MoveFlow
+      title={c.outTitle}
+      icon={<ArrowLeftRight size={16} />}
+      badge={<BoundaryBadge kind="wallet" />}
+      owner={owner}
+      input={input}
+      invalid={invalid}
+      reviewLabel={c.review}
+      doneTitle={c.done}
+      route={{
+        from: { chainId: ROBINHOOD, label: 'Robinhood Chain' },
+        to: { chainId: chain?.id ?? 8453, label: chain?.name ?? '' },
+      }}
+      aside={<HowItMoves />}
+      ticket={(q) => (
+        <>
+          {tabs}
+          <TicketBox
+            label={t.youSend}
+            side={
+              <>
+                {t.held(`${readable(usdgRaw, USDG_DECIMALS)} USDG`)}
+                {Number(held) > 0 ? (
+                  <button type="button" onClick={() => setAmount(held)}>
+                    {t.max}
+                  </button>
+                ) : null}
+              </>
+            }
+            foot={amount && Number(amount) > 0 ? t.worth(dollars(Number(amount))) : ' '}
+          >
+            <TicketAmount
+              value={amount}
+              onChange={setAmount}
+              label="USDG amount"
+              invalid={Boolean(invalid && amount)}
             />
-          )}
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <Card style={{ padding: '18px 20px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <strong style={{ fontSize: 14 }}>{c.howTitle}</strong>
-              <ol style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {c.how.map((line) => (
-                  <li key={line} style={{ fontSize: 12.5, color: 'var(--tx2)', lineHeight: 1.5 }}>
-                    {line}
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </Card>
-          <GetGas owner={owner} eth={eth} usdgRaw={usdgRaw} chains={gasChains} />
-        </div>
-      </div>
-    </Screen>
+            <AssetPill symbol="USDG" chainId={ROBINHOOD} />
+          </TicketBox>
+          <TicketArrow />
+          <TicketBox
+            label={t.youReceive}
+            foot={
+              q.quote
+                ? t.worth(dollars(Number(q.quote.usdgValue) / 1e6 - Number(q.quote.feeUsdg) / 1e6))
+                : c.toYou
+            }
+          >
+            <TicketQuoted
+              text={q.quote ? readable(q.quote.receive.amountRaw, q.quote.receive.decimals) : null}
+              loading={q.loading}
+            />
+            {chain && token ? (
+              <AssetPill symbol={token.symbol} chainId={chain.id} onClick={() => setPicking(true)} />
+            ) : null}
+          </TicketBox>
+          {Number(held) === 0 ? <Callout tone="wallet">{c.noUsdg}</Callout> : null}
+          <AssetPicker
+            open={picking}
+            onClose={() => setPicking(false)}
+            title={t.pickChainToken}
+            selected={dest}
+            options={chains.flatMap((ch) =>
+              ch.tokens.map((tk) => ({
+                key: `${ch.id}:${tk.address}`,
+                symbol: tk.symbol,
+                name: tk.name,
+                chainId: ch.id,
+              })),
+            )}
+            onPick={(key) => setDest(key)}
+          />
+        </>
+      )}
+    />
   )
 }
 
@@ -191,75 +240,113 @@ function GetGas({
   eth,
   usdgRaw,
   chains,
+  tabs,
 }: {
   owner: string
   eth: string
   usdgRaw: string
   chains: FundChain[]
+  tabs: ReactNode
 }) {
   // The swap needs a dollar of USDG and a little ETH to pay for itself; without both, gas comes over Relay.
   const canSwap = Number(eth) > 0 && BigInt(usdgRaw) >= 1_000_000n
   const [chainId, setChainId] = useState(chains[0]?.id ?? 8453)
+  const [amount, setAmount] = useState(canSwap ? '1' : '0.0005')
+  const [picking, setPicking] = useState(false)
   const chain = chains.find((ch) => ch.id === chainId)
-  const [amount, setAmount] = useState('0.0005')
   const native = chain?.tokens[0]
 
   const input = useMemo(() => {
-    if (canSwap) return { kind: 'get_gas' as const }
+    if (canSwap) {
+      const raw = toRaw(amount, USDG_DECIMALS)
+      return raw === null ? null : { kind: 'get_gas' as const, amountUsdg: raw.toString() }
+    }
     const raw = native ? toRaw(amount, native.decimals) : null
     if (raw === null || !native) return null
-    return {
-      kind: 'get_gas' as const,
-      origin: { chainId, token: native.address, amountRaw: raw.toString() },
-    }
+    return { kind: 'get_gas' as const, origin: { chainId, token: native.address, amountRaw: raw.toString() } }
   }, [canSwap, native, amount, chainId])
 
   return (
-    <div id="gas">
-      <MoveFlow
-        title={c.gasTitle}
-        icon={<Fuel size={16} />}
-        owner={owner}
-        input={input}
-        reviewLabel={c.gasReview}
-        doneTitle={c.gasDone}
-        form={
-          <>
-            <p style={{ margin: 0, fontSize: 12.5, color: 'var(--tx2)', lineHeight: 1.5 }}>
-              {c.gasBody} {c.gasHave(Number(eth).toLocaleString('en-US', { maximumFractionDigits: 6 }))}
-            </p>
+    <MoveFlow
+      title={c.gasTitle}
+      icon={<Fuel size={16} />}
+      owner={owner}
+      input={input}
+      reviewLabel={c.gasReview}
+      doneTitle={c.gasDone}
+      route={{
+        from: canSwap
+          ? { chainId: ROBINHOOD, label: 'USDG' }
+          : { chainId, label: CHAIN_LOGOS[chainId]?.name ?? '' },
+        to: { chainId: ROBINHOOD, label: 'ETH' },
+      }}
+      aside={
+        <div className="kit-summary">
+          <p style={{ margin: 0, fontSize: 12.5, color: 'var(--tx2)', lineHeight: 1.55 }}>
+            {c.gasBody} {c.gasHave(Number(eth).toLocaleString('en-US', { maximumFractionDigits: 6 }))}
+          </p>
+          <Link
+            href={'/wallet#gift' as Route}
+            style={{
+              display: 'inline-block',
+              marginTop: 10,
+              fontSize: 12.5,
+              color: 'var(--ac2)',
+              fontWeight: 600,
+            }}
+          >
+            {c.gift}
+          </Link>
+        </div>
+      }
+      ticket={(q) => (
+        <>
+          {tabs}
+          <TicketBox
+            label={t.youPay}
+            foot={canSwap ? c.gasSwapNote : c.gasFromHint}
+            side={canSwap ? t.held(`${readable(usdgRaw, USDG_DECIMALS)} USDG`) : undefined}
+          >
+            <TicketAmount value={amount} onChange={setAmount} label="Amount" />
             {canSwap ? (
-              <Eyebrow>{c.gasSwap}</Eyebrow>
+              <AssetPill symbol="USDG" chainId={ROBINHOOD} />
             ) : (
-              <>
-                <Eyebrow>{c.gasFrom}</Eyebrow>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {chains.map((ch) => (
-                    <Chip
-                      key={ch.id}
-                      label={`${ch.name} · ${ch.tokens[0]?.symbol ?? ''}`}
-                      active={ch.id === chainId}
-                      onClick={() => setChainId(ch.id)}
-                    />
-                  ))}
-                </div>
-                <AmountInput
-                  value={amount}
-                  onChange={setAmount}
-                  unit={native?.symbol ?? 'ETH'}
-                  caption={c.gasFromHint}
-                />
-              </>
+              <AssetPill
+                symbol={native?.symbol ?? 'ETH'}
+                chainId={chainId}
+                onClick={() => setPicking(true)}
+              />
             )}
-            <Link
-              href={'/wallet#gift' as Route}
-              style={{ fontSize: 12, color: 'var(--ac2)', fontWeight: 600 }}
-            >
-              {c.gift}
-            </Link>
-          </>
-        }
-      />
-    </div>
+          </TicketBox>
+          <TicketArrow />
+          <TicketBox
+            label={t.youGet}
+            foot={q.quote ? t.worth(dollars(Number(q.quote.usdgValue) / 1e6)) : ' '}
+          >
+            <TicketQuoted
+              text={q.quote ? readable(q.quote.receive.amountRaw, q.quote.receive.decimals) : null}
+              loading={q.loading}
+            />
+            <AssetPill symbol="ETH" chainId={ROBINHOOD} />
+          </TicketBox>
+          <AssetPicker
+            open={picking}
+            onClose={() => setPicking(false)}
+            title={t.pickChainToken}
+            selected={String(chainId)}
+            options={chains.map((ch) => ({
+              key: String(ch.id),
+              symbol: ch.tokens[0]?.symbol ?? 'ETH',
+              name: ch.tokens[0]?.name ?? '',
+              chainId: ch.id,
+            }))}
+            onPick={(key) => {
+              setChainId(Number(key))
+              setAmount(Number(key) === 56 ? '0.002' : '0.0005')
+            }}
+          />
+        </>
+      )}
+    />
   )
 }

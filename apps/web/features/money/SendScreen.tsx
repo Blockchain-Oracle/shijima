@@ -1,18 +1,28 @@
 'use client'
 
-import { moneyCopy } from '@desk/shared'
+import { moneyCopy, short } from '@desk/shared'
 import { ArrowUpRight } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { formatUnits, isAddress, parseUnits } from 'viem'
-import { AmountInput, BoundaryBadge, Callout, Eyebrow, Field, Screen, ScreenTitle } from '@/components/kit'
-import { TokenLogo } from '@/components/ui/token-logo'
+import { BoundaryBadge, Callout, Screen, ScreenTitle } from '@/components/kit'
+import {
+  AssetPicker,
+  AssetPill,
+  dollars,
+  readable,
+  TicketAmount,
+  TicketArrow,
+  TicketBox,
+} from '@/components/kit/ticket'
 import type { FundAsset } from './FundScreen'
 import { MoveFlow } from './MoveFlow'
 import { ScanButton } from './ScanButton'
 
 const c = moneyCopy.send
+const t = moneyCopy.ticket
+const ROBINHOOD = 4663
 
-function toRaw(amount: string, decimals: number): bigint | null {
+export function toRaw(amount: string, decimals: number): bigint | null {
   if (!/^\d*\.?\d*$/.test(amount) || amount === '' || amount === '.') return null
   try {
     const raw = parseUnits(amount, decimals)
@@ -22,20 +32,29 @@ function toRaw(amount: string, decimals: number): bigint | null {
   }
 }
 
+/** What an amount of a held asset is worth, from the wallet's own pricing of what it holds. */
+export function worthOf(asset: FundAsset, amount: string): string | null {
+  const raw = toRaw(amount, asset.decimals)
+  if (raw === null || asset.valueUsd === null || BigInt(asset.balanceRaw) === 0n) return null
+  return dollars((asset.valueUsd * Number(raw)) / Number(BigInt(asset.balanceRaw)))
+}
+
 /**
- * Send (W6), the reference wallet's public send (SendScreen.tsx:79-186): what, to whom, how much, from your own
- * wallet on Robinhood Chain. USDG, ETH or a Stock Token, to any address; a token contract is refused, and your own
- * agent is pointed to Fund so it is counted as money in. On a phone, Scan reads an address QR.
+ * Send (W6), the reference wallet's public send on the money ticket: what and how much on the left with its logo
+ * and chain, the recipient under it with Scan, and the summary and Review on the right. From your own wallet on
+ * Robinhood Chain; a token contract is refused, and your own agent is pointed to Fund so it counts as money in.
  */
 export function SendScreen({ owner, assets }: { owner: string; assets: FundAsset[] }) {
   const [token, setToken] = useState(assets[0]?.token ?? '')
   const [to, setTo] = useState('')
   const [amount, setAmount] = useState('')
+  const [picking, setPicking] = useState(false)
   const asset = assets.find((a) => a.token === token)
+  const recipient = to.trim()
+  const validTo = recipient !== '' && isAddress(recipient)
 
   const { input, invalid } = useMemo(() => {
     if (!asset) return { input: null, invalid: null }
-    const recipient = to.trim()
     if (recipient && !isAddress(recipient)) return { input: null, invalid: c.badAddress }
     const raw = toRaw(amount, asset.decimals)
     if (raw !== null && raw > BigInt(asset.balanceRaw))
@@ -45,101 +64,102 @@ export function SendScreen({ owner, assets }: { owner: string; assets: FundAsset
       input: {
         kind: 'send' as const,
         recipient: recipient as `0x${string}`,
-        source: { chainId: 4663, token: asset.token, amountRaw: raw.toString() },
+        source: { chainId: ROBINHOOD, token: asset.token, amountRaw: raw.toString() },
       },
       invalid: null,
     }
-  }, [asset, to, amount])
+  }, [asset, recipient, amount])
 
-  const held = asset ? formatUnits(BigInt(asset.balanceRaw), asset.decimals) : null
+  if (!asset) {
+    return (
+      <Screen width={1100} gap={8}>
+        <ScreenTitle title={c.title} sub={c.sub} />
+        <Callout tone="wallet">{c.empty}</Callout>
+      </Screen>
+    )
+  }
+
+  const worth = worthOf(asset, amount)
 
   return (
-    <Screen width={560} gap={8}>
+    <Screen width={1100} gap={8}>
       <ScreenTitle title={c.title} sub={c.sub} />
-      {assets.length === 0 ? (
-        <Callout tone="wallet">{c.empty}</Callout>
-      ) : (
-        <MoveFlow
-          title={c.cardTitle}
-          icon={<ArrowUpRight size={16} />}
-          badge={<BoundaryBadge kind="leaves" />}
-          owner={owner}
-          input={input}
-          invalid={invalid}
-          reviewLabel={c.review}
-          doneTitle={c.done}
-          form={
-            <>
-              <Eyebrow>{c.what}</Eyebrow>
-              <div className="kit-asset-list">
-                {assets.map((a) => (
+      <MoveFlow
+        title={c.cardTitle}
+        icon={<ArrowUpRight size={16} />}
+        badge={<BoundaryBadge kind="leaves" />}
+        owner={owner}
+        input={input}
+        invalid={invalid}
+        reviewLabel={c.review}
+        doneTitle={c.done}
+        route={{
+          from: { chainId: ROBINHOOD, label: c.fromYou },
+          to: { chainId: ROBINHOOD, label: validTo ? short(recipient, 6, 4) : c.toThem },
+        }}
+        extraRows={validTo ? [{ label: c.to, value: short(recipient, 6, 4) }] : []}
+        ticket={() => (
+          <>
+            <TicketBox
+              label={t.youSend}
+              side={
+                <>
+                  {t.held(`${readable(asset.balanceRaw, asset.decimals)} ${asset.symbol}`)}
                   <button
-                    key={a.token}
                     type="button"
-                    aria-pressed={a.token === token}
-                    className="kit-asset"
-                    data-on={a.token === token || undefined}
-                    onClick={() => {
-                      setToken(a.token)
-                      setAmount('')
-                    }}
+                    onClick={() => setAmount(formatUnits(BigInt(asset.balanceRaw), asset.decimals))}
                   >
-                    <TokenLogo symbol={a.kind === 'usdg' ? 'CASH' : a.symbol} size={26} />
-                    <span className="kit-asset-name">
-                      <strong>{a.symbol}</strong>
-                      <em>{a.name}</em>
-                    </span>
-                    <span className="kit-asset-held">
-                      <b>
-                        {Number(formatUnits(BigInt(a.balanceRaw), a.decimals)).toLocaleString('en-US', {
-                          maximumFractionDigits: 5,
-                        })}
-                      </b>
-                      <em>{a.valueUsd === null ? '—' : `$${a.valueUsd.toFixed(2)}`}</em>
-                    </span>
+                    {t.max}
                   </button>
-                ))}
-              </div>
-              <Field
-                label={c.to}
-                value={to}
-                onChange={setTo}
-                placeholder="0x…"
-                mono
-                invalid={Boolean(to.trim()) && !isAddress(to.trim())}
-                right={<ScanButton onAddress={setTo} />}
-                hint={c.toHint}
+                </>
+              }
+              foot={worth ? t.worth(worth) : ' '}
+            >
+              <TicketAmount
+                value={amount}
+                onChange={setAmount}
+                label={`${asset.symbol} amount`}
+                invalid={Boolean(invalid && amount)}
               />
-              <div
-                style={{
-                  border: '1px solid var(--bd2)',
-                  borderRadius: 14,
-                  background: 'var(--card)',
-                  padding: '20px 16px',
-                }}
-              >
-                <AmountInput
-                  value={amount}
-                  onChange={setAmount}
-                  unit={asset?.symbol ?? ''}
-                  {...(held && Number(held) > 0 ? { onMax: () => setAmount(held) } : {})}
-                  caption={
-                    held !== null
-                      ? c.available(
-                          Number(held).toLocaleString('en-US', { maximumFractionDigits: 6 }),
-                          asset?.symbol ?? '',
-                        )
-                      : undefined
-                  }
-                />
-              </div>
-              <Callout tone="danger" title={c.publicTitle}>
-                {c.publicBody}
-              </Callout>
-            </>
-          }
-        />
-      )}
+              <AssetPill symbol={asset.symbol} chainId={ROBINHOOD} onClick={() => setPicking(true)} />
+            </TicketBox>
+            <TicketArrow />
+            <TicketBox label={c.to} side={<ScanButton onAddress={setTo} />} foot={c.toHint}>
+              <input
+                className="kit-ticket-address"
+                value={to}
+                onChange={(e) => setTo(e.target.value)}
+                placeholder="0x…"
+                spellCheck={false}
+                autoComplete="off"
+                aria-label={c.to}
+                data-invalid={(recipient !== '' && !validTo) || undefined}
+              />
+            </TicketBox>
+            <Callout tone="danger" title={c.publicTitle}>
+              {c.publicBody}
+            </Callout>
+            <AssetPicker
+              open={picking}
+              onClose={() => setPicking(false)}
+              title={t.pickToken}
+              selected={asset.token}
+              options={assets.map((a) => ({
+                key: a.token,
+                symbol: a.symbol,
+                name: a.name,
+                chainId: ROBINHOOD,
+                held: readable(a.balanceRaw, a.decimals),
+                usd: a.valueUsd === null ? null : dollars(a.valueUsd),
+              }))}
+              onPick={(key) => {
+                setToken(key)
+                setAmount('')
+              }}
+            />
+          </>
+        )}
+      />
     </Screen>
   )
 }

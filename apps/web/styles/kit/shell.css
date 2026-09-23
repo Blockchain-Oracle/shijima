@@ -762,3 +762,22 @@
     padding: 18px 16px 28px;
   }
 }
+
+/* From tablet up the same sheet is a centred dialog, as the reference web app shows its flows. */
+@media (min-width: 768px) {
+  .kit-sheet-layer {
+    align-items: center;
+    padding: 24px;
+  }
+  .kit-sheet {
+    max-width: 480px;
+    border-bottom: 1px solid var(--bd2);
+    border-radius: 22px;
+    padding: 20px 22px 22px;
+    box-shadow: var(--shadow-panel, 0 30px 80px -30px #000);
+    animation-name: kitPop;
+  }
+  .kit-sheet-grabber {
+    display: none;
+  }
+}

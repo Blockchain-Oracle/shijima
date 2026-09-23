@@ -94,7 +94,7 @@ export function WalletChip({ address, collapsed }: { address: string; collapsed?
           {b === null ? c.reading : b.eth === 0n ? c.gasNone : c.gasLeft(b.signatures)}
         </span>
         {low && (
-          <Link href="/bridge#gas" className="wallet-chip-getgas">
+          <Link href="/bridge?dir=gas" className="wallet-chip-getgas">
             {c.getGas}
           </Link>
         )}

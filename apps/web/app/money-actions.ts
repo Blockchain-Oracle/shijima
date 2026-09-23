@@ -5,8 +5,8 @@ import { errorText, moneyCopy } from '@desk/shared'
 import { isAddress } from 'viem'
 import { db } from '@/lib/db'
 import { finishMove, recordStep } from '@/lib/money/finish.server'
-import { planMove } from '@/lib/money/plan.server'
-import type { MoveInput, MoveOutcome, MoveSource, PlanResult } from '@/lib/money/types'
+import { planMove, quoteMove } from '@/lib/money/plan.server'
+import type { MoveInput, MoveOutcome, MoveSource, PlanResult, QuoteResult } from '@/lib/money/types'
 import { signedInAddress } from '@/lib/session'
 
 /**
@@ -52,6 +52,21 @@ function checked(input: MoveInput): MoveInput | null {
       }
     default:
       return null
+  }
+}
+
+/** A live quote while the owner types. Checked like a plan, saved nowhere. */
+export async function quoteMoveAction(input: MoveInput): Promise<QuoteResult> {
+  try {
+    const owner = await signedInAddress()
+    if (!owner) return { ok: false, why: moneyCopy.refusals.signIn }
+    const clean = checked(input)
+    if (!clean) return { ok: false, why: moneyCopy.refusals.amount }
+    if (clean.kind === 'fund' && !(await ownsDesk(db(), clean.deskId, owner)))
+      return { ok: false, why: moneyCopy.refusals.notYourAgent }
+    return await quoteMove(owner, clean)
+  } catch (e) {
+    return { ok: false, why: errorText(e) }
   }
 }
 

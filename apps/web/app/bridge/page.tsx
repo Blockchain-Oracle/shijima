@@ -37,7 +37,7 @@ export default async function BridgePage({ searchParams }: { searchParams: Promi
   return (
     <BridgeScreen
       owner={address}
-      initialDir={dir === 'in' ? 'in' : 'out'}
+      initialDir={dir === 'in' || dir === 'gas' ? dir : 'out'}
       usdgRaw={usdg?.balanceRaw ?? '0'}
       eth={formatUnits(ethRaw, 18)}
       outChains={others

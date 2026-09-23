@@ -36,7 +36,6 @@ const n = appCopy.nav
 /** Pages that exist. The money pages join as they land, so no link ever leads to a 404. */
 const BUILT = new Set<string>([
   '/wallet',
-  '/receive',
   '/send',
   '/bridge',
   '/fund',
@@ -57,7 +56,6 @@ export const MONEY: NavItem[] = only([
   { href: '/wallet', label: n.wallet, icon: WalletMinimal, signedIn: true },
   { href: '/activity', label: n.activity, icon: ListTree, signedIn: true },
   { href: '/send', label: n.send, detail: n.details.send, icon: ArrowUpRight, signedIn: true },
-  { href: '/receive', label: n.receive, detail: n.details.receive, icon: ArrowDown, signedIn: true },
   { href: '/fund', label: n.fund, detail: n.details.fund, icon: ArrowDownToLine, signedIn: true },
   { href: '/withdraw', label: n.withdraw, detail: n.details.withdraw, icon: ArrowUpFromLine, signedIn: true },
   { href: '/bridge', label: n.bridge, detail: n.details.bridge, icon: ArrowLeftRight, signedIn: true },
