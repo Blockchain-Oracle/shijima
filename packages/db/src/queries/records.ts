@@ -51,6 +51,8 @@ export interface RecordDraft {
   amountUsdg?: bigint
   confidencePercent?: number
   failureCode?: string
+  /** Copy trading: the leader's decision this record copies, or missed copying. Unique per desk. */
+  copiedFromDecisionId?: string
   /** Owner-only material that must not be hashed or made public, such as headline text. */
   private?: Record<string, unknown>
   /** On-chain legs this decision intends to send, in order. Inserted as `planned` with the record. */
@@ -179,6 +181,7 @@ export async function appendRecord(
         recordHash,
         prevHash: slot.prevHash,
         private: draft.private ?? null,
+        copiedFromDecisionId: draft.copiedFromDecisionId ?? null,
         decidedAt: draft.decidedAt,
       })
       .returning()

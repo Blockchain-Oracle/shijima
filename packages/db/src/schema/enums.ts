@@ -16,7 +16,16 @@ export const deskLifecycle = pgEnum('desk_lifecycle', ['onboarding', 'running', 
 export const mandateStatus = pgEnum('mandate_status', ['draft', 'applied', 'superseded'])
 
 // The hourly check.
-export const wakeTrigger = pgEnum('wake_trigger', ['cron', 'tick', 'manual', 'approval', 'skeleton', 'watch'])
+// `copy` (23 Sep): a follower copying one move its leader made. Keyed on the leader's decision, never on the hour.
+export const wakeTrigger = pgEnum('wake_trigger', [
+  'cron',
+  'tick',
+  'manual',
+  'approval',
+  'skeleton',
+  'watch',
+  'copy',
+])
 export const wakeStatus = pgEnum('wake_status', ['running', 'completed', 'failed', 'skipped'])
 
 // The record. `decision` is what the desk decided. `execution` is the fresh record written when an approved
@@ -153,4 +162,6 @@ export const askProposalStatus = pgEnum('ask_proposal_status', [
 ])
 export const checkRequestStatus = pgEnum('check_request_status', ['pending', 'done', 'refused'])
 export const priceAlertKind = pgEnum('price_alert_kind', ['above_reference', 'below_reference', 'either_way'])
+// Copy trading (23 Sep, D4). A follower's link to the agent it copies. Stopped is final; paused can resume.
+export const copyLinkStatus = pgEnum('copy_link_status', ['active', 'paused', 'stopped'])
 export const priceAlertStatus = pgEnum('price_alert_status', ['active', 'fired', 'cancelled'])

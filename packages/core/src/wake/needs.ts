@@ -7,14 +7,20 @@
  * so it goes first and the gate holds it to fewer refusals.
  *
  * No candidates means "nothing to do", with no model call at all. That is the common case.
+ *
+ * A desk that copies another (`mandate.follow`) raises no drift of its own: its trades are the leader's moves,
+ * made by the copy step. Only the owner's protective rules still produce a candidate here.
  */
 import type { Mandate, MandateRule } from '@desk/shared'
 import { engineCopy } from '@desk/shared'
 import type { Candidate } from './types'
 import type { HoldingValue, Valuation } from './valuation'
 
-/** Below this an action is not worth its network fee, which the operator pays. About 4 cents a trade. */
-export const MIN_TRADE_USDG = 1_000_000n
+/**
+ * Below this an action is not worth its network fee, which the operator pays: about 5 cents a trade. Lowered from
+ * $1 to 20 cents on 23 Sep (D3), so an agent started with the free $1 can really trade. The fee is Shijima's cost.
+ */
+export const MIN_TRADE_USDG = 200_000n
 /** At most this many trades are considered in one check. */
 export const MAX_CANDIDATES_PER_WAKE = 3
 /**
@@ -57,7 +63,7 @@ const min = (a: bigint, b: bigint) => (a < b ? a : b)
  * contract might use. Without this the desk could propose a sale it can never make, which matters most in a
  * protective one.
  */
-function sellAmountFor(h: HoldingValue, usdg: bigint): bigint {
+export function sellAmountFor(h: HoldingValue, usdg: bigint): bigint {
   const highest = h.feedE8 > h.twapE8 ? h.feedE8 : h.twapE8
   const amount = (usdg * PRICE_SCALE * (BPS - BigInt(SELL_HEADROOM_BPS))) / (highest * BPS)
   return amount > h.balance ? h.balance : amount
@@ -109,6 +115,7 @@ export function findNeeds(
   // The smaller of the owner's mandate and what the chain will actually allow.
   const cap = perActionCapUsdg < mandate.perActionCapUsdg ? perActionCapUsdg : mandate.perActionCapUsdg
   const needs: Need[] = ruleNeeds(v, mandate, cap, references)
+  if (mandate.follow) return needs.map((n, i) => ({ ...n, candidate: { ...n.candidate, id: `c${i + 1}` } }))
   const ruled = new Set(needs.map((n) => n.candidate.token.address.toLowerCase()))
   // A buy never takes cash below the mandate's cash target. Cash in the vault counts as cash: a redeem is a
   // later step. What a buy may spend is the cash above that floor, and no more than the loose cash it has.

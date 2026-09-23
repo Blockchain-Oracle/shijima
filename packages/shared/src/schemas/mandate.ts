@@ -51,6 +51,12 @@ export const Mandate = z.object({
   notes: z.string().max(2000),
   /** Structured rules the desk carries out itself. Absent means none. */
   rules: z.array(MandateRule).max(MAX_RULES).optional(),
+  /**
+   * Copy trading (D4). Set while this desk copies another: it makes the leader's moves as a share of its own value,
+   * and stops rebalancing toward its own targets by itself. The owner's protective rules and the loss limit still
+   * apply. Absent means the desk runs on its own targets.
+   */
+  follow: z.object({ leaderDeskId: z.uuid() }).optional(),
 })
 export type Mandate = z.infer<typeof Mandate>
 
