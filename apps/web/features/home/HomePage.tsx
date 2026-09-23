@@ -1,5 +1,5 @@
-import { APPROVED_TOKENS, EXPLORER } from '@desk/chain'
-import { appCopy, homeCopy as H, lookOf, money, OPENSERV, PRESETS, short } from '@desk/shared'
+import { APPROVED_TOKENS } from '@desk/chain'
+import { appCopy, homeCopy as H, lookOf, money, OPENSERV, onchainCopy, PRESETS } from '@desk/shared'
 import { ArrowRight, ArrowUpRight, Fingerprint } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
@@ -8,6 +8,7 @@ import { ShijimaMark } from '@/components/shell/ShijimaMark'
 import { SectionHeader } from '@/components/ui/section-header'
 import { TokenLogo, TokenStack } from '@/components/ui/token-logo'
 import { doingNow } from '@/features/desk/AgentCard'
+import { OnChainFacts } from '@/features/onchain/OnChainFacts'
 import { StrategyCard } from '@/features/strategies/StrategyCard'
 import type { PublicAgent } from '@/lib/agents.server'
 import type { DeskView } from '@/lib/desk.server'
@@ -127,8 +128,8 @@ function DollarSplit({ vaultRateBps }: { vaultRateBps: number | null }) {
 
 /**
  * `/` for someone who has never been here: what Shijima is, in the order they need it. A live agent at work on
- * the right of the first screen, then the five steps, the $100 story, why nights and weekends, the strategies,
- * the promises, and proof they can open. After Agari's landing (`features/landing`), in Masayume's tokens.
+ * the right of the first screen, then what is live on chain, the five steps, the $100 story, why nights and
+ * weekends, the strategies, the promises, and how to check a decision yourself. After Agari's landing (`features/landing`), in Masayume's tokens.
  */
 export function HomePage({
   showcase,
@@ -173,12 +174,20 @@ export function HomePage({
                   {H.hero.secondary}
                 </Link>
               </div>
-              <p className="lp-note mt-4">{H.hero.practice}</p>
             </div>
             <div className="min-w-0">
               <LiveAgent view={showcase} />
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="lp-section" aria-label={onchainCopy.title}>
+        <div className="container">
+          <OnChainFacts
+            factory={factory}
+            account={showcase ? { address: showcase.desk.address, mine: false } : undefined}
+          />
         </div>
       </section>
 
@@ -330,97 +339,71 @@ export function HomePage({
       <section className="lp-section" aria-label={H.proof.title}>
         <div className="container">
           <SectionHeader index={H.proof.index} title={H.proof.title} desc={H.proof.desc} className="mb-10" />
-          <div className="lp-credit">
-            {/* biome-ignore lint/performance/noImgElement: a small static brand mark, drawn as the theme asks */}
-            <img
-              src="/brand/openserv-logo-white-for-dark-bg.svg"
-              alt="OpenServ"
-              className="osc-logo osc-logo--dark"
-            />
-            {/* biome-ignore lint/performance/noImgElement: as above, for the light theme */}
-            <img
-              src="/brand/openserv-logo-black-for-light-bg.svg"
-              alt=""
-              className="osc-logo osc-logo--light"
-            />
-            <p>{appCopy.credit.line}</p>
-            <Link href={'/compare' as Route} className="lp-link">
-              {appCopy.credit.compare} →
-            </Link>
-            <Link href={'/live' as Route} className="lp-link">
-              {appCopy.credit.live} →
-            </Link>
-          </div>
-          <div className="lp-proof">
-            <dl className="lp-proof-ids">
-              {showcase ? (
-                <div className="lp-proof-cell">
-                  <dt className="lp-proof-label">{H.proof.desk}</dt>
-                  <dd className="lp-proof-value">
-                    <a
-                      href={`${EXPLORER}/address/${showcase.desk.address}`}
-                      className="lp-link"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {short(showcase.desk.address)}
-                    </a>
-                  </dd>
-                </div>
-              ) : null}
-              <div className="lp-proof-cell">
-                <dt className="lp-proof-label">{H.proof.factory}</dt>
-                <dd className="lp-proof-value">
-                  <a
-                    href={`${EXPLORER}/address/${factory}`}
-                    className="lp-link"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {short(factory)}
-                  </a>
-                </dd>
-              </div>
-              <div className="lp-proof-cell">
-                <dt className="lp-proof-label">{H.proof.agent}</dt>
-                <dd className="lp-proof-value">
-                  <a href={OPENSERV.agentUrl} className="lp-link" target="_blank" rel="noreferrer">
-                    #{OPENSERV.agentId}
-                  </a>
-                </dd>
-              </div>
-              <div className="lp-proof-cell">
-                <dt className="lp-proof-label">{H.proof.identity}</dt>
-                <dd className="lp-proof-value">
-                  <a href={OPENSERV.identity.url} className="lp-link" target="_blank" rel="noreferrer">
-                    #{OPENSERV.identity.tokenId}
-                  </a>
-                </dd>
-              </div>
-              <div className="lp-proof-cell">
-                <dt className="lp-proof-label">{H.proof.reasoning}</dt>
-                <dd className="lp-proof-value">{H.proof.reasoningValue}</dd>
-              </div>
-            </dl>
-            <div className="flex flex-col gap-3">
-              <span className="lp-proof-label">{H.proof.recent}</span>
-              <ul className="hm-proof-list">
-                {recent.map((r) => (
-                  <li key={r.seq}>
-                    <Link href={`/agents/${showcase?.slug}/decision/${r.seq}` as Route}>
-                      <small>#{r.seq}</small>
-                      <span className="truncate">
-                        {outcomeLabel(r.outcome)} · {r.summary}
-                      </span>
-                      <ArrowUpRight className="size-4 text-ink-muted" aria-hidden />
-                    </Link>
+          <div className="hm-proof">
+            <div className="hm-proof-main">
+              <ol className="hm-proof-how">
+                {H.proof.how.map((step, i) => (
+                  <li key={step.title}>
+                    <span className="hm-proof-n">{String(i + 1).padStart(2, '0')}</span>
+                    <h3>{step.title}</h3>
+                    <p>{step.body}</p>
                   </li>
                 ))}
-              </ul>
-              <Link href={'/status' as Route} className="lp-link text-sm">
-                {H.proof.status} →
-              </Link>
+              </ol>
+              <div className="hm-proof-recent">
+                <span className="lp-proof-label">{H.proof.recent}</span>
+                {recent.length > 0 ? (
+                  <ul className="hm-proof-list">
+                    {recent.map((r) => (
+                      <li key={r.seq}>
+                        <Link href={`/agents/${showcase?.slug}/decision/${r.seq}` as Route}>
+                          <small>#{r.seq}</small>
+                          <span className="truncate">
+                            {outcomeLabel(r.outcome)} · {r.summary}
+                          </span>
+                          <Fingerprint className="size-4 text-ink-muted" aria-hidden />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="lp-note">{H.proof.none}</p>
+                )}
+              </div>
             </div>
+            <aside className="hm-proof-os" aria-label={H.proof.runs}>
+              <span className="lp-proof-label">{H.proof.runs}</span>
+              {/* biome-ignore lint/performance/noImgElement: a small static brand mark, drawn as the theme asks */}
+              <img
+                src="/brand/openserv-logo-white-for-dark-bg.svg"
+                alt="OpenServ"
+                className="osc-logo osc-logo--dark"
+              />
+              {/* biome-ignore lint/performance/noImgElement: as above, for the light theme */}
+              <img
+                src="/brand/openserv-logo-black-for-light-bg.svg"
+                alt=""
+                className="osc-logo osc-logo--light"
+              />
+              <p>{appCopy.credit.line}</p>
+              <a href={OPENSERV.agentUrl} className="hm-proof-agent" target="_blank" rel="noreferrer">
+                <span>
+                  {onchainCopy.agent.label} <b>#{OPENSERV.agentId}</b>
+                </span>
+                <ArrowUpRight className="size-4" aria-hidden />
+              </a>
+              <nav className="hm-proof-links">
+                <Link href={'/compare' as Route} className="lp-link">
+                  {appCopy.credit.compare} →
+                </Link>
+                <Link href={'/live' as Route} className="lp-link">
+                  {appCopy.credit.live} →
+                </Link>
+                <Link href={'/status' as Route} className="lp-link">
+                  {H.proof.status} →
+                </Link>
+              </nav>
+            </aside>
           </div>
         </div>
       </section>

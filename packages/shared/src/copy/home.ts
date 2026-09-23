@@ -5,18 +5,17 @@
  */
 export const homeCopy = {
   meta: {
-    title: 'Shijima · an AI agent for your Stock Tokens',
+    title: 'Shijima · an AI agent that keeps your stocks on plan while New York is closed',
     description:
-      'Put in USDG, pick a basket of US stocks, and your own AI agent keeps it on plan around the clock, inside limits your account enforces.',
+      'Pick a basket of US Stock Tokens on Robinhood Chain. Your own AI agent keeps it on plan through nights and weekends. It trades inside your limits and can never take your money out.',
   },
   hero: {
-    eyebrow: 'しじま · An AI agent for your Stock Tokens · Robinhood Chain',
-    titleLead: 'Your money keeps its plan.',
-    titleEm: 'Even while Wall Street sleeps.',
-    line: 'Put in USDG, pick a basket of US stocks, and your own AI agent keeps it on plan around the clock, inside limits your account enforces on the chain. It writes down every decision and tells you on Telegram.',
+    eyebrow: 'しじま · Live on Robinhood Chain',
+    titleLead: 'Your stocks stay on plan.',
+    titleEm: 'Even while New York sleeps.',
+    line: 'Pick a basket of US stocks and put in USDG. Your own AI agent keeps it on plan through nights and weekends, when New York is shut and Stock Tokens still trade. It can trade inside your limits. It can never take your money out: only you can.',
     primary: 'Start with $20 of USDG',
     secondary: 'Watch a live agent',
-    practice: 'Try it in practice first: it decides for real and spends nothing.',
   },
   live: {
     eyebrow: 'A live agent, right now',
@@ -114,15 +113,25 @@ export const homeCopy = {
   },
   proof: {
     index: '06',
-    title: 'Proof you can open',
-    desc: 'The contracts, the agent on OpenServ, and the live record.',
-    desk: 'The live agent contract',
-    factory: 'The agent factory',
-    agent: 'The agent on OpenServ',
-    identity: 'Its on-chain identity (ERC-8004, Base)',
-    reasoning: 'Its reasoning',
-    reasoningValue: 'SERV Reasoning, on every timing decision',
-    recent: 'Latest decisions on the live agent',
+    title: 'Check it yourself',
+    desc: 'Every decision leaves a fingerprint on chain. You do not have to trust this page.',
+    how: [
+      {
+        title: 'Open a decision',
+        body: 'Each one says what the agent chose, the options it turned down and how sure it was.',
+      },
+      {
+        title: 'Find its fingerprint',
+        body: 'The same transaction as the trade carries the decision’s hash, on the agent’s own account.',
+      },
+      {
+        title: 'Check it',
+        body: 'Your browser reads the transaction from the network and recomputes the hash. They match, or they do not.',
+      },
+    ],
+    recent: 'The live agent’s latest decisions',
+    none: 'The live agent has no decisions to show yet.',
+    runs: 'Runs on OpenServ',
     status: 'Is it awake right now?',
   },
   install: {

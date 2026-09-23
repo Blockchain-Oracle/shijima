@@ -22,13 +22,12 @@ const POLL_MS = 2000
  * button is a plain link into @ShijimaBot: nothing to copy, and no pop-up for a browser to block. The page
  * watches for the bot to claim the code and turns to "Connected as @name" within a couple of seconds. A code
  * lasts ten minutes; a page left open gets a fresh one. A QR code is there for a phone beside the computer.
+ * The link is the wallet's (DECISIONS F6): every agent, now and later, reports to the one chat.
  */
 export function TelegramConnect({
-  deskId,
   initial,
   compact = false,
 }: {
-  deskId: string
   /** From the server when the page has it; fetched here otherwise. */
   initial?: TelegramState
   /** One line with the button, for the desk's "Needs you" strip. */
@@ -49,31 +48,31 @@ export function TelegramConnect({
     if (state?.linked) return
     if (code && expiresAt - Date.now() > 30_000) return
     let gone = false
-    telegramCodeAction(deskId)
+    telegramCodeAction()
       .then(async (made) => {
         if (gone) return
         if (!made.ok) return setProblem(made.why)
-        const next = await telegramStateAction(deskId).catch(() => null)
+        const next = await telegramStateAction().catch(() => null)
         if (!gone && next) setState(next)
       })
       .catch(() => undefined)
     return () => {
       gone = true
     }
-  }, [deskId, state?.linked, code, expiresAt])
+  }, [state?.linked, code, expiresAt])
 
   // Watch for the bot to claim the code. Faster once the owner has pressed the button.
   useEffect(() => {
     if (!code || state?.linked) return
     const timer = setInterval(
       async () => {
-        const next = await telegramStateAction(deskId).catch(() => null)
+        const next = await telegramStateAction().catch(() => null)
         if (next) setState(next)
       },
       clicked ? POLL_MS : POLL_MS * 3,
     )
     return () => clearInterval(timer)
-  }, [code, state?.linked, deskId, clicked])
+  }, [code, state?.linked, clicked])
 
   if (state?.linked) {
     return (
@@ -95,7 +94,7 @@ export function TelegramConnect({
             disabled={pending}
             onClick={() =>
               start(async () => {
-                const done = await telegramUnlinkAction(deskId)
+                const done = await telegramUnlinkAction()
                 if (done.ok) {
                   setState({ linked: null, pending: null })
                   setClicked(false)
@@ -169,7 +168,6 @@ export function TelegramConnect({
         </p>
       )}
       {problem && <p className="type-caption text-loss">{problem}</p>}
-      {!compact && <p className="type-caption text-ink-muted">{t.without}</p>}
     </div>
   )
 }

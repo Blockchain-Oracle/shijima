@@ -333,3 +333,36 @@
 .hm .lp-hero-grid { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); }
 .hm-strategies { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
 @media (max-width: 1024px) { .hm .lp-hero-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* ── Check it yourself (DECISIONS F9): three steps and the latest decisions, beside the OpenServ agent ── */
+.hm-proof { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: 24px; align-items: stretch; }
+.hm-proof-main { display: flex; flex-direction: column; gap: 28px; }
+.hm-proof-how { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--gray-800); }
+.hm-proof-how li { display: flex; flex-direction: column; gap: 8px; padding: 22px 20px 4px 0; }
+.hm-proof-how li + li { padding-left: 20px; border-left: 1px solid var(--gray-800); }
+.hm-proof-n { font-family: var(--font-mono); font-size: 11px; color: var(--vermilion); }
+.hm-proof-how h3 { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; letter-spacing: -0.02em; color: var(--white); }
+.hm-proof-how p { margin: 0; font-size: 14px; line-height: 1.55; color: var(--gray-400); }
+.hm-proof-recent { display: flex; flex-direction: column; gap: 12px; }
+.hm-proof-os {
+  display: flex; flex-direction: column; gap: 16px;
+  padding: 24px; border: 1px solid var(--gray-800); border-radius: 18px;
+  background: radial-gradient(120% 80% at 0% 0%, color-mix(in srgb, var(--vermilion) 12%, transparent), transparent 60%), var(--bg);
+}
+.hm-proof-os .osc-logo { height: 26px; width: auto; align-self: flex-start; }
+.hm-proof-os p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--gray-300); }
+.hm-proof-agent {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 14px; border: 1px solid var(--gray-800); border-radius: 12px;
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-400);
+  transition: border-color 200ms var(--ease);
+}
+.hm-proof-agent b { color: var(--white); font-weight: 600; }
+.hm-proof-agent:hover { border-color: var(--vermilion); color: var(--white); }
+.hm-proof-links { display: flex; flex-direction: column; gap: 10px; margin-top: auto; font-size: 14px; }
+@media (max-width: 1024px) { .hm-proof { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 768px) {
+  .hm-proof-how { grid-template-columns: minmax(0, 1fr); }
+  .hm-proof-how li, .hm-proof-how li + li { padding: 18px 0; border-left: 0; }
+  .hm-proof-how li + li { border-top: 1px solid var(--gray-800); }
+}

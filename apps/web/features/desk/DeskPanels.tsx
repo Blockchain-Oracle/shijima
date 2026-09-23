@@ -68,7 +68,7 @@ export function NeedsYou({ view }: { view: DeskView }) {
       {view.desk.telegramLinked === false && (
         <div className="flex flex-col gap-2 rounded-[var(--radius-md)] border border-border bg-[var(--color-surface-2)] p-3">
           <p className="type-caption text-ink-secondary">{deskCopy.telegramOff}</p>
-          <TelegramConnect deskId={view.desk.id} compact />
+          <TelegramConnect compact />
         </div>
       )}
     </Panel>

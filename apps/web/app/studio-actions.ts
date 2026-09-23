@@ -4,6 +4,7 @@ import { randomBytes } from 'node:crypto'
 import { APPROVED_TOKENS, deskFactoryAbi, isCloneOf, readDeskState } from '@desk/chain'
 import {
   applyMandate,
+  attachOwnerTelegram,
   deskById,
   disclosureAccepted,
   draftDeskOf,
@@ -216,6 +217,11 @@ export async function finishDeskAction(input: {
     await markDeskDeployed(db(), desk.id, deployTx)
     await applyMandate(db(), desk.id, draft.mandate, { actor: 'owner', via: 'web' }, readBack)
     await startDesk(db(), desk.id)
+    // The owner's Telegram hears about the new agent from its first minute (DECISIONS F6). Never fails a publish:
+    // Telegram is not money, and the owner can reconnect from Settings.
+    await attachOwnerTelegram(db(), desk.id, desk.ownerId).catch((e) =>
+      console.error(`[studio] telegram attach: ${errorText(e)}`),
+    )
     revalidatePath('/agents/new')
     revalidatePath('/agents')
     return { ok: true, slug }

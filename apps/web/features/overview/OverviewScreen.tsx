@@ -8,6 +8,7 @@ import { TokenLogo, TokenStack } from '@/components/ui/token-logo'
 import { When } from '@/components/when'
 import { PortfolioChart } from '@/features/desk/PortfolioChart'
 import { GiftCard } from '@/features/gift/GiftCard'
+import { OnChainCard } from '@/features/onchain/OnChainFacts'
 import type { Overview, OverviewAgent } from '@/lib/overview.server'
 import { cn } from '@/lib/utils'
 
@@ -31,7 +32,14 @@ function tone(a: OverviewAgent) {
  * The Overview, on 21st's Stocks Dashboard (29424): three stat cards, then what the agents hold together, then
  * each agent with its latest real decision beside what waits on the owner and how they are connected.
  */
-export function OverviewScreen({ overview: o }: { overview: Overview }) {
+export function OverviewScreen({
+  overview: o,
+  onchain,
+}: {
+  overview: Overview
+  /** The factory and the owner's newest agent account, for the "On chain" card (DECISIONS F1). */
+  onchain: { factory: string; account?: { address: string } | undefined }
+}) {
   const c = appCopy.overview
 
   if (o.agents.length === 0) {
@@ -57,6 +65,9 @@ export function OverviewScreen({ overview: o }: { overview: Overview }) {
           </div>
         </section>
         <GiftCard className="ov-gift" />
+        <div className="ov-gift">
+          <OnChainCard factory={onchain.factory} />
+        </div>
       </div>
     )
   }
@@ -205,6 +216,8 @@ export function OverviewScreen({ overview: o }: { overview: Overview }) {
               </span>
             </Link>
           </section>
+
+          <OnChainCard factory={onchain.factory} account={onchain.account} />
         </aside>
       </div>
     </div>

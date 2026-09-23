@@ -42,7 +42,7 @@ export const appCopy = {
     gas: 'Gas',
     /** Signatures, not trades: the agent's trades are paid by Shijima. */
     gasLeft: (n: number) => (n >= 100 ? '100+ signatures' : `~${n} signature${n === 1 ? '' : 's'}`),
-    gasNone: 'no gas: you cannot sign yet',
+    gasNone: 'No gas yet',
     gasTitle:
       'The ETH in your wallet pays for what you sign yourself: creating an agent, adding money, withdrawing. ' +
       "Your agent's trades are paid by Shijima, about 5¢ each.",
@@ -135,21 +135,27 @@ export const appCopy = {
     nav: {
       connections: 'Connections',
       wallet: 'Wallet & gas',
-      agents: 'Agents',
+      agents: 'Agents & access',
       disclosure: 'What you agreed to',
-      appearance: 'Appearance',
     },
-    connectionsBody:
-      'Telegram brings approvals, trades and alerts to your phone. OpenServ lets your own workspace, and the agents in it, talk to your agent. Each agent is connected on its own.',
-    noAgents: 'Connections belong to an agent. Start one, and connect it here.',
-    wallet: {
-      body: 'Your wallet signs what only you can do: create an agent, add money, change its limits, withdraw. Each signature costs a few cents of ETH. Your agent’s trades are paid by Shijima, about 5¢ each, never from your wallet.',
-      getGas:
-        'No ETH on Robinhood Chain? When you add money from Base, Arbitrum, Ethereum or BNB Chain, tick “also send me gas” and about $1 of it arrives as ETH.',
+    openserv: {
+      title: 'OpenServ',
+      none: 'Workspaces link to an agent. Create one first.',
     },
-    agentsBody: 'Limits, mode, sharing, copying and closing live on each agent.',
+    access: {
+      mode: 'Mode',
+      trades: 'Can trade',
+      trader: (addr: string) => `Shijima · ${addr}`,
+      removed: 'Nobody. You removed Shijima',
+      session: 'Session key',
+      sessionUntil: (addr: string, until: string) => `${addr} · until ${until}`,
+      noSession: 'None',
+      withdraw: 'Can withdraw',
+      onlyYou: 'Only your wallet',
+      closed: 'Closed',
+    },
+    none: 'No agents yet.',
     agentSettings: 'Agent settings',
-    appearanceBody: 'Dark or light. It is remembered in this browser.',
   },
 
   agentPage: {
@@ -197,16 +203,16 @@ export const appCopy = {
       all: 'Every decision',
     },
     money: {
-      title: 'Your agent’s account',
+      title: 'Agent account',
       address: 'Its address on Robinhood Chain',
       addressNote:
-        'Send USDG on Robinhood Chain to this address from any wallet or exchange, and it arrives in this agent. Only the owner can take it out.',
+        'Send USDG on Robinhood Chain to this address from any wallet or exchange. Only the owner can take it out.',
       copy: 'Copy',
       copied: 'Copied',
-      gas: 'Who pays for what',
-      gasBody:
-        'Trades: Shijima pays the network fee, about 5¢ each. You pay only for what you sign: creating, adding money, withdrawing, a few cents each.',
-      explorer: 'See it on Blockscout',
+      qr: 'QR code',
+      hideQr: 'Hide QR',
+      gasBody: 'Shijima pays each trade’s network fee, about 5¢. You pay only for what you sign.',
+      explorer: 'Blockscout',
     },
   },
 
@@ -439,7 +445,7 @@ export const appCopy = {
     create: {
       label: 'Your agent',
       title: 'Start your own, from $1',
-      body: 'Pick one of twenty strategies, put in USDG, and your agent keeps it on plan around the clock. The first 20 people get their first $1 free.',
+      body: 'Pick one of twenty strategies, put in USDG, and your agent keeps it on plan around the clock. A few people get their first $1 free.',
       cta: 'Create an agent',
     },
     how: {

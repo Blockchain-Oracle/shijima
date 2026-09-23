@@ -5,8 +5,10 @@
  * or receive a button press, and all three are the point. An approval that cannot be answered where the owner
  * already is would not be answered at all.
  *
- * Two rules run through everything here. A chat only ever hears about the ONE desk it was linked to, checked
- * on the Telegram user id at every turn, so a forwarded message or a guessed id gets nothing. And answering
+ * Two rules run through everything here. A chat speaks for ONE wallet (DECISIONS F6: Telegram is linked to the
+ * owner, before or after any desk exists) and only hears about that wallet's desks, checked on the Telegram
+ * user id at every turn, so a forwarded message or a guessed id gets nothing. With several desks, the commands
+ * act on the one the chat picked with /agents. And answering
  * a request never moves money: it flips a row, and the worker re-reads the price on its next check.
  *
  * Nothing here waits on the model. A message to the desk is acknowledged at once and answered by the chat's
@@ -20,14 +22,19 @@ import {
   approvalById,
   askAllowed,
   askRequestForOwner,
+  chatLinkedToOwner,
   claimTelegramLink,
+  claimTelegramOwnerLink,
   createAskRequest,
   type Db,
   deskById,
   deskForTelegramUser,
   deskRecord,
+  desksForTelegramUser,
   pauseDesk,
   resumeDesk,
+  setTelegramCurrentDesk,
+  telegramOwnerForUser,
 } from '@desk/db'
 import { ago, errorText, marketsCopy, telegramCopy } from '@desk/shared'
 import { Bot, InlineKeyboard, InputFile } from 'grammy'
@@ -45,12 +52,13 @@ const KNOWN_COMMANDS = new Set([
   '/portfolio',
   '/record',
   '/ask',
+  '/agents',
 ])
 
 /** Telegram refuses link buttons to anything but a public https address, so before deploy links go in the text. */
 export const canLinkButton = (url: string) => url.startsWith('https://')
 
-const MENU = /^menu:(home|portfolio|record|pause|resume|ask|refresh)$/
+const MENU = /^menu:(home|portfolio|record|pause|resume|ask|refresh|agents)$/
 type MenuView = 'home' | 'portfolio' | 'record' | 'ask'
 
 export interface TelegramDeps {
@@ -82,12 +90,59 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
   const deskOf = async (userId: number | undefined) =>
     userId === undefined ? undefined : await deskForTelegramUser(db, userId)
 
+  /** Linked to a wallet that has no agent yet: say so, rather than the stranger's welcome. */
+  const walletOnly = async (userId: number | undefined) =>
+    userId === undefined ? false : Boolean(await telegramOwnerForUser(db, userId))
+
+  const noAgentYet = (ctx: { reply: (text: string, other?: object) => Promise<unknown> }) =>
+    ctx.reply(
+      telegramCopy.noAgentYet,
+      canLinkButton(deps.siteUrl)
+        ? { reply_markup: new InlineKeyboard().url(telegramCopy.createButton, `${deps.siteUrl}/agents/new`) }
+        : {},
+    )
+
+  /** The reply for a chat with no desk to act on: a linked wallet with no agent yet, or a stranger. */
+  const unlinked = async (ctx: Parameters<typeof welcome>[0] & { from?: { id: number } | undefined }) =>
+    (await walletOnly(ctx.from?.id)) ? noAgentYet(ctx) : welcome(ctx)
+
   bot.command('start', async (ctx) => {
     const payload = ctx.match?.trim()
     const linked = await deskOf(ctx.from?.id)
-    if (linked) return ctx.reply(...(await menuMessage(linked.desk.id, 'home')))
+    if (linked) return ctx.reply(...(await menuMessage(linked.desk.id, 'home', ctx.from?.id)))
     if (payload && CODE.test(payload)) return void (await link(ctx, payload))
-    return welcome(ctx)
+    return unlinked(ctx)
+  })
+
+  bot.command('agents', async (ctx) => {
+    const linked = await deskOf(ctx.from?.id)
+    if (!linked) return unlinked(ctx)
+    // A chat linked the old way, per agent, has one agent and no switch: show it.
+    if (!(await telegramOwnerForUser(db, ctx.from?.id ?? 0))) {
+      return ctx.reply(...(await menuMessage(linked.desk.id, 'home', ctx.from?.id)))
+    }
+    return ctx.reply(...(await agentsMessage(ctx.from?.id, linked.desk.id)))
+  })
+
+  /** The owner's agents as buttons; the one the commands act on is marked. */
+  async function agentsMessage(userId: number | undefined, currentId: string): Promise<[string, object]> {
+    const all = userId === undefined ? [] : await desksForTelegramUser(db, userId)
+    const kb = new InlineKeyboard()
+    for (const d of all)
+      kb.text(`${d.id === currentId ? '● ' : ''}${d.name ?? 'Agent'}`, `agent:${d.id}`).row()
+    kb.text(telegramCopy.menu.back, 'menu:home')
+    const current = all.find((d) => d.id === currentId)?.name ?? 'your agent'
+    return [telegramCopy.pickAgent(current), { parse_mode: 'HTML', reply_markup: kb }]
+  }
+
+  bot.callbackQuery(/^agent:([0-9a-f-]{36})$/, async (ctx) => {
+    const [, deskId] = ctx.match as unknown as [string, string]
+    const set = await setTelegramCurrentDesk(db, ctx.from.id, deskId)
+    if (!set) return ctx.answerCallbackQuery({ text: telegramCopy.notYourDesk, show_alert: true })
+    const desk = await deskById(db, deskId)
+    await ctx.answerCallbackQuery({ text: telegramCopy.switchedTo(desk?.name ?? 'Agent') })
+    const [text, other] = await menuMessage(deskId, 'home', ctx.from.id)
+    await ctx.editMessageText(text, other).catch(() => undefined)
   })
 
   // The brand first, as a photo, then the words and the buttons as their own message. A photo cannot be edited
@@ -114,7 +169,7 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
    * One message, many views. The main menu and everything it opens are the same text message, edited in place,
    * so the chat never fills up with menus. Returns the arguments for `reply` or `editMessageText`.
    */
-  async function menuMessage(deskId: string, view: MenuView): Promise<[string, object]> {
+  async function menuMessage(deskId: string, view: MenuView, userId?: number): Promise<[string, object]> {
     const kb = new InlineKeyboard()
     const html = { parse_mode: 'HTML' as const }
     const desk = await deskById(db, deskId)
@@ -155,6 +210,14 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
         paused ? 'menu:resume' : 'menu:pause',
       )
       .text(telegramCopy.menu.ask, 'menu:ask')
+    // Switching needs a chat linked to the wallet; a chat linked the old way, per agent, has nothing to switch.
+    if (
+      userId !== undefined &&
+      (await telegramOwnerForUser(db, userId)) &&
+      (await desksForTelegramUser(db, userId)).length > 1
+    ) {
+      kb.row().text(telegramCopy.menu.agents, 'menu:agents')
+    }
     if (canLinkButton(deps.siteUrl)) kb.row().url(telegramCopy.menu.open, siteDesk)
     return [
       telegramCopy.menu.title(
@@ -168,18 +231,18 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
 
   bot.command('portfolio', async (ctx) => {
     const linked = await deskOf(ctx.from?.id)
-    if (!linked) return welcome(ctx)
-    return ctx.reply(...(await menuMessage(linked.desk.id, 'portfolio')))
+    if (!linked) return unlinked(ctx)
+    return ctx.reply(...(await menuMessage(linked.desk.id, 'portfolio', ctx.from?.id)))
   })
   bot.command('record', async (ctx) => {
     const linked = await deskOf(ctx.from?.id)
-    if (!linked) return welcome(ctx)
-    return ctx.reply(...(await menuMessage(linked.desk.id, 'record')))
+    if (!linked) return unlinked(ctx)
+    return ctx.reply(...(await menuMessage(linked.desk.id, 'record', ctx.from?.id)))
   })
   bot.command('ask', async (ctx) => {
     const linked = await deskOf(ctx.from?.id)
-    if (!linked) return welcome(ctx)
-    return ctx.reply(...(await menuMessage(linked.desk.id, 'ask')))
+    if (!linked) return unlinked(ctx)
+    return ctx.reply(...(await menuMessage(linked.desk.id, 'ask', ctx.from?.id)))
   })
 
   // Menu presses edit the message they came from. Pause and resume act, then show the menu with the other button.
@@ -195,6 +258,10 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
       log('telegram_command', { command: action, desk: linked.desk.address, done, via: 'menu' })
       toast = done ? (action === 'pause' ? 'Paused' : 'Active again') : 'It was already like that'
       if (done) await deps.refreshStatus(linked.desk.id).catch(() => false)
+    } else if (action === 'agents') {
+      await ctx.answerCallbackQuery()
+      const [text, other] = await agentsMessage(ctx.from.id, linked.desk.id)
+      return void (await ctx.editMessageText(text, other).catch(() => undefined))
     } else if (action === 'refresh') {
       // The ↻ under the pinned message: bring it up to date where it is.
       await deps.refreshStatus(linked.desk.id).catch(() => false)
@@ -203,7 +270,7 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
       view = action as MenuView
     }
     await ctx.answerCallbackQuery(toast ? { text: toast } : {})
-    const [text, other] = await menuMessage(linked.desk.id, view)
+    const [text, other] = await menuMessage(linked.desk.id, view, ctx.from.id)
     await ctx.editMessageText(text, other).catch((e) => {
       // "message is not modified" means a second press on the same view: nothing to do.
       if (!errorText(e).includes('not modified')) throw e
@@ -214,7 +281,7 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
 
   bot.command('status', async (ctx) => {
     const linked = await deskOf(ctx.from?.id)
-    if (!linked) return ctx.reply(telegramCopy.notLinked)
+    if (!linked) return (await walletOnly(ctx.from?.id)) ? noAgentYet(ctx) : ctx.reply(telegramCopy.notLinked)
     // Bring the pinned message up to date and point at it, rather than send a second copy that then goes stale.
     const shown = await deps.refreshStatus(linked.desk.id)
     return ctx.reply(
@@ -228,7 +295,8 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
   ] as const) {
     bot.command(command, async (ctx) => {
       const linked = await deskOf(ctx.from?.id)
-      if (!linked) return ctx.reply(telegramCopy.notLinked)
+      if (!linked)
+        return (await walletOnly(ctx.from?.id)) ? noAgentYet(ctx) : ctx.reply(telegramCopy.notLinked)
       const done = await run(db, linked.desk.id, { actor: 'owner', via: 'telegram' })
       log('telegram_command', { command, desk: linked.desk.address, done })
       await ctx.reply(
@@ -249,19 +317,28 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
     const linked = await deskOf(ctx.from?.id)
     if (!linked) return ctx.answerCallbackQuery({ text: telegramCopy.notLinked, show_alert: true })
     const found = await approvalById(db, approvalId)
-    // The request must belong to THIS user's desk. A button press proves nothing on its own.
-    if (!found || found.approval.deskId !== linked.desk.id) {
+    // The request must belong to one of THIS user's desks (not only the one the commands act on: a request
+    // from any of the owner's agents arrives here). A button press proves nothing on its own.
+    const mine = await desksForTelegramUser(db, ctx.from.id)
+    const approvalDesk = found ? mine.find((d) => d.id === found.approval.deskId) : undefined
+    if (!found || !approvalDesk) {
       return ctx.answerCallbackQuery({ text: telegramCopy.notYourDesk, show_alert: true })
     }
+    const approvalOwner = await deskById(db, approvalDesk.id)
 
     const answer = choice === 'approve' ? 'approved' : 'rejected'
     const row = await answerApproval(db, {
       approvalId,
       answer,
-      ownerId: linked.desk.ownerId,
+      ownerId: approvalOwner?.ownerId ?? linked.desk.ownerId,
       via: 'telegram',
     })
-    log('telegram_answer', { desk: linked.desk.address, approvalId, answer, accepted: Boolean(row) })
+    log('telegram_answer', {
+      desk: approvalOwner?.address ?? linked.desk.address,
+      approvalId,
+      answer,
+      accepted: Boolean(row),
+    })
     if (!row) {
       // Answered on the website or in the chat first, or lapsed. The message shows what really happened,
       // never "expired" for a request the owner approved elsewhere.
@@ -320,7 +397,7 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
     const linked = await deskOf(ctx.from.id)
     if (!linked) {
       if (CODE.test(text)) return void (await link(ctx, text))
-      return welcome(ctx)
+      return unlinked(ctx)
     }
     // A slash command the bot does not know is not a question for the model.
     if (text.startsWith('/')) {
@@ -360,11 +437,15 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
     const from = ctx.from
     const chatId = ctx.chat?.id
     if (!from || chatId === undefined) return
-    const claim = await claimTelegramLink(db, code, {
-      userId: from.id,
-      chatId,
-      username: from.username ?? undefined,
-    })
+    const chat = { userId: from.id, chatId, username: from.username ?? undefined }
+    // Codes from Settings link the wallet; older codes from an agent's page link that one agent.
+    const owned = await claimTelegramOwnerLink(db, code, chat)
+    if (owned.ok && owned.desks === 0) {
+      log('telegram_linked', { owner: owned.row.ownerId, user: from.id, desks: 0 })
+      return void (await ctx.reply(telegramCopy.linkedNoAgent, { parse_mode: 'HTML' }))
+    }
+    const claim =
+      owned.ok || owned.reason === 'another_desk' ? owned : await claimTelegramLink(db, code, chat)
     if (!claim.ok) {
       return void (await ctx.reply(
         claim.reason === 'another_desk' ? telegramCopy.linkedElsewhere : telegramCopy.linkUsed,
@@ -377,7 +458,7 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
     // "it has not checked yet" and then say nothing until the next hour turns.
     if (linked) {
       await deps.refreshStatus(linked.desk.id)
-      await ctx.reply(...(await menuMessage(linked.desk.id, 'home')))
+      await ctx.reply(...(await menuMessage(linked.desk.id, 'home', from.id)))
     }
   }
 
@@ -395,6 +476,8 @@ export async function deliverAskReply(
 ): Promise<void> {
   const chatId = request.payload.telegramChatId
   if (typeof chatId !== 'number') return
+  // Disconnected while the answer was being written: the chat no longer hears about this wallet.
+  if (!(await chatLinkedToOwner(deps.db, chatId, request.ownerAddress))) return
   const row = await askRequestForOwner(deps.db, request.id, request.ownerAddress)
   if (!row) return
   if (row.status === 'failed' || !row.reply) {

@@ -1,0 +1,142 @@
+/* "On chain now" (DECISIONS F1): the landing strip in Masayume's tokens, so both themes follow; the Overview card
+   reuses the app's own `ov-card` and `ov-connect-row`. */
+.oc {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.oc-head {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 8px 48px;
+  align-items: end;
+}
+.oc-eyebrow {
+  grid-column: 1 / -1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--vermilion);
+}
+.oc-eyebrow i,
+.oc-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: var(--vermilion);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--vermilion) 18%, transparent);
+}
+.oc-dot {
+  display: inline-block;
+  background: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-dim, transparent);
+}
+.oc-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.8rem, 3.4vw, 2.8rem);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  color: var(--white);
+}
+.oc-desc {
+  margin: 0;
+  max-width: 52ch;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--gray-400);
+}
+
+.oc-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.oc-grid li {
+  display: flex;
+  min-width: 0;
+}
+.oc-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--gray-800);
+  border-radius: 16px;
+  background: var(--bg);
+  color: var(--gray-300);
+  transition:
+    border-color 200ms var(--ease),
+    transform 200ms var(--ease);
+}
+.oc-cell:hover {
+  border-color: color-mix(in srgb, var(--vermilion) 55%, var(--gray-800));
+  transform: translateY(-1px);
+}
+.oc-cell:focus-visible {
+  outline: 2px solid var(--vermilion);
+  outline-offset: 3px;
+}
+.oc-cell-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--vermilion);
+}
+.oc-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--white);
+}
+.oc-go {
+  margin-left: auto;
+  color: var(--gray-500);
+  transition: color 200ms var(--ease);
+}
+.oc-cell:hover .oc-go {
+  color: var(--vermilion);
+}
+.oc-what {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--gray-400);
+}
+.oc-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--gray-800);
+  font-size: 12px;
+  color: var(--gray-500);
+}
+.oc-foot code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--white);
+}
+.oc-row-value {
+  font-family: var(--font-mono);
+}
+
+@media (max-width: 768px) {
+  .oc-head {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

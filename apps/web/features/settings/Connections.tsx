@@ -1,6 +1,7 @@
 import { EXPLORER } from '@desk/chain'
-import { OPENSERV, settingsCopy, short } from '@desk/shared'
+import { appCopy, OPENSERV, settingsCopy, short } from '@desk/shared'
 import { ArrowUpRight, Bot, Send, Wallet } from 'lucide-react'
+import Link from 'next/link'
 import type { ReactNode } from 'react'
 import type { TelegramState } from '@/app/owner-actions'
 import { OpenservConnect } from './OpenservConnect'
@@ -44,7 +45,54 @@ function Out({ href, children }: { href: string; children: ReactNode }) {
 }
 
 /**
- * Settings' Connections group (UX-PLAN §6): Telegram, which the owner connects and disconnects here, and the two
+ * The account's Connections (DECISIONS F4, F6): Telegram once, for the wallet and every agent in it, then OpenServ,
+ * whose workspaces link to one agent each, so it is listed per agent.
+ */
+export function AccountConnections({
+  telegram,
+  agents,
+}: {
+  telegram: TelegramState
+  agents: { id: string; name: string }[]
+}) {
+  return (
+    <div className="connections-grid">
+      <Card
+        wide
+        icon={<Send className="size-5" />}
+        title={settingsCopy.telegram.title}
+        body={settingsCopy.telegram.body}
+      >
+        <TelegramConnect initial={telegram} />
+      </Card>
+      <Card
+        wide
+        icon={<Bot className="size-5" />}
+        title={appCopy.settings.openserv.title}
+        body={appCopy.openserv.tagline}
+      >
+        {agents.length === 0 ? (
+          <p className="type-caption text-ink-muted">
+            {appCopy.settings.openserv.none}{' '}
+            <Link href="/agents/new" className="text-accent">
+              {appCopy.sidebar.newAgent} →
+            </Link>
+          </p>
+        ) : (
+          agents.map((a) => (
+            <div key={a.id} className="flex flex-col gap-2">
+              {agents.length > 1 && <h4 className="type-body-strong text-ink">{a.name}</h4>}
+              <OpenservConnect deskId={a.id} />
+            </div>
+          ))
+        )}
+      </Card>
+    </div>
+  )
+}
+
+/**
+ * One agent's Connections (UX-PLAN §6): Telegram (the wallet's, shown here too), and the two
  * fixed links, the wallet that owns the desk and the OpenServ agent that checks it. Each fixed card points at the
  * public page where anyone can confirm it.
  */
@@ -70,7 +118,7 @@ export function Connections({
         title={settingsCopy.telegram.title}
         body={settingsCopy.telegram.body}
       >
-        <TelegramConnect deskId={deskId} initial={telegram} />
+        <TelegramConnect initial={telegram} />
       </Card>
       <Card icon={<Wallet className="size-5" />} title={c.wallet} body={c.walletBody}>
         <dl className="connection-rows">

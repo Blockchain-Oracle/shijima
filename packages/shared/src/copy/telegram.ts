@@ -118,7 +118,7 @@ export const telegramCopy = {
       '',
       'You choose what to hold. It decides only when to move toward it, inside limits your own account enforces, and writes every decision down where anyone can check it.',
       '',
-      'Press Start, then connect your agent from the website.',
+      'Press Start, then connect Telegram from Settings on the website.',
     ].join('\n'),
     commands: [
       { command: 'start', description: 'Your agent at a glance' },
@@ -127,6 +127,7 @@ export const telegramCopy = {
       { command: 'pause', description: 'Stop acting. Nothing is sold' },
       { command: 'resume', description: 'Start acting again' },
       { command: 'ask', description: 'How to ask the agent anything' },
+      { command: 'agents', description: 'Choose which agent the commands act on' },
       { command: 'help', description: 'Everything I understand' },
     ],
   },
@@ -139,10 +140,10 @@ export const telegramCopy = {
       'I look after a basket of Stock Tokens while the US market is shut. I decide only when to act, never what to own, and I write every decision down.',
       '',
       canButton
-        ? 'To hear from your agent here, connect it from the website.'
-        : `To hear from your agent here, open ${esc(siteUrl)}, go to your agent, and choose Connect Telegram.`,
+        ? 'To hear from your agents here, connect Telegram from the website. You can do it before you have an agent.'
+        : `To hear from your agents here, open ${esc(siteUrl)}/settings and choose Connect Telegram. You can do it before you have an agent.`,
     ].join('\n'),
-  connectButton: 'Connect my agent',
+  connectButton: 'Connect Telegram',
   howButton: 'How it works',
 
   /** The main menu under /start once linked. Every view edits this one message. */
@@ -156,8 +157,24 @@ export const telegramCopy = {
     ask: '💬 Ask',
     open: '🌐 Open Shijima',
     back: '‹ Back',
+    agents: '🔀 Switch agent',
     refresh: '↻ Refresh',
   },
+  /** Linked to a wallet that has no agent yet. Every agent it creates will report here. */
+  linkedNoAgent: [
+    b('Connected. This is Shijima.'),
+    '',
+    'This chat now belongs to your wallet. You have no agent yet: create one on the website, and it reports here from its first minute.',
+    '',
+    'Your money stays in your own account. An agent can trade inside the limits you set, and can never send it anywhere but back to you.',
+  ].join('\n'),
+  /** Any command before the wallet has an agent. */
+  noAgentYet:
+    'Your wallet is connected, but you have no agent yet. Create one on the website and it will report here.',
+  createButton: 'Create an agent',
+  /** Linked to a wallet with several agents: the commands act on one at a time. */
+  pickAgent: (current: string) => `${b('Your agents')}\nCommands act on ${b(current)}. Choose another:`,
+  switchedTo: (name: string) => `Now on ${name}`,
   /** The portfolio view in the menu: the pinned status, with a header. */
   portfolioView: (status: string) => `${b('Portfolio')}\n\n${status}`,
   /** The record view: the last few decisions, newest first. */
@@ -185,6 +202,7 @@ export const telegramCopy = {
     '/portfolio  what it holds and what it is worth',
     '/record  the last few decisions',
     '/status  bring the pinned message up to date',
+    '/agents  choose which agent the commands act on',
     '/pause  stop acting. Nothing is sold',
     '/resume  start acting again',
     '/help  this',
@@ -198,7 +216,7 @@ export const telegramCopy = {
   resumed: 'Active again. I am watching.',
   alreadyInThatState: 'Nothing changed: it was already like that.',
   notLinked:
-    'This chat is not linked to an agent. Open your agent on the website, choose Connect Telegram, and send me the code it gives you.',
+    'This chat is not linked to your wallet. Open Settings on the website, choose Connect Telegram, and send me the code it gives you.',
   linkUsed: 'That code has already been used, or it has expired. Ask the website for a new one.',
   notYourDesk: 'This agent is linked to someone else. I will not answer about it here.',
   seeDetails: 'See the full decision',
@@ -212,7 +230,7 @@ export const telegramCopy = {
   askThinking: 'Thinking. I will answer here in a moment.',
   unknownCommand: 'I do not know that command. /help lists the ones I do.',
   linkedElsewhere:
-    'This Telegram account already hears about another agent. Disconnect that one first, in its settings on the website, before linking this one.',
+    'This Telegram account already speaks for another wallet. Disconnect it there first, in Settings on the website.',
   /** Every clock in these messages is New York time, where the market is. */
   timesAreNewYork: 'New York time',
   askFailed: 'I could not answer just now. Nothing was changed.',

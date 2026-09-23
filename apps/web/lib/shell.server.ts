@@ -9,8 +9,9 @@ import {
   latestPricePoints,
   latestValueSnapshot,
   mandateFromRow,
+  ownerIdOf,
   pendingApprovals,
-  telegramForDesk,
+  telegramForOwner,
   unreadCount,
   valueSnapshotAtOrBefore,
 } from '@desk/db'
@@ -112,14 +113,10 @@ async function desksTotal(address: string): Promise<string | null> {
   return valued.reduce((sum, s) => sum + s.totalUsdg, 0n).toString()
 }
 
-/**
- * Telegram for the account menu. The link is kept per desk (UX-PLAN §6), so the menu speaks for the newest desk
- * that is still open: the one an owner with one desk means by "my Telegram". Null with no open desk.
- */
+/** Telegram for the account menu. It belongs to the wallet (DECISIONS F6), so it shows with or without an agent. */
 async function deskTelegram(address: string): Promise<HeaderTelegram | null> {
-  // Newest first (desksOfOwner's order), so this is the newest desk still open.
-  const open = (await desksOfOwner(db(), address)).find((d) => d.lifecycle !== 'closed')
-  if (!open) return null
-  const { linked } = await telegramForDesk(db(), open.id)
-  return { deskId: open.id, linked: linked ? { username: linked.username } : null }
+  const ownerId = await ownerIdOf(db(), address)
+  if (!ownerId) return null
+  const { linked } = await telegramForOwner(db(), ownerId)
+  return { linked: linked ? { username: linked.username } : null }
 }

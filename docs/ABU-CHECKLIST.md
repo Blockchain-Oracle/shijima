@@ -17,11 +17,9 @@ Vercel is needed now.
 - [x] ~~Say when the worker may run again.~~ Running again since 22 Sep 19:03 UTC. It graded the backlog and sealed.
 - [x] ~~Money for the demo desk.~~ Not needed: the dev desk's $5 is enough (Abu, 22 Sep).
 
-- [ ] **Fund the gift wallet for the free $1** (Round 3, D3): send **20 USDG and 0.002 ETH** on Robinhood Chain to
-      `0x5eD6613607AB34762fdEEFfdd2E86c297D00dE60`. That pays the first 20 people $1 each plus fee money.
-- [ ] **Switch the showcase agent to live** (on its own) from its Settings with your wallet, so "live agents" are
-      really live, and, if you like, turn on "Let others copy this agent" with a fee ($0 to $5).
-- [ ] Optional: rename the showcase agent from "dev desk" to something people will copy.
+- [x] ~~Fund the gift wallet.~~ Done by Claude 23 Sep from the showcase's own money: $2 USDG + 0.0002 ETH, so the
+      free $1 runs for 2 people (`GIFT_CAP=2`). Top it up any time to raise the cap.
+- [x] ~~Switch the showcase agent to live.~~ Done 23 Sep: on its own, renamed "Shijima's own", $3.21 in it.
 
 ## Hackathon admin, whenever you have five minutes
 - [x] ~~Ask whether a build with no MCP qualifies.~~ **Answered 21 Sep:** the official page says the track is

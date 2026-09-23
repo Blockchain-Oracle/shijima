@@ -124,7 +124,7 @@ export function FirstSteps({
             <p className="type-caption text-warning">{D.telegram.skipped}</p>
           ) : (
             <>
-              <TelegramConnect deskId={created.deskId} initial={null} />
+              <TelegramConnect initial={null} />
               <button
                 type="button"
                 className="type-caption self-start text-ink-muted underline underline-offset-2"

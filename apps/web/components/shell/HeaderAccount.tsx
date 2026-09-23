@@ -71,7 +71,7 @@ export function HeaderAccount({
             {telegram && !telegram.linked && (
               <div className="header-account-telegram">
                 <span>{webCopy.account.telegramOff}</span>
-                <TelegramConnect deskId={telegram.deskId} compact />
+                <TelegramConnect compact />
               </div>
             )}
             <Link
@@ -84,7 +84,7 @@ export function HeaderAccount({
             </Link>
             {telegram && (
               <Link
-                href={`/agents/${telegram.deskId}/settings` as Route}
+                href={'/settings' as Route}
                 className="header-account-link"
                 role="menuitem"
                 onClick={() => setOpen(false)}

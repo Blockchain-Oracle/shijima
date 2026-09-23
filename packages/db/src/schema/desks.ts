@@ -207,6 +207,40 @@ export const telegramLinks = pgTable(
 )
 
 /**
+ * The owner's Telegram, tied to the wallet rather than to one desk (DECISIONS F6), so it can be connected before
+ * any desk exists. A new table rather than a nullable `desk_id` on `telegram_links`: the desk rows stay what the
+ * outbox and the pinned status message already read (one per desk, each with its own pinned message), and this
+ * row is only the owner's say-so plus the chat. Claiming it links every open desk; `registerDesk` links each new
+ * one. `current_desk_id` is the agent the chat's commands act on when the owner has more than one.
+ */
+export const telegramOwners = pgTable(
+  'telegram_owners',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    ownerId: uuid('owner_id')
+      .notNull()
+      .references(() => owners.id),
+    status: telegramLinkStatus('status').notNull().default('pending'),
+    code: text('code').notNull(),
+    codeExpiresAt: timestamptz('code_expires_at').notNull(),
+    telegramUserId: bigint('telegram_user_id', { mode: 'number' }),
+    telegramChatId: bigint('telegram_chat_id', { mode: 'number' }),
+    telegramUsername: text('telegram_username'),
+    currentDeskId: uuid('current_desk_id').references(() => desks.id),
+    createdAt: timestamptz('created_at').notNull().defaultNow(),
+    linkedAt: timestamptz('linked_at'),
+    revokedAt: timestamptz('revoked_at'),
+  },
+  (t) => [
+    uniqueIndex('telegram_owners_code_key').on(t.code),
+    uniqueIndex('telegram_owners_one_linked_key').on(t.ownerId).where(sql`${t.status} = 'linked'`),
+    // One Telegram account speaks for one wallet.
+    uniqueIndex('telegram_owners_one_user_key').on(t.telegramUserId).where(sql`${t.status} = 'linked'`),
+    index('telegram_owners_user_idx').on(t.telegramUserId),
+  ],
+)
+
+/**
  * A desk reached from an OpenServ workspace. The platform names the workspace a message or task came from, never
  * the person, so the owner proves the workspace is theirs the way Telegram does: a one-time code made on the
  * website, sent as "link <code>" in the workspace. One workspace hears about one desk. The states are Telegram's.

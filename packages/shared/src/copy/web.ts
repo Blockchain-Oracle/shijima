@@ -928,7 +928,7 @@ export const settingsCopy = {
   telegram: {
     bot: 'ShijimaBot',
     title: 'Telegram',
-    body: 'Approvals, what the agent did, and alerts, in a chat with @ShijimaBot. You can answer requests there too.',
+    body: 'Approvals, trades and alerts for all your agents, in one chat with @ShijimaBot.',
     connected: (name: string | null) => (name ? `Connected as @${name}.` : 'Connected.'),
     connect: 'Connect Telegram',
     making: 'Making a code…',
@@ -940,7 +940,7 @@ export const settingsCopy = {
     openAgain: 'Open Telegram again',
     qr: 'QR code',
     disconnect: 'Disconnect',
-    disconnected: 'Disconnected. The bot no longer answers for this agent.',
+    disconnected: 'Disconnected. The bot no longer answers for your agents.',
     without: 'Without Telegram, requests that need your answer only reach you here on the website.',
   },
   connections: {
@@ -991,7 +991,6 @@ export const settingsCopy = {
     signIn: 'Sign in first. Accepting is tied to your wallet.',
     failed: 'Your acceptance could not be saved. Nothing else changed; try again in a moment.',
   },
-  appearance: { title: 'Appearance', body: 'Dark or light. It is remembered in this browser.' },
   close: {
     title: 'Close the agent',
     body: 'Sells or sends everything to your own wallet, removes the assistant and stops the checks, in one signature. The record stays readable.',

@@ -31,10 +31,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 /**
- * One agent, decision first. The header says whose it is and how it runs, with the owner's money buttons. Then
- * two columns: on the left what it decided last, anything waiting on the owner, and everything it has done (and,
- * for the owner, the chat); on the right one portfolio module, its limits and its account. On a phone the same
- * blocks stack in reading order: decision, portfolio, activity.
+ * One agent, decision first. The header says whose it is and how it runs; under it the agent's account address
+ * (where money is sent, DECISIONS F3) and the owner's money buttons. Then two columns: on the left what it decided
+ * last, anything waiting on the owner, and everything it has done (and, for the owner, the chat); on the right
+ * one portfolio module and its limits. On a phone the same blocks stack in reading order: decision, portfolio,
+ * activity.
  */
 export default async function AgentPage({
   params,
@@ -100,6 +101,7 @@ export default async function AgentPage({
         desk={d.address as `0x${string}`}
         contractVersion={d.contractVersion}
       >
+        <AgentMoney address={d.address} />
         {view.isOwner && (
           <div className="ap-actions">
             <QuickActions view={controlsOf(view)} />
@@ -145,9 +147,6 @@ export default async function AgentPage({
             </div>
             <div className="ap-o-limits">
               <Limits view={view} />
-            </div>
-            <div className="ap-o-money">
-              <AgentMoney address={d.address} />
             </div>
           </div>
         </div>

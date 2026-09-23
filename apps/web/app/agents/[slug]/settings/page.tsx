@@ -4,13 +4,12 @@ import {
   disclosureAccepted,
   openservForDesk,
   ownerIdOf,
-  telegramForDesk,
+  telegramForOwner,
 } from '@desk/db'
 import { appCopy, DISCLOSURE_VERSION, settingsCopy as s } from '@desk/shared'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import ThemeToggle from '@/components/shell/ThemeToggle'
 import { CopySettings } from '@/features/copy/CopySettings'
 import { DeskControls } from '@/features/desk/DeskControls'
 import { Mandate } from '@/features/desk/DeskPanels'
@@ -40,7 +39,7 @@ function Section({ title, body, children }: { title: string; body?: string; chil
   )
 }
 
-/** Settings (design brief 8.18): connections (Telegram, wallet, agent), the share link, the disclosure, appearance, and closing the desk. */
+/** One agent's settings (design brief 8.18): how it runs, connections (Telegram, wallet, agent), the share link, copying, the disclosure, and closing it. */
 export default async function SettingsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const viewer = await signedInAddress().catch(() => undefined)
@@ -52,7 +51,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
   const ownerId = await ownerIdOf(db(), viewer)
   const [view, telegram, accepted, openserv] = await Promise.all([
     loadDesk(slug),
-    telegramForDesk(db(), desk.id),
+    ownerId ? telegramForOwner(db(), ownerId) : Promise.resolve({ linked: null, pending: null }),
     ownerId ? disclosureAccepted(db(), ownerId, DISCLOSURE_VERSION) : Promise.resolve(null),
     openservForDesk(db(), desk.id),
   ])
@@ -110,9 +109,6 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
             <Disclosure
               acceptedOn={accepted ? accepted.toLocaleDateString('en-GB', { dateStyle: 'medium' }) : null}
             />
-          </Section>
-          <Section title={s.appearance.title} body={s.appearance.body}>
-            <ThemeToggle />
           </Section>
           {desk.lifecycle !== 'closed' && (
             <Section title={s.close.title} body={s.close.body}>

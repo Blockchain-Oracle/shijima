@@ -36,7 +36,7 @@ export const docsCopy = {
         },
         {
           rows: [
-            ['You put in', 'USDG, a digital dollar, from $1 (the first 20 people get their first $1 free)'],
+            ['You put in', 'USDG, a digital dollar, from $1 (a few people get their first $1 free)'],
             ['You choose', 'A strategy: a basket of US stocks at target weights, plus cash'],
             ['Your agent', 'Watches every five minutes and wakes when something moves'],
             ['You see', 'Your portfolio, and every decision with its reasons'],
@@ -82,7 +82,7 @@ export const docsCopy = {
           ],
         },
         {
-          p: 'The free $1: the first 20 people who sign in can claim $1 of USDG and about 30¢ of ETH, once per wallet. The ETH covers creating the agent, funding it and withdrawing later. The $1 is enough for a real trade: the smallest trade is 20¢, and Shijima pays its gas.',
+          p: 'The free $1: while the gift wallet lasts, people who sign in can claim $1 of USDG and about 30¢ of ETH, once per wallet. The ETH covers creating the agent, funding it and withdrawing later. The $1 is enough for a real trade: the smallest trade is 20¢, and Shijima pays its gas.',
         },
         {
           note: 'Withdraw always pays your own wallet. Nobody else, Shijima included, can send your money anywhere else.',

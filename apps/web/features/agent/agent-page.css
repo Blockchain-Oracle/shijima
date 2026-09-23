@@ -1,5 +1,6 @@
-/* One agent's page, decision first. Two columns from 1024px; below that the columns dissolve (display: contents)
- * and each block takes its reading order: needs, decision, portfolio, activity, limits, account. */
+/* One agent's page, decision first. The account's address sits under the header. Two columns from 1024px; below
+ * that the columns dissolve (display: contents) and each block takes its reading order: needs, decision,
+ * portfolio, activity, limits. */
 
 .ap-page {
   display: flex;
@@ -103,9 +104,6 @@
   }
   .ap-o-limits {
     order: 5;
-  }
-  .ap-o-money {
-    order: 6;
   }
 }
 
@@ -453,37 +451,89 @@
   background: transparent;
 }
 
-/* ── the account ───────────────────────────────────────────────────────── */
-.ap-money-row {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-.ap-money-qr {
-  width: 88px;
-  height: 88px;
-  flex: none;
-  border-radius: 10px;
-}
-.ap-money-addr {
+/* ── the account, under the header ────────────────────────────────────── */
+.ap-wallet {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  min-width: 0;
+  gap: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg, 16px);
+  background: var(--color-surface-1);
 }
-.ap-money-caption {
-  font-size: 0.72rem;
+.ap-wallet-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 0.85rem;
+}
+.ap-wallet-mark {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+  border-radius: 999px;
+  background: var(--color-surface-2);
+  color: var(--color-accent);
+}
+.ap-wallet-id {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin-right: auto;
+}
+.ap-wallet-label {
+  font-size: 0.7rem;
   color: var(--color-ink-muted);
 }
-.ap-money-addr code {
+.ap-wallet-id code {
   font-family: var(--font-data);
   font-size: 0.9rem;
   color: var(--color-ink);
+}
+.ap-wallet-more {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-hairline);
+}
+.ap-money-qr {
+  width: 112px;
+  height: 112px;
+  flex: none;
+  border-radius: 10px;
+}
+.ap-wallet-more-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--color-ink-secondary);
+}
+.ap-wallet-full {
+  font-family: var(--font-data);
+  font-size: 0.76rem;
+  color: var(--color-ink);
+  overflow-wrap: anywhere;
+  user-select: all;
 }
 .ap-money-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
+}
+@media (max-width: 560px) {
+  .ap-wallet-id {
+    flex-basis: calc(100% - 3rem);
+  }
+  .ap-wallet-more {
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 .ap-chip-btn {
@@ -501,23 +551,6 @@
   border-color: var(--color-accent-dim);
 }
 
-.ap-gas {
-  display: flex;
-  gap: 0.6rem;
-  padding: 0.75rem;
-  border-radius: var(--radius-md, 12px);
-  background: var(--color-surface-2);
-  color: var(--color-ink-secondary);
-}
-.ap-gas strong {
-  display: block;
-  font-size: 0.8rem;
-  color: var(--color-ink);
-}
-.ap-gas p {
-  font-size: 0.78rem;
-  line-height: 1.5;
-}
 .ap-proof-group {
   display: inline-flex;
   flex-wrap: wrap;

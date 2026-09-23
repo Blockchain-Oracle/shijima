@@ -1,6 +1,7 @@
 'use client'
 
 import { webCopy } from '@desk/shared'
+import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { HeaderAccount } from './HeaderAccount'
@@ -17,12 +18,11 @@ export interface HeaderProps {
   desksTotalUsdg: string | null
   /** Messages the owner has not opened yet. */
   unread: number
-  /** The owner's open desk and whether its Telegram is linked, for the account menu. */
+  /** Whether the wallet's Telegram is linked, for the account menu. */
   telegram: HeaderTelegram | null
 }
 
 export interface HeaderTelegram {
-  deskId: string
   linked: { username: string | null } | null
 }
 
@@ -32,7 +32,12 @@ export default function Header({ signedInAs, desksTotalUsdg, unread, telegram }:
   return (
     <>
       <header className="header">
-        <Link className="logo" href="/" aria-label={webCopy.nav.homeAria} data-cursor="hover">
+        <Link
+          className="logo"
+          href={(signedInAs ? '/home' : '/') as Route}
+          aria-label={webCopy.nav.homeAria}
+          data-cursor="hover"
+        >
           <span className="logo-mark">
             <ShijimaMark />
           </span>

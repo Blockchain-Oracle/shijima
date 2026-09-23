@@ -85,6 +85,20 @@
       "when": 1790160000000,
       "tag": "0010_copy_trading",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790170000000,
+      "tag": "0012_telegram_owners",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790170100000,
+      "tag": "0013_telegram_owner_user",
+      "breakpoints": true
     }
   ]
 }

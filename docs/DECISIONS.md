@@ -610,3 +610,32 @@ handoff (`docs/2026-09-23-product-fidelity-handoff.md` §10) left open. Abu can 
 - **The look (Abu, mid-build):** Robinhood's Robin Neon (#CCFF00) on black replaces the vermilion, with near-black
   text on it; the light theme uses a deep Robinhood green. A new mark: a crescent moon for the night, a still line,
   and one neon point, the agent awake while the market sleeps.
+
+## 2026-09-23 · Abu's feedback of 23 Sep, decided
+
+Made by Claude after Abu said "run what I raised" (agenda: `docs/ABU-FEEDBACK-2026-09-23.md`). Abu can overrule any.
+
+- **F1. What is live on chain is a product fact.** The landing page says it near the top and the Overview says it
+  too: the agent factory (Robinhood Chain, deployed 20 Sep, upgraded 22 Sep), the agent account (one contract per
+  person, the live showcase as the example), the OpenServ agent and its ERC-8004 identity on Base. Each links out.
+- **F2. No "dev" and no practice on show.** The showcase agent runs live, on its own, with real money. The landing
+  hero loses its "try it in practice" line. Practice stays as a mode an owner can choose, never the showcase.
+  With the ~$5 we have: $2 USDG and gas go to the gift wallet (so the free $1 runs for 2 people, `GIFT_CAP=2`, and
+  the card says how many are left, not "20"); the rest stays in the showcase agent. The operator's ~0.00047 ETH
+  pays for dozens of trades, so it needs nothing now.
+- **F3. The agent's wallet moves up.** Where to send money is the first thing an owner looks for, so the address
+  and a QR (on demand, not always open) sit at the top of the agent page, not at the bottom of the side column.
+- **F4. Settings holds settings.** No theme toggle (the header has it) and no explanatory paragraphs. Sections:
+  Connections (Telegram, OpenServ), Wallet and gas, Agents and who can act for them, the disclosure.
+- **F5. No Safe per agent.** Each agent is already its own contract account where only the owner can withdraw; a
+  Safe per agent would add a second account and a signing ceremony the agent cannot do alone. Checked 23 Sep: Safe
+  1.4.1 (SafeL2 `0x29fc…C762`, factory `0x4e1D…ec67`) is deployed on Robinhood Chain and Safe{Wallet} lists chain
+  4663, so the useful link is a **Safe as the owner**. Desk.sol has no ownership transfer, so that only works when
+  an agent is created from a Safe, and sign-in would need EIP-1271. Not in this round.
+- **F6. Telegram before an agent.** You connect Telegram to your wallet, not to one agent. You can do it before
+  creating one; every agent you have, and every agent you create later, reports to the same chat.
+- **F7. One idea on the landing page:** your own AI agent keeps your stock basket on plan while New York is
+  closed, and it can trade but can never take your money out.
+- **F8. `/` for an owner opens their agent.** Signed in with an open agent, `/` goes to the newest one; everyone
+  else gets the landing page, which stays reachable at `/home` from the app.
+- **F9. The proof section** is rebuilt around the on-chain facts in F1 and the OpenServ agent, not a list of IDs.

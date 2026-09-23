@@ -6,7 +6,7 @@ import { BUTTON_KINDS, type ButtonKind, proposeDirect } from '@desk/core'
 import {
   acceptDisclosure,
   createOpenservLink,
-  createTelegramLink,
+  createTelegramOwnerLink,
   deskById,
   ensureOwner,
   markInboxRead,
@@ -15,9 +15,9 @@ import {
   ownsDesk,
   proposalForOwner,
   setDeskShare,
-  telegramForDesk,
+  telegramForOwner,
   unlinkOpenserv,
-  unlinkTelegram,
+  unlinkOwnerTelegram,
 } from '@desk/db'
 import { DISCLOSURE_VERSION, errorText, settingsCopy } from '@desk/shared'
 import { revalidatePath } from 'next/cache'
@@ -89,9 +89,18 @@ export async function previewChainProposalAction(
 
 export type TelegramState = Awaited<ReturnType<typeof telegramStateAction>>
 
-export async function telegramStateAction(deskId: string) {
-  if (!(await ownerOf(deskId))) return null
-  const t = await telegramForDesk(db(), deskId)
+/** The signed-in wallet's owner row. Made on the spot: Telegram can be connected before any agent exists. */
+async function signedInOwner(): Promise<string | undefined> {
+  const address = await signedInAddress()
+  if (!address) return undefined
+  return (await ensureOwner(db(), address)).id
+}
+
+/** Telegram belongs to the wallet (DECISIONS F6): one chat for every agent, connected with or without one. */
+export async function telegramStateAction() {
+  const ownerId = await signedInOwner()
+  if (!ownerId) return null
+  const t = await telegramForOwner(db(), ownerId)
   return {
     linked: t.linked ? { username: t.linked.username } : null,
     pending: t.pending ? { code: t.pending.code, expiresAt: t.pending.codeExpiresAt.toISOString() } : null,
@@ -99,16 +108,16 @@ export async function telegramStateAction(deskId: string) {
 }
 
 /** A one-time code for the bot: works once, for ten minutes. A code still waiting is handed back, not replaced. */
-export async function telegramCodeAction(
-  deskId: string,
-): Promise<{ ok: true; code: string } | { ok: false; why: string }> {
+export async function telegramCodeAction(): Promise<{ ok: true; code: string } | { ok: false; why: string }> {
   try {
-    if (!(await ownerOf(deskId))) return { ok: false, why: 'That is not your agent.' }
-    const t = await telegramForDesk(db(), deskId)
-    if (t.linked) return { ok: false, why: 'This agent is already connected.' }
+    const ownerId = await signedInOwner()
+    if (!ownerId) return { ok: false, why: 'Sign in first.' }
+    const t = await telegramForOwner(db(), ownerId)
+    if (t.linked) return { ok: false, why: 'Telegram is already connected.' }
     if (t.pending) return { ok: true, code: t.pending.code }
-    const code = randomBytes(4).toString('hex')
-    await createTelegramLink(db(), deskId, code)
+    // 48 bits: twelve characters, still typeable, and far past guessing within ten minutes.
+    const code = randomBytes(6).toString('hex')
+    await createTelegramOwnerLink(db(), ownerId, code)
     return { ok: true, code }
   } catch (e) {
     return { ok: false, why: errorText(e) }
@@ -141,10 +150,11 @@ export async function openservUnlinkAction(deskId: string): Promise<{ ok: boolea
   return { ok: n > 0 }
 }
 
-export async function telegramUnlinkAction(deskId: string): Promise<{ ok: boolean }> {
-  if (!(await ownerOf(deskId))) return { ok: false }
-  const done = await unlinkTelegram(db(), deskId, { actor: 'owner', via: 'web' })
-  revalidatePath(`/agents/${deskId}/settings`)
+export async function telegramUnlinkAction(): Promise<{ ok: boolean }> {
+  const ownerId = await signedInOwner()
+  if (!ownerId) return { ok: false }
+  const done = await unlinkOwnerTelegram(db(), ownerId, { actor: 'owner', via: 'web' })
+  revalidatePath('/settings')
   return { ok: done }
 }
 

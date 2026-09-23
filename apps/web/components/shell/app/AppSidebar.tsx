@@ -14,6 +14,7 @@ import {
   SquareArrowOutUpRight,
   X,
 } from 'lucide-react'
+import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
@@ -280,7 +281,7 @@ export function AppSidebar({
                 {c.runsOn}
               </a>
               <span aria-hidden="true">·</span>
-              <Link href="/">
+              <Link href={'/home' as Route}>
                 {c.landing} <SquareArrowOutUpRight aria-hidden="true" className="inline size-3" />
               </Link>
             </p>

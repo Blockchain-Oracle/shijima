@@ -1,11 +1,10 @@
 /**
  * The free $1 to try (PLAN-ROUND-3 D3), in dollars: $1 of USDG to trade with and about 30¢ of ETH for the
- * network fees, sent to your own wallet. The first 20 wallets only. Every state the card can be in has its line.
+ * network fees, sent to your own wallet, while the gift wallet lasts (`GIFT_CAP`). Every state the card can be in has its line.
  */
 export const giftCopy = {
   title: 'Free $1 to try',
-  pitch:
-    'Get $1 to trade with and about 30¢ for network fees, sent to your own wallet. For the first 20 people.',
+  pitch: 'Get $1 to trade with and about 30¢ for network fees, sent to your own wallet, while they last.',
   cta: 'Claim your free $1',
   slide: 'Slide to claim your $1',
   left: (n: number) => (n === 1 ? '1 left' : `${n} left`),

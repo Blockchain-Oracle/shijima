@@ -16,9 +16,11 @@ import {
   notifications,
   owners,
   telegramLinks,
+  telegramOwners,
   wakes,
 } from '../schema'
 import type { SnapshotHolding } from '../schema/money'
+import { finishedDesk } from './telegram'
 
 export type DeferralRow = typeof deferrals.$inferSelect
 export type ApprovalRow = typeof approvals.$inferSelect
@@ -749,13 +751,24 @@ export async function claimTelegramLink(
       )
       .for('update')
     if (!pending) return { ok: false, reason: 'used' }
-    // One Telegram account hears about ONE desk. Otherwise /pause or a button press would act on whichever
-    // desk the database happened to return first.
+    // One Telegram account speaks for ONE wallet: it may hear about several of that owner's desks (the chat
+    // picks which one its commands act on), never about someone else's.
+    const [pendingDesk] = await tx
+      .select({ ownerId: desks.ownerId })
+      .from(desks)
+      .where(eq(desks.id, pending.deskId))
     const [elsewhere] = await tx
-      .select({ deskId: telegramLinks.deskId })
+      .select({ ownerId: desks.ownerId })
       .from(telegramLinks)
+      .innerJoin(desks, eq(telegramLinks.deskId, desks.id))
       .where(and(eq(telegramLinks.telegramUserId, chat.userId), eq(telegramLinks.status, 'linked')))
-    if (elsewhere && elsewhere.deskId !== pending.deskId) return { ok: false, reason: 'another_desk' }
+    if (elsewhere && elsewhere.ownerId !== pendingDesk?.ownerId) return { ok: false, reason: 'another_desk' }
+    const [otherWallet] = await tx
+      .select({ ownerId: telegramOwners.ownerId })
+      .from(telegramOwners)
+      .where(and(eq(telegramOwners.telegramUserId, chat.userId), eq(telegramOwners.status, 'linked')))
+    if (otherWallet && otherWallet.ownerId !== pendingDesk?.ownerId)
+      return { ok: false, reason: 'another_desk' }
     const [row] = await tx
       .update(telegramLinks)
       .set({
@@ -777,14 +790,26 @@ export async function claimTelegramLink(
   })
 }
 
-/** The desk this Telegram user is allowed to hear about. Nobody else's desk is ever answered for. */
+/**
+ * The desk this Telegram user's commands act on: the one the chat picked (`telegram_owners.current_desk_id`),
+ * else the newest linked. Only desks linked to this user are ever returned; nobody else's is answered for.
+ */
 export async function deskForTelegramUser(db: DbOrTx, telegramUserId: number) {
   const [row] = await db
     .select({ link: telegramLinks, desk: desks })
     .from(telegramLinks)
     .innerJoin(desks, eq(telegramLinks.deskId, desks.id))
-    .where(and(eq(telegramLinks.telegramUserId, telegramUserId), eq(telegramLinks.status, 'linked')))
-    .orderBy(desc(telegramLinks.linkedAt))
+    .leftJoin(
+      telegramOwners,
+      and(eq(telegramOwners.telegramUserId, telegramUserId), eq(telegramOwners.status, 'linked')),
+    )
+    .where(
+      and(eq(telegramLinks.telegramUserId, telegramUserId), eq(telegramLinks.status, 'linked'), finishedDesk),
+    )
+    .orderBy(
+      sql`(${telegramOwners.currentDeskId} = ${desks.id}) desc nulls last`,
+      desc(telegramLinks.linkedAt),
+    )
     .limit(1)
   return row
 }
