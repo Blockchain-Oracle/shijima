@@ -36,6 +36,7 @@ const n = appCopy.nav
 /** Pages that exist. The money pages join as they land, so no link ever leads to a 404. */
 const BUILT = new Set<string>([
   '/overview',
+  '/receive',
   '/activity',
   '/agents',
   '/markets',

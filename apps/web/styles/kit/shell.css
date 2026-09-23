@@ -618,3 +618,13 @@
   font: 500 10px / 1 var(--fm);
   color: var(--tx3);
 }
+
+/* A page's column, as the reference's screens sit: centred, at their own max width, with its padding. */
+.kit-screen {
+  padding: 30px 34px 44px;
+}
+@media (max-width: 767px) {
+  .kit-screen {
+    padding: 18px 16px 28px;
+  }
+}
