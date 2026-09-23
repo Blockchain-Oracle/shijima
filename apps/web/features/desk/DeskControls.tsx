@@ -2,12 +2,12 @@
 
 import type { ButtonKind } from '@desk/core'
 import { controlsCopy as c, deskCopy } from '@desk/shared'
+import type { Route } from 'next'
+import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { proposeAction } from '@/app/owner-actions'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
-import { Receive } from '@/features/agent/Receive'
-import { BridgeIn } from './BridgeIn'
 import { ControlFields, type ControlForm, type FormState } from './ControlForms'
 import type { ChatCard } from './chat-model'
 import { ProposalCard } from './ProposalCard'
@@ -225,12 +225,6 @@ export function ControlDialog({
           <Button onClick={review} disabled={pending || (form === 'mode' && state.mode === view.mode)}>
             {pending ? c.reviewing : c.review}
           </Button>
-          {/* The second way in: dollars from another network, straight into the desk through Relay. */}
-          {form === 'addMoney' && (
-            <BridgeIn desk={view.address as `0x${string}`} owner={view.owner as `0x${string}`} />
-          )}
-          {/* The third way in: straight to the agent's address from any wallet or exchange. */}
-          {form === 'addMoney' && <Receive address={view.address} />}
         </>
       )}
     </Modal>
@@ -249,9 +243,8 @@ export function DeskControls({ view }: { view: ControlsView }) {
     )
   }
   const paused = view.state === 'paused_by_owner'
+  // Money in and out open their own screens, where any token can go in and every way out is offered.
   const buttons: [ControlForm, string][] = [
-    ['addMoney', c.actions.addMoney],
-    ['withdraw', c.actions.withdraw],
     ['sellAll', c.actions.sellAll],
     paused ? ['resume', c.actions.resume] : ['pause', c.actions.pause],
     ['mode', c.actions.mode],
@@ -267,6 +260,12 @@ export function DeskControls({ view }: { view: ControlsView }) {
       </header>
       <p className="type-caption text-ink-muted">{c.intro}</p>
       <div className="desk-controls">
+        <Link href={`/fund?agent=${view.slug}` as Route} className="desk-control">
+          {c.actions.addMoney}
+        </Link>
+        <Link href={`/withdraw?agent=${view.slug}` as Route} className="desk-control">
+          {c.actions.withdraw}
+        </Link>
         {buttons.map(([form, label]) => (
           <button
             key={form}
@@ -296,13 +295,17 @@ export function QuickActions({ view }: { view: ControlsView }) {
   if (view.lifecycle === 'closed') return null
   const paused = view.state === 'paused_by_owner'
   const buttons: [ControlForm, string, boolean][] = [
-    ['addMoney', c.actions.addMoney, true],
-    ['withdraw', c.actions.withdraw, false],
     paused ? ['resume', c.actions.resume, false] : ['pause', c.actions.pause, false],
     ['checkNow', c.actions.checkNow, false],
   ]
   return (
     <div className="desk-quick">
+      <Link href={`/fund?agent=${view.slug}` as Route} className="desk-quick-btn" data-primary="">
+        {c.actions.addMoney}
+      </Link>
+      <Link href={`/withdraw?agent=${view.slug}` as Route} className="desk-quick-btn">
+        {c.actions.withdraw}
+      </Link>
       {buttons.map(([form, label, primary]) => (
         <button
           key={form}

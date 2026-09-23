@@ -3,6 +3,8 @@
 import { EXPLORER } from '@desk/chain'
 import { appCopy, short } from '@desk/shared'
 import { Check, Copy, ExternalLink, QrCode, Wallet } from 'lucide-react'
+import type { Route } from 'next'
+import Link from 'next/link'
 import { useState } from 'react'
 import { Qr } from '@/components/ui/qr'
 
@@ -13,7 +15,26 @@ const c = appCopy.agentPage.money
  * first to add money. One line with copy and Blockscout; the QR code, what to send and who pays for gas open on
  * demand beneath it, for a phone beside the computer.
  */
-export function AgentMoney({ address }: { address: string }) {
+export interface AgentBalances {
+  cashUsdg: string
+  vaultUsdg: string
+  totalUsdg: string
+  takenAt: string
+}
+
+const dollars = (raw: bigint) =>
+  `$${(Number(raw) / 1e6).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+
+export function AgentMoney({
+  address,
+  slug,
+  balances,
+}: {
+  address: string
+  slug: string
+  /** The agent's last check: cash, savings and total. Stocks are what remains. */
+  balances: AgentBalances | null
+}) {
   const [copied, setCopied] = useState(false)
   const [open, setOpen] = useState(false)
   const copy = async () => {
@@ -65,6 +86,7 @@ export function AgentMoney({ address }: { address: string }) {
           </a>
         </div>
       </div>
+      {balances ? <Balances b={balances} /> : null}
       {open && (
         <div id="ap-wallet-more" className="ap-wallet-more">
           <Qr text={address} label={c.address} className="ap-money-qr" />
@@ -72,9 +94,36 @@ export function AgentMoney({ address }: { address: string }) {
             <code className="ap-wallet-full">{address}</code>
             <p>{c.addressNote}</p>
             <p className="ap-muted">{c.gasBody}</p>
+            <Link href={`/receive?agent=${slug}` as Route} className="ap-chip-btn self-start">
+              {c.receive} →
+            </Link>
           </div>
         </div>
       )}
     </section>
+  )
+}
+
+/** Cash · Savings · Stocks · Total, the wallet card's split for one agent, from its last check. */
+function Balances({ b }: { b: AgentBalances }) {
+  const cash = BigInt(b.cashUsdg)
+  const savings = BigInt(b.vaultUsdg)
+  const total = BigInt(b.totalUsdg)
+  const stocks = total - cash - savings > 0n ? total - cash - savings : 0n
+  const cells: [string, bigint][] = [
+    [c.cash, cash],
+    ...(savings > 0n ? ([[c.savings, savings]] as [string, bigint][]) : []),
+    [c.stocks, stocks],
+    [c.total, total],
+  ]
+  return (
+    <dl className="ap-balances" title={c.asOf(new Date(b.takenAt).toLocaleString())}>
+      {cells.map(([label, v]) => (
+        <div key={label}>
+          <dt>{label}</dt>
+          <dd>{dollars(v)}</dd>
+        </div>
+      ))}
+    </dl>
   )
 }

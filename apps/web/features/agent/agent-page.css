@@ -593,3 +593,34 @@
 .ap-record {
   color: var(--color-ink-secondary);
 }
+
+/* The agent's money split, as the wallet card shows it: Cash · Savings · Stocks · Total. */
+.ap-balances {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 0.5rem;
+  margin: 0.85rem 0 0;
+}
+.ap-balances > div {
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--bd, var(--color-border));
+  border-radius: 12px;
+  background: var(--card2, transparent);
+}
+.ap-balances dt {
+  font: 700 10px / 1 var(--fm, monospace);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tx3, var(--color-ink-muted));
+}
+.ap-balances dd {
+  margin: 0.4rem 0 0;
+  font-family: var(--fm, monospace);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--tx, var(--color-ink));
+  font-variant-numeric: tabular-nums;
+}
+.ap-balances > div:last-child dd {
+  color: var(--ac2, var(--color-ink));
+}

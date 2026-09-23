@@ -7,7 +7,6 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { type Address, erc20Abi, formatUnits } from 'viem'
 import { skipTelegramAction } from '@/app/studio-actions'
-import { ControlDialog, type ControlsView } from '@/features/desk/DeskControls'
 import { DeskSessionProvider } from '@/features/session/DeskSessionProvider'
 import { OwnerSessionPanel } from '@/features/session/OwnerSessionPanel'
 import { browserClient } from '@/features/session/useDeskSession'
@@ -25,9 +24,6 @@ export function FirstSteps({
   name,
   owner,
   contractVersion,
-  perActionUsdg,
-  dailyUsdg,
-  goLiveChecks,
   onAnother,
 }: {
   created: Created
@@ -39,7 +35,6 @@ export function FirstSteps({
   goLiveChecks: number
   onAnother: () => void
 }) {
-  const [adding, setAdding] = useState(false)
   const [cash, setCash] = useState<bigint | null>(null)
   const [skipped, setSkipped] = useState(false)
 
@@ -58,27 +53,6 @@ export function FirstSteps({
       clearInterval(timer)
     }
   }, [created.address])
-
-  const view: ControlsView = {
-    deskId: created.deskId,
-    slug: created.slug,
-    address: created.address,
-    owner,
-    mode: 'shadow',
-    state: 'active',
-    lifecycle: 'running',
-    assistantRemoved: false,
-    shadowChecks: 0,
-    goLiveChecks,
-    reportOpened: false,
-    cashUsdg: cash?.toString() ?? null,
-    perActionCapUsdg: perActionUsdg,
-    dailyCapUsdg: dailyUsdg,
-    // Editing what the desk was told lives on the desk page; the first steps do not offer it.
-    mandate: null,
-    tokens: [],
-    presets: [],
-  }
 
   return (
     <DeskSessionProvider owner={owner} desk={created.address as Address} contractVersion={contractVersion}>
@@ -110,9 +84,9 @@ export function FirstSteps({
           <p className="type-caption text-ink-secondary">
             {cash !== null && cash > 0n ? D.money.funded(money(formatUnits(cash, 6))) : D.money.body}
           </p>
-          <button type="button" className="strat-sensei self-start" onClick={() => setAdding(true)}>
+          <Link href={`/fund?agent=${created.slug}` as Route} className="strat-sensei self-start">
             {D.money.open} →
-          </button>
+          </Link>
         </section>
 
         <OwnerSessionPanel />
@@ -151,14 +125,6 @@ export function FirstSteps({
           {D.open}
         </Link>
       </div>
-
-      {/* The same dialog as the desk's own Add money button: a card first, then one confirmation. */}
-      <ControlDialog
-        key={adding ? 'open' : 'shut'}
-        view={view}
-        form={adding ? 'addMoney' : null}
-        onClose={() => setAdding(false)}
-      />
     </DeskSessionProvider>
   )
 }

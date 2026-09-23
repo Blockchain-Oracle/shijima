@@ -283,6 +283,12 @@ export const appCopy = {
       hideQr: 'Hide QR',
       gasBody: 'Shijima pays each trade’s network fee, about 5¢. You pay only for what you sign.',
       explorer: 'Blockscout',
+      cash: 'Cash',
+      savings: 'Savings',
+      stocks: 'Stocks',
+      total: 'Total',
+      asOf: (when: string) => `Last checked ${when}`,
+      receive: 'Receive',
     },
   },
 
