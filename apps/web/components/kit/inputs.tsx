@@ -1,6 +1,6 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { type ReactNode, useId } from 'react'
 import { Chip, fontMono } from './primitives'
 
 /** The reference wallet's inputs (packages/ui/src/inputs.tsx): the big amount field and the segmented toggle. */
@@ -197,9 +197,10 @@ export function Field({
   hint?: ReactNode
   right?: ReactNode
 }) {
+  const id = useId()
   return (
-    <label style={{ display: 'block' }}>
-      <span
+    <div>
+      <div
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -210,10 +211,11 @@ export function Field({
           textTransform: 'uppercase',
         }}
       >
-        {label}
+        <label htmlFor={id}>{label}</label>
         {right ? <span style={{ marginLeft: 'auto' }}>{right}</span> : null}
-      </span>
+      </div>
       <input
+        id={id}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
@@ -244,6 +246,6 @@ export function Field({
           {hint}
         </span>
       ) : null}
-    </label>
+    </div>
   )
 }

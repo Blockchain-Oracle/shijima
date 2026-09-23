@@ -37,6 +37,8 @@ const n = appCopy.nav
 const BUILT = new Set<string>([
   '/wallet',
   '/receive',
+  '/send',
+  '/bridge',
   '/fund',
   '/withdraw',
   '/evidence',

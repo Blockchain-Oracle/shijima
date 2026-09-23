@@ -733,3 +733,16 @@
     display: none;
   }
 }
+
+/* Two panels, as the reference bridge: the move on the left, context on the right; one column on narrow screens. */
+.kit-two {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .kit-two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

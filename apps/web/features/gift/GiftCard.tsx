@@ -66,7 +66,7 @@ export function GiftCard({ compact = false, className }: { compact?: boolean; cl
 
   if (compact) {
     return (
-      <Link href="/overview#gift" className={cn('gift-compact', className)}>
+      <Link href="/wallet#gift" className={cn('gift-compact', className)}>
         <Gift aria-hidden="true" className="size-4" />
         <span>
           <strong>{giftCopy.title}</strong>

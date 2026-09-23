@@ -590,11 +590,11 @@ async function planBridgeOut(
 /**
  * A dollar of USDG to ETH in the owner's wallet: the router swaps it to WETH it keeps (ADDRESS_THIS), then unwraps
  * that to ETH for the owner, in one multicall after an exact approval. With no ETH at all nothing on Robinhood
- * Chain can be paid for, so gas comes from another chain through Relay instead.
+ * Chain can be paid for, so gas comes from another chain through Relay instead; the owner may also choose that.
  */
 async function planGetGas(owner: Address, input: Extract<MoveInput, { kind: 'get_gas' }>): Promise<Built> {
   const eth = await pub().getBalance({ address: owner })
-  if (eth === 0n) {
+  if (eth === 0n || input.origin) {
     if (!input.origin) return { why: c.refusals.needOrigin, hint: { kind: 'need_origin' } }
     const origin = await relayToken(input.origin.chainId, input.origin.token)
     if (!origin || input.origin.chainId === CHAIN_ID) return { why: c.refusals.unknownChain }

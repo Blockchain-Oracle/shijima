@@ -9,7 +9,7 @@ import { usePathname } from 'next/navigation'
 /** Where a lost reader most likely meant to go. */
 const PLACES = [
   '/',
-  '/overview',
+  '/wallet',
   '/markets',
   '/agents',
   '/agents/new',

@@ -226,6 +226,68 @@ export const moneyCopy = {
     create: 'Create an agent',
   },
 
+  send: {
+    meta: 'Send',
+    title: 'Send',
+    sub: 'From your own wallet on Robinhood Chain to any address: USDG, ETH or a Stock Token.',
+    cardTitle: 'From your wallet',
+    what: 'WHAT TO SEND',
+    to: 'To',
+    toHint: 'A wallet on Robinhood Chain. To put money in your own agent, use Fund so it counts as money in.',
+    available: (amount: string, unit: string) => `You hold ${amount} ${unit}`,
+    badAddress: 'That is not a valid address.',
+    moreThanHeld: (symbol: string) => `That is more ${symbol} than your wallet holds.`,
+    publicTitle: 'Sends cannot be undone.',
+    publicBody:
+      'Check the address. Anything sent to the wrong one is gone, and everyone can see the transfer.',
+    review: 'Review',
+    done: 'Sent',
+    empty:
+      'Your wallet on Robinhood Chain holds nothing to send yet. Withdraw from an agent, or bring money in.',
+  },
+
+  scan: {
+    button: 'SCAN',
+    title: 'Scan an address',
+    idle: 'Opening the camera…',
+    ready: 'Point it at a QR code. Nothing leaves this device.',
+    blocked: 'This browser cannot read QR codes, or the camera is off. Paste the address instead.',
+  },
+
+  bridge: {
+    meta: 'Bridge',
+    title: 'Bridge',
+    sub: 'Move money between Robinhood Chain and Base, Arbitrum, Ethereum or BNB, through Relay.',
+    dirs: { out: 'Out to another chain', in: 'In to an agent' },
+    direction: 'Direction',
+    outTitle: 'Out of Robinhood Chain',
+    toChain: 'TO CHAIN',
+    receiveAs: 'ARRIVES AS',
+    held: (amount: string) => `Your wallet holds ${amount} USDG on Robinhood Chain`,
+    toYou: 'It arrives in this same wallet on the other chain. Nobody else can be the recipient.',
+    review: 'Review',
+    done: 'On its way to your wallet',
+    inTitle: 'Into an agent, from another chain',
+    inBody:
+      'ETH, USDC, USDT and more on Base, Arbitrum, Ethereum or BNB arrive in your agent as USDG. About 1% all in, usually within a minute.',
+    inCta: 'Fund from another chain',
+    howTitle: 'How it moves',
+    how: [
+      'The server asks Relay for a price and shows you every step.',
+      'Your wallet signs. Nothing moves before that.',
+      'Relay fills it on the other side and the app follows it to the end.',
+    ],
+    gasTitle: 'Get gas',
+    gasBody: 'Every move on Robinhood Chain costs a few cents of ETH.',
+    gasHave: (eth: string) => `You hold ${eth} ETH on Robinhood Chain.`,
+    gasSwap: 'Swap $1 of USDG to ETH',
+    gasFrom: 'Bring ETH from another chain',
+    gasFromHint: 'Send a little ETH from one of these. It arrives as ETH on Robinhood Chain.',
+    gasReview: 'Review',
+    gasDone: 'Gas is in your wallet',
+    gift: 'Or claim the free $1, which includes some gas.',
+  },
+
   withdraw: {
     meta: 'Withdraw',
     title: 'Withdraw',

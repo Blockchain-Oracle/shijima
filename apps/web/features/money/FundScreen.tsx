@@ -69,17 +69,19 @@ export function FundScreen({
   assets,
   chains,
   initialAgent,
+  initialSource = 'wallet',
 }: {
   owner: string
   agents: FundAgent[]
   assets: FundAsset[]
   chains: FundChain[]
   initialAgent: string | null
+  initialSource?: 'wallet' | 'chain' | 'anywhere'
 }) {
   const [agentKey, setAgentKey] = useState(
     agents.find((a) => a.slug === initialAgent || a.id === initialAgent)?.id ?? agents[0]?.id ?? '',
   )
-  const [source, setSource] = useState<'wallet' | 'chain' | 'anywhere'>('wallet')
+  const [source, setSource] = useState<'wallet' | 'chain' | 'anywhere'>(initialSource)
   const [assetToken, setAssetToken] = useState<string>(assets[0]?.token ?? '')
   const [chainId, setChainId] = useState<number>(chains[0]?.id ?? 8453)
   const chain = chains.find((ch) => ch.id === chainId)

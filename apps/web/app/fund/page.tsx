@@ -13,10 +13,14 @@ export const dynamic = 'force-dynamic'
 export const metadata = { title: moneyCopy.fund.meta }
 
 /** Fund an agent: your agents, what your wallet holds now, and what Relay can bring from other chains. */
-export default async function FundPage({ searchParams }: { searchParams: Promise<{ agent?: string }> }) {
+export default async function FundPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ agent?: string; from?: string }>
+}) {
   const address = await signedInAddress().catch(() => undefined)
   if (!address) return <SignedOutCard />
-  const [{ agent }, desks, wallet, chains] = await Promise.all([
+  const [{ agent, from }, desks, wallet, chains] = await Promise.all([
     searchParams,
     desksOfOwner(db(), address),
     readWallet(pub(), address as Address).catch(() => null),
@@ -53,6 +57,7 @@ export default async function FundPage({ searchParams }: { searchParams: Promise
         }))}
       chains={others}
       initialAgent={agent ?? null}
+      initialSource={from === 'chain' || from === 'anywhere' ? from : 'wallet'}
     />
   )
 }
