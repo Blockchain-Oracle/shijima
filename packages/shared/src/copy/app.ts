@@ -226,6 +226,13 @@ export const appCopy = {
     noDecision: 'No decision yet',
   },
 
+  receive: {
+    title: 'Or send it from anywhere',
+    copy: (addr: string) => `Copy ${addr}`,
+    copied: 'Copied',
+    warn: 'Send only USDG, and only on Robinhood Chain. It lands in this agent; only you can take it out.',
+  },
+
   carousel: {
     index: 'Live',
     title: 'Agents at work, right now',

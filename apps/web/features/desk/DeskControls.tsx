@@ -8,6 +8,7 @@ import { useState, useTransition } from 'react'
 import { proposeAction } from '@/app/owner-actions'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
+import { Receive } from '@/features/agent/Receive'
 import { BridgeIn } from './BridgeIn'
 import { ControlFields, type ControlForm, type FormState } from './ControlForms'
 import type { ChatCard } from './chat-model'
@@ -230,6 +231,8 @@ export function ControlDialog({
           {form === 'addMoney' && (
             <BridgeIn desk={view.address as `0x${string}`} owner={view.owner as `0x${string}`} />
           )}
+          {/* The third way in: straight to the agent's address from any wallet or exchange. */}
+          {form === 'addMoney' && <Receive address={view.address} />}
         </>
       )}
     </Modal>

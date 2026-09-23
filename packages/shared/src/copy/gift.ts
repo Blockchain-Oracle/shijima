@@ -7,6 +7,7 @@ export const giftCopy = {
   pitch:
     'Get $1 to trade with and about 30¢ for network fees, sent to your own wallet. For the first 20 people.',
   cta: 'Claim your free $1',
+  slide: 'Slide to claim your $1',
   left: (n: number) => (n === 1 ? '1 left' : `${n} left`),
   states: {
     signedOut: 'Connect your wallet first. The $1 goes to the wallet you sign in with.',

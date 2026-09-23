@@ -7,6 +7,7 @@ import { StatusDot } from '@/components/ui/desk-kit'
 import { TokenLogo, TokenStack } from '@/components/ui/token-logo'
 import { When } from '@/components/when'
 import { PortfolioChart } from '@/features/desk/PortfolioChart'
+import { GiftCard } from '@/features/gift/GiftCard'
 import type { Overview, OverviewAgent } from '@/lib/overview.server'
 import { cn } from '@/lib/utils'
 
@@ -55,6 +56,7 @@ export function OverviewScreen({ overview: o }: { overview: Overview }) {
             </Link>
           </div>
         </section>
+        <GiftCard className="ov-gift" />
       </div>
     )
   }
@@ -154,6 +156,7 @@ export function OverviewScreen({ overview: o }: { overview: Overview }) {
         </section>
 
         <aside className="ov-side">
+          <GiftCard />
           <section className="ov-card" aria-labelledby="ov-needs">
             <div className="ov-card-head">
               <h2 id="ov-needs">

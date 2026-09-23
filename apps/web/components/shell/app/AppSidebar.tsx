@@ -33,8 +33,8 @@ import {
   useAnimatedSidebar,
 } from '@/components/ui/animated-sidebar'
 import { TokenLogo } from '@/components/ui/token-logo'
+import { GiftCard } from '@/features/gift/GiftCard'
 import { cn } from '@/lib/utils'
-import { MarketSessionChip } from '../MarketSessionChip'
 import { ShijimaMark } from '../ShijimaMark'
 import { SignInButton } from '../SignInButton'
 import { LiveBadge } from './LiveBadge'
@@ -260,6 +260,7 @@ export function AppSidebar({
       </AnimatedSidebarContent>
 
       <AnimatedSidebarFooter className="app-sidebar-footer">
+        {!collapsed && signedInAs && <GiftCard compact className="app-sidebar-gift" />}
         <AnimatedSidebarMenu>
           <AnimatedSidebarMenuItem>
             <AnimatedSidebarMenuButton
@@ -270,28 +271,19 @@ export function AppSidebar({
               {c.settings}
             </AnimatedSidebarMenuButton>
           </AnimatedSidebarMenuItem>
-          <AnimatedSidebarMenuItem>
-            <AnimatedSidebarMenuButton
-              href="/"
-              isActive={false}
-              icon={<SquareArrowOutUpRight className="size-4" />}
-            >
-              {c.landing}
-            </AnimatedSidebarMenuButton>
-          </AnimatedSidebarMenuItem>
         </AnimatedSidebarMenu>
         {!collapsed && (
           <div className="app-sidebar-foot">
             <LiveBadge compact />
-            <MarketSessionChip />
-            <a
-              className="app-sidebar-runs"
-              href="https://platform.openserv.ai/agents/4513"
-              target="_blank"
-              rel="noreferrer noopener"
-            >
-              {c.runsOn} <span>· {c.reasoning}</span>
-            </a>
+            <p className="app-sidebar-links">
+              <a href="https://platform.openserv.ai/agents/4513" target="_blank" rel="noreferrer noopener">
+                {c.runsOn}
+              </a>
+              <span aria-hidden="true">·</span>
+              <Link href="/">
+                {c.landing} <SquareArrowOutUpRight aria-hidden="true" className="inline size-3" />
+              </Link>
+            </p>
           </div>
         )}
       </AnimatedSidebarFooter>

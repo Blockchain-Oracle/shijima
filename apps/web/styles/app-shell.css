@@ -1461,3 +1461,213 @@ a.act-row:hover {
   line-height: 1.55;
   color: var(--color-ink-secondary);
 }
+
+/* ── The free $1 (21st Reward Card 5247) ───────────────────────────────── */
+.gift-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.4rem 1.2rem;
+  border: 1px solid var(--color-accent-dim);
+  border-radius: var(--radius-lg, 16px);
+  background:
+    radial-gradient(120% 90% at 50% 0%, var(--color-accent-wash), transparent 70%), var(--color-surface-1);
+  text-align: center;
+  overflow: hidden;
+}
+.gift-icon {
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 999px;
+  background: var(--color-surface-3);
+  color: var(--color-accent);
+}
+.gift-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+.gift-pitch {
+  max-width: 22rem;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--color-ink-secondary);
+}
+.gift-left {
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+.gift-slider {
+  position: relative;
+  width: min(18rem, 100%);
+  height: 3.25rem;
+  margin-top: 0.5rem;
+  border-radius: 999px;
+  background: var(--color-surface-3);
+}
+.gift-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: #fff;
+  cursor: grab;
+  touch-action: none;
+}
+.gift-handle:active {
+  cursor: grabbing;
+}
+.gift-handle:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}
+.gift-slider-text {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding-left: 2.5rem;
+  font-size: 0.8rem;
+  color: var(--color-ink-muted);
+  pointer-events: none;
+}
+.gift-state {
+  font-size: 0.85rem;
+  color: var(--color-ink);
+}
+.gift-state.is-done {
+  color: var(--color-profit);
+}
+.gift-note,
+.gift-why {
+  font-size: 0.75rem;
+  color: var(--color-ink-muted);
+}
+.gift-why {
+  color: var(--color-accent);
+}
+.gift-txs {
+  display: flex;
+  justify-content: center;
+  gap: 0.9rem;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+}
+.gift-txs a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--color-ink-secondary);
+}
+
+.gift-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px dashed var(--color-accent-dim);
+  border-radius: var(--radius-md, 12px);
+  background: var(--color-accent-wash);
+  color: var(--color-accent);
+}
+.gift-compact span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+.gift-compact strong {
+  font-size: 0.8rem;
+  color: var(--color-ink);
+}
+.gift-compact small {
+  font-size: 0.68rem;
+  color: var(--color-ink-secondary);
+}
+
+.ov-gift {
+  margin-top: 1rem;
+  max-width: 40rem;
+}
+.money-gift {
+  align-items: flex-start;
+  text-align: left;
+}
+.money-gift .gift-slider {
+  margin-top: 0.25rem;
+}
+.receive {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--color-hairline);
+}
+.receive-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.receive-row {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+}
+.receive-qr {
+  width: 104px;
+  height: 104px;
+  flex: none;
+  border-radius: 10px;
+}
+.receive-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.receive-addr {
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--color-ink);
+  word-break: break-all;
+}
+.receive-warn {
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--color-ink-muted);
+}
+.app-sidebar-gift {
+  margin: 0 0.25rem 0.4rem;
+}
+.app-sidebar-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  font-size: 0.68rem;
+  color: var(--color-ink-muted);
+}
+.app-sidebar-links a:hover {
+  color: var(--color-ink);
+}
+.app-topbar-session {
+  margin-left: 0.5rem;
+}
+@media (max-width: 900px) {
+  .app-topbar-session {
+    display: none;
+  }
+}

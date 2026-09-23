@@ -5,13 +5,14 @@ import { studioCopy } from '@desk/shared'
 import { useEffect, useState } from 'react'
 import { type Address, erc20Abi, formatUnits } from 'viem'
 import { TokenLogo } from '@/components/ui/token-logo'
+import { GiftCard } from '@/features/gift/GiftCard'
 import { browserClient } from '@/features/session/useDeskSession'
 import { cn } from '@/lib/utils'
 import { type DraftToken, dollarsToUnits, type StudioDraft } from './draft'
 import { mixSlices } from './StrategyCard'
 
 const M = studioCopy.money
-const CHOICES = ['10', '20', '50', '100'] as const
+const CHOICES = ['1', '10', '20', '50', '100'] as const
 /** The free $1 (PLAN-ROUND-3 D3) must be able to trade, so $1 is the floor. Our gas on a small trade is our cost. */
 export const MIN_USDG = 1
 
@@ -81,6 +82,7 @@ export function MoneyStep({
               ? M.balanceNone
               : M.balance(dollars(Number(formatUnits(balance, 6))))}
       </p>
+      {signedIn && <GiftCard className="money-gift" />}
 
       <fieldset className="money-choices" aria-label={M.lead}>
         {CHOICES.map((c) => (

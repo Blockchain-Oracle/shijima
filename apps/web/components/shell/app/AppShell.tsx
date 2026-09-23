@@ -16,6 +16,7 @@ import Footer from '../Footer'
 import GrainOverlay from '../GrainOverlay'
 import { HeaderAccount } from '../HeaderAccount'
 import { HeaderInbox } from '../HeaderInbox'
+import { MarketSessionChip } from '../MarketSessionChip'
 import { ShijimaMark } from '../ShijimaMark'
 import ThemeToggle from '../ThemeToggle'
 import { WrongNetworkBanner } from '../WrongNetworkBanner'
@@ -70,6 +71,7 @@ function TopBar({ signedInAs, unread }: { signedInAs: string | undefined; unread
         </span>
         <span>{webCopy.brand.name.toUpperCase()}</span>
       </Link>
+      <MarketSessionChip className="app-topbar-session" />
       <div className="app-topbar-right">
         <ThemeToggle />
         {signedInAs ? <HeaderInbox unread={unread} /> : null}
