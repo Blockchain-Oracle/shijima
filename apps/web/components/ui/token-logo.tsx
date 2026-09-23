@@ -77,7 +77,7 @@ export function TokenStack({
         <span
           key={s}
           className="rounded-full ring-2 ring-[var(--color-surface-1)]"
-          style={{ marginLeft: i === 0 ? 0 : -size * 0.22, zIndex: shown.length - i }}
+          style={{ marginLeft: i === 0 ? 0 : -size * 0.15, zIndex: shown.length - i }}
         >
           <TokenLogo symbol={s} size={size} />
         </span>
@@ -85,7 +85,7 @@ export function TokenStack({
       {rest > 0 && (
         <span
           className="inline-flex items-center justify-center rounded-full bg-[var(--color-surface-3)] font-[family-name:var(--font-data)] text-[var(--color-ink-secondary)] ring-2 ring-[var(--color-surface-1)]"
-          style={{ width: size, height: size, marginLeft: -size * 0.22, fontSize: size * 0.36 }}
+          style={{ width: size, height: size, marginLeft: -size * 0.15, fontSize: size * 0.36 }}
         >
           +{rest}
         </span>

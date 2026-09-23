@@ -13,6 +13,7 @@ export const studioCopy = {
 
   steps: ['Basket', 'Behaviour & limits', 'Test read', 'Create'] as const,
   stepsAria: 'Creation progress',
+  counter: (n: number, total: number) => `Step ${n} of ${total}`,
   studioKicker: 'Desk studio',
   studioTitle: 'Tell the desk what to hold.',
   studioBody: 'Your draft is kept in this browser. You sign only at the last step.',
@@ -26,12 +27,19 @@ export const studioCopy = {
     nameHint: 'Only you see it, unless you share the desk.',
     mix: 'Start from a mix',
     own: 'Set weights yourself',
-    ownBody: 'Start from nothing and choose each Stock Token’s share.',
+    ownBody: 'Keep the mix you have and change it, or tap Stock Tokens to build one.',
     basket: 'The basket',
     total: (pct: string) => `${pct} of 100%`,
     cash: 'Kept as cash',
     cashNote: 'Cash waits in the desk in USDG, a digital US dollar, and is what the desk buys with.',
     mustAddUp: 'The shares and cash must add up to 100%.',
+    monthShort: '30 days',
+    pick: 'Tap the Stock Tokens you want',
+    pickFirst: 'Tap a Stock Token above to add it.',
+    even: 'Even split',
+    adjust: 'Adjust the weights',
+    ofHundred: 'of 100%',
+    cashRest: 'Cash is whatever the stocks leave. The desk buys with it.',
   },
 
   behaviour: {
@@ -131,6 +139,11 @@ export const studioCopy = {
   side: {
     kicker: 'Your desk',
     unnamed: 'Unnamed desk',
+    onlyCash: 'Only cash so far',
+    split: (stocks: number, cashPct: number) =>
+      `${stocks} Stock Token${stocks === 1 ? '' : 's'}, ${cashPct}% kept as cash`,
+    sentence: (perAction: string, daily: string) =>
+      `It may spend at most ${perAction} in one trade and ${daily} in a day. Your account itself refuses anything more.`,
     own: 'Your own basket',
     cash: 'Cash',
     perAction: 'Most in one action',

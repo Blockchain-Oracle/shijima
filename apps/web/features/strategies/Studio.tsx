@@ -1,13 +1,18 @@
 'use client'
 
-import { money, type Preset, percent, studioCopy } from '@desk/shared'
+import { money, type Preset, studioCopy } from '@desk/shared'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useCallback, useMemo, useState } from 'react'
 import { formatUnits } from 'viem'
+import { AllocationDonut } from '@/components/ui/allocation-donut'
+import { Stepper } from '@/components/ui/stepper'
+import { TokenStack } from '@/components/ui/token-logo'
 import { cn } from '@/lib/utils'
 import { type Created, CreateStep } from './CreateStep'
 import { type DraftToken, draftToMandate, draftTotalBps, mandateKey, type StudioDraft } from './draft'
 import { FirstSteps } from './FirstSteps'
 import { ReadStep, useTestRead } from './ReadStep'
+import { mixSlices, type Performance } from './StrategyCard'
 import { BasketStep, LimitsStep } from './StudioFields'
 
 const S = studioCopy
@@ -28,6 +33,7 @@ export function Studio({
   disclosureOn,
   contractVersion,
   goLiveChecks,
+  performance,
 }: {
   draft: StudioDraft
   setDraft: (update: (d: StudioDraft) => StudioDraft) => void
@@ -38,8 +44,12 @@ export function Studio({
   disclosureOn: string | null
   contractVersion: string
   goLiveChecks: number
+  performance: Record<string, Performance>
 }) {
+  const reduced = useReducedMotion()
   const [step, setStep] = useState(1)
+  // Which way the step content slides: forward from the right, back from the left.
+  const [dir, setDir] = useState(1)
   const [problem, setProblem] = useState<string | null>(null)
   const [created, setCreated] = useState<Created | null>(null)
   const [createdAs, setCreatedAs] = useState({ name: '', perAction: '0', daily: '0' })
@@ -55,7 +65,13 @@ export function Studio({
     if (step === 1 && draftTotalBps(draft) !== 10_000) return setProblem(S.identity.mustAddUp)
     if (step === 2 && !result.ok) return setProblem(`${result.problems.join('. ')}.`)
     setProblem(null)
+    setDir(1)
     setStep((s) => Math.min(4, s + 1))
+  }
+  const goBack = (to: number) => {
+    setProblem(null)
+    setDir(-1)
+    setStep(to)
   }
 
   const onCreated = useCallback(
@@ -91,7 +107,8 @@ export function Studio({
   }
 
   const preset = presets.find((p) => p.id === draft.preset)
-  const held = tokens.filter((t) => (draft.weights[t.symbol] ?? 0) > 0)
+  const slices = mixSlices(draft.weights, draft.cashBps, tokens)
+  const symbols = slices.filter((x) => x.symbol !== 'CASH').map((x) => x.symbol)
 
   return (
     <section className="agent-builder" aria-label={S.studioTitle}>
@@ -103,49 +120,50 @@ export function Studio({
         <p className="strat-choice-body">{S.studioBody}</p>
       </div>
 
-      <ol className="agent-steps" aria-label={S.stepsAria}>
-        {S.steps.map((label, index) => (
-          <li key={label} aria-current={step === index + 1 ? 'step' : undefined}>
-            <button
-              type="button"
-              disabled={index + 1 >= step}
-              onClick={() => {
-                if (index + 1 < step) {
-                  setProblem(null)
-                  setStep(index + 1)
-                }
-              }}
-            >
-              <span>{String(index + 1).padStart(2, '0')}</span>
-              {label}
-            </button>
-          </li>
-        ))}
-      </ol>
+      <Stepper steps={S.steps} current={step} onBack={goBack} label={S.stepsAria} counter={S.counter} />
 
       <div className="agent-builder-grid">
         <div className="agent-builder-panel">
-          <h3 className="strat-choice-title mb-5 text-ink">{S.steps[step - 1]}</h3>
-          {step === 1 && <BasketStep draft={draft} setDraft={setDraft} presets={presets} tokens={tokens} />}
-          {step === 2 && <LimitsStep draft={draft} setDraft={setDraft} tokens={tokens} />}
-          {step === 3 && (
-            <ReadStep
-              read={read}
-              currentKey={key}
-              signedIn={Boolean(signedIn)}
-              onRun={() => mandate && key && run(mandate, key)}
-            />
-          )}
-          {step === 4 && mandate && (
-            <CreateStep
-              name={name}
-              mandate={mandate}
-              signedIn={signedIn}
-              disclosureOn={disclosureOn}
-              readRequestId={heard && read.status === 'heard' ? read.requestId : null}
-              onCreated={onCreated}
-            />
-          )}
+          <AnimatePresence mode="wait" initial={false} custom={dir}>
+            <motion.div
+              key={step}
+              custom={dir}
+              initial={reduced ? false : { opacity: 0, x: dir * 28 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={reduced ? { opacity: 0 } : { opacity: 0, x: dir * -28 }}
+              transition={{ duration: reduced ? 0 : 0.22, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <h3 className="strat-choice-title mb-5 text-ink">{S.steps[step - 1]}</h3>
+              {step === 1 && (
+                <BasketStep
+                  draft={draft}
+                  setDraft={setDraft}
+                  presets={presets}
+                  tokens={tokens}
+                  performance={performance}
+                />
+              )}
+              {step === 2 && <LimitsStep draft={draft} setDraft={setDraft} tokens={tokens} />}
+              {step === 3 && (
+                <ReadStep
+                  read={read}
+                  currentKey={key}
+                  signedIn={Boolean(signedIn)}
+                  onRun={() => mandate && key && run(mandate, key)}
+                />
+              )}
+              {step === 4 && mandate && (
+                <CreateStep
+                  name={name}
+                  mandate={mandate}
+                  signedIn={signedIn}
+                  disclosureOn={disclosureOn}
+                  readRequestId={heard && read.status === 'heard' ? read.requestId : null}
+                  onCreated={onCreated}
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
           {problem && (
             <p className="agent-form-error" role="alert">
               {problem}
@@ -153,14 +171,7 @@ export function Studio({
           )}
           <div className="agent-builder-actions">
             {step > 1 ? (
-              <button
-                type="button"
-                className="strat-sensei"
-                onClick={() => {
-                  setProblem(null)
-                  setStep((s) => s - 1)
-                }}
-              >
+              <button type="button" className="strat-sensei" onClick={() => goBack(step - 1)}>
                 {S.back}
               </button>
             ) : (
@@ -178,27 +189,27 @@ export function Studio({
           <p className="strat-micro text-ink-muted">{SIDE.kicker}</p>
           <h3 className="strat-choice-title mt-3 break-words text-ink">{name}</h3>
           <p className="strat-mono-11 mt-1 text-ink-muted">{preset?.name ?? SIDE.own}</p>
-          <div className="studio-bar" aria-hidden>
-            {held.map((t, i) => (
-              <span
-                key={t.symbol}
-                style={{
-                  width: `${(draft.weights[t.symbol] ?? 0) / 100}%`,
-                  background: `color-mix(in srgb, var(--color-vermilion) ${90 - i * 8}%, var(--bg))`,
-                }}
-              />
-            ))}
+          <div className="mt-4 flex items-center gap-4">
+            <AllocationDonut slices={slices} size={72} thickness={9} />
+            <div className="min-w-0">
+              {symbols.length > 0 ? (
+                <TokenStack symbols={symbols} size={24} max={5} />
+              ) : (
+                <span className="text-[12px] text-muted-foreground">{SIDE.onlyCash}</span>
+              )}
+              <p className="mt-2 text-[12px] text-muted-foreground">
+                {SIDE.split(symbols.length, Math.round(draft.cashBps / 100))}
+              </p>
+            </div>
           </div>
-          <div className="studio-weights">
-            {held.map((t) => (
-              <span key={t.symbol}>
-                {t.symbol} <b>{percent(draft.weights[t.symbol] ?? 0)}</b>
-              </span>
-            ))}
-            <span>
-              {SIDE.cash} <b>{percent(draft.cashBps)}</b>
-            </span>
-          </div>
+          {mandate && (
+            <p className="mt-4 rounded-[var(--radius-md)] border border-border bg-[var(--color-surface-2)] p-3 text-[12.5px] text-foreground/85">
+              {SIDE.sentence(
+                money(formatUnits(mandate.perActionCapUsdg, 6)),
+                money(formatUnits(mandate.dailyCapUsdg, 6)),
+              )}
+            </p>
+          )}
           <dl className="agent-preview-facts">
             <div>
               <dt>{SIDE.perAction}</dt>

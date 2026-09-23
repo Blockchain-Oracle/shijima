@@ -125,6 +125,7 @@ export function StrategiesScreen({
           disclosureOn={disclosureOn}
           contractVersion={contractVersion}
           goLiveChecks={goLiveChecks}
+          performance={performance}
         />
       </div>
 
