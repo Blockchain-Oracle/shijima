@@ -2222,4 +2222,8 @@ a.act-row:hover {
   font-size: 0.75rem;
   color: var(--color-ink-muted);
 }
-.cat-chips { border: 0; padding: 0; min-width: 0; }
+.cat-chips {
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
