@@ -1,6 +1,7 @@
 import { webCopy } from '@desk/shared'
 import {
   BookOpen,
+  BookText,
   ChartLine,
   GalleryVerticalEnd,
   Layers3,
@@ -63,6 +64,13 @@ export const NAV_ITEMS = {
     description: webCopy.nav.howItWorks.description,
     icon: BookOpen,
   },
+  docs: {
+    id: 'docs',
+    name: webCopy.nav.docs.name,
+    href: '/docs',
+    description: webCopy.nav.docs.description,
+    icon: BookText,
+  },
 } as const satisfies Record<string, NavItem>
 
 export const DESKTOP_NAV: readonly NavItem[] = [
@@ -87,7 +95,7 @@ export const MOBILE_DRAWER_SECTIONS: readonly NavSection[] = [
     ...webCopy.nav.sections.explore,
     items: [NAV_ITEMS.markets, NAV_ITEMS.reels, NAV_ITEMS.strategies],
   },
-  { id: 'learn', ...webCopy.nav.sections.learn, items: [NAV_ITEMS.howItWorks] },
+  { id: 'learn', ...webCopy.nav.sections.learn, items: [NAV_ITEMS.howItWorks, NAV_ITEMS.docs] },
 ]
 
 export const MOBILE_OVERFLOW: readonly NavItem[] = MOBILE_DRAWER_SECTIONS.flatMap((section) => section.items)

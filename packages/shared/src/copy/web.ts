@@ -30,6 +30,7 @@ export const webCopy = {
     },
     strategies: { name: 'Strategies', description: 'Start a desk from a basket of stocks.' },
     howItWorks: { name: 'How it works', description: 'What the desk decides, and what it never can.' },
+    docs: { name: 'Docs', description: 'The manual: using Shijima, and how it is built.' },
     more: 'More',
     openAll: 'Open all navigation',
     drawerKicker: 'Navigate',
@@ -113,6 +114,7 @@ export const webCopy = {
     source: 'Source',
     /** The chart library's licence asks for a visible link to TradingView; this is it, so the charts carry no logo. */
     charts: 'Charts by TradingView',
+    docs: 'Docs',
   },
 
   states: {

@@ -15,6 +15,9 @@ export default function Footer() {
             <Link href="/how-it-works" data-cursor="hover">
               {webCopy.footer.howItWorks}
             </Link>
+            <Link href="/docs" data-cursor="hover">
+              {webCopy.footer.docs}
+            </Link>
             <Link href="/how-it-works#withdraw-without-us" data-cursor="hover">
               {webCopy.footer.withdraw}
             </Link>
