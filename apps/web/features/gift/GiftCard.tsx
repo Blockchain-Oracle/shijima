@@ -28,6 +28,8 @@ export function GiftCard({ compact = false, className }: { compact?: boolean; cl
   const [why, setWhy] = useState<string | null>(null)
   const [pending, start] = useTransition()
 
+  // Read once, then follow only a claim that is on its way: an idle card has nothing to wait for.
+  const moving = gift?.state === 'queued' || gift?.state === 'sending'
   useEffect(() => {
     let stopped = false
     const read = () =>
@@ -35,12 +37,12 @@ export function GiftCard({ compact = false, className }: { compact?: boolean; cl
         .then((g) => !stopped && setGift(g))
         .catch(() => undefined)
     read()
-    const timer = setInterval(read, POLL_MS)
+    const timer = moving ? setInterval(read, POLL_MS) : undefined
     return () => {
       stopped = true
-      clearInterval(timer)
+      if (timer) clearInterval(timer)
     }
-  }, [])
+  }, [moving])
 
   const claim = () =>
     start(async () => {

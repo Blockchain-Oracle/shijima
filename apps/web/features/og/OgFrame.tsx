@@ -1,5 +1,6 @@
 import { ogCopy, webCopy } from '@desk/shared'
 import type { ReactNode } from 'react'
+import { markDataUri } from './mark'
 import { OG, OG_PAD } from './theme'
 
 const CROP = 28
@@ -23,14 +24,10 @@ function Crop({ at }: { at: 'tl' | 'tr' | 'bl' | 'br' }) {
   )
 }
 
-/** The Shijima mark at preview size: `ShijimaMark`'s still ring and its one vermilion point, with inline fills. */
+/** The Shijima mark at preview size, drawn as an image of `ShijimaMark`'s SVG, as the app icon draws it. */
 export function OgMark({ size }: { size: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <circle cx="16" cy="16" r="12" fill="none" stroke={OG.ink} strokeWidth="2.4" opacity="0.9" />
-      <circle cx="16" cy="16" r="4.2" fill={OG.vermilion} />
-    </svg>
-  )
+  // biome-ignore lint/performance/noImgElement: Satori draws a plain img; next/image does not exist here
+  return <img src={markDataUri()} width={size} height={size} alt="" />
 }
 
 /** Every preview, as in Agari's `OgFrame`: the dark ground, the crop marks, the wordmark and an eyebrow, the honesty line. */
