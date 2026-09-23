@@ -940,6 +940,19 @@ export const settingsCopy = {
     agentId: (id: number) => `Agent ${id}`,
     openAgent: 'Open on OpenServ',
     openIdentity: 'See the identity',
+    /** Linking an OpenServ workspace, so its chat and tasks reach this desk's agent. */
+    workspace: {
+      intro:
+        'Talk to this agent from your own OpenServ workspace: add Shijima there, then send it a code from here.',
+      make: 'Make a link code',
+      making: 'Making a code…',
+      send: 'In your OpenServ workspace, send Shijima:',
+      expires: 'The code works once, for 30 minutes.',
+      linked: (n: number) => `Linked to ${n === 1 ? 'one OpenServ workspace' : `${n} OpenServ workspaces`}.`,
+      unlink: 'Unlink',
+      copied: 'Copied',
+      copy: 'Copy',
+    },
   },
   share: {
     title: 'Share a read-only link',

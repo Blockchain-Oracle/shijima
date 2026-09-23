@@ -12,13 +12,25 @@
 import { runningDesks, workerBeat } from '@desk/db'
 import { errorText } from '@desk/shared'
 import { Agent } from '@openserv-labs/sdk'
-import type { DoTaskActionSchema } from '@openserv-labs/sdk/dist/types.js'
+import type { DoTaskActionSchema, RespondChatMessageActionSchema } from '@openserv-labs/sdk/dist/types.js'
 import { z } from 'zod'
 import { type Cli, type Log, type ReviewSummary, reviewAllDesksExclusive } from '../review'
+import { answerWorkspace } from './talk'
 
 export const AGENT_NAME = 'shijima'
 export const AGENT_DESCRIPTION =
-  'Shijima (しじま). Keeps one owner Stock Token portfolio to its written mandate while the US market is shut, on Robinhood Chain. It decides only WHEN to act, never what to own, and every decision including doing nothing is recorded and fingerprinted on-chain.'
+  'Shijima (しじま) is an AI agent that keeps one person’s basket of US Stock Tokens on plan around the clock, on Robinhood Chain, inside limits their own account enforces. It decides only WHEN to move, never what to own, and fingerprints every decision on-chain. Link your workspace to your desk with a code from the website (send: link ABC123), then ask it how your portfolio is doing, why it waited, or to check now. Anything that moves money comes back as a link to confirm on your desk.'
+
+/** Our own workflow's goal and task, as provisioned. Only a task that carries both runs the review pass. */
+export const HOURLY_GOAL =
+  'Every hour, check each running desk against its owner mandate and act only within the limits that desk enforces on-chain.'
+export const HOURLY_TASK = 'Run the hourly desk review'
+
+/**
+ * A workspace's lasting key. The platform sends a fresh `workspace.id` on every run (it names the session), but the
+ * workspace's file bucket stays the same, so links are kept against that.
+ */
+const workspaceKey = (w: { id: number | string; bucket_folder?: string }) => w.bucket_folder || String(w.id)
 
 export interface AgentCredentials {
   /** Identifies this agent to the platform. */
@@ -36,9 +48,55 @@ export function createDeskAgent(cli: Cli, log: Log, credentials?: AgentCredentia
   }
 
   class DeskAgent extends Agent {
+    /**
+     * A person talking to Shijima inside their own workspace. The platform's model is never asked: the message
+     * goes to the desk the workspace is linked to, and the answer comes from the same brain as the website's chat.
+     */
+    protected override async respondToChat(action: RespondChatMessageActionSchema): Promise<void> {
+      const workspaceId = action.workspace.id
+      const last = [...(action.messages ?? [])].reverse().find((m) => m.author === 'user')
+      if (!last) return
+      try {
+        const reply = await answerWorkspace(cli, log, workspaceKey(action.workspace), last.message)
+        await this.sendChatMessage({ workspaceId, agentId: action.me.id, message: reply })
+      } catch (e) {
+        log('openserv_chat_failed', { workspace: workspaceId, error: platformError(e) })
+      }
+    }
+
     protected override async doTask(action: DoTaskActionSchema): Promise<void> {
       const workspaceId = action.workspace.id
       const taskId = action.task.id
+      log('openserv_task_in', {
+        workspace: workspaceId,
+        goal: action.workspace.goal.slice(0, 80),
+        key: workspaceKey(action.workspace),
+        task: String(action.task.description).slice(0, 80),
+        execution: action.workspaceExecutionId ?? null,
+      })
+      // A task from anyone else's workspace is a question for the desk that workspace is linked to. Only our own
+      // workflow's task runs the review, so no outside workspace can add a clock to the desk's.
+      const own = action.task.description === HOURLY_TASK && action.workspace.goal === HOURLY_GOAL
+      if (!own) {
+        try {
+          await this.updateTaskStatus({ workspaceId, taskId, status: 'in-progress' })
+          const question = [
+            ...new Set(
+              [action.task.description, action.task.body, action.task.input].filter(
+                (x): x is string => typeof x === 'string' && x.trim().length > 0,
+              ),
+            ),
+          ].join('\n')
+          const answer = await answerWorkspace(cli, log, workspaceKey(action.workspace), question)
+          await this.addLogToTask({ workspaceId, taskId, severity: 'info', type: 'text', body: answer })
+          await this.updateTaskStatus({ workspaceId, taskId, status: 'done' })
+        } catch (e) {
+          const error = platformError(e)
+          log('openserv_task_failed', { error, workspaceId, taskId })
+          await this.markTaskAsErrored({ workspaceId, taskId, error }).catch(() => undefined)
+        }
+        return
+      }
       try {
         await this.updateTaskStatus({ workspaceId, taskId, status: 'in-progress' })
         const summary = await review(action.task.triggerEvent?.trigger_name ?? 'task')

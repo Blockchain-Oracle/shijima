@@ -1,4 +1,11 @@
-import { deskById, deskIdBySlug, disclosureAccepted, ownerIdOf, telegramForDesk } from '@desk/db'
+import {
+  deskById,
+  deskIdBySlug,
+  disclosureAccepted,
+  openservForDesk,
+  ownerIdOf,
+  telegramForDesk,
+} from '@desk/db'
 import { DISCLOSURE_VERSION, settingsCopy as s } from '@desk/shared'
 import type { Route } from 'next'
 import Link from 'next/link'
@@ -37,9 +44,10 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
   if (!desk || !viewer || viewer.toLowerCase() !== desk.ownerAddress.toLowerCase()) notFound()
 
   const ownerId = await ownerIdOf(db(), viewer)
-  const [telegram, accepted] = await Promise.all([
+  const [telegram, accepted, openserv] = await Promise.all([
     telegramForDesk(db(), desk.id),
     ownerId ? disclosureAccepted(db(), ownerId, DISCLOSURE_VERSION) : Promise.resolve(null),
+    openservForDesk(db(), desk.id),
   ])
 
   return (
@@ -63,6 +71,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
               deskId={desk.id}
               ownerAddress={desk.ownerAddress}
               deskAddress={desk.address}
+              openservLinked={openserv.linked.length}
               telegram={{
                 linked: telegram.linked ? { username: telegram.linked.username } : null,
                 pending: telegram.pending

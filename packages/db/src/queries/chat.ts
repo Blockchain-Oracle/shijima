@@ -31,7 +31,7 @@ export async function createAskRequest(
     ownerAddress: string
     deskId: string | null
     kind: 'ask' | 'readback'
-    via: 'web' | 'telegram' | 'chat'
+    via: 'web' | 'telegram' | 'chat' | 'openserv'
     question: string
     payload?: Record<string, unknown>
   },

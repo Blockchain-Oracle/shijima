@@ -57,6 +57,13 @@
       "when": 1790139099921,
       "tag": "0007_watch_trigger",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790139965394,
+      "tag": "0008_openserv_links",
+      "breakpoints": true
     }
   ]
 }

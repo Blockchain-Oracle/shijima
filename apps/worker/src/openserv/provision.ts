@@ -13,7 +13,7 @@
 import { errorText } from '@desk/shared'
 import { getProvisionedInfo, provision, triggers } from '@openserv-labs/client'
 import { openCli } from '../cli/context'
-import { AGENT_DESCRIPTION, AGENT_NAME, createDeskAgent } from './agent'
+import { AGENT_DESCRIPTION, AGENT_NAME, createDeskAgent, HOURLY_GOAL, HOURLY_TASK } from './agent'
 
 const WORKFLOW_NAME = 'Hourly desk review'
 const log = (event: string, detail: Record<string, unknown> = {}) =>
@@ -54,12 +54,12 @@ try {
     },
     workflow: {
       name: WORKFLOW_NAME,
-      goal: 'Every hour, check each running desk against its owner mandate and act only within the limits that desk enforces on-chain.',
+      goal: HOURLY_GOAL,
       // The platform is the clock. The worker's own timer is the safety net behind it, and a check is keyed
       // on its hour, so whichever arrives first does the work.
       trigger: triggers.cron({ schedule: '0 * * * *', timezone: 'UTC' }),
       task: {
-        description: 'Run the hourly desk review',
+        description: HOURLY_TASK,
         body: 'Check every running desk once. Record every decision, including doing nothing.',
       },
     },

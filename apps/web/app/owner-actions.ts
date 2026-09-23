@@ -5,15 +5,18 @@ import { APPROVED_TOKENS } from '@desk/chain'
 import { BUTTON_KINDS, type ButtonKind, proposeDirect } from '@desk/core'
 import {
   acceptDisclosure,
+  createOpenservLink,
   createTelegramLink,
   deskById,
   ensureOwner,
   markInboxRead,
+  openservForDesk,
   ownerInbox,
   ownsDesk,
   proposalForOwner,
   setDeskShare,
   telegramForDesk,
+  unlinkOpenserv,
   unlinkTelegram,
 } from '@desk/db'
 import { DISCLOSURE_VERSION, errorText, settingsCopy } from '@desk/shared'
@@ -110,6 +113,32 @@ export async function telegramCodeAction(
   } catch (e) {
     return { ok: false, why: errorText(e) }
   }
+}
+
+/**
+ * A code that ties an OpenServ workspace to this desk: the owner sends "link <code>" in the workspace and its chat
+ * and tasks reach this desk's agent from then on. Upper-case letters and digits, easy to type from a screen.
+ */
+export async function openservCodeAction(
+  deskId: string,
+): Promise<{ ok: true; code: string; expiresAt: string } | { ok: false; why: string }> {
+  try {
+    if (!(await ownerOf(deskId))) return { ok: false, why: 'That is not your desk.' }
+    const o = await openservForDesk(db(), deskId)
+    if (o.pending) return { ok: true, code: o.pending.code, expiresAt: o.pending.codeExpiresAt.toISOString() }
+    const code = randomBytes(4).toString('hex').toUpperCase()
+    const row = await createOpenservLink(db(), deskId, code)
+    return { ok: true, code, expiresAt: (row?.codeExpiresAt ?? new Date()).toISOString() }
+  } catch (e) {
+    return { ok: false, why: errorText(e) }
+  }
+}
+
+export async function openservUnlinkAction(deskId: string): Promise<{ ok: boolean }> {
+  if (!(await ownerOf(deskId))) return { ok: false }
+  const n = await unlinkOpenserv(db(), deskId)
+  revalidatePath(`/desk/${deskId}/settings`)
+  return { ok: n > 0 }
 }
 
 export async function telegramUnlinkAction(deskId: string): Promise<{ ok: boolean }> {

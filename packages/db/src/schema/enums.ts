@@ -118,7 +118,7 @@ export const deskEventKind = pgEnum('desk_event_kind', [
   'session_revoked',
 ])
 export const eventActor = pgEnum('event_actor', ['owner', 'desk', 'system'])
-export const eventVia = pgEnum('event_via', ['web', 'telegram', 'chain', 'worker', 'chat'])
+export const eventVia = pgEnum('event_via', ['web', 'telegram', 'chain', 'worker', 'chat', 'openserv'])
 export const telegramLinkStatus = pgEnum('telegram_link_status', ['pending', 'linked', 'revoked'])
 /** The message types of design brief section 9. Command replies are direct, so they are not in the outbox. */
 export const notificationKind = pgEnum('notification_kind', [

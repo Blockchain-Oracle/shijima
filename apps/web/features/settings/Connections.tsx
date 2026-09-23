@@ -3,6 +3,7 @@ import { OPENSERV, settingsCopy, short } from '@desk/shared'
 import { ArrowUpRight, Bot, Send, Wallet } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { TelegramState } from '@/app/owner-actions'
+import { OpenservLink } from './OpenservLink'
 import { TelegramConnect } from './TelegramConnect'
 
 const c = settingsCopy.connections
@@ -52,11 +53,14 @@ export function Connections({
   ownerAddress,
   deskAddress,
   telegram,
+  openservLinked = 0,
 }: {
   deskId: string
   ownerAddress: string
   deskAddress: string
   telegram: TelegramState
+  /** How many OpenServ workspaces this desk is linked to. */
+  openservLinked?: number
 }) {
   return (
     <div className="connections-grid">
@@ -96,6 +100,7 @@ export function Connections({
           <Out href={OPENSERV.agentUrl}>{c.openAgent}</Out>
           <Out href={OPENSERV.identity.url}>{c.openIdentity}</Out>
         </div>
+        <OpenservLink deskId={deskId} linked={openservLinked} />
       </Card>
     </div>
   )

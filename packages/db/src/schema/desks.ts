@@ -195,3 +195,30 @@ export const telegramLinks = pgTable(
     index('telegram_links_user_idx').on(t.telegramUserId),
   ],
 )
+
+/**
+ * A desk reached from an OpenServ workspace. The platform names the workspace a message or task came from, never
+ * the person, so the owner proves the workspace is theirs the way Telegram does: a one-time code made on the
+ * website, sent as "link <code>" in the workspace. One workspace hears about one desk. The states are Telegram's.
+ */
+export const openservLinks = pgTable(
+  'openserv_links',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    deskId: uuid('desk_id')
+      .notNull()
+      .references(() => desks.id),
+    status: telegramLinkStatus('status').notNull().default('pending'),
+    code: text('code').notNull(),
+    codeExpiresAt: timestamptz('code_expires_at').notNull(),
+    workspaceId: text('workspace_id'),
+    createdAt: timestamptz('created_at').notNull().defaultNow(),
+    linkedAt: timestamptz('linked_at'),
+    revokedAt: timestamptz('revoked_at'),
+  },
+  (t) => [
+    uniqueIndex('openserv_links_code_key').on(t.code),
+    uniqueIndex('openserv_links_one_workspace_key').on(t.workspaceId).where(sql`${t.status} = 'linked'`),
+    index('openserv_links_desk_idx').on(t.deskId),
+  ],
+)
