@@ -746,3 +746,19 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Every other page inside the frame takes the reference screen's measure: 1040px, its padding, its title size. */
+.kit-main .app-container,
+.kit-main .markets-main > .container {
+  max-width: calc(1040px + 68px);
+  padding: 30px 34px 44px;
+}
+.kit-main .app-container h1:first-of-type {
+  letter-spacing: -0.02em;
+}
+@media (max-width: 767px) {
+  .kit-main .app-container,
+  .kit-main .markets-main > .container {
+    padding: 18px 16px 28px;
+  }
+}
