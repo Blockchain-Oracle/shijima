@@ -45,15 +45,17 @@
   --canvas-glow-a: color-mix(in srgb, var(--ac) 9%, transparent);
   --canvas-glow-b: color-mix(in srgb, var(--ac) 6%, transparent);
 
-  --fm: var(--font-jetbrains), "IBM Plex Mono", ui-monospace, monospace;
-  --fs: var(--font-inter), "Hanken Grotesk", system-ui, -apple-system, sans-serif;
-
   --radius-panel: 24px;
   --shadow-panel: 0 50px 130px -50px #000, 0 0 0 1px rgb(0 0 0 / 0.4);
   --shadow-pop: 0 40px 90px -34px #000, 0 0 0 1px rgb(0 0 0 / 0.4);
   --shadow-glow: 0 10px 30px -12px color-mix(in srgb, var(--ac) 45%, transparent);
+}
 
-  /* Every face in the app is the reference's now (lib/fonts.ts). */
+/* The font loader's variables (--font-sora, --font-inter, --font-jetbrains) are set on <body>, not :root, so
+ * anything that reads them is declared here: on :root they would be undefined and the value invalid. */
+body {
+  --fm: var(--font-jetbrains), "IBM Plex Mono", ui-monospace, monospace;
+  --fs: var(--font-inter), "Hanken Grotesk", system-ui, -apple-system, sans-serif;
   --font-display: var(--font-sora), "Hanken Grotesk", system-ui, sans-serif;
   --font-body: var(--font-inter), "Hanken Grotesk", system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), "IBM Plex Mono", ui-monospace, monospace;

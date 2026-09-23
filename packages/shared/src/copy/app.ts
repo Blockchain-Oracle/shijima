@@ -3,6 +3,52 @@
  * Settings). An agent is what the owner sees; "desk" is only the contract's name in code.
  */
 export const appCopy = {
+  /** The app's navigation, in the reference wallet's order: your money first, then your agents, then Discover. */
+  nav: {
+    brand: 'SHIJIMA',
+    tagline: 'AI AGENTS · ROBINHOOD',
+    motto: 'Shijima · AI agents for Robinhood Chain stocks',
+    wallet: 'Wallet',
+    activity: 'Activity',
+    send: 'Send',
+    receive: 'Receive',
+    fund: 'Fund',
+    withdraw: 'Withdraw',
+    bridge: 'Bridge',
+    evidence: 'Evidence',
+    agents: 'Agents',
+    markets: 'Markets',
+    strategies: 'Strategies',
+    reels: 'Reels',
+    live: 'Live',
+    settings: 'Settings',
+    newAgent: 'New agent',
+    more: 'More',
+    moreTitle: 'Everything else',
+    groups: {
+      money: 'Your money',
+      agents: 'Your agents',
+      discover: 'Discover',
+      move: 'Move',
+      account: 'Account',
+    },
+    details: {
+      send: 'From your wallet to any address',
+      receive: 'Your address and your agents’, with QR codes',
+      fund: 'Any token, from any chain, into an agent',
+      withdraw: 'From an agent back to your wallet',
+      bridge: 'In from Base, Arbitrum, Ethereum or BNB, or out',
+      evidence: 'Every decision and move, with its proof',
+      agents: 'Every live agent, and copying one',
+      markets: 'Stock Tokens, open and closed hours',
+      strategies: 'Twenty baskets to start from',
+      reels: 'Decisions and stocks, one at a time',
+      live: 'The live numbers, on mainnet',
+      settings: 'Connections, access, gas',
+    },
+    home: 'Shijima home',
+  },
+
   sidebar: {
     aria: 'Shijima',
     home: 'Overview',

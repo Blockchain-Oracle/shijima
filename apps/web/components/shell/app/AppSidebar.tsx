@@ -1,68 +1,35 @@
 'use client'
 
 import { appCopy, webCopy } from '@desk/shared'
-import {
-  Bell,
-  ChartLine,
-  GalleryVerticalEnd,
-  Layers3,
-  LayoutDashboard,
-  ListTree,
-  Plus,
-  Radar,
-  Settings,
-  SquareArrowOutUpRight,
-  X,
-} from 'lucide-react'
+import { Plus, SquareArrowOutUpRight } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
-import {
-  AnimatedSidebar,
-  AnimatedSidebarClose,
-  AnimatedSidebarContent,
-  AnimatedSidebarFooter,
-  AnimatedSidebarGroup,
-  AnimatedSidebarGroupContent,
-  AnimatedSidebarGroupLabel,
-  AnimatedSidebarHeader,
-  AnimatedSidebarMenu,
-  AnimatedSidebarMenuButton,
-  AnimatedSidebarMenuItem,
-  AnimatedSidebarRail,
-  useAnimatedSidebar,
-} from '@/components/ui/animated-sidebar'
+import { NetworkPill } from '@/components/kit'
 import { TokenLogo } from '@/components/ui/token-logo'
 import { GiftCard } from '@/features/gift/GiftCard'
 import { cn } from '@/lib/utils'
 import { ShijimaMark } from '../ShijimaMark'
 import { SignInButton } from '../SignInButton'
+import ThemeToggle from '../ThemeToggle'
 import { LiveBadge } from './LiveBadge'
+import { DISCOVER, HOME_HREF, isOn, MONEY, type NavItem, SETTINGS } from './nav'
 import type { SidebarAgent } from './types'
 import { WalletChip } from './WalletChip'
 
-/** Is this path the one a link names, or under it. */
-function on(pathname: string | null, href: string, exact = false) {
-  if (!pathname) return false
-  return pathname === href || (!exact && pathname.startsWith(`${href}/`))
-}
+/**
+ * The app's sidebar, in the reference wallet's shape (WalletShell.tsx:104-137): the mark and its line, the network
+ * pill, a flat list of places with an accent bar on the one you are on, and the account at the foot with the theme
+ * toggle. Shijima adds its agents as live rows, Discover, the free $1, the live block and OpenServ. Below 1100px it
+ * is an icon rail; below 768px the phone chrome takes over and this is hidden.
+ */
 
 function dollars(raw: string | null): string {
   if (raw === null) return appCopy.sidebar.noValue
   return `$${(Number(raw) / 1e6).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-function change(bps: number | null): { text: string; tone: 'up' | 'down' | 'flat' } | null {
-  if (bps === null) return null
-  const pct = bps / 100
-  return {
-    text: `${pct > 0 ? '+' : ''}${pct.toFixed(1)}%`,
-    tone: pct > 0.05 ? 'up' : pct < -0.05 ? 'down' : 'flat',
-  }
-}
-
-/** One status word per agent: what the dot's colour means, for a screen reader and the tooltip. */
 function statusOf(a: SidebarAgent): { key: keyof typeof appCopy.sidebar.status; dot: string } {
   if (a.needsYou > 0) return { key: 'needsYou', dot: 'is-needs' }
   if (a.state !== 'active') return { key: 'paused', dot: 'is-paused' }
@@ -70,33 +37,92 @@ function statusOf(a: SidebarAgent): { key: keyof typeof appCopy.sidebar.status; 
   return { key: 'running', dot: 'is-running' }
 }
 
-/** An agent's mark: its heaviest holding's logo with the status dot on its shoulder. */
-function AgentMark({ agent }: { agent: SidebarAgent }) {
-  const s = statusOf(agent)
+export function NavLink({
+  item,
+  active,
+  badge,
+  onNavigate,
+}: {
+  item: NavItem
+  active: boolean
+  badge?: ReactNode
+  onNavigate?: () => void
+}) {
+  const Icon = item.icon
   return (
-    <span className="agent-mark">
-      <TokenLogo symbol={agent.symbols[0] ?? 'CASH'} size={20} />
-      <span className={cn('agent-mark-dot', s.dot)} />
-    </span>
+    <Link
+      href={item.href as Route}
+      className="kit-nav-item"
+      data-active={active || undefined}
+      aria-current={active ? 'page' : undefined}
+      title={item.label}
+      {...(onNavigate ? { onClick: onNavigate } : {})}
+    >
+      <span className="kit-nav-bar" aria-hidden="true" />
+      <Icon aria-hidden="true" className="kit-nav-icon" />
+      <span className="kit-label">{item.label}</span>
+      {badge}
+    </Link>
   )
 }
 
-function Group({ label, children }: { label?: string; children: ReactNode }) {
+export function AgentRows({
+  agents,
+  pathname,
+  onNavigate,
+}: {
+  agents: SidebarAgent[]
+  pathname: string | null
+  onNavigate?: () => void
+}) {
+  const c = appCopy.sidebar
   return (
-    <AnimatedSidebarGroup className="pb-2">
-      {label ? <AnimatedSidebarGroupLabel>{label}</AnimatedSidebarGroupLabel> : null}
-      <AnimatedSidebarGroupContent>
-        <AnimatedSidebarMenu>{children}</AnimatedSidebarMenu>
-      </AnimatedSidebarGroupContent>
-    </AnimatedSidebarGroup>
+    <>
+      {agents.map((a) => {
+        const s = statusOf(a)
+        const active =
+          pathname === `/agents/${a.slug}` ||
+          pathname?.startsWith(`/agents/${a.slug}/`) ||
+          pathname === `/agents/${a.id}` ||
+          pathname?.startsWith(`/agents/${a.id}/`)
+        return (
+          <Link
+            key={a.id}
+            href={`/agents/${a.slug}` as Route}
+            className="kit-nav-item kit-agent-row"
+            data-active={active || undefined}
+            aria-current={active ? 'page' : undefined}
+            title={`${a.name} · ${c.status[s.key]}`}
+            {...(onNavigate ? { onClick: onNavigate } : {})}
+          >
+            <span className="kit-nav-bar" aria-hidden="true" />
+            <span className="agent-mark">
+              <TokenLogo symbol={a.symbols[0] ?? 'CASH'} size={20} />
+              <span className={cn('agent-mark-dot', s.dot)} />
+            </span>
+            <span className="kit-label kit-agent-name">
+              <span className="sr-only">{`${c.status[s.key]}: `}</span>
+              {a.name}
+            </span>
+            <span className="kit-label kit-agent-money">{dollars(a.valueUsdg)}</span>
+          </Link>
+        )
+      })}
+      <Link
+        href={'/agents/new' as Route}
+        className="kit-nav-item"
+        data-active={pathname === '/agents/new' || undefined}
+        title={appCopy.nav.newAgent}
+        {...(onNavigate ? { onClick: onNavigate } : {})}
+      >
+        <span className="kit-nav-bar" aria-hidden="true" />
+        <Plus aria-hidden="true" className="kit-nav-icon" />
+        <span className="kit-label">{appCopy.nav.newAgent}</span>
+      </Link>
+    </>
   )
 }
 
-/**
- * The app's sidebar, on 21st's Animated Sidebar (29334): the owner's wallet, then You (Overview, Needs you,
- * Activity), their agents like channels with a live status dot, then Discover. Settings, the live network and
- * the landing page sit at the foot, one click from anywhere. On a phone it is a focus-managed sheet.
- */
 export function AppSidebar({
   signedInAs,
   agents,
@@ -105,190 +131,98 @@ export function AppSidebar({
   agents: SidebarAgent[]
 }) {
   const pathname = usePathname()
-  const { state, isMobile } = useAnimatedSidebar()
-  const collapsed = state === 'collapsed' && !isMobile
-  const c = appCopy.sidebar
-  const waiting = agents.reduce((n, a) => n + a.needsYou, 0)
+  const n = appCopy.nav
+  const waiting = agents.reduce((sum, a) => sum + a.needsYou, 0)
+  const signedIn = signedInAs !== undefined
 
   return (
-    <AnimatedSidebar ariaLabel={c.aria} collapsible="icon" panelClassName="app-sidebar-panel">
-      <AnimatedSidebarHeader className="app-sidebar-header">
-        <div className="app-sidebar-brand">
-          <Link
-            href={signedInAs ? '/overview' : '/markets'}
-            className="app-sidebar-logo"
-            aria-label={webCopy.nav.homeAria}
-          >
-            <span className="logo-mark">
-              <ShijimaMark />
-            </span>
-            {!collapsed && (
-              <>
-                <span className="app-sidebar-word">{webCopy.brand.name.toUpperCase()}</span>
-                <span className="logo-ja" lang="ja">
-                  {webCopy.brand.ja}
-                </span>
-              </>
-            )}
-          </Link>
-          <AnimatedSidebarClose
-            className="ml-auto text-muted-foreground hover:bg-muted md:hidden"
-            aria-label={c.close}
-          >
-            <X aria-hidden="true" className="size-4" />
-          </AnimatedSidebarClose>
-        </div>
-        {signedInAs ? (
-          <WalletChip address={signedInAs} collapsed={collapsed} />
-        ) : collapsed ? null : (
-          <div className="app-sidebar-signedout">
-            <strong>{c.signedOut.title}</strong>
-            <p>{c.signedOut.body}</p>
+    <aside className="kit-side" aria-label={appCopy.sidebar.aria}>
+      <Link
+        href={(signedIn ? HOME_HREF : '/home') as Route}
+        className="kit-brand"
+        aria-label={webCopy.nav.homeAria}
+      >
+        <span className="kit-brand-tile logo-mark">
+          <ShijimaMark />
+        </span>
+        <span className="kit-label kit-brand-words">
+          <span className="kit-brand-name">
+            {n.brand} <span lang="ja">{webCopy.brand.ja}</span>
+          </span>
+          <span className="kit-brand-line">{n.tagline}</span>
+        </span>
+      </Link>
+
+      <div className="kit-side-network kit-label">
+        <NetworkPill />
+      </div>
+
+      <nav className="kit-nav" aria-label={appCopy.sidebar.aria}>
+        {signedIn ? (
+          <div className="kit-nav-group">
+            {MONEY.map((item) => (
+              <NavLink
+                key={item.href}
+                item={item}
+                active={isOn(pathname, item)}
+                badge={
+                  item.href === '/activity' && waiting > 0 ? (
+                    <span className="kit-nav-count">
+                      {waiting}
+                      <span className="sr-only"> {appCopy.sidebar.needsYou}</span>
+                    </span>
+                  ) : undefined
+                }
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="kit-side-signedout kit-label">
+            <strong>{appCopy.sidebar.signedOut.title}</strong>
+            <p>{appCopy.sidebar.signedOut.body}</p>
             <SignInButton />
           </div>
         )}
-      </AnimatedSidebarHeader>
 
-      <AnimatedSidebarContent className="app-sidebar-content">
-        {signedInAs && (
-          <Group label={c.groups.you}>
-            <AnimatedSidebarMenuItem>
-              <AnimatedSidebarMenuButton
-                href="/overview"
-                isActive={on(pathname, '/overview')}
-                icon={<LayoutDashboard className="size-4" />}
-              >
-                {c.overview}
-              </AnimatedSidebarMenuButton>
-            </AnimatedSidebarMenuItem>
-            <AnimatedSidebarMenuItem>
-              <AnimatedSidebarMenuButton
-                href="/activity?tab=needs"
-                isActive={false}
-                icon={<Bell className="size-4" />}
-                badge={waiting > 0 ? <span className="app-sidebar-count">{waiting}</span> : undefined}
-              >
-                {c.needsYou}
-              </AnimatedSidebarMenuButton>
-            </AnimatedSidebarMenuItem>
-            <AnimatedSidebarMenuItem>
-              <AnimatedSidebarMenuButton
-                href="/activity"
-                isActive={on(pathname, '/activity')}
-                icon={<ListTree className="size-4" />}
-              >
-                {c.activity}
-              </AnimatedSidebarMenuButton>
-            </AnimatedSidebarMenuItem>
-          </Group>
-        )}
-
-        {signedInAs && (
-          <Group label={c.groups.agents}>
-            {agents.map((a) => {
-              const ch = change(a.changeBps)
-              const s = statusOf(a)
-              return (
-                <AnimatedSidebarMenuItem key={a.id}>
-                  <AnimatedSidebarMenuButton
-                    href={`/agents/${a.slug}`}
-                    isActive={on(pathname, `/agents/${a.slug}`) || on(pathname, `/agents/${a.id}`)}
-                    icon={<AgentMark agent={a} />}
-                    className="app-sidebar-agent"
-                    badge={
-                      <span className="app-sidebar-agent-money">
-                        <span>{dollars(a.valueUsdg)}</span>
-                        {ch && <span className={`is-${ch.tone}`}>{ch.text}</span>}
-                      </span>
-                    }
-                  >
-                    <span className="sr-only">{`${c.status[s.key]}: `}</span>
-                    {a.name}
-                  </AnimatedSidebarMenuButton>
-                </AnimatedSidebarMenuItem>
-              )
-            })}
-            <AnimatedSidebarMenuItem>
-              <AnimatedSidebarMenuButton
-                href="/agents/new"
-                isActive={on(pathname, '/agents/new', true)}
-                icon={<Plus className="size-4" />}
-              >
-                {c.newAgent}
-              </AnimatedSidebarMenuButton>
-            </AnimatedSidebarMenuItem>
-          </Group>
-        )}
-
-        <Group label={c.groups.discover}>
-          <AnimatedSidebarMenuItem>
-            <AnimatedSidebarMenuButton
-              href="/markets"
-              isActive={on(pathname, '/markets') || on(pathname, '/stock')}
-              icon={<ChartLine className="size-4" />}
-            >
-              {c.markets}
-            </AnimatedSidebarMenuButton>
-          </AnimatedSidebarMenuItem>
-          <AnimatedSidebarMenuItem>
-            <AnimatedSidebarMenuButton
-              href="/agents"
-              isActive={on(pathname, '/agents', true)}
-              icon={<Radar className="size-4" />}
-            >
-              {c.liveAgents}
-            </AnimatedSidebarMenuButton>
-          </AnimatedSidebarMenuItem>
-          <AnimatedSidebarMenuItem>
-            <AnimatedSidebarMenuButton
-              href="/strategies"
-              isActive={on(pathname, '/strategies')}
-              icon={<Layers3 className="size-4" />}
-            >
-              {c.strategies}
-            </AnimatedSidebarMenuButton>
-          </AnimatedSidebarMenuItem>
-          <AnimatedSidebarMenuItem>
-            <AnimatedSidebarMenuButton
-              href="/reels"
-              isActive={on(pathname, '/reels')}
-              icon={<GalleryVerticalEnd className="size-4" />}
-            >
-              {c.reels}
-            </AnimatedSidebarMenuButton>
-          </AnimatedSidebarMenuItem>
-        </Group>
-      </AnimatedSidebarContent>
-
-      <AnimatedSidebarFooter className="app-sidebar-footer">
-        {!collapsed && signedInAs && <GiftCard compact className="app-sidebar-gift" />}
-        <AnimatedSidebarMenu>
-          <AnimatedSidebarMenuItem>
-            <AnimatedSidebarMenuButton
-              href="/settings"
-              isActive={on(pathname, '/settings')}
-              icon={<Settings className="size-4" />}
-            >
-              {c.settings}
-            </AnimatedSidebarMenuButton>
-          </AnimatedSidebarMenuItem>
-        </AnimatedSidebarMenu>
-        {!collapsed && (
-          <div className="app-sidebar-foot">
-            <LiveBadge compact />
-            <p className="app-sidebar-links">
-              <a href="https://platform.openserv.ai/agents/4513" target="_blank" rel="noreferrer noopener">
-                {c.runsOn}
-              </a>
-              <span aria-hidden="true">·</span>
-              <Link href={'/home' as Route}>
-                {c.landing} <SquareArrowOutUpRight aria-hidden="true" className="inline size-3" />
-              </Link>
-            </p>
+        {signedIn && (
+          <div className="kit-nav-group">
+            <div className="kit-nav-heading kit-label">{n.groups.agents}</div>
+            <AgentRows agents={agents} pathname={pathname} />
           </div>
         )}
-      </AnimatedSidebarFooter>
-      <AnimatedSidebarRail aria-label={c.toggle} />
-    </AnimatedSidebar>
+
+        <div className="kit-nav-group">
+          <div className="kit-nav-heading kit-label">{n.groups.discover}</div>
+          {DISCOVER.map((item) => (
+            <NavLink key={item.href} item={item} active={isOn(pathname, item, item.href === '/agents')} />
+          ))}
+          {signedIn && <NavLink item={SETTINGS} active={isOn(pathname, SETTINGS)} />}
+        </div>
+        {signedIn && <GiftCard compact className="app-sidebar-gift kit-label" />}
+      </nav>
+
+      <div className="kit-side-foot">
+        {signedIn && (
+          <div className="kit-label">
+            <WalletChip address={signedInAs} />
+          </div>
+        )}
+        <div className="kit-side-row">
+          <span className="kit-label kit-side-live">
+            <LiveBadge compact />
+          </span>
+          <ThemeToggle />
+        </div>
+        <p className="kit-side-links kit-label">
+          <a href="https://platform.openserv.ai/agents/4513" target="_blank" rel="noreferrer noopener">
+            {appCopy.sidebar.runsOn}
+          </a>
+          <span aria-hidden="true">·</span>
+          <Link href={'/home' as Route}>
+            {n.home} <SquareArrowOutUpRight aria-hidden="true" className="inline size-3" />
+          </Link>
+        </p>
+      </div>
+    </aside>
   )
 }
