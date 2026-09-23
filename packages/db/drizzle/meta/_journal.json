@@ -68,7 +68,7 @@
     {
       "idx": 10,
       "version": "7",
-      "when": 1790156383771,
+      "when": 1790160000000,
       "tag": "0010_copy_trading",
       "breakpoints": true
     }
