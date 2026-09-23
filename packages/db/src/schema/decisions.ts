@@ -105,6 +105,14 @@ export const decisions = pgTable(
     sealedByTx: text('sealed_by_tx'),
     sealedAt: timestamptz('sealed_at'),
 
+    /**
+     * Set when OpenServ asked for this decision: the hourly workflow's task, or a linked workspace's check_now.
+     * The workspace is its lasting key (the bucket folder), the task and execution are the platform's own ids.
+     */
+    openservWorkspace: text('openserv_workspace'),
+    openservTaskId: text('openserv_task_id'),
+    openservExecutionId: text('openserv_execution_id'),
+
     decidedAt: timestamptz('decided_at').notNull(),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
   },

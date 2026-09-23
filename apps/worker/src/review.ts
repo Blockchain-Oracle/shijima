@@ -28,6 +28,7 @@ import {
   hasWake,
   lastDecisionAt,
   lastSealAt,
+  type OpenservOrigin,
   pendingCheckRequests,
   planCheckpoint,
   runningDesks,
@@ -35,8 +36,10 @@ import {
 } from '@desk/db'
 import { errorText } from '@desk/shared'
 import type { Address, Hex } from 'viem'
+import { createDeskAgentKit, type DeskAgentKit } from './agentkit'
 import type { openCli } from './cli/context'
 import { implementationsByVersion } from './cli/context'
+import { afterCheck } from './openserv/sessions'
 import { resolveUnsettled, sendAction } from './sender'
 
 const SEAL_EVERY_MS = 24 * 60 * 60 * 1000
@@ -85,15 +88,44 @@ export function hourSlot(now = new Date()): Date {
 }
 
 let inFlight: Promise<ReviewSummary> | undefined
+let kitLoading: Promise<DeskAgentKit | undefined> | undefined
+
+/**
+ * The worker's AgentKit, built once. If it cannot be built the desk still sends, with the same key and journal
+ * through the plain wallet client, and says so: a missing wrapper must never stop a protective sale.
+ */
+function agentKitFor(cli: Cli, log: Log): Promise<DeskAgentKit | undefined> {
+  kitLoading ??= createDeskAgentKit(cli.deps, cli.env.rpcUrl).then(
+    (kit) => {
+      log('agentkit_ready', {
+        wallet: kit.walletProvider.getName(),
+        network: kit.walletProvider.getNetwork(),
+      })
+      return kit
+    },
+    (e: unknown) => {
+      log('agentkit_unavailable', { error: errorText(e), note: 'sending with the wallet client directly' })
+      return undefined
+    },
+  )
+  return kitLoading
+}
 
 /**
  * The one entry point both clocks use. A pass already running is returned to the second caller, never started
  * again beside it: the operator key signs from one place at a time.
  */
+export interface ReviewOptions {
+  trigger?: WakeTrigger
+  now?: Date
+  /** The OpenServ workflow task that started this pass. Stamped on the decisions its hourly checks write. */
+  openserv?: OpenservOrigin
+}
+
 export function reviewAllDesksExclusive(
   cli: Cli,
   log: Log,
-  options: { trigger?: WakeTrigger; now?: Date } = {},
+  options: ReviewOptions = {},
 ): Promise<ReviewSummary> {
   if (inFlight) {
     log('review_joined', { trigger: options.trigger ?? 'tick', note: 'a pass is already running' })
@@ -108,7 +140,7 @@ export function reviewAllDesksExclusive(
 export async function reviewAllDesks(
   cli: Cli,
   log: Log,
-  options: { trigger?: WakeTrigger; now?: Date } = {},
+  options: ReviewOptions = {},
 ): Promise<ReviewSummary> {
   const now = options.now ?? new Date()
   const hour = hourSlot(now)
@@ -119,7 +151,9 @@ export async function reviewAllDesks(
   const summary: ReviewSummary = { desks: 0, checks: [], graded: 0, sealed: 0, held: false }
 
   const send = async (action: ActionRow, call: DeskCall): Promise<SendReport> => {
-    const sent = await sendAction(cli.deps, action, call)
+    // Through Coinbase AgentKit: its action runs the same write-ahead sender, and its wallet provider signs.
+    const kit = await agentKitFor(cli, log)
+    const sent = kit ? await kit.send(action, call) : await sendAction(cli.deps, action, call)
     if (sent.status === 'refused') return sent
     if (sent.status === 'reverted') return { status: 'reverted', txHash: sent.outcome.txHash }
     const { txHash, eventHash, chainSeq, amountOut } = sent.outcome
@@ -182,6 +216,19 @@ export async function reviewAllDesks(
       trigger: 'manual',
     })
     await finishCheckRequest(cli.db, request.id, { status: 'done' })
+    await afterCheck(
+      cli,
+      log,
+      request.deskId,
+      report.records,
+      request.openservWorkspace
+        ? {
+            workspace: request.openservWorkspace,
+            taskId: request.openservTaskId,
+            executionId: request.openservExecutionId,
+          }
+        : undefined,
+    )
     log('check_now', {
       desk: request.deskId,
       status: report.status,
@@ -215,6 +262,7 @@ export async function reviewAllDesks(
           records: report.records,
         })
       }
+      await afterCheck(cli, log, desk.id, report.records, trigger === 'cron' ? options.openserv : undefined)
       summary.checks.push({ desk: desk.address, status: report.status, records: report.records.length })
     }
 

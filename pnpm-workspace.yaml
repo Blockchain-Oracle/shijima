@@ -20,8 +20,18 @@ catalog:
   "@types/node": ^24.0.0
 
 # Build scripts are denied by default in pnpm 11. esbuild is needed by tsx and vitest.
+# The rest came with @coinbase/agentkit (23 Sep): husky hooks, a TOS notice and optional native
+# builds with pure-JS fallbacks. Checked and denied.
 allowBuilds:
+  '@coinbase/x402': false
+  '@opensea/seaport-js': false
+  bigint-buffer: false
+  bufferutil: false
   esbuild: true
+  keccak: false
+  opensea-js: false
+  secp256k1: false
+  utf-8-validate: false
 
 # openai 5.x lists zod 3 as a peer only for its zod helpers, which we do not use.
 # We build JSON schemas with zod 4's own z.toJSONSchema. openai stays on 5.x because

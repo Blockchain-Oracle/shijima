@@ -12,6 +12,7 @@
  *   pnpm desk:skeleton --force             if SERV says wait or decline, trade anyway as a recorded developer override
  *   pnpm desk:skeleton --kill-after-send   crash drill: die right after the transaction is broadcast
  *   pnpm desk:skeleton --kill-before-send  crash drill: die after signing, before anything is broadcast
+ *   pnpm desk:skeleton --agentkit          send through the worker's Coinbase AgentKit action, as the worker does
  *
  * After a crash drill, run `pnpm desk:resolve` (or the skeleton again). It settles the action from the chain.
  *
@@ -43,6 +44,7 @@ import {
 import { appendRecord, appendResult, finishWake, logServCall, startWake } from '@desk/db'
 import { chainHead, errorText, verifyRecord } from '@desk/shared'
 import { formatUnits, parseUnits } from 'viem'
+import { createDeskAgentKit } from '../agentkit'
 import { requireLeader } from '../leader'
 import { resolveUnsettled, sendAction } from '../sender'
 import { assertChainSeqAgrees, openCli, printSettlements, readDevDesk, registerDevDesk } from './context'
@@ -253,10 +255,17 @@ async function main() {
         decisionHash: recordHash,
       }
     : { kind: 'checkpoint', desk, version: deskRow.contractVersion, decisionHash: recordHash }
-  const sent = await sendAction(deps, action, call, {
-    ...(flag('kill-before-send') ? { afterPrepared: () => dieHere('after signing, before broadcast') } : {}),
-    ...(flag('kill-after-send') ? { afterSent: () => dieHere('right after broadcast') } : {}),
-  })
+  // The crash drills hook into the plain sender, so they keep it. --agentkit takes the worker's own path.
+  const sent = flag('agentkit')
+    ? await (await createDeskAgentKit(deps, env.rpcUrl)).send(action, call)
+    : await sendAction(deps, action, call, {
+        ...(flag('kill-before-send')
+          ? { afterPrepared: () => dieHere('after signing, before broadcast') }
+          : {}),
+        ...(flag('kill-after-send') ? { afterSent: () => dieHere('right after broadcast') } : {}),
+      })
+  if (flag('agentkit'))
+    console.log('sent through Coinbase AgentKit (shijima action provider, ViemWalletProvider)')
   if (sent.status !== 'confirmed') {
     await finishWake(db, wake.id, {
       status: 'failed',

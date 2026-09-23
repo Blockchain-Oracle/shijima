@@ -20,9 +20,11 @@
     "telegram-link": "tsx --env-file-if-exists=../../.env src/cli/link.ts",
     "review": "tsx --env-file-if-exists=../../.env src/cli/review.ts",
     "ask": "tsx --env-file-if-exists=../../.env src/cli/ask.ts",
-    "prove-gift": "tsx --env-file-if-exists=../../.env src/cli/prove-gift.ts"
+    "prove-gift": "tsx --env-file-if-exists=../../.env src/cli/prove-gift.ts",
+    "prove:openserv": "tsx --env-file-if-exists=../../.env src/cli/prove-openserv.ts"
   },
   "dependencies": {
+    "@coinbase/agentkit": "0.10.4",
     "@desk/chain": "workspace:*",
     "@desk/core": "workspace:*",
     "@desk/db": "workspace:*",

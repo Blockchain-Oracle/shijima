@@ -13,6 +13,7 @@ import {
   broadcast,
   type DeskCall,
   type DeskOutcome,
+  type DeskTxSigner,
   findOutcome,
   OperatorLowGasError,
   type OperatorWallet,
@@ -37,6 +38,11 @@ export interface SenderDeps {
   db: Db
   pub: PublicClient
   wallet: OperatorWallet
+  /**
+   * Signs in place of the wallet client: the Coinbase AgentKit wallet provider, holding the same key. Everything
+   * around it (simulate, pinned nonce, write-ahead journal, broadcast, recovery) is unchanged.
+   */
+  signer?: DeskTxSigner
 }
 
 /** Test hooks for the crash drills. Each one is a point where the process can be killed on purpose. */
@@ -92,7 +98,7 @@ export async function sendAction(
 ): Promise<SendResult> {
   let signed: Awaited<ReturnType<typeof signDeskCall>>
   try {
-    signed = await signDeskCall(deps.pub, deps.wallet, call)
+    signed = await signDeskCall(deps.pub, deps.wallet, call, deps.signer)
   } catch (e) {
     const name = revertName(e)
     const code =

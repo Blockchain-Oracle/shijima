@@ -9,12 +9,17 @@
  * to an hour first does the work, because a check is keyed on (desk, hour), and the other finds it done.
  */
 
-import { runningDesks, workerBeat } from '@desk/db'
+import { checkRequestStatus, runningDesks, workerBeat } from '@desk/db'
 import { errorText } from '@desk/shared'
 import { Agent } from '@openserv-labs/sdk'
-import type { DoTaskActionSchema, RespondChatMessageActionSchema } from '@openserv-labs/sdk/dist/types.js'
+import type {
+  ActionSchema,
+  DoTaskActionSchema,
+  RespondChatMessageActionSchema,
+} from '@openserv-labs/sdk/dist/types.js'
 import { z } from 'zod'
 import { type Cli, type Log, type ReviewSummary, reviewAllDesksExclusive } from '../review'
+import { agentStatus, type CallerSession, checkNow, latestDecisions, proposeChange } from './capabilities'
 import { answerWorkspace } from './talk'
 
 export const AGENT_NAME = 'shijima'
@@ -32,6 +37,29 @@ export const HOURLY_TASK = 'Run the hourly desk review'
  */
 const workspaceKey = (w: { id: number | string; bucket_folder?: string }) => w.bucket_folder || String(w.id)
 
+/** What the platform calls a workspace, for "Linked to X". Its payload types only the goal, so a name is a bonus. */
+export const workspaceLabel = (w: { goal?: string; name?: unknown }) =>
+  (typeof w.name === 'string' && w.name.trim()) || w.goal?.trim().slice(0, 120) || null
+
+/** The session a capability call came from. A call with no workspace is refused by every capability. */
+export function callerSession(action: ActionSchema | undefined): CallerSession {
+  const workspace = action?.workspace
+  return {
+    workspaceKey: workspace ? workspaceKey(workspace) : '',
+    taskId: action?.type === 'do-task' ? String(action.task.id) : null,
+    executionId:
+      action?.type === 'do-task' && action.workspaceExecutionId !== undefined
+        ? String(action.workspaceExecutionId)
+        : null,
+  }
+}
+
+/** A workspace task that only asks for a check: "check now", "please check my desk". */
+const CHECK_TASK = /^\s*(please\s+)?check(\s+(it|my desk|the desk))?(\s+now)?[.!]?\s*$/i
+
+/** How long check_now waits for its decision before answering with the link alone. */
+const CHECK_WAIT_MS = 50_000
+
 export interface AgentCredentials {
   /** Identifies this agent to the platform. */
   apiKey: string
@@ -40,11 +68,29 @@ export interface AgentCredentials {
 }
 
 export function createDeskAgent(cli: Cli, log: Log, credentials?: AgentCredentials): Agent {
-  const review = async (trigger: string) => {
-    log('openserv_task', { trigger })
-    // The same pass the timer runs, never beside it: one operator key, one pass at a time.
-    const summary = await reviewAllDesksExclusive(cli, log, { trigger: 'cron' })
+  const review = async (trigger: string, session: CallerSession) => {
+    log('openserv_task', { trigger, task: session.taskId, execution: session.executionId })
+    // The same pass the timer runs, never beside it: one operator key, one pass at a time. The workflow's task
+    // and run are stamped on every decision its hourly checks write.
+    const summary = await reviewAllDesksExclusive(cli, log, {
+      trigger: 'cron',
+      openserv: { workspace: session.workspaceKey, taskId: session.taskId, executionId: session.executionId },
+    })
     return summary
+  }
+
+  /** Queues the check, then waits for the worker's pass to run it, so the answer carries the decision. */
+  const checkNowAndWait = async (session: CallerSession): Promise<string> => {
+    const asked = await checkNow(cli, log, session)
+    if (!asked.ok || !asked.requestId) return asked.reply
+    const until = Date.now() + CHECK_WAIT_MS
+    while (Date.now() < until) {
+      await new Promise((r) => setTimeout(r, 2_000))
+      const status = await checkRequestStatus(cli.db, asked.requestId)
+      if (status?.status === 'refused') return status.refusedReason ?? asked.reply
+      if (status?.status === 'done') return `${asked.reply}\n\n${await latestDecisions(cli, session, 3)}`
+    }
+    return asked.reply
   }
 
   class DeskAgent extends Agent {
@@ -57,7 +103,13 @@ export function createDeskAgent(cli: Cli, log: Log, credentials?: AgentCredentia
       const last = [...(action.messages ?? [])].reverse().find((m) => m.author === 'user')
       if (!last) return
       try {
-        const reply = await answerWorkspace(cli, log, workspaceKey(action.workspace), last.message)
+        const reply = await answerWorkspace(
+          cli,
+          log,
+          workspaceKey(action.workspace),
+          last.message,
+          workspaceLabel(action.workspace),
+        )
         await this.sendChatMessage({ workspaceId, agentId: action.me.id, message: reply })
       } catch (e) {
         log('openserv_chat_failed', { workspace: workspaceId, error: platformError(e) })
@@ -87,7 +139,16 @@ export function createDeskAgent(cli: Cli, log: Log, credentials?: AgentCredentia
               ),
             ),
           ].join('\n')
-          const answer = await answerWorkspace(cli, log, workspaceKey(action.workspace), question)
+          // "Check now" as a task is the check_now capability, with this task's id on the decision it writes.
+          const answer = CHECK_TASK.test(question)
+            ? await checkNowAndWait(callerSession(action))
+            : await answerWorkspace(
+                cli,
+                log,
+                workspaceKey(action.workspace),
+                question,
+                workspaceLabel(action.workspace),
+              )
           await this.addLogToTask({ workspaceId, taskId, severity: 'info', type: 'text', body: answer })
           await this.updateTaskStatus({ workspaceId, taskId, status: 'done' })
         } catch (e) {
@@ -99,7 +160,7 @@ export function createDeskAgent(cli: Cli, log: Log, credentials?: AgentCredentia
       }
       try {
         await this.updateTaskStatus({ workspaceId, taskId, status: 'in-progress' })
-        const summary = await review(action.task.triggerEvent?.trigger_name ?? 'task')
+        const summary = await review(action.task.triggerEvent?.trigger_name ?? 'task', callerSession(action))
         // NOT completeTask. SDK 2.4.1 sends `output` as a string, and the platform now wants an object plus
         // an outputOptionId, so it answers 400. Logging the summary and marking the task done uses only
         // endpoints that work today, and it leaves the same record on the task.
@@ -128,9 +189,9 @@ export function createDeskAgent(cli: Cli, log: Log, credentials?: AgentCredentia
     ...(credentials ?? {}),
   })
 
-  // One capability, so the agent page states plainly what it can be asked to do. It READS: the hourly review
-  // is started by the workflow's cron trigger and by nothing a chat can say, so a stray request to the agent
-  // can never add a third clock beside the platform's and the worker's.
+  // The public one READS: the hourly review is started by the workflow's cron trigger and by nothing a chat can
+  // say, so a stray request can never add a third clock. The one way to ask for a check is check_now below,
+  // from a linked workspace whose owner allowed it, and it runs one desk's check inside the same pass.
   agent.addCapability({
     name: 'desk_status',
     description:
@@ -142,6 +203,54 @@ export function createDeskAgent(cli: Cli, log: Log, credentials?: AgentCredentia
       log('openserv_capability', { reason: args.reason ?? null })
       const [desks, beat] = await Promise.all([runningDesks(cli.db), workerBeat(cli.db)])
       return `${desks.length} desk${desks.length === 1 ? '' : 's'} running. The worker's last pass finished ${beat ? beat.beatAt.toISOString() : 'never'}. Checks run on the hourly trigger, not on request.`
+    },
+  })
+
+  // Callable only from a workspace linked to a desk. Each finds the desk through that link and nothing else.
+  agent.addCapability({
+    name: 'agent_status',
+    description:
+      'The linked Shijima desk: its name, practice or live, running or paused, and when it last checked. Only for a workspace linked to a desk with "link <code>".',
+    inputSchema: z.object({}),
+    async run({ action }) {
+      return agentStatus(cli, callerSession(action))
+    },
+  })
+
+  agent.addCapability({
+    name: 'latest_decisions',
+    description:
+      'The linked desk’s newest decisions, including "nothing to do": what it decided, the amount, the transaction and a link to the full record.',
+    inputSchema: z.object({
+      limit: z.number().int().min(1).max(20).optional().describe('How many, newest first. Default 5.'),
+    }),
+    async run({ args, action }) {
+      return latestDecisions(cli, callerSession(action), args.limit ?? 5)
+    },
+  })
+
+  agent.addCapability({
+    name: 'check_now',
+    description:
+      'Ask the linked desk to look now instead of at the next hour. Only works when the owner turned on "Let my workspace trigger checks". The agent’s own rules and the on-chain limits still decide whether anything moves; it can never withdraw or raise a limit.',
+    inputSchema: z.object({
+      reason: z.string().max(300).optional().describe('Why a check is wanted. Recorded, never acted on.'),
+    }),
+    async run({ args, action }) {
+      log('openserv_capability', { name: 'check_now', reason: args.reason ?? null })
+      return checkNowAndWait(callerSession(action))
+    },
+  })
+
+  agent.addCapability({
+    name: 'propose_change',
+    description:
+      'Suggest a change to the linked desk in plain words, for example "hold less NVDA". Nothing changes here: the answer is a link where the owner confirms it on the website.',
+    inputSchema: z.object({
+      change: z.string().min(3).max(1000).describe('The change, in plain words.'),
+    }),
+    async run({ args, action }) {
+      return proposeChange(cli, log, callerSession(action), args.change)
     },
   })
 

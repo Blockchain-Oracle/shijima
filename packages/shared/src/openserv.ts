@@ -29,4 +29,23 @@ export const openservCopy = {
   timeout: 'I am still thinking about that. The answer will be in the chat on your desk.',
   confirm: (url: string) => `Nothing changes until you confirm it on your desk: ${url}`,
   task: (answer: string) => answer,
+  /** The owner has not turned on "Let my workspace trigger checks" for this workspace. */
+  checksOff: (url: string) =>
+    `This workspace may read the desk but not start checks. The owner can allow it in Settings, under Connections: ${url}`,
+  checkQueued: (url: string) =>
+    `Asked. The agent looks now, and its usual rules and on-chain limits still decide whether anything moves. The decision will be on the desk: ${url}`,
+  checkRefused: {
+    pending: 'A check is already waiting to run. Its decision will be on the desk in a minute.',
+    cooldown: 'The desk was checked less than ten minutes ago. Ask again a little later.',
+    not_running: 'The desk is not running, so there is nothing to check.',
+  },
 } as const
+
+/**
+ * An OpenServ webhook-trigger URL, exactly: `https://api.openserv.ai/webhooks/trigger/<token>`. Anything else is
+ * refused, so a saved "webhook" can never make the worker POST to an arbitrary host. Returns the token.
+ */
+export function openservWebhookToken(url: string): string | undefined {
+  const m = /^https:\/\/api\.openserv\.ai\/webhooks\/trigger\/([A-Za-z0-9_-]{8,200})\/?$/.exec(url.trim())
+  return m?.[1]
+}

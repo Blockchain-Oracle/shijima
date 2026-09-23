@@ -35,6 +35,7 @@ export async function answerWorkspace(
   log: Log,
   workspaceId: string,
   text: string,
+  workspaceName?: string | null,
 ): Promise<string> {
   const site = siteOf(cli)
   // A task arrives with its description and its body, often the same words twice, so the text is read line by
@@ -51,7 +52,7 @@ export async function answerWorkspace(
   const question = lines.filter((l) => !LINK.test(l)).join('\n')
   if (codeLine) {
     const code = LINK.exec(codeLine)?.[1] ?? ''
-    const claim = await claimOpenservLink(cli.db, code.toUpperCase(), workspaceId)
+    const claim = await claimOpenservLink(cli.db, code.toUpperCase(), workspaceId, workspaceName)
     const already = !claim.ok && (await deskForWorkspace(cli.db, workspaceId))
     if (!claim.ok && !already) return claim.reason === 'another_desk' ? C.linkElsewhere : C.linkUsed
     if (claim.ok) {
