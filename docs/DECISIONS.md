@@ -517,3 +517,16 @@ Tight pick from the Glider pass.
 | How much real money goes in | **Settled 2026-09-22 by Abu: about $5.** The dev desk's funds (5.21 USDG and a little NVDA) cover all development, the v1 move and the demo. No $50 demo desk; the rules and caps are sized to $5. Abu's go also covers the v1 deploy's gas. |
 | Does a build with no MCP qualify for the "Mainnet & MCP" track | **Settled 2026-09-21: yes.** The track is for agents that act on Robinhood Chain *or* use Robinhood MCP. We also fit the Open track. `research/2026-09-21-tracks.md`. |
 | The product's name | **Settled 2026-09-21: Shijima (しじま).** Abu chose it. Reasoning below. |
+
+## 2026-09-23 · UX overhaul decisions
+
+- **Motion is in.** `motion` 12.43.0, the version Agari runs. FIDELITY §3 skipped it; Abu asked for animation. Used
+  for meaning only (steps, counters, stagger, the chart drawing in) and every use honours reduced motion.
+- **Basket names are plain words.** Labels changed, ids kept, so stored mandates are untouched.
+- **Token looks live in `packages/shared`, not in the chain's token list.** Presentation is not chain data.
+- **Telegram stays linked per desk.** An account-level link would break approvals and the outbox for no gain with
+  one owner and one desk (reviewed against `bot.ts:112`, `outbox.ts`).
+- **The desk chart is our own SVG after 21st's Portfolio Chart**, not lightweight-charts, whose logo it carried.
+  The markets page keeps lightweight-charts.
+- **A moved desk shows its past.** The chart prepends the earlier contract's value history and the record folds its
+  decisions, linking to that contract's page on the explorer. Decision pages stay per contract.

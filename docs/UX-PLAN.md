@@ -1,5 +1,7 @@
 # Shijima UX overhaul: web app and Telegram bot
 
+**Status, 23 Sep:** steps 1 to 7 built and committed; see the BUILD-PLAN log for what was cut.
+
 ## Context
 
 Abu opened the app on 22 Sep and found the experience mediocre.

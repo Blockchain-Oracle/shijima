@@ -823,6 +823,32 @@ the fork and the rehearsal database, ending in a real shadow check on v1. Then o
 price alerts across; v0 is closed and its 44 records stay in the database. Worker restarted from tag `v1`.
 **Owed:** Blockscout verification by hand (Sourcify is done), so the "Write proxy" steps work.
 
+**Wed 23 Sep, early. UX OVERHAUL, per `docs/UX-PLAN.md`, with 21st.dev, at Abu's request.** He found the app mediocre:
+text-only cards, jargon basket names, a flat studio, no portfolio chart, a buried Telegram link and a bare bot. About
+40 21st searches, 78 previews viewed on contact sheets, 14 components read with `21st get` and adapted into our tokens
+(21st AI generation is not enabled on the account). What changed, each proven in headless Chrome at 390 and 1440, dark
+and light, with no console errors and no sideways scroll:
+- **Bot:** named Shijima (it was "Omamori"), 7 commands, descriptions, its picture, a welcome photo, and a menu
+  (Portfolio, Record, Pause/Resume, Ask) that edits one message in place; a refresh button on the pinned status.
+  Run live into Abu's own chat. Approvals untouched.
+- **Logos** for all 10 Stock Tokens (`public/tokens`, `TokenLogo`, `TokenStack`) and one colour per token
+  (`packages/shared/src/token-look.ts`).
+- **Plain basket names** (The whole US market, The 7 giants, The companies building AI, Play it safe; ids unchanged).
+  Strategy cards show logos, a donut and each basket's real 30-day return from `price_points` (`presetPerformance`,
+  the same arithmetic as the markets chart).
+- **Studio:** a stepper with slides, basket radio cards with returns, build-your-own as logo tiles and sliders with
+  cash as the remainder, a live preview with the limits in one sentence.
+- **Desk:** value first, a portfolio chart (value against where it started, dips, range tabs, decision dots,
+  keyboard slider) that carries the earlier v0 contract's history, now-against-plan, holdings with logos and 24h
+  sparklines, limit gauges, and the record as a day-by-day timeline; visitors get the record beside the portfolio.
+- **Record page:** chips with logos instead of dropdowns. **Telegram connect:** one real link, code made ahead.
+- **Found and fixed on the way: sign-in was broken since the 22 Sep review.** The server pinned the SIWE scheme and
+  the button never sent one, so every sign-in answered "That signature does not match". Proven fixed with a real
+  signature from the owner key through `/api/auth`.
+- `motion` 12.43.0 added (reverses FIDELITY §3; see DECISIONS). Lint, typecheck, 98 checks and the build pass.
+- **Not done, on the cut list:** trade and portfolio images rendered by a web route; Settings "Connections" cards;
+  Telegram connect in the header menu. Log in with Telegram and a Mini App wait for a public domain.
+
 ## 6. Schedule
 
 | Day | Work | Must be true by end of day |
