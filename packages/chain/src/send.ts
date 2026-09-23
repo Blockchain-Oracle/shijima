@@ -132,10 +132,29 @@ export function revertName(error: unknown): string | undefined {
   }
 }
 
+/** Exactly what gets signed: the prepared request with its pinned nonce and the gas headroom applied. */
+export interface PreparedDeskTx {
+  chainId: number
+  to: Address
+  data: Hex
+  nonce: number
+  gas: bigint
+  maxFeePerGas?: bigint
+  maxPriorityFeePerGas?: bigint
+  gasPrice?: bigint
+}
+
+/**
+ * Something other than the wallet client that turns a prepared request into signed bytes: the worker's Coinbase
+ * AgentKit wallet provider. Same key, same bytes; only who holds the pen changes.
+ */
+export type DeskTxSigner = (tx: PreparedDeskTx) => Promise<Hex>
+
 export async function signDeskCall(
   pub: PublicClient,
   wallet: OperatorWallet,
   call: DeskCall,
+  signer?: DeskTxSigner,
 ): Promise<SignedDeskCall> {
   const account = wallet.account
   // Separate call sites, because viem types each contract function separately and cannot take a union of them.
@@ -192,7 +211,18 @@ export async function signDeskCall(
   const needed = gas * (request.maxFeePerGas ?? request.gasPrice ?? 0n)
   const balance = await pub.getBalance({ address: wallet.account.address })
   if (balance < needed) throw new OperatorLowGasError(balance, needed)
-  const serialized = await wallet.signTransaction({ ...request, gas })
+  const serialized = signer
+    ? await signer({
+        chainId: request.chainId ?? (await pub.getChainId()),
+        to: call.desk,
+        data,
+        nonce: request.nonce,
+        gas,
+        ...(request.maxFeePerGas === undefined
+          ? { gasPrice: request.gasPrice }
+          : { maxFeePerGas: request.maxFeePerGas, maxPriorityFeePerGas: request.maxPriorityFeePerGas }),
+      })
+    : await wallet.signTransaction({ ...request, gas })
   return {
     kind: call.kind,
     desk: call.desk,

@@ -34,6 +34,12 @@ export interface SignedTransaction {
   deadlineUnix?: number
 }
 
+/** One action row by id: what an outside caller (the AgentKit action) must name before it may send anything. */
+export async function actionById(db: DbOrTx, actionId: string): Promise<ActionRow | undefined> {
+  const [row] = await db.select().from(actions).where(eq(actions.id, actionId))
+  return row
+}
+
 export async function markActionPrepared(
   db: DbOrTx,
   actionId: string,

@@ -36,6 +36,7 @@ import {
 } from '@desk/db'
 import { errorText } from '@desk/shared'
 import type { Address, Hex } from 'viem'
+import { createDeskAgentKit, type DeskAgentKit } from './agentkit'
 import type { openCli } from './cli/context'
 import { implementationsByVersion } from './cli/context'
 import { afterCheck } from './openserv/sessions'
@@ -87,6 +88,28 @@ export function hourSlot(now = new Date()): Date {
 }
 
 let inFlight: Promise<ReviewSummary> | undefined
+let kitLoading: Promise<DeskAgentKit | undefined> | undefined
+
+/**
+ * The worker's AgentKit, built once. If it cannot be built the desk still sends, with the same key and journal
+ * through the plain wallet client, and says so: a missing wrapper must never stop a protective sale.
+ */
+function agentKitFor(cli: Cli, log: Log): Promise<DeskAgentKit | undefined> {
+  kitLoading ??= createDeskAgentKit(cli.deps, cli.env.rpcUrl).then(
+    (kit) => {
+      log('agentkit_ready', {
+        wallet: kit.walletProvider.getName(),
+        network: kit.walletProvider.getNetwork(),
+      })
+      return kit
+    },
+    (e: unknown) => {
+      log('agentkit_unavailable', { error: errorText(e), note: 'sending with the wallet client directly' })
+      return undefined
+    },
+  )
+  return kitLoading
+}
 
 /**
  * The one entry point both clocks use. A pass already running is returned to the second caller, never started
@@ -128,7 +151,9 @@ export async function reviewAllDesks(
   const summary: ReviewSummary = { desks: 0, checks: [], graded: 0, sealed: 0, held: false }
 
   const send = async (action: ActionRow, call: DeskCall): Promise<SendReport> => {
-    const sent = await sendAction(cli.deps, action, call)
+    // Through Coinbase AgentKit: its action runs the same write-ahead sender, and its wallet provider signs.
+    const kit = await agentKitFor(cli, log)
+    const sent = kit ? await kit.send(action, call) : await sendAction(cli.deps, action, call)
     if (sent.status === 'refused') return sent
     if (sent.status === 'reverted') return { status: 'reverted', txHash: sent.outcome.txHash }
     const { txHash, eventHash, chainSeq, amountOut } = sent.outcome
