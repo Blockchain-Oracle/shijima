@@ -1,5 +1,5 @@
 import { APPROVED_TOKENS, EXPLORER } from '@desk/chain'
-import { homeCopy as H, lookOf, money, OPENSERV, PRESETS, short } from '@desk/shared'
+import { appCopy, homeCopy as H, lookOf, money, OPENSERV, PRESETS, short } from '@desk/shared'
 import { ArrowRight, ArrowUpRight, Fingerprint } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
@@ -9,6 +9,8 @@ import { SectionHeader } from '@/components/ui/section-header'
 import { TokenLogo, TokenStack } from '@/components/ui/token-logo'
 import { doingNow } from '@/features/desk/AgentCard'
 import { StrategyCard } from '@/features/strategies/StrategyCard'
+import { LiveAgentsCarousel } from './LiveAgentsCarousel'
+import type { PublicAgent } from '@/lib/agents.server'
 import type { DeskView } from '@/lib/desk.server'
 import type { PresetPerformance } from '@/lib/markets.server'
 import './home.css'
@@ -130,12 +132,14 @@ function DollarSplit({ vaultRateBps }: { vaultRateBps: number | null }) {
  */
 export function HomePage({
   showcase,
+  agents,
   weekendFact,
   performance,
   vaultRateBps,
   factory,
 }: {
   showcase: DeskView | undefined
+  agents: PublicAgent[]
   weekendFact: string | null
   performance: PresetPerformance[]
   vaultRateBps: number | null
@@ -177,6 +181,20 @@ export function HomePage({
           </div>
         </div>
       </section>
+
+      {agents.length > 0 && (
+        <section className="lp-section" aria-label={appCopy.carousel.title}>
+          <div className="container">
+            <SectionHeader
+              index={appCopy.carousel.index}
+              title={appCopy.carousel.title}
+              desc={appCopy.carousel.desc}
+              className="mb-6"
+            />
+            <LiveAgentsCarousel agents={agents} />
+          </div>
+        </section>
+      )}
 
       <section className="lp-section" aria-label={H.steps.title}>
         <div className="container">

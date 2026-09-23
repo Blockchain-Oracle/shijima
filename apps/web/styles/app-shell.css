@@ -1041,3 +1041,117 @@ a.act-row:hover {
   gap: 0.75rem;
   margin-top: 1.8rem;
 }
+
+/* ── Agents: the board (21st Leaderboard Rankings 13063) and the empty marquee (19377) ── */
+.ag-intro { max-width: 44rem; margin-top: 0.6rem; font-size: 0.9rem; line-height: 1.55; color: var(--color-ink-secondary); }
+.ag-section { margin-bottom: 1.6rem; scroll-margin-top: 4.5rem; }
+
+.ag-mine { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 0.75rem; }
+.ag-mine-card { display: flex; align-items: center; gap: 0.7rem; padding: 0.9rem 1rem; border: 1px solid var(--color-hairline); border-radius: var(--radius-lg, 16px); background: var(--color-surface-1); }
+.ag-mine-card:hover { border-color: var(--color-accent-dim); }
+.ag-mine-name { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.ag-mine-name strong { font-size: 0.92rem; color: var(--color-ink); }
+.ag-mine-value { margin-left: auto; font-family: var(--font-data); color: var(--color-ink); }
+
+.ag-empty { position: relative; overflow: hidden; border: 1px solid var(--color-hairline); border-radius: var(--radius-xl, 24px); background: var(--color-surface-1); }
+.ag-empty-marquee { position: absolute; inset: 0; opacity: 0.35; mask-image: linear-gradient(90deg, transparent, #000 20%, #000 80%, transparent); pointer-events: none; }
+.ag-empty-track { display: flex; gap: 0.75rem; width: max-content; padding: 1rem; animation: ag-drift 38s linear infinite; }
+.ag-empty-pill { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0.8rem; border: 1px solid var(--color-hairline); border-radius: 999px; background: var(--color-surface-2); font-size: 0.8rem; color: var(--color-ink-secondary); white-space: nowrap; }
+.ag-empty-body { position: relative; padding: 4.5rem 1.6rem 1.6rem; background: linear-gradient(180deg, transparent, var(--color-surface-1) 45%); }
+.ag-empty-body h3 { font-size: 1.25rem; font-weight: 700; color: var(--color-ink); }
+.ag-empty-body p { max-width: 38rem; margin-top: 0.5rem; font-size: 0.9rem; line-height: 1.55; color: var(--color-ink-secondary); }
+
+@keyframes ag-drift { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .ag-empty-track { animation: none; } }
+
+.ag-board { border: 1px solid var(--color-hairline); border-radius: var(--radius-lg, 16px); background: var(--color-surface-1); overflow: hidden; }
+.ag-row {
+  display: grid;
+  grid-template-columns: 2rem minmax(11rem, 1.1fr) minmax(0, 1.6fr) minmax(7rem, auto) minmax(9rem, 0.9fr) auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.1rem;
+}
+.ag-row + .ag-row { border-top: 1px solid var(--color-hairline); }
+.ag-rank { font-family: var(--font-data); font-size: 0.85rem; color: var(--color-ink-muted); }
+.ag-who { display: flex; align-items: center; gap: 0.7rem; min-width: 0; }
+.ag-who-text { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.ag-who-text strong { font-size: 0.95rem; color: var(--color-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ag-latest { display: grid; grid-template-columns: auto 1fr; gap: 0.1rem 0.45rem; align-items: start; min-width: 0; }
+.ag-latest-text { font-size: 0.82rem; line-height: 1.4; color: var(--color-ink-secondary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ag-latest-when { grid-column: 2; font-size: 0.7rem; color: var(--color-ink-muted); }
+.ag-money { display: flex; align-items: center; gap: 0.6rem; }
+.ag-money-text { display: flex; flex-direction: column; align-items: flex-end; font-family: var(--font-data); }
+.ag-money-text strong { color: var(--color-ink); font-size: 0.9rem; }
+.ag-money-text span { font-size: 0.72rem; color: var(--color-ink-muted); }
+.ag-money-text .is-up { color: var(--color-profit); }
+.ag-money-text .is-down { color: var(--color-loss); }
+.ag-record { display: flex; flex-direction: column; gap: 0.15rem; font-size: 0.76rem; color: var(--color-ink-secondary); }
+.ag-record small { font-size: 0.7rem; color: var(--color-ink-muted); }
+.ag-cta { display: flex; gap: 0.4rem; }
+.ag-cta a { display: inline-flex; align-items: center; gap: 0.3rem; }
+
+@media (max-width: 1100px) {
+  .ag-row { grid-template-columns: 1.5rem minmax(0, 1fr) auto; grid-template-areas: "rank who money" "rank latest latest" "rank record cta"; row-gap: 0.6rem; }
+  .ag-rank { grid-area: rank; align-self: start; }
+  .ag-who { grid-area: who; }
+  .ag-latest { grid-area: latest; }
+  .ag-money { grid-area: money; }
+  .ag-record { grid-area: record; }
+  .ag-cta { grid-area: cta; justify-self: end; }
+  .ag-spark { display: none; }
+}
+
+/* ── Landing: live agents carousel (21st Apple Card Carousel 28160, on native scroll-snap) ── */
+.lac-controls { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.lac-all { font-size: 0.85rem; color: var(--color-accent); }
+.lac-arrows { display: inline-flex; gap: 0.5rem; }
+.lac-arrows button { display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border: 1px solid var(--color-hairline); border-radius: 999px; color: var(--color-ink); background: var(--color-surface-1); }
+.lac-arrows button:disabled { opacity: 0.35; }
+.lac-arrows button:not(:disabled):hover { border-color: var(--color-accent-dim); }
+
+.lac-track {
+  display: flex;
+  gap: 1.25rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding-bottom: 0.5rem;
+  outline: none;
+}
+.lac-track::-webkit-scrollbar { display: none; }
+.lac-track:focus-visible { box-shadow: 0 0 0 2px var(--color-accent); border-radius: var(--radius-lg, 16px); }
+
+.lac-card {
+  position: relative;
+  flex: 0 0 min(21rem, 82vw);
+  min-height: 26rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-xl, 24px);
+  background: radial-gradient(120% 80% at 0% 0%, var(--color-accent-wash), transparent 60%), var(--color-surface-1);
+  scroll-snap-align: start;
+  transition: transform 300ms var(--ease-out, ease-out), border-color 200ms;
+}
+.lac-card:hover { transform: scale(1.015); border-color: var(--color-accent-dim); }
+.lac-card-link { position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
+.lac-card-head { display: flex; align-items: center; gap: 0.7rem; }
+.lac-card-label { display: flex; flex-direction: column; }
+.lac-card-label strong { font-size: 0.95rem; color: var(--color-ink); }
+.lac-mode { font-family: var(--font-data); font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent); }
+.lac-mode.is-live { color: var(--color-profit); }
+.lac-headline { font-family: var(--font-display, inherit); font-size: 1.45rem; line-height: 1.25; font-weight: 600; letter-spacing: -0.01em; color: var(--color-ink); display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.lac-when { font-size: 0.75rem; color: var(--color-ink-muted); }
+.lac-foot { margin-top: auto; display: flex; flex-direction: column; gap: 0.75rem; }
+.lac-foot-row { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
+.lac-value { font-family: var(--font-data); font-size: 1.1rem; color: var(--color-ink); }
+.lac-record { font-size: 0.72rem; color: var(--color-ink-muted); text-align: right; }
+.lac-copy { position: relative; z-index: 2; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.65rem 1rem; border-radius: var(--radius-md, 12px); font-weight: 600; font-size: 0.85rem; }
+
+@media (prefers-reduced-motion: reduce) { .lac-card { transition: none; } .lac-card:hover { transform: none; } }
+.lac-card--quiet { background: var(--color-surface-1); border-style: dashed; }
+.lac-card--quiet .lac-headline { font-size: 1.3rem; }
+.lac-body { font-size: 0.88rem; line-height: 1.55; color: var(--color-ink-secondary); }

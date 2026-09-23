@@ -1,0 +1,98 @@
+/**
+ * The public face of every shared agent, for the Live agents board and the landing page's carousel: what it holds
+ * and how that moved, its latest real decision in its own words, its graded track record, and a small line of its
+ * value. Only agents whose owners turned sharing on; never an owner's address in full, never their notes.
+ */
+import { APPROVED_TOKENS } from '@desk/chain'
+import {
+  currentMandate,
+  deskRecord,
+  gradeTally,
+  isQuiet,
+  latestValueSnapshot,
+  mandateFromRow,
+  sharedDesks,
+  valueHistory,
+  valueSnapshotAtOrBefore,
+} from '@desk/db'
+import { db } from './db'
+
+const DAY_MS = 24 * 60 * 60 * 1000
+
+const symbolOf = (address: string | null) =>
+  address ? (APPROVED_TOKENS.find((t) => t.address.toLowerCase() === address.toLowerCase())?.symbol ?? null) : null
+
+export interface PublicAgent {
+  id: string
+  slug: string
+  name: string
+  mode: 'shadow' | 'ask_first' | 'on_its_own'
+  running: boolean
+  symbols: string[]
+  valueUsdg: string | null
+  dayBps: number | null
+  latest: { seq: number; summary: string; outcome: string; shadow: boolean; symbol: string | null; at: string } | null
+  graded: number
+  better: number
+  followers: number
+  /** The last two days of value, thinned to about 32 points, in dollars. */
+  spark: number[]
+  startedAt: string | null
+}
+
+export async function publicAgents(): Promise<PublicAgent[]> {
+  const shared = (await sharedDesks(db())).filter((d) => d.lifecycle !== 'closed' && d.shareSlug)
+  const rows = await Promise.all(
+    shared.map(async (d): Promise<PublicAgent> => {
+      const [now, dayAgo, mandateRow, record, tally, history] = await Promise.all([
+        latestValueSnapshot(db(), d.id),
+        valueSnapshotAtOrBefore(db(), d.id, new Date(Date.now() - DAY_MS)),
+        currentMandate(db(), d.id),
+        deskRecord(db(), d.id, { limit: 40 }),
+        gradeTally(db(), d.id),
+        valueHistory(db(), d.id, 200),
+      ])
+      const mandate = mandateRow ? mandateFromRow(mandateRow) : null
+      const latest = record.find((r) => !isQuiet(r)) ?? record[0]
+      const recent = history.filter((h) => h.takenAt.getTime() > Date.now() - 2 * DAY_MS)
+      const step = Math.max(1, Math.ceil(recent.length / 32))
+      return {
+        id: d.id,
+        slug: d.shareSlug ?? d.id,
+        name: d.name ?? 'Agent',
+        mode: d.mode,
+        running: d.lifecycle === 'running' && d.state === 'active',
+        symbols: (mandate?.targets.tokens ?? [])
+          .slice()
+          .sort((a, b) => b.weightBps - a.weightBps)
+          .flatMap((t) => symbolOf(t.token) ?? []),
+        valueUsdg: now ? now.totalUsdg.toString() : null,
+        dayBps:
+          now && dayAgo && dayAgo.totalUsdg > 0n
+            ? Number(((now.totalUsdg - dayAgo.totalUsdg) * 10_000n) / dayAgo.totalUsdg)
+            : null,
+        latest: latest
+          ? {
+              seq: latest.seq,
+              summary: latest.summary,
+              outcome: latest.outcome,
+              shadow: latest.shadow,
+              symbol: symbolOf(latest.token),
+              at: latest.decidedAt.toISOString(),
+            }
+          : null,
+        graded: tally.graded,
+        better: tally.better,
+        followers: 0,
+        spark: recent.filter((_, i) => i % step === 0).map((h) => Number(h.totalUsdg) / 1e6),
+        startedAt: d.startedAt?.toISOString() ?? null,
+      }
+    }),
+  )
+  // Live agents first, then by what they hold: the board leads with agents trading real money.
+  return rows.sort(
+    (a, b) =>
+      Number(b.mode !== 'shadow') - Number(a.mode !== 'shadow') ||
+      Number(BigInt(b.valueUsdg ?? '0') - BigInt(a.valueUsdg ?? '0')),
+  )
+}

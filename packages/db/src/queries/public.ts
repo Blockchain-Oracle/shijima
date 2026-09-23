@@ -497,3 +497,18 @@ export async function outcomeCounts(db: DbOrTx, deskId: string) {
     .where(eq(decisions.deskId, deskId))
     .groupBy(decisions.outcome)
 }
+
+/**
+ * An agent's graded timing calls: how many were graded at the reopen and how many beat the other choice. Only
+ * real grades (not replays, not "ungradable"), so the track record on a public card is the record, not a claim.
+ */
+export async function gradeTally(db: DbOrTx, deskId: string): Promise<{ graded: number; better: number }> {
+  const result = await db.execute<{ graded: string; better: string }>(sql`
+    select count(*) filter (where g.verdict <> 'ungradable') as graded,
+           count(*) filter (where g.verdict = 'better') as better
+    from ${grades} g
+    where g.desk_id = ${deskId} and g.replay = false
+  `)
+  const row = result.rows[0]
+  return { graded: Number(row?.graded ?? 0), better: Number(row?.better ?? 0) }
+}

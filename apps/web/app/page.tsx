@@ -1,6 +1,7 @@
 import { homeCopy } from '@desk/shared'
 import { HomePage } from '@/features/home/HomePage'
 import { currentDeployment } from '@/lib/chain'
+import { publicAgents } from '@/lib/agents.server'
 import { currentVaultRateBps, loadDesk } from '@/lib/desk.server'
 import { loadWeekendFact, presetPerformance } from '@/lib/markets.server'
 
@@ -15,8 +16,9 @@ const SHOWCASE_SLUG = 'showcase'
  * signed-in owner reaches their app from the header's "Open app"; this page never sends anyone away.
  */
 export default async function Home() {
-  const [showcase, weekendFact, performance, vaultRateBps] = await Promise.all([
+  const [showcase, agents, weekendFact, performance, vaultRateBps] = await Promise.all([
     loadDesk(SHOWCASE_SLUG).catch(() => undefined),
+    publicAgents().catch(() => []),
     loadWeekendFact().catch(() => null),
     presetPerformance(30).catch(() => []),
     currentVaultRateBps().catch(() => null),
@@ -24,6 +26,7 @@ export default async function Home() {
   return (
     <HomePage
       showcase={showcase}
+      agents={agents}
       weekendFact={weekendFact}
       performance={performance}
       vaultRateBps={vaultRateBps}

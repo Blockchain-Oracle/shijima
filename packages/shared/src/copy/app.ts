@@ -198,6 +198,60 @@ export const appCopy = {
     },
   },
 
+  agents: {
+    meta: 'Agents',
+    kicker: 'Live on Robinhood Chain',
+    title: 'Agents',
+    intro:
+      'Every agent here is an account on the chain with an AI working it inside hard limits. Watch any of them, or copy one: your own agent then makes the same moves with your own money, and only you can take it out.',
+    yours: 'Your agents',
+    live: 'Live agents',
+    none: {
+      title: 'You have no agent yet',
+      body: 'Make one from a strategy, or copy one of the agents below. Either way it is your own account, and only you can withdraw from it.',
+      create: 'Create an agent',
+      copy: 'Copy an agent',
+    },
+    noneShared: 'No agent is shared yet. Yours can be the first: turn sharing on in its settings.',
+    columns: { agent: 'Agent', latest: 'Latest decision', value: 'Holds', record: 'Track record' },
+    record: (better: number, graded: number) =>
+      graded === 0 ? 'Not graded yet' : `${better} of ${graded} timing calls beat the alternative`,
+    recordTitle:
+      'Each timing call is graded when the US market reopens: was acting (or waiting) better than the other choice? Only real grades are counted.',
+    followers: (n: number) => (n === 0 ? 'No one copies it yet' : `${n} ${n === 1 ? 'copies' : 'copy'} it`),
+    copy: 'Copy',
+    watch: 'Watch',
+    practice: 'Practice',
+    liveMode: 'Trading',
+    noDecision: 'No decision yet',
+  },
+
+  carousel: {
+    index: 'Live',
+    title: 'Agents at work, right now',
+    desc: 'Each is a real account on Robinhood Chain mainnet with an AI working it. Open one to see every decision, or copy it.',
+    aria: 'Live agents, scroll sideways',
+    all: 'Every agent',
+    prev: 'Previous agents',
+    next: 'Next agents',
+    practice: 'Practice',
+    live: 'Trading live',
+    copy: 'Copy this agent',
+    noDecision: 'Its first decision is on the way.',
+    create: {
+      label: 'Your agent',
+      title: 'Start your own, from $1',
+      body: 'Pick one of twenty strategies, put in USDG, and your agent keeps it on plan around the clock. The first 20 people get their first $1 free.',
+      cta: 'Create an agent',
+    },
+    how: {
+      label: 'Copying',
+      title: 'Copy an agent, keep your own keys',
+      body: 'Your own agent makes the same moves as the one you copy, sized to your money and held to your limits. Only you can take it out. Stop any time.',
+      cta: 'How it works',
+    },
+  },
+
   notFound: {
     meta: 'Not found',
     code: '404',
