@@ -1,6 +1,6 @@
 /**
  * Pictures in Telegram: after a trade and with the report, the desk's share card, drawn by the web app's own
- * Open Graph route (`/desk/[slug]/opengraph-image`) and sent as a photo under the text.
+ * Open Graph route (`/agents/[slug]/opengraph-image`) and sent as a photo under the text.
  *
  * A picture is decoration. The words have already gone when one is queued, so a failed fetch or a failed upload
  * costs nothing but the picture. They go out one at a time in the background, never inside the outbox's pass,
@@ -24,7 +24,7 @@ export interface CardSender {
 
 /** The card's address. Only a shared desk has one: the route draws nothing private. */
 export const cardUrl = (webUrl: string, shareSlug: string) =>
-  `${webUrl.replace(/\/$/, '')}/desk/${encodeURIComponent(shareSlug)}/opengraph-image`
+  `${webUrl.replace(/\/$/, '')}/agents/${encodeURIComponent(shareSlug)}/opengraph-image`
 
 export async function fetchCard(url: string): Promise<Uint8Array> {
   const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS), redirect: 'follow' })
