@@ -23,6 +23,11 @@ export interface ApprovedToken {
   observationCardinality: number
   uiMultiplier: string
   tradability: string
+  /**
+   * Set when a token already listed no longer passes the rule. It stays listed so desks that hold it still see
+   * it, but no strategy may use it. The text is the reason, e.g. "pinned pool holds $95295 of USDG, under $100000".
+   */
+  watch?: string
 }
 
 export const TOKENS_GENERATED_AT: string = data.generatedAt
