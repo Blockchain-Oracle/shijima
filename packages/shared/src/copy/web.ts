@@ -1202,8 +1202,7 @@ export const takesCopy = {
   composer: {
     title: 'Post a take',
     close: 'Close',
-    where:
-      'Your words are kept by Shijima and shown with your wallet. Your agent never reads them.',
+    where: 'Your words are kept by Shijima and shown with your wallet. Your agent never reads them.',
     stock: 'About',
     placeholder: 'What do you make of it? Name another with $TICKER.',
     holds: (symbol: string) => `Show that my agent holds ${symbol}`,

@@ -268,7 +268,10 @@ export const howCopy = {
       title: '0.5% a year, waived during the beta',
       body: 'A small yearly share of what the agent holds, counted as it goes, for example “Fee so far: $0.03, waived.” Practice mode is always free.',
     },
-    perTrade: { title: 'No fee per trade', body: 'An agent that is paid per trade is paid to trade too much.' },
+    perTrade: {
+      title: 'No fee per trade',
+      body: 'An agent that is paid per trade is paid to trade too much.',
+    },
     network: {
       title: 'Network fees',
       body: 'Paid in ETH on Robinhood Chain. Creating an agent costs about $0.30, and a trade about $0.04. Every card shows the fee before you sign.',

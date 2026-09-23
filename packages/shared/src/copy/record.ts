@@ -202,7 +202,8 @@ export const decisionCopy = {
   arithmetic:
     'This part is plain arithmetic, not an assistant. It can refuse, and it can never start anything.',
   everyLimitPassed: 'Every limit passed.',
-  vaultNoLimits: 'Nothing counts against the limits: the money stays in the agent’s account, as the contract counts it.',
+  vaultNoLimits:
+    'Nothing counts against the limits: the money stays in the agent’s account, as the contract counts it.',
   refused: (reasons: string) => `Refused: ${reasons}.`,
   nothingToCheck: 'Nothing to check: the agent was not going to act.',
   spend: 'It would spend',

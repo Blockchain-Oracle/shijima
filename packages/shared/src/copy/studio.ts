@@ -32,7 +32,8 @@ export const studioCopy = {
     basket: 'The basket',
     total: (pct: string) => `${pct} of 100%`,
     cash: 'Kept as cash',
-    cashNote: 'Cash waits in your agent’s account in USDG, a digital US dollar, and is what the agent buys with.',
+    cashNote:
+      'Cash waits in your agent’s account in USDG, a digital US dollar, and is what the agent buys with.',
     mustAddUp: 'The shares and cash must add up to 100%.',
     monthShort: '30 days',
     pick: 'Tap the Stock Tokens you want',
@@ -281,7 +282,8 @@ export const tutorialCopy = {
       kicker: 'Last step',
       heading: 'Connect and sign one message',
       note: 'It costs nothing and moves nothing. Then start an agent from a basket.',
-      fineprint: 'You can see a real agent without connecting: the markets page marks what shared agents did.',
+      fineprint:
+        'You can see a real agent without connecting: the markets page marks what shared agents did.',
     },
   },
   close: 'Close',
