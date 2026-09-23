@@ -18,6 +18,7 @@ import {
   valueSnapshotAtOrBefore,
 } from '@desk/db'
 import { db } from './db'
+import { netChangeBps, netChangeUsdg } from './money/flows'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 const HOUR_MS = 60 * 60 * 1000
@@ -59,8 +60,11 @@ export interface Overview {
   agents: OverviewAgent[]
   totalUsdg: string | null
   dayChangeUsdg: string | null
-  /** Every agent's value added up, hour by hour, oldest first, in dollars. */
-  combined: { t: number; value: number }[]
+  /**
+   * Every agent's value added up, hour by hour, oldest first, in dollars, with money in minus out so far (`flow`),
+   * so the chart reads the change net of the owner's own moves.
+   */
+  combined: { t: number; value: number; flow: number }[]
   needs: OverviewNeed[]
   telegramLinked: number
   openservLinked: number
@@ -95,10 +99,8 @@ export async function loadOverview(address: string): Promise<Overview> {
           .sort((a, b) => b.weightBps - a.weightBps)
           .flatMap((t) => symbolOf(t.token) ?? []),
         valueUsdg: now ? now.totalUsdg.toString() : null,
-        changeBps:
-          now && dayAgo && dayAgo.totalUsdg > 0n
-            ? Number(((now.totalUsdg - dayAgo.totalUsdg) * 10_000n) / dayAgo.totalUsdg)
-            : null,
+        // Net of money the owner moved: a withdrawal is not a loss.
+        changeBps: now && dayAgo ? netChangeBps(now, dayAgo) : null,
         needsYou: waiting.length,
         latest: latest
           ? {
@@ -135,7 +137,7 @@ export async function loadOverview(address: string): Promise<Overview> {
   const withDay = valued.filter((r) => r.dayAgo)
   const dayChange =
     withDay.length > 0
-      ? withDay.reduce((s, r) => s + ((r.now?.totalUsdg ?? 0n) - (r.dayAgo?.totalUsdg ?? 0n)), 0n)
+      ? withDay.reduce((s, r) => s + (r.now && r.dayAgo ? netChangeUsdg(r.now, r.dayAgo) : 0n), 0n)
       : null
 
   return {
@@ -153,22 +155,26 @@ export async function loadOverview(address: string): Promise<Overview> {
  * Adds several agents' value histories into one line, an hour at a time. Each agent carries its last known value
  * forward, and an hour counts only once every agent has started, so a new agent never shows as a jump in value.
  */
-function combine(histories: { takenAt: Date; totalUsdg: bigint }[][]): { t: number; value: number }[] {
+function combine(
+  histories: { takenAt: Date; totalUsdg: bigint; flowsUsdg: bigint }[][],
+): { t: number; value: number; flow: number }[] {
   const live = histories.filter((h) => h.length > 0)
   if (live.length === 0) return []
   const start = Math.max(...live.map((h) => h[0]?.takenAt.getTime() ?? 0))
   const end = Math.max(...live.map((h) => h[h.length - 1]?.takenAt.getTime() ?? 0))
-  const out: { t: number; value: number }[] = []
+  const out: { t: number; value: number; flow: number }[] = []
   const cursor = live.map(() => 0)
   for (let t = Math.floor(start / HOUR_MS) * HOUR_MS; t <= end + HOUR_MS; t += HOUR_MS) {
     let sum = 0n
+    let flows = 0n
     for (const [i, h] of live.entries()) {
       let at = cursor[i] ?? 0
       while (at + 1 < h.length && (h[at + 1]?.takenAt.getTime() ?? Infinity) <= t) at++
       cursor[i] = at
       sum += h[at]?.totalUsdg ?? 0n
+      flows += h[at]?.flowsUsdg ?? 0n
     }
-    out.push({ t, value: Number(sum) / 1e6 })
+    out.push({ t, value: Number(sum) / 1e6, flow: Number(flows) / 1e6 })
   }
   return out
 }

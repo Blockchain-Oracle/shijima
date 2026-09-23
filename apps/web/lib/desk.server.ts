@@ -11,6 +11,7 @@ import {
   companyEventsFrom,
   currentMandate,
   deskById,
+  deskFlows,
   deskIdBySlug,
   deskNotes,
   deskRecord,
@@ -107,7 +108,7 @@ export async function loadDesk(slug: string) {
   if (!resolved) return undefined
   const { isOwner, raw: desk } = resolved
 
-  const [snapshot, mandateRow, approvals, record, history, timing, chat] = await Promise.all([
+  const [snapshot, mandateRow, approvals, record, history, timing, chat, flows] = await Promise.all([
     latestValueSnapshot(db(), desk.id),
     currentMandate(db(), desk.id),
     isOwner ? pendingApprovals(db(), desk.id) : Promise.resolve([]),
@@ -115,6 +116,7 @@ export async function loadDesk(slug: string) {
     valueHistory(db(), desk.id, 400),
     timingSummary(db(), desk.id),
     isOwner ? askHistory(db(), desk.id, desk.ownerAddress) : Promise.resolve([]),
+    deskFlows(db(), desk.id, 50),
   ])
   const mandate = mandateRow ? mandateFromRow(mandateRow) : null
   const tokens = mandate?.targets.tokens.map((t) => t.token) ?? []
@@ -330,7 +332,18 @@ export async function loadDesk(slug: string) {
     })),
     record: groupQuietRuns(record),
     notes: notes.map((n) => ({ at: n.at.toISOString(), kind: n.kind, detail: n.detail ?? {} })),
-    history: history.map((h) => ({ at: h.takenAt.toISOString(), totalUsdg: h.totalUsdg.toString() })),
+    history: history.map((h) => ({
+      at: h.takenAt.toISOString(),
+      totalUsdg: h.totalUsdg.toString(),
+      flowsUsdg: h.flowsUsdg.toString(),
+    })),
+    /** Money the owner moved in (positive) or out, as each check found it, newest first: the chart marks each one. */
+    flows: flows.map((f) => ({
+      at: f.at.toISOString(),
+      usdg: f.usdg.toString(),
+      moveKind: f.moveKind,
+      fromChainId: f.fromChainId,
+    })),
     /** Token address to symbol, for logos beside decisions. */
     tokenSymbols: Object.fromEntries(
       APPROVED_TOKENS.map((t) => [t.address.toLowerCase(), t.symbol]),

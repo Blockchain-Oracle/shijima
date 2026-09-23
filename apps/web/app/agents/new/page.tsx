@@ -14,6 +14,7 @@ import { type OwnDesk, type SharedMix, StrategiesScreen } from '@/features/strat
 import { currentDeployment } from '@/lib/chain'
 import { db } from '@/lib/db'
 import { presetPerformance } from '@/lib/markets.server'
+import { netSeries } from '@/lib/money/flows'
 import { signedInAddress } from '@/lib/session'
 
 export const dynamic = 'force-dynamic'
@@ -78,7 +79,7 @@ export default async function NewAgent({
         mode: deskCopy.modes[d.mode],
         checks: d.shadowChecks,
         valueUsdg: h.at(-1)?.totalUsdg.toString() ?? null,
-        spark: h.map((x) => Number(x.totalUsdg) / 1e6),
+        spark: netSeries(h),
       }
     })
     .sort((a, b) => order(a.lifecycle) - order(b.lifecycle))

@@ -139,6 +139,7 @@ export function desk(overrides: {
     record: overrides.record ?? [],
     notes: overrides.notes ?? [],
     history: [],
+    flows: [],
     earlier: null,
     tokenSymbols: {},
     markers: [],

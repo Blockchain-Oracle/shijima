@@ -23,3 +23,12 @@ export function netChangeBps(now: FlowPoint, then: FlowPoint): number | null {
   if (base <= 0n) return null
   return Number((netChangeUsdg(now, then) * 10_000n) / base)
 }
+
+/**
+ * A value series with the owner's own money moves taken out, in dollars, ending at the latest real value: a
+ * sparkline of it shows what the agent did, not a cliff where money was withdrawn.
+ */
+export function netSeries(rows: FlowPoint[]): number[] {
+  const last = rows.at(-1)?.flowsUsdg ?? 0n
+  return rows.map((r) => Number(r.totalUsdg - r.flowsUsdg + last) / 1e6)
+}
