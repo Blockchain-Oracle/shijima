@@ -174,7 +174,10 @@ export async function presetPerformance(days = 30, now = new Date()): Promise<Pr
       const token = bySymbol(symbol)
       return token ? [{ address: token.address.toLowerCase(), weightBps }] : []
     })
-    const points = basketSeries(rows, members, preset.cashBps)
+    // A member with no price yet (a token added on 23 Sep) holds the basket's start back until it has one, so a
+    // young token gives "not enough history" (null), never a return worked out without it.
+    const complete = members.length === Object.keys(preset.weights).length
+    const points = complete ? basketSeries(rows, members, preset.cashBps) : []
     const first = points[0]
     const last = points.at(-1)
     const enough = first && last && last.time - first.time > DAY / 1000

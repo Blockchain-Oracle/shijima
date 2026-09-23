@@ -5,9 +5,10 @@
  *                                         the new rows reached
  *   pnpm prices:facts                     read every multiplier change from the chain and each company's report
  *                                         dates from Finnhub, for the stock pages
- *   pnpm prices:backfill [--days 30]      fill hourly rows for the past days, oldest first, skipping any hour
- *                                         already written. Slow on purpose: one hour at a time, so it never
- *                                         competes with the engine for the RPC budget.
+ *   pnpm prices:backfill [--days 30]      fill hourly rows for the past days, oldest first, skipping any token
+ *                                         already written for that hour, so a token added to the list later
+ *                                         gets its past filled in. Slow on purpose: one hour at a time, so it
+ *                                         never competes with the engine for the RPC budget.
  *
  * The halt flag has no history, so backfilled rows store it as unknown. Set RPC_URL to use a fork.
  */
@@ -21,7 +22,7 @@ import {
   syncEarnings,
   syncMultipliers,
 } from '@desk/core'
-import { createDb, priceSlotWritten, savePricePoints } from '@desk/db'
+import { createDb, savePricePoints, tokensPricedAt } from '@desk/db'
 import { errorText, registerSecretsFromEnv } from '@desk/shared'
 
 registerSecretsFromEnv(process.env)
@@ -46,10 +47,12 @@ try {
       t < end;
       t = new Date(t.getTime() + HOUR)
     ) {
-      if (await priceSlotWritten(db, t)) continue
+      const done = await tokensPricedAt(db, t)
+      const missing = APPROVED_TOKENS.filter((token) => !done.has(token.address.toLowerCase()))
+      if (missing.length === 0) continue
       const mark = await blockAtOrBefore(pub, t)
       const rows = []
-      for (const token of APPROVED_TOKENS) {
+      for (const token of missing) {
         try {
           rows.push(await readPricePoint(pub, token, t, reference, mark.number))
         } catch (e) {
