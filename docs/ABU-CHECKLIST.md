@@ -21,6 +21,10 @@ Vercel is needed now.
 ## Hackathon admin, whenever you have five minutes
 - [x] ~~Ask whether a build with no MCP qualifies.~~ **Answered 21 Sep:** the official page says the track is
       for agents that "act on Robinhood Chain **or** operate funds via Robinhood MCP". We qualify.
+- [ ] **Publish Shijima on OpenServ before submitting** (found 23 Sep, `research/2026-09-23-openserv-publishing.md`).
+      Claude does: fill the agent's listing (logo, categories, trading agent, usage, repo link) and register its
+      ERC-8004 identity on Base (a few cents of gas), replacing a sample card the platform left there. Abu does,
+      only if the API cannot: press "submit for review" on agent 4513 so it appears under Browse agents.
 - [ ] **Submit on https://form.typeform.com/to/A475N331** ("SERV Hackathon #1 submission", open). GyPxGqRn is
       the old pre-registration form and is closed. The hackathon page's FAQ still links the closed one, so a
       one-line check in the OpenServ Telegram is worth it. Tick every track that applies: Mainnet & MCP and Open.
