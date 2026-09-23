@@ -1,0 +1,1 @@
+ALTER TYPE "public"."wake_trigger" ADD VALUE 'watch';

@@ -16,7 +16,7 @@ export const deskLifecycle = pgEnum('desk_lifecycle', ['onboarding', 'running', 
 export const mandateStatus = pgEnum('mandate_status', ['draft', 'applied', 'superseded'])
 
 // The hourly check.
-export const wakeTrigger = pgEnum('wake_trigger', ['cron', 'tick', 'manual', 'approval', 'skeleton'])
+export const wakeTrigger = pgEnum('wake_trigger', ['cron', 'tick', 'manual', 'approval', 'skeleton', 'watch'])
 export const wakeStatus = pgEnum('wake_status', ['running', 'completed', 'failed', 'skipped'])
 
 // The record. `decision` is what the desk decided. `execution` is the fresh record written when an approved

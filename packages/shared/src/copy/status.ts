@@ -8,12 +8,12 @@ const plural = (count: number, one: string, many = `${one}s`) => `${n(count)} ${
 export const statusCopy = {
   title: 'Status',
   description:
-    'Is the desk awake: the worker, the hourly trigger, the reasoning engine, the chain and the prices, read live.',
+    'Is the desk awake: the worker, the OpenServ trigger, the reasoning engine, the chain and the prices, read live.',
   section: { index: '01', title: 'Is the desk awake' },
   desksSection: {
     index: '02',
     title: 'Desks',
-    desc: 'Every shared desk, and yours if you are signed in. Each is checked every hour.',
+    desc: 'Every shared desk, and yours if you are signed in. Each is watched every five minutes.',
   },
   countsSection: {
     index: '03',
@@ -38,7 +38,7 @@ export const statusCopy = {
 
   rows: {
     worker: 'Worker · heartbeat',
-    openserv: 'OpenServ · hourly trigger',
+    openserv: 'OpenServ · trigger',
     serv: 'SERV Reasoning · the timing call',
     rpc: 'Robinhood Chain · RPC',
     prices: 'Price log · every 5 minutes',
@@ -62,12 +62,12 @@ export const statusCopy = {
     noDesks: 'no running desk to check',
     notRegistered: 'no OpenServ agent on this worker: its own timer runs the checks',
     hourCron: (hour: string, cron: number, total: number) =>
-      `the ${hour} check was started by OpenServ · ${n(cron)} of ${plural(total, 'hourly check')} in 24 h`,
+      `the ${hour} check was started by OpenServ · ${n(cron)} of ${plural(total, 'top-of-the-hour look')} in 24 h`,
     hourTick: (hour: string, lastCron: string) =>
-      `the ${hour} check was started by the worker's own timer, 7 minutes in; OpenServ last started one ${lastCron}`,
+      `the ${hour} check was started by the worker's own timer, 4 minutes in; OpenServ last started one ${lastCron}`,
     hourTickNever: (hour: string) =>
       `the ${hour} check was started by the worker's own timer; OpenServ has not started one yet`,
-    noHourly: (since: string) => `no hourly check since ${since}`,
+    noHourly: (since: string) => `no top-of-the-hour look since ${since}`,
     agent: (id: number) => `agent ${id}`,
 
     servNone: 'no call yet',

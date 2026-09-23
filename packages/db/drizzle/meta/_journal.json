@@ -50,6 +50,13 @@
       "when": 1790098235001,
       "tag": "0006_approval_answered",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790139099921,
+      "tag": "0007_watch_trigger",
+      "breakpoints": true
     }
   ]
 }

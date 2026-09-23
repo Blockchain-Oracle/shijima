@@ -16,6 +16,7 @@ import {
   checkPriceAlerts,
   gradeAtReopen,
   logPrices,
+  priceSlot,
   type SendReport,
   syncEarnings,
   syncMultipliers,
@@ -25,6 +26,7 @@ import {
   type ActionRow,
   finishCheckRequest,
   hasWake,
+  lastDecisionAt,
   lastSealAt,
   pendingCheckRequests,
   planCheckpoint,
@@ -38,18 +40,23 @@ import { implementationsByVersion } from './cli/context'
 import { resolveUnsettled, sendAction } from './sender'
 
 const SEAL_EVERY_MS = 24 * 60 * 60 * 1000
+/**
+ * A desk that recorded nothing for this long gets one ordinary check, which writes "nothing to do". Watching writes
+ * only what changed, so on a quiet day this one line is the record that the agent was awake, and the daily seal
+ * has something to seal.
+ */
+const QUIET_DAY_MS = 24 * 60 * 60 * 1000
 /** Multiplier changes are rare and report dates rarer. Read them now and then, never on every tick. */
 const MULTIPLIERS_EVERY_MS = 60 * 60 * 1000
 const EARNINGS_EVERY_MS = 12 * 60 * 60 * 1000
 const lastRead = { multipliers: 0, earnings: 0, lowGasWarnedAt: 0 }
 /**
- * How long the worker's own timer waits before stepping in.
+ * How long the worker's own timer waits before taking the top-of-the-hour look itself.
  *
- * OpenServ's cron is the primary clock. The timer runs every 15 seconds and would otherwise win every race by
- * seconds, which would make the platform trigger redundant and untested. So for an ordinary tick the timer
- * holds back until a check is this far overdue. A trigger from the platform, or a person, runs at once.
+ * OpenServ's hourly cron asks for that look; the timer, running every 15 seconds, would otherwise win every race
+ * and leave the platform trigger untested. The other eleven looks an hour are the worker's own and run at once.
  */
-const TIMER_GRACE_MS = 7 * 60 * 1000
+const TIMER_GRACE_MS = 4 * 60 * 1000
 /** The operator should be able to pay for about this many more actions before Abu is told. */
 const LOW_GAS_ACTIONS = 20n
 const GAS_PER_ACTION = 400_000n
@@ -105,6 +112,9 @@ export async function reviewAllDesks(
 ): Promise<ReviewSummary> {
   const now = options.now ?? new Date()
   const hour = hourSlot(now)
+  // The agent looks every five minutes, on the price logger's own slots, and wakes the model only when something
+  // changed. The top-of-the-hour slot is the one OpenServ's cron asks for.
+  const slot = priceSlot(now)
   const trigger = options.trigger ?? 'tick'
   const summary: ReviewSummary = { desks: 0, checks: [], graded: 0, sealed: 0, held: false }
 
@@ -141,7 +151,8 @@ export async function reviewAllDesks(
   }
 
   const overdue = now.getTime() - hour.getTime() >= TIMER_GRACE_MS
-  const mayCheck = trigger !== 'tick' || overdue
+  const platformSlot = slot.getTime() === hour.getTime()
+  const mayCheck = trigger !== 'tick' || !platformSlot || overdue
   const wakeDeps = {
     db: cli.db,
     pub: cli.pub,
@@ -181,15 +192,29 @@ export async function reviewAllDesks(
 
   for (const desk of await runningDesks(cli.db)) {
     summary.desks++
-    if (mayCheck && !(await hasWake(cli.db, desk.id, hour)) && (await clearToSend())) {
-      const report = await wakeDesk(wakeDeps, { deskId: desk.id, scheduledFor: hour, trigger })
-      log('check', {
-        desk: desk.address,
-        hour: hour.toISOString(),
-        status: report.status,
-        note: report.note,
-        records: report.records,
+    if (mayCheck && !(await hasWake(cli.db, desk.id, slot)) && (await clearToSend())) {
+      // A day with nothing recorded gets one ordinary check, which writes its "nothing to do". Every other slot is
+      // a watching look that records only what changed.
+      const last = await lastDecisionAt(cli.db, desk.id)
+      const quietDay = !last || now.getTime() - last.getTime() >= QUIET_DAY_MS
+      const report = await wakeDesk(wakeDeps, {
+        deskId: desk.id,
+        scheduledFor: slot,
+        // Which clock asked stays in the record: OpenServ's cron, or the worker's own look.
+        // The top-of-the-hour look keeps its own label, `tick`, when the worker's timer takes it: Status measures
+        // how often OpenServ's cron was the one that started it.
+        trigger: trigger === 'cron' ? 'cron' : quietDay || platformSlot ? 'tick' : 'watch',
+        watch: !quietDay,
       })
+      if (report.records.length > 0 || report.status !== 'completed') {
+        log('check', {
+          desk: desk.address,
+          slot: slot.toISOString(),
+          status: report.status,
+          note: report.note,
+          records: report.records,
+        })
+      }
       summary.checks.push({ desk: desk.address, status: report.status, records: report.records.length })
     }
 

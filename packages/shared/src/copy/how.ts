@@ -41,7 +41,7 @@ export const howCopy = {
     },
     talk: {
       title: 'Talk to it',
-      body: 'Ask why it waited, pause it, or change your mix. It proposes; you confirm on a card. It checks your desk every hour, and it starts in practice, where it spends nothing.',
+      body: 'Ask why it waited, pause it, or change your mix. It proposes; you confirm on a card. It watches your desk every five minutes and wakes when something moves, and it starts in practice, where it spends nothing.',
     },
   },
 
@@ -96,7 +96,7 @@ export const howCopy = {
         'A weekend price does not reliably say where Monday will open, and the desk never claims otherwise. Each wait is graded after the reopen against acting at once, and the grade can go either way.',
       band: 'Your desk contract refuses the assistant’s trades when a price is more than 8% from the last official update. Only you can sell then.',
       hourly:
-        'The desk still checks every hour. The record shows every check, including the ones where it did nothing.',
+        'The agent still watches every five minutes. It writes down every decision, and on a quiet day one line that it looked and found nothing to do.',
     },
   },
 
@@ -123,7 +123,7 @@ export const howCopy = {
     shadow: {
       title: 'Practice',
       body: (checks: number) =>
-        `It decides every hour and records what it would have done, but spends nothing. Every desk starts here. It can go live after ${checks} practice checks and once you have read its report.`,
+        `It watches and decides for real, and records what it would have done, but spends nothing. Every desk starts here. It can go live after ${checks} practice checks and once you have read its report.`,
     },
     askFirst: {
       title: 'Ask first',
@@ -298,7 +298,7 @@ export const howCopy = {
     },
     awake: {
       q: 'How do I know it is awake?',
-      a: 'Status shows the last check of every shared desk, the worker’s heartbeat, the hourly trigger from OpenServ, and every data source, live. In Telegram, one pinned message is updated at every check.',
+      a: 'Status shows the last check of every shared desk, the worker’s heartbeat, the trigger from OpenServ, and every data source, live. In Telegram, one pinned message is updated at every check.',
     },
     practice: {
       q: 'Why does it start in practice?',
@@ -317,7 +317,7 @@ export const howCopy = {
 
   cta: {
     title: 'Start in practice',
-    body: 'Pick a basket and create your desk. It checks every hour and spends nothing until you let it.',
+    body: 'Pick a basket and create your desk. It watches every five minutes and spends nothing until you let it.',
     action: 'Start a desk',
   },
 } as const

@@ -245,9 +245,9 @@ export async function loadDesk(slug: string) {
           }
         })()
       : null
-  const nextCheck = new Date(now)
-  nextCheck.setUTCMinutes(0, 0, 0)
-  nextCheck.setUTCHours(nextCheck.getUTCHours() + 1)
+  // The agent looks every five minutes, on the price logger's slots, and wakes the model only when something moved.
+  const LOOK_MS = 5 * 60 * 1000
+  const nextCheck = new Date(Math.floor(now.getTime() / LOOK_MS) * LOOK_MS + LOOK_MS)
 
   return {
     isOwner,

@@ -48,8 +48,9 @@ export async function buildStatus(db: Db, deskId: string, now = new Date()): Pro
     )
 
   const clock = marketClock(now)
-  const nextCheck = new Date(now.getTime() + 60 * 60 * 1000)
-  nextCheck.setUTCMinutes(0, 0, 0)
+  // The agent looks every five minutes; the pinned message says when the next look is.
+  const LOOK_MS = 5 * 60 * 1000
+  const nextCheck = new Date(Math.floor(now.getTime() / LOOK_MS) * LOOK_MS + LOOK_MS)
 
   return {
     mode: MODES[desk.mode],

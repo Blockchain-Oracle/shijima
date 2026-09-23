@@ -21,7 +21,7 @@ export const telegramCopy = {
       '',
       `I look after ${esc(deskName)} while the US market is shut.`,
       '',
-      'I check every hour. Most of the time there is nothing to do, and I will not tell you about those. They go in the pinned message, which I edit quietly.',
+      'I watch every five minutes and wake when something moves. Most of the time there is nothing to do, and I will not tell you about those. They go in the pinned message, which I edit quietly.',
       '',
       'I will message you when something needs you, when I have done something, or when something has gone wrong. Nothing else.',
       '',
@@ -48,7 +48,7 @@ export const telegramCopy = {
       ...(s.holdings.length > 0 ? [esc(s.holdings.join('. '))] : []),
       `Value ${esc(s.value)}. Cash ${esc(s.cash)}.`,
       `Spent today ${esc(s.spentToday)} of ${esc(s.dailyCap)}.`,
-      `Next check ${esc(s.nextCheck)}. ${esc(s.market)}`,
+      `Watching. Next look ${esc(s.nextCheck)}. ${esc(s.market)}`,
       'Times are New York time.',
     ].join('\n'),
 
@@ -195,7 +195,7 @@ export const telegramCopy = {
   ].join('\n'),
 
   paused: 'Paused. Nothing will happen until you resume. Nothing was sold.',
-  resumed: 'Active again. I will check at the top of the hour.',
+  resumed: 'Active again. I am watching.',
   alreadyInThatState: 'Nothing changed: it was already like that.',
   notLinked:
     'This chat is not linked to a desk. Open your desk on the website, choose Connect Telegram, and send me the code it gives you.',

@@ -936,3 +936,28 @@ export async function recordOwnerCalls(
     return true
   })
 }
+
+/**
+ * The newest decision about one token on one desk: its outcome and summary. A watching look that would only say
+ * the same thing again ("still waiting", "trading is paused") writes nothing: the record keeps what changed.
+ */
+export async function latestDecisionOn(db: DbOrTx, deskId: string, token: string) {
+  const [row] = await db
+    .select({ outcome: decisions.outcome, summary: decisions.summary, decidedAt: decisions.decidedAt })
+    .from(decisions)
+    .where(and(eq(decisions.deskId, deskId), eq(decisions.token, token.toLowerCase())))
+    .orderBy(desc(decisions.seq))
+    .limit(1)
+  return row
+}
+
+/** When the desk last recorded anything at all. Undefined for a desk with no record yet. */
+export async function lastDecisionAt(db: DbOrTx, deskId: string): Promise<Date | undefined> {
+  const [row] = await db
+    .select({ at: decisions.decidedAt })
+    .from(decisions)
+    .where(eq(decisions.deskId, deskId))
+    .orderBy(desc(decisions.seq))
+    .limit(1)
+  return row?.at
+}

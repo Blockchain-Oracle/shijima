@@ -36,6 +36,7 @@ import {
   expireApprovals,
   finishWake,
   lastConfirmedActionBlock,
+  latestDecisionOn,
   latestValueSnapshot,
   mandateFromRow,
   pendingApprovalSince,
@@ -57,7 +58,7 @@ import { considerCandidate } from './consider'
 import { pauseOnChain } from './loss-stop'
 import { type EventSource, referenceFor } from './market'
 import { findNeeds, MAX_CANDIDATES_PER_WAKE, type Need } from './needs'
-import type { PlannedOutcome } from './plan'
+import { OUTCOME_COLUMN, type PlannedOutcome } from './plan'
 import { allPriced, findOutsideChanges, netFlowUsdg, scaledBaseline } from './reconcile'
 import { buildDecisionBody, mandateFingerprint, RECORD_SCHEMA_VERSION } from './record'
 import { chainReferenceSource } from './reference'
@@ -69,6 +70,17 @@ import { redeemForBuys, sweepIdleCash, type VaultStepContext } from './vault'
 const REPEAT_WINDOW_MS = 10 * 60 * 1000
 /** On this many consecutive checks below the loss limit, the desk pauses itself on the chain. */
 const ON_CHAIN_PAUSE_AT_BREACH = 2
+/**
+ * A watching look (trigger `watch`, every five minutes) keeps a value snapshot only this often, unless money moved.
+ * The charts and the loss limit need about an hour's resolution, not twelve rows an hour.
+ */
+const WATCH_SNAPSHOT_MS = 55 * 60 * 1000
+
+/**
+ * True for the one watching look each hour that stands for the hour: it counts toward practice and refreshes the
+ * pinned Telegram status. Every other look in the hour is silent unless it records something.
+ */
+const topOfHour = (at: Date) => at.getUTCMinutes() === 0
 
 /** What the worker's sender reports back. The worker owns the operator key, so sending is injected. */
 export type SendReport =
@@ -96,6 +108,11 @@ export interface WakeInput {
   dry?: boolean
   /** DEVELOPER ONLY. Act even when the model says wait, recorded as an override. */
   force?: boolean
+  /**
+   * A watching look: it records only what changed. Whichever clock asked (the worker's own `watch`, or OpenServ's
+   * `cron` at the top of the hour), a look is watching unless the desk has gone a whole day with no record.
+   */
+  watch?: boolean
 }
 
 export interface WakeReport {
@@ -219,6 +236,8 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
   const reference = chainReferenceSource(db, pub)
   const events = companyEventSource(db)
 
+  // A watching look records only what changed. Everything else about a check is the same.
+  const watching = input.watch === true || input.trigger === 'watch'
   const desk = await deskById(db, input.deskId)
   if (!desk) throw new Error(`desk ${input.deskId} is not registered`)
   const mandateRow = await currentMandate(db, desk.id)
@@ -329,7 +348,7 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
           },
           snapshot,
         })
-      } else {
+      } else if (!watching || !previous || now.getTime() - previous.takenAt.getTime() >= WATCH_SNAPSHOT_MS) {
         await saveValueSnapshot(db, snapshot)
       }
     }
@@ -495,7 +514,9 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
           )
         : []
     let needs = currentNeeds().slice(0, MAX_CANDIDATES_PER_WAKE)
-    if (needs.length === 0) {
+    if (needs.length === 0 && watching) {
+      say('nothing to do: a watching look, so nothing is recorded')
+    } else if (needs.length === 0) {
       const summary = deskState === 'active' ? engineCopy.nothingToDo : engineCopy.notLooking(stateText)
       const seq = dry
         ? null
@@ -557,6 +578,7 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
           events,
           now,
           dry,
+          watching,
           say,
           records,
         })
@@ -609,7 +631,8 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
     const fresh = dry ? desk : await deskById(db, desk.id)
     await sweepIdleCash(deps, vaultStep(), fresh ? (dry ? deskState : fresh.state) : 'needs_attention')
 
-    if (wake) {
+    const recordedSomething = records.some((r) => r.seq !== null)
+    if (wake && (!watching || recordedSomething || topOfHour(input.scheduledFor))) {
       await enqueueNotification(db, {
         deskId: desk.id,
         kind: 'status',
@@ -617,11 +640,16 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
         // sent, so it can never be a stale sentence written an hour before anyone read it.
         payload: { lastCheck: now.toISOString() },
       })
-      // Going live is earned: 24 completed checks in shadow mode, and the report opened. Only the desk's own
-      // hourly checks count. A check the owner asked for by hand never does, or 24 could be run in minutes.
-      if (desk.mode === 'shadow' && input.trigger !== 'manual') await bumpShadowChecks(db, desk.id)
-      await finishWake(db, wake.id, { status: 'completed', sourceHealth: { rpc: true } })
+      // Going live is earned: 24 hours watched in practice, and the report opened. One look an hour counts, so
+      // watching every five minutes cannot shorten it, and a check the owner asked for by hand never counts.
+      if (
+        desk.mode === 'shadow' &&
+        input.trigger !== 'manual' &&
+        (!watching || topOfHour(input.scheduledFor))
+      )
+        await bumpShadowChecks(db, desk.id)
     }
+    if (wake) await finishWake(db, wake.id, { status: 'completed', sourceHealth: { rpc: true } })
     return { status: 'completed', records }
   } catch (e) {
     const message = errorText(e)
@@ -641,6 +669,8 @@ interface CandidateRun {
   events: EventSource
   now: Date
   dry: boolean
+  /** A watching look: an outcome with no model call that only repeats the newest record on this token is not written. */
+  watching: boolean
   say: (line: string) => void
   records: WakeReport['records']
 }
@@ -710,6 +740,23 @@ async function runCandidate(
         preview: null,
         newDeferralBaseline: null,
       }
+    }
+  }
+  // Watching every five minutes, "still waiting" or "trading is paused" would be written twelve times an hour. When
+  // nothing was asked of the model, nothing is being sent or asked, and the newest record on this token already
+  // says exactly this, the look leaves the record alone.
+  if (run.watching && !considered.answer && !considered.willAct && !considered.ask) {
+    // A remembered decision that still stands is itself the record: the wait, or the practice call, already says it.
+    const standing = considered.deferral?.status === 'standing'
+    const latest = standing ? undefined : await latestDecisionOn(db, desk.id, need.candidate.token.address)
+    if (
+      standing ||
+      (latest &&
+        latest.outcome === OUTCOME_COLUMN[considered.outcome] &&
+        latest.summary === considered.summary)
+    ) {
+      run.say(`  unchanged since the last record (${considered.outcome}): nothing written`)
+      return false
     }
   }
   if (run.dry) {

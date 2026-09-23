@@ -521,7 +521,7 @@ export const deskCopy = {
       `Valued ${age} on the trading pools’ half-hour average, never on the frozen official price.`,
     notYet: 'Not valued yet. The desk values itself at its first check.',
     valuedShort: (age: string) => `valued ${age}`,
-    nextCheckIn: (when: string) => (when === 'now' ? 'checking now' : `next check in ${when}`),
+    nextCheckIn: (when: string) => (when === 'now' ? 'looking now' : `watching · next look in ${when}`),
     sinceStartShort: 'since your money went in',
     timing: 'Timing',
     timingNote:
@@ -563,9 +563,9 @@ export const deskCopy = {
   },
 
   nextCheck: {
-    title: 'Next check',
-    lead: 'At the top of the hour,',
-    at: (when: string) => `At the top of the hour, ${when} New York.`,
+    title: 'Watching',
+    lead: 'Watching every five minutes. It wakes when something moves;',
+    at: (when: string) => `Watching every five minutes. Its next look is at ${when} New York.`,
     stopped: 'The desk is not acting until you resume it.',
     late: (ago: string) =>
       `Has not checked in. Last check was ${ago}. Your money is safe in your account and cannot move without the assistant.`,
@@ -812,7 +812,7 @@ export const controlsCopy = {
       waiting: 'Sent. Waiting for it to arrive on Robinhood Chain…',
       back: 'Arrived. Switching your wallet back to Robinhood Chain…',
       done: (amount: string) =>
-        `Arrived: about ${amount} is in your desk. It is put to work at the next check.`,
+        `Arrived: about ${amount} is in your desk. Your agent notices it within five minutes.`,
       failed:
         'It did not go through. If anything left your wallet, Relay returns it. Nothing reached the desk.',
       cancelled: 'You cancelled in your wallet. Nothing was sent.',
@@ -840,7 +840,7 @@ export const controlsCopy = {
     title: 'Stop the desk acting',
     body: 'Nothing is sold. It stops acting until you resume it, and waiting requests are cancelled.',
     resumeTitle: 'Let the desk carry on',
-    resumeBody: 'It carries on from its next check.',
+    resumeBody: 'It carries on from its next look.',
   },
   mode: {
     eyebrow: 'Mode',
@@ -862,7 +862,7 @@ export const controlsCopy = {
   editMandate: {
     eyebrow: 'What you told it',
     title: 'Change your instructions',
-    body: 'Pick what to change. The card shows before and after, and the change applies from the next check. No model is asked.',
+    body: 'Pick what to change. The card shows before and after, and the change applies from the next look. No model is asked.',
     parts: {
       strategy: 'Strategy',
       weights: 'Targets',
@@ -936,7 +936,7 @@ export const settingsCopy = {
     view: 'View on Blockscout',
     agent: 'OpenServ agent',
     agentBody:
-      'The agent that checks this desk every hour. It can trade only inside the limits the desk contract enforces, and never withdraw.',
+      'The agent that watches this desk around the clock. It can trade only inside the limits the desk contract enforces, and never withdraw.',
     agentId: (id: number) => `Agent ${id}`,
     openAgent: 'Open on OpenServ',
     openIdentity: 'See the identity',

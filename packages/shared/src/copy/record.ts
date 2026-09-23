@@ -142,7 +142,7 @@ export const decisionCopy = {
     `This was overruled by ${by}: ${reason} The assistant had chosen something else, shown below. It still could not get past the limits.`,
   approvalOf: (who: string, seq: number, when: string, via: string, moved: string) =>
     `${who} approved this in record #${seq}, answered ${when} on the ${via}. The price had moved ${moved} since it was shown.`,
-  routine: 'A routine hourly check.',
+  routine: 'A routine look. Nothing had changed that needed a decision.',
   ruleFired: (id: string) => `Raised by ${id === 'rule1' ? 'a standing rule of the owner’s' : id}.`,
   deferral: (seq: number) => `It had already decided this at record #${seq}.`,
   deferralStanding: 'Nothing measurable had changed since, so it did not ask again.',
