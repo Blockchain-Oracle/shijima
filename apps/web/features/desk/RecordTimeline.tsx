@@ -25,8 +25,10 @@ import { cn } from '@/lib/utils'
  * The record as a day-by-day timeline, after 21st's Activity Timeline (28340). Each outcome has one icon and one
  * colour, the same everywhere; a decision about a stock carries its logo; quiet runs fold into one line.
  */
+/** `id` keys the row: a decision's seq, a quiet run's first seq, a note's time and kind. */
 export type TimelineItem =
   | {
+      id: string
       kind: 'decision'
       at: number
       outcome: PublicDecision['outcome']
@@ -35,8 +37,8 @@ export type TimelineItem =
       href?: string
       symbol?: string | undefined
     }
-  | { kind: 'quiet'; at: number; count: number; label: string; children: TimelineItem[] }
-  | { kind: 'note'; at: number; label: string; summary: string }
+  | { id: string; kind: 'quiet'; at: number; count: number; label: string; children: TimelineItem[] }
+  | { id: string; kind: 'note'; at: number; label: string; summary: string }
 
 const LOOK: Record<string, { icon: LucideIcon; tone: string }> = {
   acted: { icon: ArrowLeftRight, tone: 'text-[var(--profit)] bg-[var(--color-profit-wash)]' },
@@ -116,7 +118,7 @@ function Row({ item, index }: { item: TimelineItem; index: number }) {
           </summary>
           <ul className="mt-3 flex flex-col gap-3">
             {item.children.map((c, i) => (
-              <Row key={`${c.at}-${i}`} item={c} index={i} />
+              <Row key={c.id} item={c} index={i} />
             ))}
           </ul>
         </details>
@@ -182,7 +184,7 @@ function Days({ items }: { items: TimelineItem[] }) {
           </div>
           <ol className="relative flex flex-col gap-4 before:absolute before:top-2 before:bottom-2 before:left-[13px] before:w-px before:bg-[var(--color-hairline)]">
             {g.items.map((it, i) => (
-              <Row key={`${it.kind}-${it.at}-${i}`} item={it} index={i} />
+              <Row key={it.id} item={it} index={i} />
             ))}
           </ol>
         </section>

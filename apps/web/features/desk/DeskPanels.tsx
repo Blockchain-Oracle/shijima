@@ -484,6 +484,7 @@ export function Record({ view, limit = 14 }: { view: DeskView; limit?: number })
       (row): TimelineItem =>
         row.kind === 'entry'
           ? {
+              id: `d${row.decision.seq}`,
               kind: 'decision',
               at: rowAt(row),
               outcome: row.decision.outcome,
@@ -493,11 +494,13 @@ export function Record({ view, limit = 14 }: { view: DeskView; limit?: number })
               symbol: symbolOfDecision(row.decision, view),
             }
           : {
+              id: `q${row.decisions[0]?.seq ?? row.from.getTime()}`,
               kind: 'quiet',
               at: rowAt(row),
               count: row.count,
               label: deskCopy.record.quiet(row.count),
               children: row.decisions.map((d) => ({
+                id: `d${d.seq}`,
                 kind: 'decision' as const,
                 at: d.decidedAt.getTime(),
                 outcome: d.outcome,
@@ -510,6 +513,7 @@ export function Record({ view, limit = 14 }: { view: DeskView; limit?: number })
     ),
     ...view.notes.map(
       (note: DeskNote): TimelineItem => ({
+        id: `n${note.at}-${note.kind}`,
         kind: 'note',
         at: new Date(note.at).getTime(),
         label: noteLabel(note),
@@ -543,6 +547,7 @@ export function Record({ view, limit = 14 }: { view: DeskView; limit?: number })
                 explorer: `https://robinhoodchain.blockscout.com/address/${view.earlier.address}`,
                 explorerLabel: deskCopy.record.earlierExplorer,
                 items: view.earlier.decisions.map((d) => ({
+                  id: `e${d.seq}`,
                   kind: 'decision' as const,
                   at: new Date(d.at).getTime(),
                   outcome: d.outcome,

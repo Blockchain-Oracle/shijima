@@ -3,17 +3,11 @@
   "project": {
     "name": "@desk/web",
     "productType": "fintech web app: an agent that keeps a Stock Token basket on Robinhood Chain",
-    "stack": [
-      "nextjs",
-      "react",
-      "tailwind-v4"
-    ]
+    "stack": ["nextjs", "react", "tailwind-v4"]
   },
   "sources": {
     "tokens": [],
-    "components": [
-      "components/ui"
-    ],
+    "components": ["components/ui"],
     "assets": [],
     "instructions": []
   },

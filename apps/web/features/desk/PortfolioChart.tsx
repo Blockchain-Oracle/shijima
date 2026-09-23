@@ -149,7 +149,7 @@ export function PortfolioChart({
   const tLast = view.at(-1)?.t ?? 1
   const cx = useCallback(
     (t: number) => x0 + ((t - tFirst) / (tLast - tFirst || 1)) * (x1 - x0),
-    [x0, x1, tFirst, tLast],
+    [x1, tFirst, tLast],
   )
 
   const [lo, hi] = useMemo(() => {
@@ -251,28 +251,33 @@ export function PortfolioChart({
         )}
       </div>
 
-      <div className="relative w-full" style={{ height }}>
+      {/* A slider, for the keyboard: the arrow keys walk the readout above through time, like 21st's chart. */}
+      <div
+        className="relative w-full rounded-[var(--radius-md)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-dim)]"
+        style={{ height }}
+        role="slider"
+        aria-label={c.aria(money(view.at(-1)?.value ?? 0), changePct === null ? null : changePct.toFixed(2))}
+        aria-valuemin={0}
+        aria-valuemax={Math.max(0, n - 1)}
+        aria-valuenow={hover ?? n - 1}
+        aria-valuetext={active ? `${money(active.value)}, ${when(active.t)} ET` : ''}
+        tabIndex={0}
+        onPointerMove={(e) => onMove(e.clientX)}
+        onPointerLeave={() => setHover(null)}
+        onBlur={() => setHover(null)}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowLeft') setHover((h) => Math.max(0, (h ?? n - 1) - 1))
+          if (e.key === 'ArrowRight') setHover((h) => Math.min(n - 1, (h ?? n - 1) + 1))
+        }}
+      >
         {width > 0 && (
-          // biome-ignore lint/a11y/noNoninteractiveTabindex: the chart is explorable with the arrow keys, like 21st's.
           <svg
             ref={svgRef}
             width={w}
             height={height}
             viewBox={`0 0 ${w} ${height}`}
-            className="block w-full touch-pan-y select-none overflow-visible outline-none"
-            role="img"
-            aria-label={c.aria(
-              money(view.at(-1)?.value ?? 0),
-              changePct === null ? null : changePct.toFixed(2),
-            )}
-            tabIndex={0}
-            onPointerMove={(e) => onMove(e.clientX)}
-            onPointerLeave={() => setHover(null)}
-            onBlur={() => setHover(null)}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowLeft') setHover((h) => Math.max(0, (h ?? n - 1) - 1))
-              if (e.key === 'ArrowRight') setHover((h) => Math.min(n - 1, (h ?? n - 1) + 1))
-            }}
+            className="block w-full touch-pan-y select-none overflow-visible"
+            aria-hidden
           >
             <defs>
               <linearGradient id={`fill-${uid}`} x1="0" x2="0" y1="0" y2="1">
@@ -346,16 +351,16 @@ export function PortfolioChart({
               transition={{ duration: reduced ? 0 : 0.9, ease: [0.16, 1, 0.3, 1] }}
             />
 
-            {markers
+            {[...new Map(markers.map((m) => [`${m.t}-${m.kind}`, m])).values()]
               .filter((m) => m.t >= tFirst && m.t <= tLast)
-              .map((m, i) => {
+              .map((m) => {
                 const near = view.reduce(
                   (b, p) => (Math.abs(p.t - m.t) < Math.abs(b.t - m.t) ? p : b),
                   view[0] as ValuePoint,
                 )
                 return (
                   <circle
-                    key={`${m.t}-${m.kind}-${i}`}
+                    key={`${m.t}-${m.kind}`}
                     cx={cx(m.t)}
                     cy={vy(near.value)}
                     r="3.5"
@@ -376,13 +381,19 @@ export function PortfolioChart({
               {c.ddLabel}
             </text>
 
-            {[view[0], view[Math.floor(n / 2)], view.at(-1)].map((p, i) =>
+            {(
+              [
+                ['start', view[0]],
+                ['middle', view[Math.floor(n / 2)]],
+                ['end', view.at(-1)],
+              ] as const
+            ).map(([anchor, p]) =>
               p ? (
                 <text
-                  key={`${p.t}-${i}`}
+                  key={anchor}
                   x={cx(p.t)}
                   y={height - 6}
-                  textAnchor={i === 0 ? 'start' : i === 2 ? 'end' : 'middle'}
+                  textAnchor={anchor}
                   className="fill-[var(--color-ink-muted)] font-[family-name:var(--font-data)] text-[10px]"
                 >
                   {new Date(p.t).toLocaleDateString('en-US', {

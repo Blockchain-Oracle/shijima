@@ -136,6 +136,18 @@
   .desk-frame.is-visitor .desk-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+  .desk-col-chat {
+    position: sticky;
+    top: calc(var(--appstrip) + 108px);
+  }
+  .desk-chat {
+    height: calc(100vh - var(--appstrip) - 132px);
+  }
+  .desk-col-side {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
   /* A visitor has no chat, so the record takes the right-hand column and stays in view beside the portfolio. */
   .desk-frame.is-visitor .desk-col-side {
     display: grid;
@@ -148,18 +160,6 @@
     top: calc(var(--appstrip) + 108px);
     max-height: calc(100vh - var(--appstrip) - 132px);
     overflow-y: auto;
-  }
-  .desk-col-chat {
-    position: sticky;
-    top: calc(var(--appstrip) + 108px);
-  }
-  .desk-chat {
-    height: calc(100vh - var(--appstrip) - 132px);
-  }
-  .desk-col-side {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
   }
 }
 
