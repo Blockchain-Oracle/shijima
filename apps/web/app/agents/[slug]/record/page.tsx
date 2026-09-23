@@ -69,6 +69,8 @@ function filterFrom(
  * nothing to do. Those are the proof it was awake and honest, so they are never hidden, but a run of them
  * folds into one line that can be opened.
  */
+export const metadata = { title: 'Every decision' }
+
 export default async function RecordPage({
   params,
   searchParams,

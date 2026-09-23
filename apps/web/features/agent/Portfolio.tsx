@@ -9,7 +9,6 @@ import { MARKER_KIND } from '@/features/desk/DeskPanels'
 import { HoldingFlags } from '@/features/desk/HoldingsPanel'
 import { type ChartMarker, PortfolioChart, type ValuePoint } from '@/features/desk/PortfolioChart'
 import type { DeskView } from '@/lib/desk.server'
-import { cn } from '@/lib/utils'
 
 const pct = (bps: number) => `${(bps / 100).toFixed(bps % 100 === 0 ? 0 : 1)}%`
 

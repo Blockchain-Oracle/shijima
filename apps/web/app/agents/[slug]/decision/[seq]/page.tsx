@@ -72,6 +72,11 @@ function sectionCounter() {
  * One decision, in full [8.11], in the brief's order: the decision, why it looked, what it saw, the options it
  * weighed, the limits check, the cost, what happened, if you were asked, the proof, how it looks now.
  */
+export async function generateMetadata({ params }: { params: Promise<{ slug: string; seq: string }> }) {
+  const { seq } = await params
+  return { title: `Decision #${seq}` }
+}
+
 export default async function DecisionPage({ params }: { params: Promise<{ slug: string; seq: string }> }) {
   const { slug, seq } = await params
   const resolved = await deskForViewer(slug)

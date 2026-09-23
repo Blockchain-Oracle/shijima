@@ -2,8 +2,6 @@
 
 import type { ButtonKind } from '@desk/core'
 import { controlsCopy as c, deskCopy } from '@desk/shared'
-import type { Route } from 'next'
-import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { proposeAction } from '@/app/owner-actions'
 import { Button } from '@/components/ui/button'
@@ -266,12 +264,6 @@ export function DeskControls({ view }: { view: ControlsView }) {
     <section className="desk-panel">
       <header className="desk-panel-head">
         <h2 className="type-label-micro text-ink-muted">{c.title}</h2>
-        <Link
-          href={`/agents/${view.slug}/settings` as Route}
-          className="type-caption text-ink-secondary hover:text-ink"
-        >
-          {deskCopy.settingsLink} →
-        </Link>
       </header>
       <p className="type-caption text-ink-muted">{c.intro}</p>
       <div className="desk-controls">

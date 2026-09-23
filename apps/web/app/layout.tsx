@@ -25,10 +25,13 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const shell = await loadShell()
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn('antialiased cursor-custom', fontVariables)} suppressHydrationWarning>
-        {/* Paint the chosen theme on the first frame, so there is no flash of the other one. */}
+      <head>
+        {/* Paint the chosen theme on the first frame, so there is no flash of the other one. In the head, so it
+            runs on every document, including a nested page that turns into a 404. */}
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: a fixed script of our own, with no input in it */}
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
+      <body className={cn('antialiased cursor-custom', fontVariables)} suppressHydrationWarning>
         <Providers>
           <TooltipProvider>
             <Toaster limit={1}>
