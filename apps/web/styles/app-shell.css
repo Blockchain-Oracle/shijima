@@ -2034,3 +2034,78 @@ a.act-row:hover {
 [data-theme="light"] .osc-logo--light {
   display: block;
 }
+
+/* ── /live ─────────────────────────────────────────────────────────────── */
+.live-hero {
+  margin: -0.5rem 0 1rem;
+}
+.live-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-bottom: 1rem;
+}
+.live-txs {
+  display: flex;
+  flex-direction: column;
+}
+.live-txs li {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding-block: 0.65rem;
+  border-top: 1px solid var(--color-hairline);
+}
+.live-txs li:first-child {
+  border-top: 0;
+}
+.live-tx-what {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.live-tx-what strong {
+  font-size: 0.86rem;
+  color: var(--color-ink);
+}
+.live-tx-what small {
+  font-size: 0.72rem;
+  color: var(--color-ink-muted);
+}
+.live-tx-what a {
+  color: var(--color-ink-secondary);
+}
+.live-tx-hash {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-data);
+  font-size: 0.74rem;
+  color: var(--color-profit);
+}
+.live-rows {
+  display: flex;
+  flex-direction: column;
+}
+.live-rows > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 0.55rem;
+  border-top: 1px solid var(--color-hairline);
+  font-size: 0.82rem;
+}
+.live-rows dt {
+  color: var(--color-ink-secondary);
+}
+.live-rows dd {
+  font-family: var(--font-data);
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+@media (max-width: 760px) {
+  .live-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

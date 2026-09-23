@@ -340,6 +340,43 @@ export const appCopy = {
     credit: 'Runs on OpenServ · decisions by SERV Reasoning',
   },
 
+  livePage: {
+    meta: 'Live on mainnet',
+    kicker: 'Robinhood Chain · chain 4663',
+    title: 'Live on mainnet, and you can check every number',
+    intro:
+      'Shijima runs on Robinhood Chain mainnet with real money. Every count here comes from the record, and every transaction opens on Blockscout.',
+    stats: {
+      agents: 'Agents',
+      agentsNote: (trading: number) => `${trading} trading real money`,
+      followers: 'Copying an agent',
+      trades: 'Confirmed trades',
+      moved: (usd: string) => `${usd} of USDG moved`,
+      checkpoints: 'Records fingerprinted on chain',
+      serv: 'SERV Reasoning calls',
+      runs: 'OpenServ workflow runs',
+    },
+    latestTitle: 'The latest transactions',
+    latestNone: 'No confirmed transaction yet.',
+    kinds: {
+      buy: 'Buy',
+      sell: 'Sell',
+      checkpoint: 'Fingerprint',
+      sweep: 'To savings',
+      redeem: 'From savings',
+    } as Record<string, string>,
+    revenueTitle: 'Revenue',
+    revenueBody:
+      'Trading on Shijima is free. When someone copies an agent, they pay its creator a one-time fee they saw first; Shijima keeps 20% of it.',
+    creators: 'Earned by creators',
+    shijima: 'Earned by Shijima',
+    copies: (n: number) => `${n} paid ${n === 1 ? 'copy' : 'copies'}`,
+    contractsTitle: 'The contracts',
+    factory: 'Agent factory',
+    implementation: 'Agent account (every agent is a copy of this)',
+    operator: 'Shijima’s operator (trades inside each agent’s limits, pays the gas)',
+  },
+
   receive: {
     title: 'Or send it from anywhere',
     copy: (addr: string) => `Copy ${addr}`,

@@ -1,6 +1,7 @@
 'use client'
 
 import { appCopy } from '@desk/shared'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { browserClient } from '@/features/session/useDeskSession'
 import { cn } from '@/lib/utils'
@@ -31,7 +32,8 @@ export function LiveBadge({ compact = false, className }: { compact?: boolean; c
   }, [])
 
   return (
-    <span
+    <Link
+      href="/live"
       className={cn('live-badge', compact && 'live-badge--compact', className)}
       title={appCopy.live.title}
     >
@@ -40,6 +42,6 @@ export function LiveBadge({ compact = false, className }: { compact?: boolean; c
       {block !== null && (
         <span className="live-badge-block">{appCopy.live.block(block.toLocaleString('en-US'))}</span>
       )}
-    </span>
+    </Link>
   )
 }
