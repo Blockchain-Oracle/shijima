@@ -22,6 +22,7 @@
     "db:migrate": "pnpm --filter @desk/db migrate",
     "records:import": "tsx --env-file-if-exists=.env scripts/import-file-records.ts",
     "rehearsal:reset": "tsx --env-file-if-exists=.env scripts/rehearsal-db.ts",
+    "rehearse:copy": "tsx --env-file-if-exists=.env scripts/rehearse-copy.ts",
     "desk:resolve": "pnpm --filter @desk/worker resolve",
     "dev:prove-limits": "tsx --env-file-if-exists=.env scripts/prove-limits.ts",
     "dev:prove-alerts": "tsx --env-file-if-exists=.env scripts/prove-alerts.ts",
