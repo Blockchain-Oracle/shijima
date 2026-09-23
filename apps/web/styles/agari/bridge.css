@@ -138,12 +138,12 @@
   --color-popover: var(--ms-surface-3);
   --color-popover-foreground: var(--white);
   --color-primary: var(--vermilion);
-  --color-primary-foreground: #FFFFFF;
+  --color-primary-foreground: var(--on-accent);
   --color-secondary: var(--ms-surface-2);
   --color-secondary-foreground: var(--white);
   --color-muted: var(--ms-surface-2);
   --color-muted-foreground: var(--gray-400);
-  --color-accent-foreground: #FFFFFF;
+  --color-accent-foreground: var(--on-accent);
   --color-destructive: var(--loss);
   --color-border: var(--ms-hairline);
   --color-input: var(--ms-hairline);

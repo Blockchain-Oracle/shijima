@@ -29,7 +29,7 @@ function palette() {
   const css = getComputedStyle(document.documentElement)
   const v = (name: string, fallback: string) => css.getPropertyValue(name).trim() || fallback
   return {
-    line: v('--vermilion', '#E04D26'),
+    line: v('--vermilion', '#CCFF00'),
     text: v('--gray-500', '#737373'),
     grid: v('--ms-hairline', 'rgba(255,255,255,0.1)'),
     reference: v('--gray-500', '#737373'),

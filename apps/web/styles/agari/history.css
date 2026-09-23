@@ -269,7 +269,7 @@
   border-radius: var(--radius-md);
   transition: border-color 180ms var(--ease);
 }
-.badge-card.is-earned { border-color: rgba(224, 77, 38, 0.3); background: rgba(224, 77, 38, 0.06); }
+.badge-card.is-earned { border-color: rgba(204,255,0, 0.3); background: rgba(204,255,0, 0.06); }
 .badge-card.is-locked { background: rgba(255, 255, 255, 0.018); opacity: 0.45; }
 [data-theme="light"] .badge-card.is-locked { background: rgba(20, 18, 16, 0.02); opacity: 0.55; }
 .badge-card-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 20px; color: var(--color-ink-muted); }
@@ -286,4 +286,4 @@
   color: var(--color-ink-muted);
 }
 .badge-card-icon svg { width: 16px; height: 16px; }
-.badge-card.is-earned .badge-card-icon { border-color: rgba(224, 77, 38, 0.35); background: rgba(224, 77, 38, 0.08); color: var(--vermilion); }
+.badge-card.is-earned .badge-card-icon { border-color: rgba(204,255,0, 0.35); background: rgba(204,255,0, 0.08); color: var(--vermilion); }

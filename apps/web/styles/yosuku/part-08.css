@@ -92,9 +92,9 @@
 .podium-spot:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.18); }
 .podium-spot.s1 {
   background:
-    radial-gradient(ellipse at top right, rgba(224,77,38,0.08), transparent 60%),
+    radial-gradient(ellipse at top right, rgba(204,255,0,0.08), transparent 60%),
     rgba(255,255,255,0.02);
-  border-color: rgba(224,77,38,0.3);
+  border-color: rgba(204,255,0,0.3);
   min-height: 380px;
 }
 .podium-spot.s2 { min-height: 320px; }
@@ -110,7 +110,7 @@
   pointer-events: none;
   user-select: none;
 }
-.podium-spot.s1 .podium-rank { color: rgba(224,77,38,0.18); font-size: 240px; }
+.podium-spot.s1 .podium-rank { color: rgba(204,255,0,0.18); font-size: 240px; }
 
 .podium-eyebrow {
   font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em;
@@ -123,7 +123,7 @@
   padding: 3px 8px; border-radius: 2px;
   font-weight: 700;
 }
-.podium-spot.s1 .podium-eyebrow .ord { background: var(--vermilion); color: var(--white); }
+.podium-spot.s1 .podium-eyebrow .ord { background: var(--vermilion); color: var(--on-accent); }
 
 .podium-portrait {
   margin-top: 22px;
@@ -146,8 +146,8 @@
 }
 .podium-spot.s1 .podium-portrait {
   width: 112px; height: 112px;
-  background: linear-gradient(135deg, #1a1612 0%, #6b3520 50%, #E04D26 100%);
-  border-color: rgba(224,77,38,0.4);
+  background: linear-gradient(135deg, #1a1612 0%, #6b3520 50%, #CCFF00 100%);
+  border-color: rgba(204,255,0,0.4);
   font-size: 44px;
 }
 
@@ -156,12 +156,12 @@
   top: 22px; left: -36px;
   width: 160px;
   background: var(--vermilion);
-  color: var(--white);
+  color: var(--on-accent);
   font-family: var(--font-mono); font-size: 9px; font-weight: 700;
   letter-spacing: 0.24em; text-align: center;
   padding: 4px 0;
   transform: rotate(-32deg);
-  box-shadow: 0 4px 12px rgba(224,77,38,0.3);
+  box-shadow: 0 4px 12px rgba(204,255,0,0.3);
   z-index: 3;
 }
 
@@ -217,11 +217,11 @@
 /* ───────── Yokozuna champion strip ───────── */
 .yokozuna {
   margin-top: 64px;
-  border: 1px solid rgba(224,77,38,0.2);
+  border: 1px solid rgba(204,255,0,0.2);
   border-radius: 4px;
   overflow: hidden;
   background:
-    linear-gradient(120deg, rgba(224,77,38,0.04) 0%, rgba(0,0,0,0) 60%),
+    linear-gradient(120deg, rgba(204,255,0,0.04) 0%, rgba(0,0,0,0) 60%),
     rgba(255,255,255,0.012);
   display: grid;
   grid-template-columns: 5fr 7fr;

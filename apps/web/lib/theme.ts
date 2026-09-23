@@ -1,5 +1,5 @@
 // Theme: dark (default) + the cream light mode drawn from the brand films
-// (#F4EEE3 paper / #141210 ink / #D93E1F vermilion / #2E6B4F matcha).
+// (#F4EEE3 paper / #141210 ink / #4F7A00 vermilion / #2E6B4F matcha).
 // Persisted per-browser; first visit with no stored choice follows the OS.
 // Ported from reference/yosuku/lib/theme.ts @ 3c56ef5 — only the storage key is ours.
 const STORAGE_KEY = 'shijima_theme'

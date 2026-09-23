@@ -8,8 +8,8 @@
 [data-theme="light"] .settle-clock .sc-track { stroke: rgba(20,18,16,0.16); }
 .settle-clock--urgent { animation: settleClockPulse 1.7s var(--ease) infinite; }
 @keyframes settleClockPulse {
-  0%, 100% { filter: drop-shadow(0 0 0 rgba(224,77,38,0)); }
-  50%      { filter: drop-shadow(0 0 11px rgba(224,77,38,0.38)); }
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(204,255,0,0)); }
+  50%      { filter: drop-shadow(0 0 11px rgba(204,255,0,0.38)); }
 }
 
 /* Collapsed pill — while the card list is in view the orb shrinks to a slim,
@@ -167,8 +167,8 @@
   display: inline-flex; align-items: center; gap: 6px;
   font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.03em;
   color: var(--gray-300);
-  background: rgba(224,77,38,0.1);
-  border: 1px solid rgba(224,77,38,0.3);
+  background: rgba(204,255,0,0.1);
+  border: 1px solid rgba(204,255,0,0.3);
   padding: 3px 10px 3px 8px; border-radius: 999px;
 }
 .hc-countdown svg { width: 12px; height: 12px; color: var(--vermilion); }
@@ -209,7 +209,7 @@
   padding: 2px 6px;
   border-radius: 2px;
   z-index: 3;
-  border: 1px solid rgba(224,77,38,0.4);
+  border: 1px solid rgba(204,255,0,0.4);
 }
 
 .hero-chart-foot {

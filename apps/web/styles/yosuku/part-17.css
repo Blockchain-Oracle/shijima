@@ -59,7 +59,7 @@
    Un-drainable custody rail + focus-follows-step spine.
    ══════════════════════════════════════════════════════════════ */
 .xt {
-  --xt-verm: #E04D26;
+  --xt-verm: #CCFF00;
   --xt-mint: #34D399;
   --xt-ink: #f3f1ee;
   --e-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -83,7 +83,7 @@
 
 /* spine + nodes */
 .xt-spine-fill { transform-origin: top; transition: transform 0.6s var(--e-emph); }
-@keyframes xt-pulse { 0% { box-shadow: 0 0 0 0 rgba(224,77,38,0.30); } 100% { box-shadow: 0 0 0 9px rgba(224,77,38,0); } }
+@keyframes xt-pulse { 0% { box-shadow: 0 0 0 0 rgba(204,255,0,0.30); } 100% { box-shadow: 0 0 0 9px rgba(204,255,0,0); } }
 .xt-node-active { animation: xt-pulse 1.9s var(--e-out) infinite; }
 .xt-check path { stroke-dasharray: 24; stroke-dashoffset: 24; animation: xt-draw 0.42s var(--e-draw) 0.05s both; }
 @keyframes xt-draw { to { stroke-dashoffset: 0; } }
@@ -142,8 +142,8 @@
   box-shadow: 0 22px 48px -24px rgba(20,18,16,0.26), 0 3px 8px -3px rgba(20,18,16,0.11), inset 0 1px 0 rgba(255,255,255,0.95);
 }
 .earn-vault-glow { position: absolute; top: -42%; right: -16%; width: 62%; height: 130%; pointer-events: none;
-  background: radial-gradient(closest-side, rgba(224,77,38,0.11), transparent 72%); }
-[data-theme="light"] .earn-vault-glow { background: radial-gradient(closest-side, rgba(224,77,38,0.08), transparent 72%); }
+  background: radial-gradient(closest-side, rgba(204,255,0,0.11), transparent 72%); }
+[data-theme="light"] .earn-vault-glow { background: radial-gradient(closest-side, rgba(204,255,0,0.08), transparent 72%); }
 .earn-vault-accent { position: absolute; top: 0; left: 26px; width: 46px; height: 2px; border-radius: 0 0 2px 2px; background: var(--color-vermilion); opacity: 0.9; }
 
 .earn-livedot { display:inline-block; width:6px; height:6px; border-radius:50%; background: var(--color-new-mint); animation: earn-pulse 2.4s ease-out infinite; }
@@ -155,7 +155,7 @@
 
 .earn-meter { height: 5px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; }
 [data-theme="light"] .earn-meter { background: rgba(20,18,16,0.09); }
-.earn-meter-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--color-vermilion), #f0774f); box-shadow: 0 0 8px rgba(224,77,38,0.45); transition: width .6s cubic-bezier(0.2,0,0,1); }
+.earn-meter-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--color-vermilion), #f0774f); box-shadow: 0 0 8px rgba(204,255,0,0.45); transition: width .6s cubic-bezier(0.2,0,0,1); }
 
 .earn-chipg { border: 1px solid rgba(52,211,153,0.30); background: rgba(52,211,153,0.09); }
 [data-theme="light"] .earn-chipg { border-color: rgba(45,160,110,0.35); background: rgba(45,160,110,0.10); }
@@ -174,14 +174,14 @@
 .earn-field { border: 1px solid rgba(255,255,255,0.10); transition: border-color .2s; }
 .earn-field:focus-within { border-color: rgba(255,255,255,0.25); }
 [data-theme="light"] .earn-field { border-color: rgba(20,18,16,0.16); background: rgba(255,255,255,0.45); }
-[data-theme="light"] .earn-field:focus-within { border-color: rgba(224,77,38,0.5); }
+[data-theme="light"] .earn-field:focus-within { border-color: rgba(204,255,0,0.5); }
 [data-theme="light"] .earn-field input::placeholder { color: rgba(20,18,16,0.32); }
 .earn-chip { border: 1px solid rgba(255,255,255,0.10); }
 [data-theme="light"] .earn-chip { border-color: rgba(20,18,16,0.14); }
 .earn-ghost { border: 1px solid rgba(255,255,255,0.15); transition: border-color .2s, color .2s; }
 .earn-ghost:hover { border-color: rgba(255,255,255,0.30); }
 [data-theme="light"] .earn-ghost { border-color: rgba(20,18,16,0.2); }
-[data-theme="light"] .earn-ghost:hover { border-color: rgba(224,77,38,0.5); }
+[data-theme="light"] .earn-ghost:hover { border-color: rgba(204,255,0,0.5); }
 
 /* ══════════════════════════════════════════════════════════════
    Leaderboard — light-mode surfaces (podium 2nd/3rd + banzuke field
@@ -219,7 +219,7 @@
 }
 .strat-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.13); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 24px 50px -24px rgba(0,0,0,0.95); }
 .strat-card:active { transform: translateY(-1px) scale(0.995); }
-.strat-card:focus-visible { outline: none; border-color: var(--color-vermilion); box-shadow: 0 0 0 3px rgba(224,77,38,0.25); }
+.strat-card:focus-visible { outline: none; border-color: var(--color-vermilion); box-shadow: 0 0 0 3px rgba(204,255,0,0.25); }
 [data-theme="light"] .strat-card {
   --gain: #0F9D6E; --loss: #B23A2A;
   background: #FCF8F0; border-color: rgba(20,18,16,0.08);
@@ -231,7 +231,7 @@
 [data-theme="light"] .strat-sigil { box-shadow: inset 0 0 0 1px rgba(20,18,16,0.12); }
 .strat-sigil .glyph { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-jp); color: rgba(255,255,255,0.9); text-shadow: 0 1px 4px rgba(0,0,0,0.5); }
 
-.strat-mem { background: rgba(224,77,38,0.12); color: var(--color-vermilion); }
+.strat-mem { background: rgba(204,255,0,0.12); color: var(--color-vermilion); }
 
 /* ── Earn — compact one-page layout (scoped; the hero CSS is shared with other pages) ── */
 .earn-page .page-hero { padding: 92px 0 12px; }
@@ -291,7 +291,7 @@
   font-family: var(--font-serif, var(--font-display));
   font-style: italic;
   font-weight: 500;
-  color: var(--vermilion-d, #B83A1B);
+  color: var(--vermilion-d, #A3CC00);
 }
 .appband-mark {
   display: inline-flex;
@@ -320,7 +320,7 @@
 }
 .appband::before { left: 0;  background: linear-gradient(90deg, var(--cream, #F4EEE3), transparent); }
 .appband::after  { right: 0; background: linear-gradient(270deg, var(--cream, #F4EEE3), transparent); }
-.appband:hover .appband-cell em { color: var(--vermilion, #E04D26); }
+.appband:hover .appband-cell em { color: var(--vermilion, #CCFF00); }
 @keyframes appbandDrift { 0% { transform: translate3d(0,0,0); } 100% { transform: translate3d(-50%,0,0); } }
 
 /* The band inverts in the cream theme.

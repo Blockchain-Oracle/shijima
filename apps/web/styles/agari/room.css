@@ -47,7 +47,7 @@
 }
 
 /* max-h-[88dvh] w-full max-w-[440px] rounded-t-3xl sm:rounded-3xl
-   + shadow-[0_-20px_80px_-20px_rgba(224,77,38,0.25)] */
+   + shadow-[0_-20px_80px_-20px_rgba(204,255,0,0.25)] */
 .room-sheet {
   position: fixed;
   z-index: 1000;
@@ -64,7 +64,7 @@
   border-radius: 24px 24px 0 0;
   background: var(--room-sheet);
   color: rgb(var(--room-ink-rgb));
-  box-shadow: 0 -20px 80px -20px rgba(224, 77, 38, 0.25);
+  box-shadow: 0 -20px 80px -20px rgba(204,255,0, 0.25);
 }
 
 .room-sheet:focus,
@@ -116,8 +116,8 @@
   margin-top: 2px;
   border: 1px solid color-mix(in srgb, var(--vermilion) 30%, transparent);
   border-radius: 12px;
-  background: rgba(224, 77, 38, 0.08);
-  box-shadow: 0 0 24px -6px rgba(224, 77, 38, 0.5);
+  background: rgba(204,255,0, 0.08);
+  box-shadow: 0 0 24px -6px rgba(204,255,0, 0.5);
   color: var(--vermilion);
 }
 
@@ -210,7 +210,7 @@
 }
 
 .room-state-icon[data-tone="vermilion"]::before {
-  background: radial-gradient(circle, rgba(224, 77, 38, 0.28), transparent 70%);
+  background: radial-gradient(circle, rgba(204,255,0, 0.28), transparent 70%);
 }
 
 .room-state-icon > span {
@@ -241,7 +241,7 @@
   padding: 12px 24px;
   font-size: 14px;
   font-weight: 600;
-  color: #fff;
+  color: var(--on-accent);
   outline: none;
   transition: background-color 200ms var(--ease-out), gap 200ms var(--ease-out);
 }

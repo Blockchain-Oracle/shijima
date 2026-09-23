@@ -225,7 +225,7 @@
 .scroll-cue-dot {
   position: absolute; left: -1.5px; top: 0;
   width: 4px; height: 9px; border-radius: 2px; background: var(--vermilion);
-  box-shadow: 0 0 8px rgba(224,77,38,0.6);
+  box-shadow: 0 0 8px rgba(204,255,0,0.6);
   animation: scrollCueDot 1.9s var(--ease) infinite;
 }
 @keyframes scrollCueDot {

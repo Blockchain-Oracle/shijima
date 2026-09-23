@@ -32,7 +32,7 @@ const FOOTER_Y = 846
 const ADVICE_Y = 882
 
 /** Every colour the cards draw comes from share-card.css; these are the no-stylesheet fallbacks. */
-const FALLBACK_VERMILION = 'rgb(224 77 38)'
+const FALLBACK_VERMILION = 'rgb(204 255 0)'
 const DISPLAY_FALLBACK = "'Sora', system-ui, sans-serif"
 const MONO_FALLBACK = "'JetBrains Mono', ui-monospace, monospace"
 
@@ -106,7 +106,7 @@ function toRgb(color: string): [number, number, number] {
     return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff]
   }
   const rgb = /rgba?\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)/i.exec(color)
-  return rgb ? [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])] : [224, 77, 38]
+  return rgb ? [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])] : [204, 255, 0]
 }
 
 /** The live `--vermilion` and the cards' own tokens (share-card.css), so the heat is the page's, not a second red. */

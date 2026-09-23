@@ -18,7 +18,7 @@ export const OG = {
   /** `.crop` corner marks (part-04). */
   crop: 'rgba(255, 255, 255, 0.18)',
   /** `--vermilion` */
-  vermilion: 'rgb(224, 77, 38)',
+  vermilion: 'rgb(204,255,0)',
   /** `--color-profit` and `--color-loss` (dark), for a gap's side only: never a verdict. */
   up: 'rgb(52, 211, 153)',
   down: 'rgb(251, 113, 133)',

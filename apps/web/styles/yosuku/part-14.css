@@ -91,7 +91,7 @@
 [data-theme="light"] .hero-chart-foot .ramp .bar,
 [data-theme="light"] .mc-strip .ramp .bar { background: rgba(20,18,16,0.10); }
 [data-theme="light"] .hero-chart-foot .ramp .fill,
-[data-theme="light"] .mc-strip .ramp .fill { background: linear-gradient(90deg, var(--vermilion), #E6A489); }
+[data-theme="light"] .mc-strip .ramp .fill { background: linear-gradient(90deg, var(--vermilion), #B8D96B); }
 
 /* footer top hairline: authored rgba(255,255,255,0.06) is invisible on cream → re-ink. */
 [data-theme="light"] .footer { border-top-color: rgba(20,18,16,0.08); }
@@ -161,7 +161,7 @@
    invisible chips on cream. Re-aim to the warm inset the market strips use. */
 [data-theme="light"] .fund-amt { background: rgba(20,18,16,0.035); }
 [data-theme="light"] .fund-preset { border-color: rgba(20,18,16,0.16); }
-[data-theme="light"] .fund-preset:hover { border-color: rgba(217,62,31,0.5); }
+[data-theme="light"] .fund-preset:hover { border-color: rgba(79,122,0,0.5); }
 
 /* hover-border variants */
 [data-theme="light"] .hover\:border-white\/20:hover,

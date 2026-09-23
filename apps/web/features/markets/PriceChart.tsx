@@ -99,7 +99,7 @@ export function PriceChart({
       line.setData(points.map((p) => ({ time: p.time as UTCTimestamp, value: p.value })))
 
       if (marks.length > 0) {
-        const acted = v('--vermilion', '#e04d26')
+        const acted = v('--vermilion', '#CCFF00')
         const quiet = v('--gray-500', '#737373')
         createSeriesMarkers(
           line,

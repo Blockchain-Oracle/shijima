@@ -66,7 +66,7 @@ export function Stepper({
                   className={cn(
                     'flex size-4 shrink-0 items-center justify-center rounded-full border text-[9px] font-semibold',
                     done
-                      ? 'border-[var(--color-accent)] bg-[var(--color-accent)] text-white'
+                      ? 'border-[var(--color-accent)] bg-[var(--color-accent)] text-[var(--on-accent)]'
                       : on
                         ? 'border-[var(--color-accent)] text-[var(--color-accent)]'
                         : 'border-border',

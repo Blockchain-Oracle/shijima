@@ -65,7 +65,7 @@
 
 .room-line[data-mine="true"] .room-bubble {
   border-color: color-mix(in srgb, var(--vermilion) 28%, transparent);
-  background: rgba(224, 77, 38, 0.07);
+  background: rgba(204,255,0, 0.07);
 }
 
 .room-meta {
@@ -140,7 +140,7 @@
   justify-content: center;
   border-radius: 9999px;
   background: var(--vermilion);
-  color: #fff;
+  color: var(--on-accent);
   outline: none;
   transition: opacity 150ms var(--ease-out);
 }

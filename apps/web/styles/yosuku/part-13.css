@@ -225,10 +225,10 @@
 .lp-market-card .market-asset { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--white); }
 .lp-market-card .market-window { font-family: var(--font-mono); font-size: 10px; color: var(--gray-600); letter-spacing: 0.1em; }
 .lp-market-card .spacer { flex: 1; }
-.lp-market-card.hot { border-color: rgba(224,77,38,0.3); }
+.lp-market-card.hot { border-color: rgba(204,255,0,0.3); }
 .lp-market-card.hot::before {
   content: ''; position: absolute; inset: 0;
-  background: radial-gradient(ellipse at top right, rgba(224,77,38,0.04), transparent 60%);
+  background: radial-gradient(ellipse at top right, rgba(204,255,0,0.04), transparent 60%);
   pointer-events: none; border-radius: inherit;
 }
 
@@ -302,7 +302,7 @@
 /* ───────── Light Mode (beta) ───────── */
 /* ══════════════════════════════════════════════════════════════════════════
    CREAM LIGHT MODE — the brand-film palette, brought into the app.
-   #F4EEE3 paper · #141210 ink · #D93E1F vermilion · #2E6B4F matcha.
+   #F4EEE3 paper · #141210 ink · #4F7A00 vermilion · #2E6B4F matcha.
 
    Most of the app re-skins for free: tailwind.config maps gray-*, bg, and
    vermilion to the CSS vars flipped below (so 830 text-gray-* + bg-bg + every
@@ -330,8 +330,9 @@
   --gray-900: #F6F0E4;  /* card surface */
   --gray-950: #FBF7EE;  /* raised surface, just above paper */
 
-  --vermilion:   #D93E1F;
-  --vermilion-d: #B83214;
+  --vermilion:   #4F7A00;
+  --vermilion-d: #3E6000;
+  --on-accent: #FFFFFF;
   --profit: #2E6B4F;    /* matcha — the neon mint is unreadable on cream */
   --loss:   #C2381F;    /* warm red, legible on cream */
 

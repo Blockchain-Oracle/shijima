@@ -4,7 +4,7 @@
 .app-shell {
   --sidebar-width: 17rem;
   --sidebar-width-icon: 4.25rem;
-  background: var(--color-bg);
+  background: var(--color-background);
 }
 
 /* ── the panel ─────────────────────────────────────────────────────────── */
@@ -61,7 +61,7 @@
   padding-inline: 0.35rem;
   border-radius: 999px;
   background: var(--color-accent);
-  color: #fff;
+  color: var(--on-accent);
   font-family: var(--font-data);
   font-size: 0.68rem;
   font-weight: 600;
@@ -311,7 +311,7 @@
 
 /* ── the inset: top bar, page, phone bar ───────────────────────────────── */
 .app-inset {
-  background: var(--color-bg);
+  background: var(--color-background);
 }
 
 .app-topbar {
@@ -324,7 +324,7 @@
   height: 3.5rem;
   padding-inline: 0.75rem 1rem;
   border-bottom: 1px solid var(--color-hairline);
-  background: color-mix(in srgb, var(--color-bg) 86%, transparent);
+  background: color-mix(in srgb, var(--color-background) 86%, transparent);
   backdrop-filter: blur(12px);
 }
 
@@ -821,7 +821,7 @@ a.act-row:hover {
 
 .act-kind.is-trade {
   background: var(--color-accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .act-body {
@@ -1523,7 +1523,7 @@ a.act-row:hover {
   height: 3.25rem;
   border-radius: 999px;
   background: var(--color-accent);
-  color: #fff;
+  color: var(--on-accent);
   cursor: grab;
   touch-action: none;
 }
@@ -1839,7 +1839,7 @@ a.act-row:hover {
   padding: 0.4rem 0.6rem;
   border: 1px solid var(--color-hairline);
   border-radius: var(--radius-md, 12px);
-  background: var(--color-bg);
+  background: var(--color-background);
   color: var(--color-ink);
 }
 .copyset-followers {
@@ -1935,7 +1935,7 @@ a.act-row:hover {
   border-radius: var(--radius-md, 12px);
   font-family: var(--font-data);
   color: var(--color-ink);
-  background: var(--color-bg);
+  background: var(--color-background);
 }
 .osc-code-row input {
   flex: 1;
@@ -1943,7 +1943,7 @@ a.act-row:hover {
   padding: 0.45rem 0.7rem;
   border: 1px solid var(--color-hairline);
   border-radius: var(--radius-md, 12px);
-  background: var(--color-bg);
+  background: var(--color-background);
   color: var(--color-ink);
   font-size: 0.78rem;
 }
