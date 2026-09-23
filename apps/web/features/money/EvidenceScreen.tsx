@@ -140,15 +140,15 @@ export function EvidenceScreen({ facts, agents }: { facts: EvidenceFact[]; agent
               {c.none}
             </div>
           ) : (
-            <div className="kit-evidence" role="table" aria-label={a.name}>
-              <div className="kit-evidence-row kit-evidence-head" role="row">
-                <span role="columnheader">{c.step}</span>
-                <span role="columnheader">{c.fingerprint}</span>
-                <span role="columnheader">{c.explorer}</span>
+            <div className="kit-evidence">
+              <div className="kit-evidence-row kit-evidence-head" aria-hidden="true">
+                <span>{c.step}</span>
+                <span>{c.fingerprint}</span>
+                <span>{c.explorer}</span>
               </div>
               {a.rows.map((r) => (
-                <div className="kit-evidence-row" role="row" key={r.seq}>
-                  <span role="cell" className="kit-evidence-step">
+                <div className="kit-evidence-row" key={r.seq}>
+                  <span className="kit-evidence-step">
                     <Link href={`/agents/${a.slug}/decision/${r.seq}` as Route}>
                       <strong>#{r.seq}</strong> {r.summary}
                     </Link>
@@ -160,10 +160,10 @@ export function EvidenceScreen({ facts, agents }: { facts: EvidenceFact[]; agent
                       <small>{r.at}</small>
                     </span>
                   </span>
-                  <span role="cell">
+                  <span>
                     <code title={r.recordHash}>{short(r.recordHash, 10, 8)}</code>
                   </span>
-                  <span role="cell">
+                  <span>
                     {r.sealedByTx ? (
                       <a href={`${EXPLORER}/tx/${r.sealedByTx}`} target="_blank" rel="noreferrer noopener">
                         <ExternalLink aria-hidden="true" size={14} /> {short(r.sealedByTx, 6, 4)}
