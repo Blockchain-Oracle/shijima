@@ -6,7 +6,7 @@
 
 export const howCopy = {
   title: 'How it works',
-  lead: 'You choose what to hold. The desk decides only when to move, inside limits the network itself enforces, and it writes down every decision, including the hours it did nothing.',
+  lead: 'You choose what to hold. The agent decides only when to move, inside limits the network itself enforces, and it writes down every decision, including the hours it did nothing.',
   back: 'Back to Markets',
 
   sections: {
@@ -15,9 +15,9 @@ export const howCopy = {
     clock: 'The market clock',
     split: 'What you decide, and what it decides',
     modes: 'Three modes',
-    order: 'How the desk decides',
+    order: 'How the agent decides',
     judgment: 'Where AI is used, and where it is not',
-    refuses: 'When the desk will not act',
+    refuses: 'When the agent will not act',
     chain: 'What the network enforces',
     withdraw: 'Withdraw without our website',
     fee: 'The fee',
@@ -33,15 +33,15 @@ export const howCopy = {
     limits: {
       title: 'Set two hard limits',
       body: (perAction: string, perDay: string) =>
-        `The most the desk may spend in one action, and in one day. Both are written into your desk contract, so the network refuses anything larger. They start at ${perAction} and ${perDay}.`,
+        `The most the agent may spend in one action, and in one day. Both are written into your agent’s contract, so the network refuses anything larger. They start at ${perAction} and ${perDay}.`,
     },
     create: {
-      title: 'Create your desk',
-      body: 'One signature from your wallet creates a desk contract that you own, on Robinhood Chain. Only you can take money out. The network fee is about $0.30.',
+      title: 'Create your agent',
+      body: 'One signature from your wallet creates an agent contract that you own, on Robinhood Chain. Only you can take money out. The network fee is about $0.30.',
     },
     talk: {
       title: 'Talk to it',
-      body: 'Ask why it waited, pause it, or change your mix. It proposes; you confirm on a card. It watches your desk every five minutes and wakes when something moves, and it starts in practice, where it spends nothing.',
+      body: 'Ask why it waited, pause it, or change your mix. It proposes; you confirm on a card. It watches your agent every five minutes and wakes when something moves, and it starts in practice, where it spends nothing.',
     },
   },
 
@@ -61,7 +61,7 @@ export const howCopy = {
   },
 
   clock: {
-    lead: 'Stock Tokens trade on Robinhood Chain at every hour. The US market does not. What a token’s price means depends on the hour, so the desk reads the clock before anything else.',
+    lead: 'Stock Tokens trade on Robinhood Chain at every hour. The US market does not. What a token’s price means depends on the hour, so the agent reads the clock before anything else.',
     lanes: {
       open: {
         name: 'Market open',
@@ -76,7 +76,7 @@ export const howCopy = {
       shut: {
         name: 'Weekends and holidays',
         clock: 'Fri 20:00 to Sun 20:00 New York',
-        body: 'No one can create or redeem Stock Tokens, so nothing ties a pool to the real market. The pools keep trading, and prices drift from the reference. This is the window the desk was built for.',
+        body: 'No one can create or redeem Stock Tokens, so nothing ties a pool to the real market. The pools keep trading, and prices drift from the reference. This is the window the agent was built for.',
       },
     },
     wordsTitle: 'What the clock says',
@@ -90,11 +90,11 @@ export const howCopy = {
       holiday: 'the exchange is shut, from 20:00 the evening before',
     },
     shutTitle: 'While the market is shut',
-    shutBody: 'Most of the week falls outside regular hours. This is what that means for your desk.',
+    shutBody: 'Most of the week falls outside regular hours. This is what that means for your agent.',
     shutPoints: {
       noEdge:
-        'A weekend price does not reliably say where Monday will open, and the desk never claims otherwise. Each wait is graded after the reopen against acting at once, and the grade can go either way.',
-      band: 'Your desk contract refuses the assistant’s trades when a price is more than 8% from the last official update. Only you can sell then.',
+        'A weekend price does not reliably say where Monday will open, and the agent never claims otherwise. Each wait is graded after the reopen against acting at once, and the grade can go either way.',
+      band: 'Your agent’s contract refuses the assistant’s trades when a price is more than 8% from the last official update. Only you can sell then.',
       hourly:
         'The agent still watches every five minutes. It writes down every decision, and on a quiet day one line that it looked and found nothing to do.',
     },
@@ -103,11 +103,11 @@ export const howCopy = {
   split: {
     basket: {
       title: 'Your basket',
-      body: 'What to hold, and in what proportions. The desk never adds a holding and never changes your proportions.',
+      body: 'What to hold, and in what proportions. The agent never adds a holding and never changes your proportions.',
     },
     limits: {
       title: 'Your limits',
-      body: 'Per action and per day, held by your desk contract. A drift tolerance, a largest single holding and a loss limit, held by the desk.',
+      body: 'Per action and per day, held by your agent’s contract. A drift tolerance, a largest single holding and a loss limit, held by the agent.',
     },
     timing: {
       title: 'Its one call: when',
@@ -123,7 +123,7 @@ export const howCopy = {
     shadow: {
       title: 'Practice',
       body: (checks: number) =>
-        `It watches and decides for real, and records what it would have done, but spends nothing. Every desk starts here. It can go live after ${checks} hours of practice, once you have read its report.`,
+        `It watches and decides for real, and records what it would have done, but spends nothing. Every agent starts here. It can go live after ${checks} hours of practice, once you have read its report.`,
     },
     askFirst: {
       title: 'Ask first',
@@ -167,7 +167,7 @@ export const howCopy = {
       },
       recheck: {
         label: 'Check the limits again',
-        desc: 'The same sums your desk contract will do, rounding included. This step can refuse what the engine chose, and the engine can never get past it.',
+        desc: 'The same sums your agent’s contract will do, rounding included. This step can refuse what the engine chose, and the engine can never get past it.',
       },
       act: {
         label: 'Act, ask, or record',
@@ -197,21 +197,21 @@ export const howCopy = {
       never: ['Never decides', 'what to hold, how much of it, or whether a limit applies'],
     } satisfies Record<string, [string, string]>,
     compareLink: 'See the same question asked with and without SERV',
-    foot: 'The engine is SERV Reasoning, from OpenServ. Its answer must fit a strict format, and our own checks reject an answer that cites a rule or a fact it was not given. A rejected answer means the desk does nothing that hour, and the record says so.',
+    foot: 'The engine is SERV Reasoning, from OpenServ. Its answer must fit a strict format, and our own checks reject an answer that cites a rule or a fact it was not given. A rejected answer means the agent does nothing that hour, and the record says so.',
   },
 
   refuses: {
     halted: {
       title: 'Trading paused in a token',
-      body: 'If Robinhood’s status for a token says trading is paused, or the status cannot be read, the desk will not touch that token. The record names the reason.',
+      body: 'If Robinhood’s status for a token says trading is paused, or the status cannot be read, the agent will not touch that token. The record names the reason.',
     },
     band: {
       title: 'A price beyond 8%, or no price feed',
-      body: 'Your desk contract refuses the assistant’s trades when a price is more than 8% from the last official update, or when the feed is missing or paused. Only you can sell then, and you are told.',
+      body: 'Your agent’s contract refuses the assistant’s trades when a price is more than 8% from the last official update, or when the feed is missing or paused. Only you can sell then, and you are told.',
     },
     data: {
       title: 'Data it cannot verify',
-      body: 'If a price, a feed or the news cannot be read, the desk does not guess. It waits, and the record says which source did not answer. Status shows every source, live.',
+      body: 'If a price, a feed or the news cannot be read, the agent does not guess. It waits, and the record says which source did not answer. Status shows every source, live.',
     },
     statusLink: 'See every source on Status',
     never: {
@@ -222,7 +222,7 @@ export const howCopy = {
 
   chain: {
     own: {
-      title: 'A desk contract of your own',
+      title: 'An agent contract of your own',
       body: 'Your money sits in a contract you own on Robinhood Chain, not with us. Only you can withdraw, and a withdrawal can only go to your wallet.',
     },
     limits: {
@@ -236,16 +236,16 @@ export const howCopy = {
   },
 
   withdraw: {
-    body: 'If this website ever disappears, your money is still in your desk contract on the public network. You can take it out with the block explorer alone.',
+    body: 'If this website ever disappears, your money is still in your agent’s contract on the public network. You can take it out with the block explorer alone.',
     steps: {
       open: {
-        label: 'Open your desk on the explorer',
+        label: 'Open your agent on the explorer',
         desc: (explorer: string) =>
-          `Go to ${explorer}/address/ followed by your desk’s address. The address is on your desk page and in its settings.`,
+          `Go to ${explorer}/address/ followed by your agent’s address. The address is on your agent’s page and in its settings.`,
       },
       write: {
         label: 'Open Contract, then Write proxy',
-        desc: 'Connect the wallet that owns the desk. The assistant’s key cannot do what follows.',
+        desc: 'Connect the wallet that owns the agent. The assistant’s key cannot do what follows.',
       },
       call: {
         label: 'Call withdraw',
@@ -257,36 +257,39 @@ export const howCopy = {
       },
     },
     foot: 'To stop the assistant first, call revokeOperator in the same place. It needs no amount.',
-    yourDesk: 'Your desk on the explorer',
+    yourDesk: 'Your agent on the explorer',
     tokensTitle: 'Token addresses',
-    usdg: 'USDG · the desk’s cash',
+    usdg: 'USDG · the agent’s cash',
     vault: 'steakUSDG · savings-vault shares, to redeem at the vault yourself',
   },
 
   fee: {
     yearly: {
       title: '0.5% a year, waived during the beta',
-      body: 'A small yearly share of what the desk holds, counted as it goes, for example “Fee so far: $0.03, waived.” Practice mode is always free.',
+      body: 'A small yearly share of what the agent holds, counted as it goes, for example “Fee so far: $0.03, waived.” Practice mode is always free.',
     },
-    perTrade: { title: 'No fee per trade', body: 'A desk that is paid per trade is paid to trade too much.' },
+    perTrade: {
+      title: 'No fee per trade',
+      body: 'An agent that is paid per trade is paid to trade too much.',
+    },
     network: {
       title: 'Network fees',
-      body: 'Paid in ETH on Robinhood Chain. Creating a desk costs about $0.30, and a trade about $0.04. Every card shows the fee before you sign.',
+      body: 'Paid in ETH on Robinhood Chain. Creating an agent costs about $0.30, and a trade about $0.04. Every card shows the fee before you sign.',
     },
   },
 
   faq: {
     predict: {
-      q: 'Does the desk predict prices?',
+      q: 'Does the agent predict prices?',
       a: 'No. It does not pick stocks, forecast prices, or claim to do better than acting at once. It decides when to make the moves your own proportions call for, and after the reopen it grades its own waits against acting at once, whichever way that went.',
     },
     custody: {
       q: 'Can Shijima take my money?',
-      a: 'No. Your money is in a desk contract you own. Only your wallet can withdraw, and a withdrawal can only pay your wallet. The assistant can trade inside your limits, and nothing else.',
+      a: 'No. Your money is in an agent contract you own. Only your wallet can withdraw, and a withdrawal can only pay your wallet. The assistant can trade inside your limits, and nothing else.',
     },
     gone: {
       q: 'What if this website disappears?',
-      a: 'Your money stays in your desk contract. You can withdraw with the block explorer alone; the steps are above.',
+      a: 'Your money stays in your agent’s contract. You can withdraw with the block explorer alone; the steps are above.',
     },
     token: {
       q: 'What is a Stock Token?',
@@ -298,7 +301,7 @@ export const howCopy = {
     },
     awake: {
       q: 'How do I know it is awake?',
-      a: 'Status shows the last check of every shared desk, the worker’s heartbeat, the trigger from OpenServ, and every data source, live. In Telegram, one pinned message is updated at every check.',
+      a: 'Status shows the last check of every shared agent, the worker’s heartbeat, the trigger from OpenServ, and every data source, live. In Telegram, one pinned message is updated at every check.',
     },
     practice: {
       q: 'Why does it start in practice?',
@@ -307,17 +310,17 @@ export const howCopy = {
     },
     vault: {
       q: 'Does idle cash earn anything?',
-      a: 'When the desk acts on its own, the part of your cash target it does not need for its own buys goes to a savings vault: Steakhouse USDG on Morpho, the vault behind Robinhood Earn. Only when a month of interest is well over the network fees, and never cash that is on its way into a stock. The rate varies, about 4% a year lately, and your desk shows it live. Taking cash out depends on how much the vault has available at that moment.',
+      a: 'When the agent acts on its own, the part of your cash target it does not need for its own buys goes to a savings vault: Steakhouse USDG on Morpho, the vault behind Robinhood Earn. Only when a month of interest is well over the network fees, and never cash that is on its way into a stock. The rate varies, about 4% a year lately, and your agent shows it live. Taking cash out depends on how much the vault has available at that moment.',
     },
     override: {
       q: 'Can I make it trade now?',
-      a: 'Chat can start a check now, and the desk still decides. “Do it anyway” makes a trade the desk would not, on a second confirmation. It is recorded and graded as your call, not the desk’s, and it is not available in practice.',
+      a: 'Chat can start a check now, and the agent still decides. “Do it anyway” makes a trade the agent would not, on a second confirmation. It is recorded and graded as your call, not the agent’s, and it is not available in practice.',
     },
   },
 
   cta: {
     title: 'Start in practice',
-    body: 'Pick a basket and create your desk. It watches every five minutes and spends nothing until you let it.',
-    action: 'Start a desk',
+    body: 'Pick a basket and create your agent. It watches every five minutes and spends nothing until you let it.',
+    action: 'Start an agent',
   },
 } as const

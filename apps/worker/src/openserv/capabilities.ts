@@ -50,7 +50,7 @@ export async function agentStatus(cli: Cli, session: CallerSession): Promise<str
   const d = found.desk
   const last = await lastCheckOf(cli.db, d.deskId)
   return JSON.stringify({
-    desk: d.name ?? 'your desk',
+    desk: d.name ?? 'your agent',
     address: d.address,
     mode: d.mode === 'shadow' ? 'practice' : d.mode,
     state: d.lifecycle,

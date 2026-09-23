@@ -8,26 +8,26 @@ const plural = (count: number, one: string, many = `${one}s`) => `${n(count)} ${
 export const statusCopy = {
   title: 'Status',
   description:
-    'Is the desk awake: the worker, the OpenServ trigger, the reasoning engine, the chain and the prices, read live.',
-  section: { index: '01', title: 'Is the desk awake' },
+    'Is the agent awake: the worker, the OpenServ trigger, the reasoning engine, the chain and the prices, read live.',
+  section: { index: '01', title: 'Is the agent awake' },
   desksSection: {
     index: '02',
-    title: 'Desks',
-    desc: 'Every shared desk, and yours if you are signed in. Each is watched every five minutes.',
+    title: 'Agents',
+    desc: 'Every shared agent, and yours if you are signed in. Each is watched every five minutes.',
   },
   countsSection: {
     index: '03',
     title: 'Counts',
-    desc: 'Everything the desks have done, counted from the record.',
+    desc: 'Everything the agents have done, counted from the record.',
   },
-  unreachable: 'Status could not read its own database just now. The desks run without this page.',
+  unreachable: 'Status could not read its own database just now. The agents run without this page.',
   healthy: 'Everything answering',
   degraded: 'Something needs attention',
   worst: (label: string) => `Worst: ${label}`,
   allFresh: 'Every reading below was taken just now.',
   checkpoint: 'Block',
   noBlock: 'unreachable',
-  tableTitle: (count: number) => `Parts of the desk (${count})`,
+  tableTitle: (count: number) => `Parts of the agent (${count})`,
   lag: (sec: number) =>
     sec < 120 ? `${sec}s` : sec < 7200 ? `${Math.round(sec / 60)}m` : `${Math.round(sec / 3600)}h`,
   latency: (ms: number) => (ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`),
@@ -59,7 +59,7 @@ export const statusCopy = {
     operatorLowGas: (balance: string, needed: string) =>
       `the assistant's wallet holds ${balance} ETH for network fees and needs about ${needed} for the next 20 actions: top it up`,
 
-    noDesks: 'no running desk to check',
+    noDesks: 'no running agent to check',
     notRegistered: 'no OpenServ agent on this worker: its own timer runs the checks',
     hourCron: (hour: string, cron: number, total: number) =>
       `the ${hour} check was started by OpenServ · ${n(cron)} of ${plural(total, 'top-of-the-hour look')} in 24 h`,
@@ -85,12 +85,12 @@ export const statusCopy = {
     feedsOk: (withFeed: number, tokens: number, newest: string) =>
       `${n(withFeed)} of ${n(tokens)} answering · newest official update ${newest}`,
     feedsMissing: (missing: number) =>
-      `${plural(missing, 'feed')} missing: the desk will not trade those tokens`,
+      `${plural(missing, 'feed')} missing: the agent will not trade those tokens`,
     oraclePaused: (symbols: string) => `paused by the issuer: ${symbols}`,
 
     haltsNone: 'no Stock Token paused',
     halted: (symbols: string) => `trading paused: ${symbols}`,
-    haltUnknown: (symbols: string) => `status unreadable for ${symbols}: the desk will not trade them`,
+    haltUnknown: (symbols: string) => `status unreadable for ${symbols}: the agent will not trade them`,
 
     telegramOff: 'no bot on this worker',
     telegramOk: (ago: string) => `last message sent ${ago}`,
@@ -105,10 +105,10 @@ export const statusCopy = {
   },
 
   desks: {
-    tableTitle: (count: number) => `Desks (${count})`,
-    none: 'No desk is shared yet.',
+    tableTitle: (count: number) => `Agents (${count})`,
+    none: 'No agent is shared yet.',
     yours: 'yours',
-    unnamed: 'A desk',
+    unnamed: 'An agent',
     late: (ago: string) =>
       `Has not checked in. Last check was ${ago}. Its money is safe in its own account and cannot move without the assistant.`,
     never: (when: string) => `No check yet. The first is due ${when}.`,
@@ -119,11 +119,11 @@ export const statusCopy = {
     >,
     paused: 'Paused by its owner. Nothing will happen until it is resumed.',
     stopped: 'Stopped by its own loss limit.',
-    attention: 'Waiting for its owner: something changed that the desk will not guess about.',
+    attention: 'Waiting for its owner: something changed that the agent will not guess about.',
   },
 
   counts: {
-    desks: ['Desks running', 'each in its own contract'],
+    desks: ['Agents running', 'each in its own contract'],
     checks: ['Checks completed', 'including the ones that did nothing'],
     records: ['Records written', 'each one hash-chained to the one before'],
     onChain: ['Fingerprints on the public network', 'actions and daily seals, each confirmed'],

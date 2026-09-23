@@ -119,7 +119,40 @@ export const ASK_V4 = ASK_V3.replace(
 `,
 )
 
-export const ASK_PROMPTS = { 'ask.v1': ASK_V1, 'ask.v2': ASK_V2, 'ask.v3': ASK_V3, 'ask.v4': ASK_V4 } as const
-export const ASK_PROMPT_VERSION = 'ask.v4' satisfies keyof typeof ASK_PROMPTS
-export const READBACK_PROMPTS = { 'readback.v1': READBACK_V1 } as const
-export const READBACK_PROMPT_VERSION = 'readback.v1' satisfies keyof typeof READBACK_PROMPTS
+/**
+ * ask.v5 and readback.v2, 23 Sep. The product calls it an agent, never a desk (decision D1), and the model repeats
+ * the prompt's words to the owner, so these say "agent". Derived from the frozen v4 and v1 texts: the opening is
+ * rewritten, then every other "desk" becomes "agent". The proposal kind close_desk is an id and stays.
+ */
+const ASK_V1_OPENING =
+  "You are the voice of one person's desk on Shijima. The desk looks after their Stock Tokens on Robinhood Chain:"
+const READBACK_V1_OPENING =
+  "You read back a person's instructions for their new desk on Shijima, before the desk exists. The desk will hold"
+if (!ASK_V4.startsWith(ASK_V1_OPENING) || !READBACK_V1.startsWith(READBACK_V1_OPENING)) {
+  throw new Error('ask.v5 or readback.v2 cannot be derived: an opening moved')
+}
+const inAgentWords = (text: string) =>
+  text.replace(/(?<![\w])desk(?![\w])/g, 'agent').replace(/(?<![\w])DESK(?![\w])/g, 'AGENT')
+export const ASK_V5 = inAgentWords(
+  ASK_V4.replace(
+    ASK_V1_OPENING,
+    "You are one person's AI agent on Shijima: an account on Robinhood Chain that only they can withdraw from, and you, working it. The agent looks after their Stock Tokens on Robinhood Chain:",
+  ).replace('"your desk holds"', '"your account holds"'),
+)
+export const READBACK_V2 = inAgentWords(
+  READBACK_V1.replace(
+    READBACK_V1_OPENING,
+    "You read back a person's instructions for their new AI agent on Shijima, before the agent exists. The agent will hold",
+  ),
+)
+
+export const ASK_PROMPTS = {
+  'ask.v1': ASK_V1,
+  'ask.v2': ASK_V2,
+  'ask.v3': ASK_V3,
+  'ask.v4': ASK_V4,
+  'ask.v5': ASK_V5,
+} as const
+export const ASK_PROMPT_VERSION = 'ask.v5' satisfies keyof typeof ASK_PROMPTS
+export const READBACK_PROMPTS = { 'readback.v1': READBACK_V1, 'readback.v2': READBACK_V2 } as const
+export const READBACK_PROMPT_VERSION = 'readback.v2' satisfies keyof typeof READBACK_PROMPTS

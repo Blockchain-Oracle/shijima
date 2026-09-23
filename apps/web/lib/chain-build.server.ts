@@ -88,7 +88,7 @@ async function sellEverything(holdings: Record<string, bigint>, reason: Hex) {
   const sales = await Promise.all(
     Object.entries(holdings).map(async ([address, amount]) => {
       const token = tokenOf(address)
-      if (!token) throw new Error(`the desk holds a token that is not on the list: ${address}`)
+      if (!token) throw new Error(`the agent holds a token that is not on the list: ${address}`)
       const [out, feed] = await Promise.all([
         quotePinned(pub(), token, 'sell', amount),
         readFeed(pub(), token.feed).catch(() => null),
@@ -161,7 +161,7 @@ export async function build(proposal: AskProposalRow, desk: DeskForBuild): Promi
           calls.push(encode('withdraw', [VAULT, all(desk, state.vaultShares)]))
           lines.push('Your savings-vault shares, which you can redeem yourself at any time')
         }
-        if (calls.length === 0) return 'The desk holds nothing to withdraw.'
+        if (calls.length === 0) return 'The agent holds nothing to withdraw.'
         return {
           ...base,
           data: oneTransaction(calls),
@@ -180,9 +180,9 @@ export async function build(proposal: AskProposalRow, desk: DeskForBuild): Promi
         const redeemed = state.vaultShares > 0n ? await redeemAll(state.vaultShares, reason) : null
         const payable = redeemed ? await vaultPayable() : undefined
         if (redeemed && payable !== undefined && payable < redeemed.assets)
-          return `The savings vault can pay out only ${dollars(payable)} right now, less than the ${dollars(redeemed.assets)} the desk has in it. Withdraw everything as it is instead: the vault shares come to your wallet and you can redeem them yourself later.`
+          return `The savings vault can pay out only ${dollars(payable)} right now, less than the ${dollars(redeemed.assets)} the agent has in it. Withdraw everything as it is instead: the vault shares come to your wallet and you can redeem them yourself later.`
         const cashAfter = state.usdg + sold.minOut + (redeemed?.assets ?? 0n)
-        if (cashAfter === 0n) return 'The desk holds nothing to withdraw.'
+        if (cashAfter === 0n) return 'The agent holds nothing to withdraw.'
         const calls = [
           ...sold.calls,
           ...(redeemed ? [redeemed.call] : []),
@@ -216,7 +216,7 @@ export async function build(proposal: AskProposalRow, desk: DeskForBuild): Promi
       // More than the loose cash: the rest comes out of the savings vault first.
       const short_ = wanted - state.usdg
       if (state.vaultShares === 0n)
-        return `The desk has ${dollars(state.usdg)} in cash. Withdraw that, or withdraw everything to sell the holdings first.`
+        return `The agent has ${dollars(state.usdg)} in cash. Withdraw that, or withdraw everything to sell the holdings first.`
       const shares = await pub().readContract({
         address: VAULT,
         abi: vaultAbi,
@@ -224,7 +224,7 @@ export async function build(proposal: AskProposalRow, desk: DeskForBuild): Promi
         args: [short_],
       })
       if (shares > state.vaultShares)
-        return `The desk has ${dollars(state.usdg)} in cash and less than that in the savings vault. Withdraw everything to sell the holdings first.`
+        return `The agent has ${dollars(state.usdg)} in cash and less than that in the savings vault. Withdraw everything to sell the holdings first.`
       const payable = await vaultPayable()
       if (payable !== undefined && payable < short_)
         return `The savings vault can pay out only ${dollars(payable)} right now, less than the ${dollars(short_)} this needs from it. You can withdraw ${dollars(state.usdg + payable)} now, and the rest once the vault has the cash.`
@@ -242,13 +242,14 @@ export async function build(proposal: AskProposalRow, desk: DeskForBuild): Promi
     }
 
     case 'sell_everything': {
-      if (Object.keys(state.holdings).length === 0) return 'The desk holds no Stock Tokens to sell.'
+      if (Object.keys(state.holdings).length === 0) return 'The agent holds no Stock Tokens to sell.'
       const sold = await sellEverything(state.holdings, reason)
       return {
         ...base,
         data: oneTransaction(sold.calls),
         sessionMay: false,
-        summary: 'Sell every holding to USDG inside the desk, at no worse than 1% under the quote.',
+        summary:
+          'Sell every holding to USDG inside the agent’s account, at no worse than 1% under the quote.',
         lines: [...sold.lines, `At least ${dollars(state.usdg + sold.minOut)} in cash afterwards`],
       }
     }
@@ -261,18 +262,18 @@ export async function build(proposal: AskProposalRow, desk: DeskForBuild): Promi
         data: encode('revokeOperator', []),
         sessionMay: true,
         summary: 'Remove the assistant. It loses all access at once.',
-        lines: ['The desk stops on-chain. Your money stays in your account.'],
+        lines: ['The agent stops on-chain. Your money stays in your account.'],
       }
 
     case 'unpause': {
       const removed = state.operator === '0x0000000000000000000000000000000000000000'
-      if (!removed && !state.paused) return 'The desk is already running on-chain.'
+      if (!removed && !state.paused) return 'The agent is already running on-chain.'
       const calls = [...(removed ? [encode('setOperator', [desk.operator])] : []), encode('unpause', [])]
       return {
         ...base,
         data: oneTransaction(calls),
         sessionMay: false,
-        summary: removed ? 'Bring the assistant back and restart the desk.' : 'Restart the desk on-chain.',
+        summary: removed ? 'Bring the assistant back and restart the agent.' : 'Restart the agent on-chain.',
         lines: removed
           ? [`The assistant, ${short(desk.operator)}, can act again inside your limits`]
           : ['The assistant can act again inside your limits'],
@@ -315,10 +316,10 @@ export async function build(proposal: AskProposalRow, desk: DeskForBuild): Promi
         to: USDG,
         data: encodeFunctionData({ abi: erc20Abi, functionName: 'transfer', args: [desk.address, amount] }),
         sessionMay: false,
-        summary: `Move ${dollars(amount)} of USDG from your wallet into the desk.`,
+        summary: `Move ${dollars(amount)} of USDG from your wallet into the agent’s account.`,
         lines: [
           `${dollars(amount)} from ${dollars(balance)} in your wallet`,
-          `Into the desk, ${short(desk.address)}`,
+          `Into the agent’s account, ${short(desk.address)}`,
         ],
       }
     }
@@ -366,7 +367,7 @@ export async function build(proposal: AskProposalRow, desk: DeskForBuild): Promi
         ...base,
         data: oneTransaction(calls),
         sessionMay,
-        summary: `Close the desk: everything goes ${toOwner}`,
+        summary: `Close the agent: everything goes ${toOwner}`,
         lines,
       }
     }

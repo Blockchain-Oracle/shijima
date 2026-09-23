@@ -64,7 +64,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
           ← {s.back}
         </Link>
         <h1 className="type-headline text-ink">
-          {s.title} · {desk.name ?? 'Your desk'}
+          {s.title} · {desk.name ?? 'Your agent'}
         </h1>
       </header>
       <DeskSessionProvider

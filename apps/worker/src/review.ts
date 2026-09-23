@@ -208,7 +208,7 @@ export async function reviewAllDesks(
     if (!running.has(request.deskId)) {
       await finishCheckRequest(cli.db, request.id, {
         status: 'refused',
-        refusedReason: 'the desk is not running',
+        refusedReason: 'the agent is not running',
       })
       continue
     }

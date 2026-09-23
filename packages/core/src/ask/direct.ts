@@ -151,7 +151,7 @@ export async function proposeDirect(
     now,
   })
   if ('refused' in context) return { ok: false, why: context.refused }
-  if (!context.facts) return { ok: false, why: 'Start a desk first.' }
+  if (!context.facts) return { ok: false, why: 'Start an agent first.' }
 
   const decoded = decodeFields(input.fields ?? {})
   // A number that did not parse must never reach a check as NaN.

@@ -35,7 +35,7 @@ export default async function SharePage() {
         desc={
           desk
             ? `The latest decision of each kind on ${desk.name ?? desk.shareSlug}, drawn as it would be shared.`
-            : 'No desk is shared yet.'
+            : 'No agent is shared yet.'
         }
       />
       <ShareGallery cards={cards} />

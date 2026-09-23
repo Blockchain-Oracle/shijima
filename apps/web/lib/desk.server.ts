@@ -81,7 +81,7 @@ export async function deskForViewer(slug: string) {
     /** The public face: what a visitor's page may show. No owner address, no Telegram, no notes. */
     face: {
       id: desk.id,
-      name: desk.name ?? 'Your desk',
+      name: desk.name ?? 'Your agent',
       address: desk.address,
       chainId: desk.chainId,
       contractVersion: desk.contractVersion,
@@ -255,7 +255,7 @@ export async function loadDesk(slug: string) {
     owner: desk.ownerAddress,
     desk: {
       id: desk.id,
-      name: desk.name ?? 'Your desk',
+      name: desk.name ?? 'Your agent',
       address: desk.address,
       mode: desk.mode,
       state: desk.state,

@@ -108,7 +108,7 @@ export async function answerAskRequest(
       await finishAskRequest(deps.db, request.id, {
         reply: {
           ...plain(
-            'I have used up today’s chat allowance, so I can’t answer until midnight UTC. Your desk keeps checking as usual.',
+            'I have used up today’s chat allowance, so I can’t answer until midnight UTC. Your agent keeps checking as usual.',
           ),
         },
       })
@@ -209,7 +209,7 @@ async function checkAnswer(
   }
   if (!value.proposal) return { reply }
   if (!context.facts) {
-    reply.refused = 'Start a desk first, and then I can change it for you.'
+    reply.refused = 'Start an agent first, and then I can change it for you.'
     rejected.push('a proposal with no desk')
     return { reply }
   }
@@ -225,7 +225,7 @@ async function checkAnswer(
   const args = check.proposal.args as { token: string; side: 'buy' | 'sell'; amountIn: string }
   const token = deps.approved.find((t) => t.address.toLowerCase() === args.token.toLowerCase())
   if (!token) {
-    reply.refused = 'That Stock Token is no longer one the desk can hold.'
+    reply.refused = 'That Stock Token is no longer one the agent can hold.'
     return { reply }
   }
   const [inDecimals, outDecimals] =

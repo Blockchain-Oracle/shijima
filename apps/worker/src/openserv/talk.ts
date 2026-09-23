@@ -59,13 +59,13 @@ export async function answerWorkspace(
       const desk = await deskById(cli.db, claim.deskId)
       log('openserv_linked', { workspace: workspaceId, desk: desk?.address })
       const url = `${site}/agents/${desk?.shareSlug ?? claim.deskId}`
-      if (!question) return C.linked(desk?.name ?? 'your desk', url)
+      if (!question) return C.linked(desk?.name ?? 'your agent', url)
     }
   }
   if (!question) {
     const ws = await deskForWorkspace(cli.db, workspaceId)
     return ws
-      ? C.linked(ws.name ?? 'your desk', `${site}/agents/${ws.shareSlug ?? ws.deskId}`)
+      ? C.linked(ws.name ?? 'your agent', `${site}/agents/${ws.shareSlug ?? ws.deskId}`)
       : C.notLinked(site)
   }
 

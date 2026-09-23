@@ -24,11 +24,11 @@ import { answerWorkspace } from './talk'
 
 export const AGENT_NAME = 'shijima'
 export const AGENT_DESCRIPTION =
-  'Shijima (しじま) is an AI agent that keeps one person’s basket of US Stock Tokens on plan around the clock, on Robinhood Chain, inside limits their own account enforces. It decides only WHEN to move, never what to own, and fingerprints every decision on-chain. Link your workspace to your desk with a code from the website (send: link ABC123), then ask it how your portfolio is doing, why it waited, or to check now. Anything that moves money comes back as a link to confirm on your desk.'
+  'Shijima (しじま) is an AI agent that keeps one person’s basket of US Stock Tokens on plan around the clock, on Robinhood Chain, inside limits their own account enforces. It decides only WHEN to move, never what to own, and fingerprints every decision on-chain. Link your workspace to your agent with a code from the website (send: link ABC123), then ask it how your portfolio is doing, why it waited, or to check now. Anything that moves money comes back as a link to confirm on your agent’s page.'
 
 /** Our own workflow's goal and task, as provisioned. Only a task that carries both runs the review pass. */
 export const HOURLY_GOAL =
-  'Every hour, check each running desk against its owner mandate and act only within the limits that desk enforces on-chain.'
+  'Every hour, check each running agent against its owner mandate and act only within the limits that agent enforces on-chain.'
 export const HOURLY_TASK = 'Run the hourly desk review'
 
 /**
@@ -184,7 +184,7 @@ export function createDeskAgent(cli: Cli, log: Log, credentials?: AgentCredentia
 
   const agent = new DeskAgent({
     systemPrompt:
-      'You are the after-hours desk. You do not decide anything here: your engine does, inside on-chain limits.',
+      'You are the after-hours agent. You do not decide anything here: your engine does, inside on-chain limits.',
     // Registering binds these itself. Starting later reads them back from the saved state.
     ...(credentials ?? {}),
   })
@@ -195,14 +195,14 @@ export function createDeskAgent(cli: Cli, log: Log, credentials?: AgentCredentia
   agent.addCapability({
     name: 'desk_status',
     description:
-      'Say how many desks are running and when the worker last completed a pass. Reads only; it never starts a check.',
+      'Say how many agents are running and when the worker last completed a pass. Reads only; it never starts a check.',
     schema: z.object({
       reason: z.string().optional().describe('Why this was asked. Recorded, never acted on.'),
     }),
     async run({ args }) {
       log('openserv_capability', { reason: args.reason ?? null })
       const [desks, beat] = await Promise.all([runningDesks(cli.db), workerBeat(cli.db)])
-      return `${desks.length} desk${desks.length === 1 ? '' : 's'} running. The worker's last pass finished ${beat ? beat.beatAt.toISOString() : 'never'}. Checks run on the hourly trigger, not on request.`
+      return `${desks.length} agent${desks.length === 1 ? '' : 's'} running. The worker's last pass finished ${beat ? beat.beatAt.toISOString() : 'never'}. Checks run on the hourly trigger, not on request.`
     },
   })
 
@@ -210,7 +210,7 @@ export function createDeskAgent(cli: Cli, log: Log, credentials?: AgentCredentia
   agent.addCapability({
     name: 'agent_status',
     description:
-      'The linked Shijima desk: its name, practice or live, running or paused, and when it last checked. Only for a workspace linked to a desk with "link <code>".',
+      'The linked Shijima agent: its name, practice or live, running or paused, and when it last checked. Only for a workspace linked to an agent with "link <code>".',
     inputSchema: z.object({}),
     async run({ action }) {
       return agentStatus(cli, callerSession(action))
@@ -220,7 +220,7 @@ export function createDeskAgent(cli: Cli, log: Log, credentials?: AgentCredentia
   agent.addCapability({
     name: 'latest_decisions',
     description:
-      'The linked desk’s newest decisions, including "nothing to do": what it decided, the amount, the transaction and a link to the full record.',
+      'The linked agent’s newest decisions, including "nothing to do": what it decided, the amount, the transaction and a link to the full record.',
     inputSchema: z.object({
       limit: z.number().int().min(1).max(20).optional().describe('How many, newest first. Default 5.'),
     }),
@@ -232,7 +232,7 @@ export function createDeskAgent(cli: Cli, log: Log, credentials?: AgentCredentia
   agent.addCapability({
     name: 'check_now',
     description:
-      'Ask the linked desk to look now instead of at the next hour. Only works when the owner turned on "Let my workspace trigger checks". The agent’s own rules and the on-chain limits still decide whether anything moves; it can never withdraw or raise a limit.',
+      'Ask the linked agent to look now instead of at the next hour. Only works when the owner turned on "Let my workspace trigger checks". The agent’s own rules and the on-chain limits still decide whether anything moves; it can never withdraw or raise a limit.',
     inputSchema: z.object({
       reason: z.string().max(300).optional().describe('Why a check is wanted. Recorded, never acted on.'),
     }),
@@ -245,7 +245,7 @@ export function createDeskAgent(cli: Cli, log: Log, credentials?: AgentCredentia
   agent.addCapability({
     name: 'propose_change',
     description:
-      'Suggest a change to the linked desk in plain words, for example "hold less NVDA". Nothing changes here: the answer is a link where the owner confirms it on the website.',
+      'Suggest a change to the linked agent in plain words, for example "hold less NVDA". Nothing changes here: the answer is a link where the owner confirms it on the website.',
     inputSchema: z.object({
       change: z.string().min(3).max(1000).describe('The change, in plain words.'),
     }),
@@ -261,8 +261,8 @@ function summarise(s: ReviewSummary): string {
   if (s.held) return 'Held: an earlier transaction may still land, so nothing new was sent.'
   const checks = s.checks.map((c) => `${c.desk} ${c.status} (${c.records} records)`).join(', ')
   return [
-    `${s.desks} desk${s.desks === 1 ? '' : 's'} reviewed.`,
-    s.checks.length > 0 ? `Checked: ${checks}.` : 'Every desk had already been checked this hour.',
+    `${s.desks} agent${s.desks === 1 ? '' : 's'} reviewed.`,
+    s.checks.length > 0 ? `Checked: ${checks}.` : 'Every agent had already been checked this hour.',
     s.graded > 0 ? `${s.graded} earlier decisions graded against the reopen.` : '',
     s.sealed > 0 ? `${s.sealed} record chain sealed on-chain.` : '',
   ]

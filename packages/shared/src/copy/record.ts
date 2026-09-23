@@ -36,13 +36,13 @@ export const checkItCopy = {
   unsealedNextUnknown: 'It will be sealed by the next action, or by the daily seal.',
   unknownSeal:
     'This record is marked as sealed, but the sealing record could not be found on our side. Open the transaction and compare the fingerprint yourself.',
-  noEvent: 'The transaction holds no fingerprint for this desk. Do not trust this record as shown.',
+  noEvent: 'The transaction holds no fingerprint for this agent. Do not trust this record as shown.',
 } as const
 
 /** Words shared by the record's pages. */
 export const recordPagesCopy = {
   back: (name: string) => `← ${name}`,
-  visitor: 'Someone else’s desk. You are reading its record; nothing here can be changed from this page.',
+  visitor: 'Someone else’s agent. You are reading its record; nothing here can be changed from this page.',
   practice: 'practice',
   modes: {
     shadow: 'Practice, spending nothing',
@@ -166,7 +166,7 @@ export const decisionCopy = {
   oraclePaused: ' · the price feed is paused',
   holding: 'This holding',
   holdingLine: (weight: string, target: string, wander: string) =>
-    `${weight} of the desk against a target of ${target}, allowed to wander ${wander}`,
+    `${weight} of the agent’s value against a target of ${target}, allowed to wander ${wander}`,
   event: 'Company event',
   eventLine: (kind: string, date: string, timing: string | null, days: number) =>
     `${kind} on ${date}${timing ? `, ${timing}` : ''}, ${days === 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`}. Trading can pause around it.`,
@@ -180,10 +180,10 @@ export const decisionCopy = {
   vaultRate: (rate: string) => `pays ${rate} a year after its fees`,
   vaultLiquidity: (amount: string) => ` · ${amount} could be taken out right then`,
   vaultFee: (amount: string) => ` · a deposit and a later withdrawal cost ${amount} in network fees`,
-  vaultKeep: (amount: string) => ` · the desk keeps ${amount} in cash for its own buys`,
+  vaultKeep: (amount: string) => ` · the agent keeps ${amount} in cash for its own buys`,
   limitsAt: (whose: string) => `${whose} limits at that moment`,
   limitsLine: (perAction: string, left: string, cash: string) =>
-    `${perAction} per action · ${left} left today · ${cash} cash in the desk`,
+    `${perAction} per action · ${left} left today · ${cash} cash in the account`,
   headlines: (n: number) => `Headlines naming the company in the last 72 hours (${n})`,
   newsUnavailable: 'News was unavailable at that moment',
   noHeadlineText: 'The headline text is not shown here: our news licence does not allow passing it on.',
@@ -198,13 +198,14 @@ export const decisionCopy = {
   turnedDown: 'turned down',
   noModelAsked: 'No model was asked.',
   vaultNoModel:
-    'Moving cash into or out of the savings vault is arithmetic, not a question of timing, and the money never leaves the desk.',
+    'Moving cash into or out of the savings vault is arithmetic, not a question of timing, and the money never leaves the agent’s account.',
   arithmetic:
     'This part is plain arithmetic, not an assistant. It can refuse, and it can never start anything.',
   everyLimitPassed: 'Every limit passed.',
-  vaultNoLimits: 'Nothing counts against the limits: the money stays in the desk, as the contract counts it.',
+  vaultNoLimits:
+    'Nothing counts against the limits: the money stays in the agent’s account, as the contract counts it.',
   refused: (reasons: string) => `Refused: ${reasons}.`,
-  nothingToCheck: 'Nothing to check: the desk was not going to act.',
+  nothingToCheck: 'Nothing to check: the agent was not going to act.',
   spend: 'It would spend',
   receive: 'It should receive',
   least: 'The least it would accept',
@@ -221,8 +222,8 @@ export const decisionCopy = {
     rejected: (who: string, when: string, via: string) => `${who} rejected it ${when}, on the ${via}.`,
     expired: 'Nobody answered before it expired. Nothing was done, and that is recorded here.',
     cancelled: (why: string) => `It was withdrawn: ${why}.`,
-    executed: (seq: number) => `What the desk then did is record #${seq}.`,
-    notExecuted: 'The desk did not carry it out: the price had moved too far from what was shown.',
+    executed: (seq: number) => `What the agent then did is record #${seq}.`,
+    notExecuted: 'The agent did not carry it out: the price had moved too far from what was shown.',
     via: { telegram: 'Telegram', web: 'website', chat: 'chat' } as Record<string, string>,
   },
   proofOwn:
@@ -265,9 +266,9 @@ export const reportCopy = {
 
 /** Your desks: the list for an owner of more than one. */
 export const desksCopy = {
-  title: 'Your desks',
+  title: 'Your agents',
   signIn: 'Connect your wallet and sign in above to see them. Signing costs nothing and moves nothing.',
-  none: 'This wallet does not own a desk yet. A desk is an account on the network that only you can withdraw from, and an assistant that looks after it inside limits you set.',
+  none: 'This wallet does not own an agent yet. An agent is an account on the network that only you can withdraw from, and the AI that looks after it inside limits you set.',
   makeOne: 'Make one in Strategies →',
   publicView: 'The public view →',
   open: 'Open →',
@@ -282,5 +283,5 @@ export const desksCopy = {
     `${Math.min(done, needed)} of ${needed} practice hours done · ${read ? 'report read' : 'report not read yet'}`,
   ready: ' · it can go live when you choose',
   practiceNote:
-    'In practice mode the desk decides for real and spends nothing. None of your money has moved.',
+    'In practice mode the agent decides for real and spends nothing. None of your money has moved.',
 } as const

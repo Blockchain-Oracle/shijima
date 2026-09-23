@@ -82,7 +82,7 @@ export function desk(overrides: {
     owner: '0x0000000000000000000000000000000000000001',
     desk: {
       id: '00000000-0000-4000-8000-000000000000',
-      name: 'Fixture desk',
+      name: 'Fixture agent',
       address: '0x0000000000000000000000000000000000000002',
       mode: 'ask_first',
       state: 'active',
@@ -156,7 +156,7 @@ export const OUTCOME_ROWS: RecordRow[] = entries(
   decision(
     3,
     'acted_by_override',
-    'Bought on your call. The desk had chosen to wait; every limit still held.',
+    'Bought on your call. The agent had chosen to wait; every limit still held.',
   ),
   decision(4, 'waited', 'Waiting for the market to reopen: the weekend price is not anchored.'),
   decision(5, 'declined', 'Declined: your note says not to add before the report.'),

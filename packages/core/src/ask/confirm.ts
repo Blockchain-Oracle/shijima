@@ -33,8 +33,8 @@ export type ConfirmOutcome = { ok: true; text: string } | { ok: false; text: str
 
 const CHECK_REFUSED = {
   pending: 'A check is already on its way.',
-  cooldown: 'The desk checked a few minutes ago. Ask again in ten minutes.',
-  not_running: 'The desk is not running, so it cannot check now.',
+  cooldown: 'The agent checked a few minutes ago. Ask again in ten minutes.',
+  not_running: 'The agent is not running, so it cannot check now.',
 } as const
 
 export async function confirmSigninProposal(
@@ -62,7 +62,7 @@ export async function confirmSigninProposal(
   try {
     const desk = proposal.deskId ? await deskById(db, proposal.deskId) : undefined
     if (!desk || desk.ownerAddress.toLowerCase() !== input.ownerAddress.toLowerCase()) {
-      return finish({ ok: false, text: 'That desk is not yours.' })
+      return finish({ ok: false, text: 'That agent is not yours.' })
     }
     const by = { actor: 'owner', via: 'chat' } as const
     const args = proposal.args
@@ -90,7 +90,7 @@ export async function confirmSigninProposal(
         })
         return finish({
           ok: true,
-          text: `Done. Your new settings are in force (version ${row.version}). The desk moves toward them at its next checks, inside your limits.`,
+          text: `Done. Your new settings are in force (version ${row.version}). The agent moves toward them at its next checks, inside your limits.`,
         })
       }
       case 'pause':
@@ -100,13 +100,13 @@ export async function confirmSigninProposal(
                 ok: true,
                 text: 'Paused. Nothing was sold. Waiting requests and remembered waits were cancelled.',
               }
-            : { ok: false, text: 'The desk was not active, so nothing changed.' },
+            : { ok: false, text: 'The agent was not active, so nothing changed.' },
         )
       case 'resume':
         return finish(
           (await resumeDesk(db, desk.id, by))
-            ? { ok: true, text: 'Resumed. The desk carries on from its next check.' }
-            : { ok: false, text: 'The desk was not paused by you, so nothing changed.' },
+            ? { ok: true, text: 'Resumed. The agent carries on from its next check.' }
+            : { ok: false, text: 'The agent was not paused by you, so nothing changed.' },
         )
       case 'set_mode': {
         const mode = args.mode as 'shadow' | 'ask_first' | 'on_its_own'
@@ -116,13 +116,13 @@ export async function confirmSigninProposal(
             ok: false,
             text:
               change.reason === 'practice_checks'
-                ? `Not yet. Going live needs ${GO_LIVE_CHECKS} practice checks, and this desk has done ${change.checksDone}.`
+                ? `Not yet. Going live needs ${GO_LIVE_CHECKS} practice checks, and this agent has done ${change.checksDone}.`
                 : 'Not yet. Going live needs you to read the practice report first.',
           })
         }
         return finish({
           ok: true,
-          text: change.changed ? 'Done. The mode has changed.' : 'The desk was already in that mode.',
+          text: change.changed ? 'Done. The mode has changed.' : 'The agent was already in that mode.',
         })
       }
       case 'answer_approval': {
@@ -146,7 +146,7 @@ export async function confirmSigninProposal(
         )
         return finish({
           ok: true,
-          text: 'Approved. The desk checks the price again and acts within a minute if it still holds.',
+          text: 'Approved. The agent checks the price again and acts within a minute if it still holds.',
         })
       }
       case 'check_now': {
@@ -159,7 +159,7 @@ export async function confirmSigninProposal(
           request.ok
             ? {
                 ok: true,
-                text: 'The desk is checking now. Its answer appears in the record in a minute or so.',
+                text: 'The agent is checking now. Its answer appears in the record in a minute or so.',
               }
             : { ok: false, text: CHECK_REFUSED[request.reason] },
         )
@@ -182,10 +182,10 @@ export async function confirmSigninProposal(
             ok: false,
             text:
               done.reason === 'practice'
-                ? 'In practice mode the desk spends nothing, even on your word.'
+                ? 'In practice mode the agent spends nothing, even on your word.'
                 : done.reason === 'not_active'
-                  ? 'The desk is not active, so it cannot act now.'
-                  : 'That wait has already ended. Ask me what the desk is doing now.',
+                  ? 'The agent is not active, so it cannot act now.'
+                  : 'That wait has already ended. Ask me what the agent is doing now.',
           })
         }
         await requestCheck(
@@ -195,7 +195,7 @@ export async function confirmSigninProposal(
         )
         return finish({
           ok: true,
-          text: 'Done. The desk acts on your call within a minute, if the price is still within half a percent of what you saw and every limit holds.',
+          text: 'Done. The agent acts on your call within a minute, if the price is still within half a percent of what you saw and every limit holds.',
         })
       }
       case 'price_alert': {

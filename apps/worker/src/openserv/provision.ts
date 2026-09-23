@@ -60,7 +60,7 @@ try {
       trigger: triggers.cron({ schedule: '0 * * * *', timezone: 'UTC' }),
       task: {
         description: HOURLY_TASK,
-        body: 'Check every running desk once. Record every decision, including doing nothing.',
+        body: 'Check every running agent once. Record every decision, including doing nothing.',
       },
     },
   })

@@ -16,28 +16,28 @@ export const OPENSERV = {
  */
 export const openservCopy = {
   notLinked: (site: string) =>
-    `I am Shijima, an AI agent that looks after one person's Stock Tokens on Robinhood Chain. This workspace is not linked to a desk yet. On ${site}, open your desk's Settings, choose Connections, make an OpenServ code, and send it here as: link ABC123`,
+    `I am Shijima, an AI agent that looks after one person's Stock Tokens on Robinhood Chain. This workspace is not linked to an agent yet. On ${site}, open your agent's Settings, choose Connections, make an OpenServ code, and send it here as: link ABC123`,
   linked: (name: string, url: string) =>
-    `Linked. This workspace now talks to ${name}. Ask me how it is doing, why I waited, or to check now. Anything that moves money comes back as a link to confirm on your desk: ${url}`,
+    `Linked. This workspace now talks to ${name}. Ask me how it is doing, why I waited, or to check now. Anything that moves money comes back as a link to confirm on your agent’s page: ${url}`,
   linkUsed:
-    'That code has expired or was already used. Make a new one in your desk’s Settings, under Connections.',
-  linkElsewhere: 'This workspace is already linked to another desk. Unlink it there first.',
-  closed: 'The desk this workspace is linked to is closed. Its record stays readable on the website.',
+    'That code has expired or was already used. Make a new one in your agent’s Settings, under Connections.',
+  linkElsewhere: 'This workspace is already linked to another agent. Unlink it there first.',
+  closed: 'The agent this workspace is linked to is closed. Its record stays readable on the website.',
   slowDown:
-    'That is a lot of questions for today. I answer again tomorrow; the desk keeps working meanwhile.',
+    'That is a lot of questions for today. I answer again tomorrow; the agent keeps working meanwhile.',
   failed: 'I could not answer just now. Nothing was changed.',
-  timeout: 'I am still thinking about that. The answer will be in the chat on your desk.',
-  confirm: (url: string) => `Nothing changes until you confirm it on your desk: ${url}`,
+  timeout: 'I am still thinking about that. The answer will be in the chat on your agent’s page.',
+  confirm: (url: string) => `Nothing changes until you confirm it on your agent’s page: ${url}`,
   task: (answer: string) => answer,
   /** The owner has not turned on "Let my workspace trigger checks" for this workspace. */
   checksOff: (url: string) =>
-    `This workspace may read the desk but not start checks. The owner can allow it in Settings, under Connections: ${url}`,
+    `This workspace may read the agent but not start checks. The owner can allow it in Settings, under Connections: ${url}`,
   checkQueued: (url: string) =>
-    `Asked. The agent looks now, and its usual rules and on-chain limits still decide whether anything moves. The decision will be on the desk: ${url}`,
+    `Asked. The agent looks now, and its usual rules and on-chain limits still decide whether anything moves. The decision will be on the agent’s page: ${url}`,
   checkRefused: {
-    pending: 'A check is already waiting to run. Its decision will be on the desk in a minute.',
-    cooldown: 'The desk was checked less than ten minutes ago. Ask again a little later.',
-    not_running: 'The desk is not running, so there is nothing to check.',
+    pending: 'A check is already waiting to run. Its decision will be on the agent’s page in a minute.',
+    cooldown: 'The agent was checked less than ten minutes ago. Ask again a little later.',
+    not_running: 'The agent is not running, so there is nothing to check.',
   },
 } as const
 

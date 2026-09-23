@@ -78,7 +78,7 @@ export function mandateLines(m: Mandate, approved: ApprovedToken[], ids: Set<str
   const preset = PRESETS.find((p) => p.id === m.preset)
   const lines = [
     `Strategy: ${preset ? `${preset.name} (${preset.id})` : 'the owner’s own basket'}. Targets: ${describeBasket(m, approved)}.`,
-    `May wander ${pct(m.driftToleranceBps)} before the desk acts. Largest holding ${pct(m.maxPositionBps)}. Stops after a ${pct(m.lossStopBps)} fall.`,
+    `May wander ${pct(m.driftToleranceBps)} before the agent acts. Largest holding ${pct(m.maxPositionBps)}. Stops after a ${pct(m.lossStopBps)} fall.`,
     `Most per action ${usd(m.perActionCapUsdg)}. Most per day ${usd(m.dailyCapUsdg)}. Asks first at ${usd(m.largeActionUsdg)} or more.`,
     '',
     "OWNER'S NOTES",
@@ -106,7 +106,7 @@ async function marketSections(db: Db, approved: ApprovedToken[], now: Date, ids:
   const lines = [
     'NOW',
     `New York time: ${nyTime(now)}. Session: ${clock.session}${clock.anchored ? ', anchored' : ', not anchored (thin weekend or holiday market)'}.`,
-    'The desk checks every hour, on the hour.',
+    'The agent checks every hour, on the hour.',
     '',
     'STRATEGIES',
     ...PRESETS.map(
@@ -162,7 +162,7 @@ export async function loadAskContext(
       ...market,
       '',
       'YOUR DESK',
-      'The owner has no desk yet. They can start one from a strategy. Answer about markets and strategies, and propose nothing.',
+      'The owner has no agent yet. They can start one from a strategy. Answer about markets and strategies, and propose nothing.',
       ...question,
     ].join('\n')
     return { facts: null, desk: null, ids, message }
@@ -170,10 +170,10 @@ export async function loadAskContext(
 
   const desk = await deskById(db, input.deskId)
   if (!desk || desk.ownerAddress.toLowerCase() !== input.ownerAddress.toLowerCase()) {
-    return { refused: 'That desk is not yours, so I cannot talk about it.' }
+    return { refused: 'That agent is not yours, so I cannot talk about it.' }
   }
   const mandateRow = await currentMandate(db, desk.id)
-  if (!mandateRow) return { refused: 'This desk has no settings yet. Finish setting it up first.' }
+  if (!mandateRow) return { refused: 'This agent has no settings yet. Finish setting it up first.' }
   const mandate = mandateFromRow(mandateRow)
 
   const [snapshot, approvals, record, waits, graded, timing, conversation] = await Promise.all([
@@ -198,7 +198,7 @@ export async function loadAskContext(
 
   lines.push('', 'MONEY')
   if (!snapshot) {
-    lines.push('Not valued yet: the desk has not finished a check.')
+    lines.push('Not valued yet: the agent has not finished a check.')
   } else {
     const total = snapshot.totalUsdg
     const share = (v: bigint) => (total === 0n ? 0 : Number((v * 10_000n) / total))
@@ -210,7 +210,7 @@ export async function loadAskContext(
       const target = mandate.targets.tokens.find((t) => t.token.toLowerCase() === h.token.toLowerCase())
       const value = BigInt(h.valueUsdg)
       lines.push(
-        `- ${tokenName(approved, h.token)}: ${usd(value)}, ${pct(share(value))} of the desk (target ${pct(target?.weightBps ?? 0)}).`,
+        `- ${tokenName(approved, h.token)}: ${usd(value)}, ${pct(share(value))} of the agent’s value (target ${pct(target?.weightBps ?? 0)}).`,
       )
     }
   }
@@ -230,7 +230,7 @@ export async function loadAskContext(
     )
   })
 
-  lines.push('', 'STANDING WAITS (the desk chose to wait and is keeping that choice)')
+  lines.push('', 'STANDING WAITS (the agent chose to wait and is keeping that choice)')
   const waitIds = new Map<string, StandingWait>()
   if (waits.length === 0) lines.push('None.')
   waits.forEach((w, i) => {
@@ -278,7 +278,7 @@ export async function loadAskContext(
     )
   }
 
-  lines.push('', "TIMING (what the desk's timing calls earned or cost, graded after the reopen)")
+  lines.push('', "TIMING (what the agent's timing calls earned or cost, graded after the reopen)")
   lines.push(
     `Live: ${signedUsd(timing.live.usdg)} over ${timing.live.decisions} graded decisions. Practice: ${signedUsd(timing.practice.usdg)} over ${timing.practice.decisions}.`,
   )
@@ -287,7 +287,7 @@ export async function loadAskContext(
     lines.push('', 'CONVERSATION SO FAR (oldest first)')
     for (const c of conversation) {
       const reply = typeof c.reply?.reply === 'string' ? c.reply.reply : ''
-      lines.push(`Owner: ${c.question}`, `Desk: ${reply}`)
+      lines.push(`Owner: ${c.question}`, `Agent: ${reply}`)
     }
   }
 

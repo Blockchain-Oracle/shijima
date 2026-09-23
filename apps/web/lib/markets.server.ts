@@ -279,7 +279,7 @@ function toMarks(decisions: SharedDecision[], times: number[]): DeskMark[] {
         side: d.side === 'buy' || d.side === 'sell' ? d.side : null,
         symbol: token.symbol,
         href: `/agents/${d.shareSlug}/decision/${d.seq}`,
-        line: marketsCopy.decisionLine(d.deskName ?? 'A desk', outcome, d.side, token.displayName),
+        line: marketsCopy.decisionLine(d.deskName ?? 'An agent', outcome, d.side, token.displayName),
         outcome,
         summary: d.summary,
       },
