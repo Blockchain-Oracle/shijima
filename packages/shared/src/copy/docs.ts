@@ -36,7 +36,7 @@ export const docsCopy = {
         },
         {
           rows: [
-            ['You put in', 'USDG, a digital dollar, from $5'],
+            ['You put in', 'USDG, a digital dollar, from $1 (the first 20 people get their first $1 free)'],
             ['You choose', 'A strategy: a basket of US stocks at target weights, plus cash'],
             ['Your agent', 'Watches every five minutes and wakes when something moves'],
             ['You see', 'Your portfolio, and every decision with its reasons'],
@@ -62,6 +62,51 @@ export const docsCopy = {
         },
         {
           p: 'Your USDG on another network? Bring it from Base, Arbitrum, Ethereum or BNB Chain in one step at the last screen. Crossing networks has a fixed fee, so it works best from $20.',
+        },
+      ],
+    },
+    {
+      id: 'money',
+      group: 'Use it',
+      title: 'Money in, money out, and who pays gas',
+      blocks: [
+        {
+          p: 'Your agent is its own account on Robinhood Chain, with its own address. Money reaches it three ways: a USDG transfer from your wallet (one signature), USDC bridged from Base, Arbitrum, Ethereum or BNB Chain in one step, or USDG sent to the agent’s address from any wallet or exchange. Add money shows all three, with the address as a QR code.',
+        },
+        {
+          rows: [
+            ['A trade your agent makes', 'about 5¢ of network fee, paid by Shijima, never by you'],
+            ['Creating your agent', 'a few cents of ETH, from your wallet'],
+            ['Adding money or withdrawing', 'a few cents of ETH each, from your wallet'],
+            ['Trading on Shijima', 'free: no fee on trades or on what you hold'],
+          ],
+        },
+        {
+          p: 'The free $1: the first 20 people who sign in can claim $1 of USDG and about 30¢ of ETH, once per wallet. The ETH covers creating the agent, funding it and withdrawing later. The $1 is enough for a real trade: the smallest trade is 20¢, and Shijima pays its gas.',
+        },
+        {
+          note: 'Withdraw always pays your own wallet. Nobody else, Shijima included, can send your money anywhere else.',
+        },
+      ],
+    },
+    {
+      id: 'copy',
+      group: 'Use it',
+      title: 'Copying an agent',
+      blocks: [
+        {
+          p: 'On any shared agent, Copy this agent makes you your own agent that follows it. When it trades, yours makes the same move as a share of its own value: if it puts 12% of its $500 into Nvidia, an agent of $50 puts 12%, $6, into Nvidia.',
+        },
+        {
+          list: [
+            'Your agent holds your money only, in your own account. The agent you copy can never touch it.',
+            'Your own limits apply to every copy. A move yours cannot make is written down as a missed copy, with the reason.',
+            'Pause, resume or stop from your agent’s page. Moves made while paused are never copied later.',
+            'The creator may ask a one-time fee of $0 to $5, shown before you sign. 80% goes to the creator, 20% to Shijima.',
+          ],
+        },
+        {
+          p: 'To let others copy your agent, turn on its public link, then Let others copy this agent in its settings, and set your fee.',
         },
       ],
     },
@@ -138,7 +183,14 @@ export const docsCopy = {
           p: 'Telegram: press Connect Telegram on your agent’s page and the bot opens already linked. It keeps one pinned status message, sends a message when it acts or needs you, and answers anything you ask.',
         },
         {
-          p: 'OpenServ: add the Shijima agent to your own OpenServ workspace. On your agent’s page, open Settings, then Connections, and make a link code. Send it to Shijima in the workspace. From then on you can ask it anything there, in chat or as a task. Anything that moves money comes back as a link to confirm on your agent’s page.',
+          p: 'OpenServ: Settings (in the sidebar), then Connections. Step 1 opens Shijima on the OpenServ platform to add it to a workflow in your workspace. Step 2 makes a one-time link code with a countdown: send it to Shijima in your workspace chat, and the card turns into your workspace’s name within seconds. From then on you can ask it anything there, in chat or as a task. Anything that moves money comes back as a link to confirm here.',
+        },
+        {
+          list: [
+            'Let it ask for a look now: the agents in your workspace can then wake yours. Your limits still decide; it can never withdraw or raise them.',
+            'Send decisions to your workspace: paste a webhook trigger URL from OpenServ, and every decision your agent makes starts that workflow.',
+            'Every decision OpenServ asked for says so on its record, with the workspace and the task.',
+          ],
         },
         { code: 'link ABC12345\nHow is my portfolio doing?\nWhy did you wait on Nvidia?\nCheck now' },
         {

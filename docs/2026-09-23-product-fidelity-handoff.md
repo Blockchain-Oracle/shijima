@@ -258,6 +258,8 @@ For each accepted claim, attach evidence: route/viewport capture, account/chain 
 
 ## 10. Open decisions and external checks
 
+> **Resolved 23 Sep** by `docs/DECISIONS.md` (Round 3, D1–D10) and built per `docs/PLAN-ROUND-3.md`: the credit is $1 USDG plus about 30¢ of ETH for the first 20 wallets; creator revenue is a one-time $0–$5 copy fee split 80/20; copying follows the leader's individual trades; OpenServ has no consumer OAuth, so the code link is the connection, made visible and polished. Item 5 (jurisdiction) stands as written.
+
 1. **Free credit/minimum:** exact one-time USDG amount, eligibility rule, treasury cap and whether “20 UJG” meant $20 to start or the 20-strategy target. The current `$5` minimum cannot coexist with a claim that $1 alone starts a live agent without change.
 2. **Creator revenue:** fixed join/resume fee, recurring fee, trade-based fee or another model; fee change/renewal consent and beta policy. This must be distinct from pool/network costs.
 3. **Copy semantics:** default should follow eligible individual leader trades because the owner explicitly said “copy trade/copy an agent”; whether a separate “use this basket” action remains should be named separately.

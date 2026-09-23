@@ -151,7 +151,7 @@ Good ideas, deliberately not in the first version.
   overnight.
 - **Snipers, DCA ladders, and a limit-order engine.** That is a trading bot. Six products already do it
   better, and none of them can explain a decision.
-- **Copy trading, leaderboards, referrals.** A social layer on a product with no track record yet.
+- ~~**Copy trading, leaderboards,**~~ **referrals.** A social layer on a product with no track record yet. (Copy trading and the agents board are built in Round 3: `DECISIONS.md` D4, D5.)
 - **Prediction markets.** No API exists on Robinhood.
 - **Voice.** Robinhood Cortex has it. It buys us nothing here.
 - **Card or fiat onboarding.** KYC burden for no gain.

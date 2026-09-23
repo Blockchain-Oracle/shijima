@@ -872,6 +872,26 @@ and light, with no console errors and no sideways scroll:
   Connect when not, plus a Settings link. Proven at 390 and 1440, dark and light, no console errors. The unlinked
   menu state was not seen live (the only desk is linked).
 
+**Wed 23 Sep, all day. ROUND 3 (`docs/PLAN-ROUND-3.md`): A SIDEBAR APP, AGENTS YOU CAN COPY, A FREE $1, ROBINHOOD GREEN.**
+Abu found dropped features (copy trading, creator fees, OpenServ connect, a $1 try, 20 strategies, a 404) and a
+confusing agent page. Planned from a ledger of all 64 of his messages (`research/2026-09-23-feature-ledger.md`) and a
+doc-promise audit, then built with four parallel builders on branches plus the shell in main. All merged:
+- The app shell with a sidebar (21st Animated Sidebar), Overview, Activity, account Settings, 404 and error pages,
+  Ask from any page (⌘J). `/desk/*` → `/agents/*` with redirects; "desk" became "agent" in ~420 lines of copy.
+- The agent page, decision first; one portfolio module; the agent's address with a QR; who pays gas.
+- Agents board and a live-agents carousel; `/strategies` is a catalog of 20; the studio is `/agents/new`.
+- Copy trading: follower agents mirror a leader's moves as a share of value (worker `copy` wake, migration 0010,
+  proven on a fork: leader txs 0xa8f3d2…, 0xe26721…; follower copies 0x8213e3…, 0x11e8ec…; pause proven). The UI:
+  Copy dialog → studio in copy mode → fee (80/20, checked on chain) → link; creator settings; follower bar.
+- The free $1 (migration 0009, worker gift sender, proven on a fork incl. a crash drill). Gift wallet created:
+  `GIFT_ADDRESS` 0x5eD6613607AB34762fdEEFfdd2E86c297D00dE60 (key in `.env`), waiting for Abu's 20 USDG + 0.002 ETH.
+- OpenServ: capabilities for linked workspaces (status, latest decisions, check now, propose), session ids on
+  decisions (migration 0011), webhook push, the visible three-step Connect card with the official logo. Trades sign
+  through Coinbase AgentKit's `ViemWalletProvider` (fork tx 0xef9006…).
+- 15 tokens pass the rescan; 20 strategies; `pnpm strategies:verify`. `/live`: the proof page. Robin Neon replaces
+  vermilion; a new mark (moon, still line, one neon point) in the app, icons, previews and the bot.
+Waiting on Abu: fund the gift wallet; switch the showcase to live; data collection on; deploy go.
+
 ## 6. Schedule
 
 | Day | Work | Must be true by end of day |

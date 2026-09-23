@@ -569,3 +569,44 @@ Made by Claude while building step 7 of `PLAN-ROUND-3.md`. Abu can overrule any 
 - **A one-fund strategy holds 90%,** so choosing it raises the largest holding allowed to fit (never lowers it).
 - **`pnpm strategies:verify` is the gate.** It fails on a feed past its 24h heartbeat in market time, a pinned pool
   under $100k or 30 observations, or a round trip at $1,000 over 0.75%.
+
+## 2026-09-23 · Round 3: agents you can copy, a free $1, and a sidebar app
+
+Made by Claude on Abu's delegation (`docs/PLAN-ROUND-3.md`, approved 23 Sep). They close every question the Codex
+handoff (`docs/2026-09-23-product-fidelity-handoff.md` §10) left open. Abu can overrule any of these.
+
+- **D1. It is an Agent, everywhere a person reads.** Routes are `/agents` and `/agents/[slug]`; `/desk/*`, `/desks`
+  and `/start` redirect, so every link ever shared still lands. `Desk` stays the contract's and the code's name.
+  "DEX" only ever means the Uniswap pool. About 420 lines of copy were rewritten; the timing prompts and the
+  OpenServ workflow's name keep "desk" because they are hashed into records or used to find the workflow.
+- **D2. Two shells.** The website (`/`, `/how-it-works`, `/docs`) keeps its top header and is always reachable,
+  signed in or not ("Open app →"). Everything else is the app, with a sidebar (21st Animated Sidebar 29334): the
+  wallet and its gas, Overview, Needs you, Activity, the owner's agents like channels, Discover (Markets first),
+  Settings, the free $1, and the live-network badge. Ask Shijima opens from any page (⌘J).
+- **D3. The free $1: "start with 20 USDG".** 20 people each get $1 USDG and 0.00008 ETH (about 30¢ of gas: enough
+  to create, fund and later withdraw), once per wallet, once per connection a day, from a gift wallet the worker
+  holds (`GIFT_ADDRESS` 0x5eD6613607AB34762fdEEFfdd2E86c297D00dE60). The web only queues; a write-ahead journal
+  means a retry never pays twice. The funding minimum is $1 and the engine's smallest trade $0.20: the 5¢ of gas on
+  a 20¢ trade is Shijima's cost, not the owner's.
+- **D4. Copying means copying trades.** The follower gets their own agent (their own contract, their own money).
+  When the leader acts, the follower makes the same move as a share of its own value, through its own limits, gate
+  and mode, with its own record ("Copied from …") and its own transaction. A move it cannot make is recorded as a
+  missed copy. No contract change: one operator already runs every agent inside its own caps. A pause stops future
+  copies, and moves made during a pause are never copied late.
+- **D5. Free trading, a fee for creators.** Shijima charges nothing on trading or on money held. A creator may set
+  a one-time copy fee of $0 to $5, shown before signing, paid from the follower's wallet when they start. The
+  server links the copy only after it finds the transfers on chain.
+- **D6. Twenty strategies** from the tokens that pass the liquidity rule (see the rescan entry above), checked by
+  `pnpm strategies:verify`. `/strategies` is the catalog; the studio lives at `/agents/new`.
+- **D7. Mainnet, plainly.** It is the only network. Practice is an explicit mode, never dressed as live.
+- **D8. OpenServ, honestly.** There is no "Sign in with OpenServ" for other apps (checked in the SDK, the docs, the
+  platform bundle and GitHub). So: add Shijima on OpenServ, link a workspace with a one-time code (the card turns
+  into the workspace's name), optionally send every decision to a workspace webhook, and let a linked workspace's
+  agents ask for a look now, inside the limits. Decisions record the workspace, task and execution that asked.
+  Trades are signed through Coinbase AgentKit's wallet provider, for the AgentKit track.
+- **D9. "Live on mainnet," with proof.** A LIVE badge with the block read in the reader's browser, linking to
+  `/live`: counts from the record, the latest transactions on Blockscout, revenue and the contracts.
+- **D10. Revenue with no token.** Shijima keeps 20% of each copy fee; the creator gets 80%. `/live` shows both.
+- **The look (Abu, mid-build):** Robinhood's Robin Neon (#CCFF00) on black replaces the vermilion, with near-black
+  text on it; the light theme uses a deep Robinhood green. A new mark: a crescent moon for the night, a still line,
+  and one neon point, the agent awake while the market sleeps.

@@ -517,7 +517,7 @@ decision as a card, a public track record page, export for taxes, asking the des
 more than one desk per person, other assistants paying to ask the desk a question, a history of
 mandate versions, and sending withdrawn money straight to another network.
 
-**Never planned:** copying other traders, leaderboards, referral rewards, memecoins, borrowing, a token
+**Never planned:** ~~copying other traders, leaderboards~~ (both built in Round 3, see `DECISIONS.md` D4, D5), referral rewards, memecoins, borrowing, a token
 of our own, card payments, voice.
 
 ## 12. What is fixed and what is yours
