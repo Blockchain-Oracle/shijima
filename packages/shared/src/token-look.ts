@@ -25,6 +25,13 @@ export const TOKEN_LOOK: Record<string, TokenLook> = {
   META: { color: '#0866FF', tile: '#FFFFFF', ink: '#0866FF', monogram: 'M' },
   TSLA: { color: '#E82127', tile: '#E82127', ink: '#FFFFFF', monogram: 'T' },
   SGOV: { color: '#2DD4BF', tile: '#0F3B36', ink: '#CCFBF1', monogram: 'T-BILL' },
+  // Added 23 Sep. Each chart colour clears 3:1 against both grounds (#050505 dark, #F4EEE3 paper).
+  MU: { color: '#12848F', tile: '#0B4F9C', ink: '#FFFFFF', monogram: 'MU' },
+  SPCX: { color: '#3B82B8', tile: '#005288', ink: '#FFFFFF', monogram: 'SX' },
+  CRCL: { color: '#8669AE', tile: '#6E4F9A', ink: '#FFFFFF', monogram: 'C' },
+  USO: { color: '#B7791F', tile: '#3A2A10', ink: '#F5D9A8', monogram: 'OIL' },
+  SLV: { color: '#7C8594', tile: '#2A2E35', ink: '#E5E7EB', monogram: 'Ag' },
+  GME: { color: '#C8266B', tile: '#D2202F', ink: '#FFFFFF', monogram: 'GME' },
 }
 
 /** Cash, in every chart, is the quiet grey that says "waiting". */
