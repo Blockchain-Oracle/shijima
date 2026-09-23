@@ -30,6 +30,7 @@ export function holding(name: string, symbol: string, flags: Partial<Flags> = {}
     reference: { value: '$202.0000', kind: 'last_regular_close', at: iso(50) },
     gapBps: 55,
     gapToFeedBps: flags.beyondBandBps ?? null,
+    spark: [202.4, 202.9, 202.6, 203.3, 203.1],
     flags: { ...noFlags, ...flags },
   }
 }
@@ -138,6 +139,8 @@ export function desk(overrides: {
     record: overrides.record ?? [],
     notes: overrides.notes ?? [],
     history: [],
+    earlier: null,
+    tokenSymbols: {},
     markers: [],
     timing: { live: { usdg: '0', decisions: 0 }, practice: { usdg: '0', decisions: 0 } },
     feeUsdg: '0',

@@ -1,4 +1,6 @@
-import { ago, comparedTo, deskCopy, usd } from '@desk/shared'
+import { ago, comparedTo, deskCopy, lookOf, usd } from '@desk/shared'
+import { Sparkline } from '@/components/ui/sparkline'
+import { TokenLogo } from '@/components/ui/token-logo'
 import type { DeskView } from '@/lib/desk.server'
 
 const pct = (bps: number) => `${(bps / 100).toFixed(bps % 100 === 0 ? 0 : 1)}%`
@@ -27,33 +29,61 @@ export function Holdings({ view }: { view: DeskView }) {
                 : h.under(pct(-off))
           return (
             <div key={row.symbol} className="desk-holding">
-              <div className="flex items-baseline justify-between gap-3">
-                <span className="type-body-strong text-ink">{row.name}</span>
-                <span className="type-data text-ink">
-                  <span className="text-ink-muted">{row.amount} · </span>
-                  {usd(BigInt(row.valueUsdg))}
-                </span>
+              <div className="flex items-center gap-3">
+                <TokenLogo symbol={row.symbol} size={34} />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate type-body-strong text-ink">{row.name}</div>
+                  <div className="font-[family-name:var(--font-data)] text-[11px] text-ink-muted">
+                    {row.amount} {row.symbol}
+                  </div>
+                </div>
+                <Sparkline values={row.spark} width={72} height={26} className="hidden sm:block" />
+                <div className="text-right">
+                  <div className="font-[family-name:var(--font-data)] text-[14px] text-ink tabular-nums">
+                    {usd(BigInt(row.valueUsdg))}
+                  </div>
+                  <div className="text-[11px] text-ink-muted">
+                    {pct(row.weightBps)} · {h.target(pct(row.targetBps))}
+                  </div>
+                </div>
               </div>
-              <div className="desk-bar" aria-hidden>
-                <span className="desk-bar-fill" style={{ width: `${Math.min(100, row.weightBps / 100)}%` }} />
+              <div
+                className="relative h-1.5 overflow-hidden rounded-full bg-[var(--color-hairline)]"
+                aria-hidden
+              >
                 <span
-                  className="desk-bar-target"
-                  style={{ left: `${Math.min(100, row.targetBps / 100)}%` }}
+                  className="absolute inset-y-0 left-0 rounded-full"
+                  style={{
+                    width: `${Math.min(100, row.weightBps / 100)}%`,
+                    background: lookOf(row.symbol).color,
+                  }}
+                />
+                <span
+                  className="absolute inset-y-[-2px] w-0.5 bg-ink"
+                  style={{ left: `${Math.min(99.5, row.targetBps / 100)}%` }}
                 />
               </div>
               <div className="flex items-baseline justify-between gap-3 type-caption text-ink-muted">
-                <span>
-                  {pct(row.weightBps)} · {h.target(pct(row.targetBps))}
+                <span
+                  className={
+                    Math.abs(off) < (view.mandate?.driftToleranceBps ?? 300)
+                      ? ''
+                      : 'text-[var(--color-warning)]'
+                  }
+                >
+                  {tone}
                 </span>
-                <span>{tone}</span>
+                <details className="group text-right">
+                  <summary className="cursor-pointer list-none hover:text-ink">{h.priceDetail}</summary>
+                  <p className="mt-1 text-left type-caption text-ink-secondary">
+                    {row.price ? h.priceNow(row.price.value, ago(new Date(row.price.at), now)) : h.noPrice}
+                    {row.reference
+                      ? ` · ${h.referenceIs(row.reference.value, h.referenceKinds[row.reference.kind] ?? row.reference.kind)}`
+                      : ''}
+                    {row.gapBps !== null ? ` · ${h.gap(comparedTo(row.gapBps))}` : ''}
+                  </p>
+                </details>
               </div>
-              <p className="type-caption text-ink-secondary">
-                {row.price ? h.priceNow(row.price.value, ago(new Date(row.price.at), now)) : h.noPrice}
-                {row.reference
-                  ? ` · ${h.referenceIs(row.reference.value, h.referenceKinds[row.reference.kind] ?? row.reference.kind)}`
-                  : ''}
-                {row.gapBps !== null ? ` · ${h.gap(comparedTo(row.gapBps))}` : ''}
-              </p>
               <HoldingFlags flags={row.flags} owner={view.isOwner} />
             </div>
           )

@@ -468,6 +468,8 @@ export const deskCopy = {
     valued: (age: string) =>
       `Valued ${age} on the trading pools’ half-hour average, never on the frozen official price.`,
     notYet: 'Not valued yet. The desk values itself at its first check.',
+    valuedShort: (age: string) => `valued ${age}`,
+    sinceStartShort: 'since your money went in',
     timing: 'Timing',
     timingNote:
       'What the desk’s timing calls earned or cost against acting at once, graded after the market reopened. It can be negative.',
@@ -487,6 +489,7 @@ export const deskCopy = {
     } as Record<string, string>,
     gap: (compared: string) => `${compared} the reference`,
     noPrice: 'No price logged yet.',
+    priceDetail: 'Price detail',
     inLine: 'in line',
     over: (pct: string) => `${pct} over`,
     under: (pct: string) => `${pct} under`,
@@ -541,6 +544,20 @@ export const deskCopy = {
     perAction: 'Most in one action',
     daily: 'Most in a day',
     large: 'Asks first at',
+    largestNow: 'Largest single holding',
+    largestOf: (now: string, max: string) => `${now} of at most ${max}`,
+    all: 'All limits',
+  },
+
+  allocation: {
+    title: 'Now against the plan',
+    now: 'Now',
+    caption: 'what it holds',
+    target: (pct: string) => `plan ${pct}`,
+    over: (pct: string) => `${pct} over plan`,
+    under: (pct: string) => `${pct} under plan`,
+    sentence: (name: string, pct: string, under: boolean) =>
+      `${name} is ${pct} ${under ? 'under' : 'over'} plan, past what it may wander. The desk weighs moving it back at each check.`,
   },
 
   mandate: {
@@ -577,6 +594,11 @@ export const deskCopy = {
     title: 'The record',
     empty: 'The desk has not checked yet.',
     quiet: (n: number) => `${n} quiet checks`,
+    today: 'Today',
+    yesterday: 'Yesterday',
+    practice: 'practice',
+    earlier: (n: number) => `${n} decisions on the desk’s earlier contract`,
+    earlierExplorer: 'Every one is on the earlier contract’s page on the explorer',
     notes: {
       outside: (what: string) =>
         `Your balance is different from what the desk expected: ${what}. It has updated its picture, and your loss limit counts from the new amount.`,
@@ -604,8 +626,20 @@ export const deskCopy = {
   chart: {
     title: 'Value',
     empty: 'The chart starts at the desk’s second check.',
+    emptyTitle: 'Nothing to draw yet',
     acted: 'acted',
     waited: 'waited',
+    earlier: 'on the earlier contract',
+    earlierBand: 'Earlier contract',
+    belowHigh: 'Below its high',
+    worst: 'Worst dip',
+    ranges: 'Time range',
+    all: 'All',
+    ddLabel: 'Dips',
+    legendStart: 'Where it started',
+    legend: { acted: 'Traded', would: 'Would have traded', waited: 'Chose to wait' },
+    aria: (value: string, pct: string | null) =>
+      `Desk value ${value}${pct === null ? '' : `, ${pct}% against where it started`}.`,
   },
 } as const
 

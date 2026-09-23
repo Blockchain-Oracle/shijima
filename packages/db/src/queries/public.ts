@@ -216,6 +216,22 @@ export async function valueSnapshotAtOrBefore(db: DbOrTx, deskId: string, at: Da
 }
 
 /** The desk's value over time, oldest first, for the chart. */
+/**
+ * The desk this one replaced, when an owner moved a desk to a newer contract (`scripts/move-desk.sql` records
+ * the move on the old desk's `closed` event). Its value history and record are the new desk's past, read-only.
+ */
+export async function predecessorOf(db: DbOrTx, address: string) {
+  const [row] = await db
+    .select({ id: desks.id, address: desks.address, contractVersion: desks.contractVersion })
+    .from(deskEvents)
+    .innerJoin(desks, eq(desks.id, deskEvents.deskId))
+    .where(
+      and(eq(deskEvents.kind, 'closed'), sql`${deskEvents.detail}->>'movedTo' = ${address.toLowerCase()}`),
+    )
+    .limit(1)
+  return row
+}
+
 export async function valueHistory(db: DbOrTx, deskId: string, limit = 400) {
   const rows = await db
     .select({

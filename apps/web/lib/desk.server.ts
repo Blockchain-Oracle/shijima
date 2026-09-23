@@ -21,6 +21,8 @@ import {
   latestValueSnapshot,
   mandateFromRow,
   pendingApprovals,
+  predecessorOf,
+  pricesBetween,
   spentSince,
   telegramForDesk,
   timingSummary,
@@ -119,6 +121,24 @@ export async function loadDesk(slug: string) {
   // The last reopen: this stretch's, if the market is open, otherwise the one before this close.
   const stretch = reportWindow(now)
   const reopenedAt = stretch.settled ? stretch.to : previousWindow(stretch).to
+  const earlierDesk = await predecessorOf(db(), desk.address)
+  const [earlierHistory, earlierRecord, dayPrices] = await Promise.all([
+    earlierDesk ? valueHistory(db(), earlierDesk.id, 400) : Promise.resolve([]),
+    earlierDesk ? deskRecord(db(), earlierDesk.id, { limit: 200 }) : Promise.resolve([]),
+    tokens.length > 0
+      ? pricesBetween(db(), new Date(Date.now() - 24 * 60 * 60 * 1000), new Date())
+      : Promise.resolve([]),
+  ])
+  // A day of each held token's pool price, thinned to about 24 points, for the holdings' sparklines.
+  const sparkOf = (token: string) => {
+    const rows = dayPrices.filter(
+      (r) => r.token.toLowerCase() === token.toLowerCase() && r.poolMidE8 !== null,
+    )
+    const step = Math.max(1, Math.ceil(rows.length / 24))
+    return rows
+      .filter((_, i) => i % step === 0 || i === rows.length - 1)
+      .map((r) => Number(r.poolMidE8) / 1e8)
+  }
   const [lastCheck, notes, prices, events, spentToday, atReopen, telegram] = await Promise.all([
     lastCheckOf(db(), desk.id),
     deskNotes(db(), desk.id, desk.startedAt ?? desk.createdAt, tokens),
@@ -170,6 +190,7 @@ export async function loadDesk(slug: string) {
               : null,
           gapBps: p?.gapBps ?? null,
           gapToFeedBps: held?.gapToFeedBps ?? null,
+          spark: sparkOf(t.token),
           flags: {
             halted: fresh ? p.halted : false,
             feedMissing: fresh ? p.feedPriceE8 === null || p.oraclePaused === true : false,
@@ -304,6 +325,27 @@ export async function loadDesk(slug: string) {
     record: groupQuietRuns(record),
     notes: notes.map((n) => ({ at: n.at.toISOString(), kind: n.kind, detail: n.detail ?? {} })),
     history: history.map((h) => ({ at: h.takenAt.toISOString(), totalUsdg: h.totalUsdg.toString() })),
+    /** Token address to symbol, for logos beside decisions. */
+    tokenSymbols: Object.fromEntries(
+      APPROVED_TOKENS.map((t) => [t.address.toLowerCase(), t.symbol]),
+    ) as Record<string, string>,
+    /** The desk this one moved from: its value history and a short account of its decisions. */
+    earlier: earlierDesk
+      ? {
+          address: earlierDesk.address,
+          contractVersion: earlierDesk.contractVersion,
+          history: earlierHistory.map((h) => ({
+            at: h.takenAt.toISOString(),
+            totalUsdg: h.totalUsdg.toString(),
+          })),
+          decisions: earlierRecord.map((d) => ({
+            seq: d.seq,
+            at: d.decidedAt.toISOString(),
+            outcome: d.outcome,
+            summary: d.summary,
+          })),
+        }
+      : null,
     markers: record
       .filter(
         (d) =>

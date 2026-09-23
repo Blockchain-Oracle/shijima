@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { DeskChat } from '@/features/desk/DeskChat'
 import { DeskControls } from '@/features/desk/DeskControls'
 import {
+  Allocation,
   Holdings,
   Limits,
   Mandate,
@@ -106,9 +107,10 @@ export default async function DeskPage({
               )}
               {view.isOwner && <OwnerSessionPanel />}
               <Plate view={view} />
-              <NextCheck view={view} />
-              <Holdings view={view} />
               <ValueChart view={view} />
+              <Allocation view={view} />
+              <Holdings view={view} />
+              <NextCheck view={view} />
               <Limits view={view} />
               <Mandate view={view} />
             </>
