@@ -21,6 +21,7 @@ import { ShijimaMark } from '../ShijimaMark'
 import ThemeToggle from '../ThemeToggle'
 import { WrongNetworkBanner } from '../WrongNetworkBanner'
 import { AppSidebar } from './AppSidebar'
+import { AskDrawer } from './AskDrawer'
 import type { SidebarAgent } from './types'
 
 export interface AppShellProps {
@@ -39,7 +40,7 @@ export function AppShell({ children, signedInAs, unread, agents }: AppShellProps
     <AnimatedSidebarProvider className="app-shell">
       <AppSidebar signedInAs={signedInAs} agents={agents} />
       <AnimatedSidebarInset className="app-inset">
-        <TopBar signedInAs={signedInAs} unread={unread} />
+        <TopBar signedInAs={signedInAs} unread={unread} agents={agents} />
         <GrainOverlay />
         <div className="app-page">
           <WrongNetworkBanner />
@@ -52,7 +53,15 @@ export function AppShell({ children, signedInAs, unread, agents }: AppShellProps
   )
 }
 
-function TopBar({ signedInAs, unread }: { signedInAs: string | undefined; unread: number }) {
+function TopBar({
+  signedInAs,
+  unread,
+  agents,
+}: {
+  signedInAs: string | undefined
+  unread: number
+  agents: SidebarAgent[]
+}) {
   return (
     <header className="app-topbar">
       <AnimatedSidebarTrigger
@@ -73,6 +82,7 @@ function TopBar({ signedInAs, unread }: { signedInAs: string | undefined; unread
       </Link>
       <MarketSessionChip className="app-topbar-session" />
       <div className="app-topbar-right">
+        {signedInAs && agents.length > 0 ? <AskDrawer agents={agents} /> : null}
         <ThemeToggle />
         {signedInAs ? <HeaderInbox unread={unread} /> : null}
         <HeaderAccount signedInAs={signedInAs} />

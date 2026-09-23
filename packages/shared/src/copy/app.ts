@@ -70,6 +70,13 @@ export const appCopy = {
     ask: 'Ask Shijima',
   },
 
+  ask: {
+    button: 'Ask Shijima',
+    title: (name: string) => `Ask ${name}`,
+    note: 'Ask what it holds and why, or tell it what to change. It shows you a card, and nothing changes until you confirm.',
+    noAgent: 'Start an agent first, then talk to it here from any page.',
+  },
+
   overview: {
     meta: 'Overview',
     kicker: 'Your agents, together',
