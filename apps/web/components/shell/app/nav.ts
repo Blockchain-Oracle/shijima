@@ -35,7 +35,7 @@ const n = appCopy.nav
 
 /** Pages that exist. The money pages join as they land, so no link ever leads to a 404. */
 const BUILT = new Set<string>([
-  '/overview',
+  '/wallet',
   '/receive',
   '/evidence',
   '/activity',
@@ -51,7 +51,6 @@ const only = (items: NavItem[]) => items.filter((i) => BUILT.has(i.href.split('?
 
 export const MONEY: NavItem[] = only([
   { href: '/wallet', label: n.wallet, icon: WalletMinimal, signedIn: true },
-  { href: '/overview', label: n.wallet, icon: WalletMinimal, signedIn: true },
   { href: '/activity', label: n.activity, icon: ListTree, signedIn: true },
   { href: '/send', label: n.send, detail: n.details.send, icon: ArrowUpRight, signedIn: true },
   { href: '/receive', label: n.receive, detail: n.details.receive, icon: ArrowDown, signedIn: true },
@@ -59,7 +58,7 @@ export const MONEY: NavItem[] = only([
   { href: '/withdraw', label: n.withdraw, detail: n.details.withdraw, icon: ArrowUpFromLine, signedIn: true },
   { href: '/bridge', label: n.bridge, detail: n.details.bridge, icon: ArrowLeftRight, signedIn: true },
   { href: '/evidence', label: n.evidence, detail: n.details.evidence, icon: ShieldCheck, signedIn: true },
-]).filter((item, _i, all) => item.href !== '/overview' || !all.some((x) => x.href === '/wallet'))
+])
 
 export const DISCOVER: NavItem[] = only([
   { href: '/agents', label: n.agents, detail: n.details.agents, icon: Radar },

@@ -44,6 +44,7 @@ const config: NextConfig = {
       { source: '/desk/:path*', destination: '/agents/:path*', permanent: true },
       { source: '/desks', destination: '/agents', permanent: true },
       { source: '/start', destination: '/agents/new', permanent: false },
+      { source: '/overview', destination: '/wallet', permanent: true },
     ]
   },
   async headers() {
