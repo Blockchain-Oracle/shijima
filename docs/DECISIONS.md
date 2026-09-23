@@ -673,3 +673,18 @@ copy its code, keep only Shijima's light and dark colours. Plan: `docs/PLAN-ROUN
   own it." Motto: "Shijima · AI agents for Robinhood Chain stocks".
 - **W13. Creating an agent keeps its own bridge step.** Its money step runs before the agent is recorded, and the
   Fund screen needs a recorded agent, so the studio's Relay step stays. Every other money path uses the new screens.
+
+## 2026-09-23 · Round 5: Abu's feedback on the money screens
+
+- **R1. Money screens use the whole width.** Send, Fund, Withdraw and Bridge are two panels: the ticket on the left
+  (what you pay, an arrow, what arrives, after 21st's Multi-chain Swap 16251), the live summary and Review on the
+  right. Never a narrow centred column. Stacks on phones.
+- **R2. A live quote as you type.** The same planner Review uses prices the move half a second after typing stops,
+  and every 30 seconds after; nothing is saved until Review.
+- **R3. Real logos.** USDG, ETH, USDC, USDT, BNB, WETH and DAI, and the five chains, wear their published logos,
+  vendored from Relay into `public/logos`. Pickers offer only tokens we have a logo for.
+- **R4. Receive is a sheet, not a page.** It opens from Receive or the wallet card's QR; `/receive` redirects to
+  `/wallet?receive=…`. Get gas is a Bridge tab.
+- **R5. First run.** Five steps with the reference's intro and chime for anyone with no agent: welcome, how it
+  works, connect, the free $1, create. Reopened from Settings.
+
