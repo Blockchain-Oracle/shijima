@@ -69,8 +69,8 @@ export function summarise(rows: Graded[]): ReportSummary {
   const sentence =
     judged.length === 0
       ? quiet === 0
-        ? 'The desk made no decisions in this window.'
-        : `${quiet} checks found nothing to do. The desk made no other decisions.`
+        ? 'The agent made no decisions in this window.'
+        : `${quiet} checks found nothing to do. The agent made no other decisions.`
       : `${judged.length} decision${judged.length === 1 ? '' : 's'}. ${parts.join(', ')}.${
           quiet > 0 ? ` ${quiet} other checks found nothing to do.` : ''
         }`

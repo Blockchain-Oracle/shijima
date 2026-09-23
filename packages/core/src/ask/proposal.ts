@@ -182,7 +182,7 @@ function mandateProposal(
         title,
         before: describeTargets(facts.mandate, approved),
         after: describeTargets(next, approved),
-        note: 'Your targets change when you confirm. The desk moves toward them at its next checks, inside your limits.',
+        note: 'Your targets change when you confirm. The agent moves toward them at its next checks, inside your limits.',
       },
     },
   }
@@ -226,7 +226,7 @@ export function checkProposal(
       for (const t of p.targets) {
         const token = approved.find((a) => a.symbol === t.symbol.toUpperCase())
         if (!token)
-          return { ok: false, why: `${t.symbol} is not one of the Stock Tokens this desk can hold.` }
+          return { ok: false, why: `${t.symbol} is not one of the Stock Tokens this agent can hold.` }
         tokens.push({ token: token.address, weightBps: t.weightBps })
       }
       const next: Mandate = { ...m, preset: null, targets: { cashBps: p.cashBps, tokens } }
@@ -245,7 +245,7 @@ export function checkProposal(
             title: 'Change your notes',
             before: m.notes ? m.notes.split('\n') : ['No notes'],
             after: p.notes ? p.notes.split('\n') : ['No notes'],
-            note: 'The desk reads these at every check. They can shape when it acts, never how much.',
+            note: 'The agent reads these at every check. They can shape when it acts, never how much.',
           },
         },
       }
@@ -258,7 +258,7 @@ export function checkProposal(
       for (const r of p.rules) {
         const token = approved.find((a) => a.symbol === r.symbol.toUpperCase())
         if (!token)
-          return { ok: false, why: `${r.symbol} is not one of the Stock Tokens this desk can hold.` }
+          return { ok: false, why: `${r.symbol} is not one of the Stock Tokens this agent can hold.` }
         rules.push({
           id: `rule${rules.length + 1}`,
           kind: 'price_move_sell',
@@ -275,7 +275,7 @@ export function checkProposal(
         check.proposal.card.after =
           rules.length === 0 ? ['No rules'] : rules.map((r) => ruleLine(r, approved))
         check.proposal.card.note =
-          'The desk carries these out by arithmetic at every check: a fall is measured on the pool’s half-hour average against the reference. A sale a rule demands still passes every limit.'
+          'The agent carries these out by arithmetic at every check: a fall is measured on the pool’s half-hour average against the reference. A sale a rule demands still passes every limit.'
       }
       return check
     }
@@ -310,23 +310,23 @@ export function checkProposal(
     }
     case 'pause':
       if (facts.state !== 'active')
-        return { ok: false, why: 'The desk is not active, so there is nothing to pause.' }
+        return { ok: false, why: 'The agent is not active, so there is nothing to pause.' }
       return simple(
         p.kind,
         'signin',
-        'Pause the desk',
+        'Pause the agent',
         'Nothing is sold. It stops acting until you resume it.',
       )
     case 'resume':
-      if (facts.state !== 'paused_by_owner') return { ok: false, why: 'The desk is not paused by you.' }
-      return simple(p.kind, 'signin', 'Resume the desk', 'It carries on from its next check.')
+      if (facts.state !== 'paused_by_owner') return { ok: false, why: 'The agent is not paused by you.' }
+      return simple(p.kind, 'signin', 'Resume the agent', 'It carries on from its next check.')
     case 'set_mode': {
-      if (!p.mode || p.mode === facts.mode) return { ok: false, why: 'The desk is already in that mode.' }
+      if (!p.mode || p.mode === facts.mode) return { ok: false, why: 'The agent is already in that mode.' }
       if (facts.mode === 'shadow' && p.mode !== 'shadow') {
         if (facts.shadowChecks < GO_LIVE_CHECKS)
           return {
             ok: false,
-            why: `Not yet. Going live needs ${GO_LIVE_CHECKS} practice checks, and this desk has done ${facts.shadowChecks}.`,
+            why: `Not yet. Going live needs ${GO_LIVE_CHECKS} practice checks, and this agent has done ${facts.shadowChecks}.`,
           }
         if (!facts.reportOpened)
           return { ok: false, why: 'Not yet. Going live needs you to read its practice report first.' }
@@ -359,7 +359,7 @@ export function checkProposal(
           card: {
             title: p.answer === 'approve' ? 'Approve this request' : 'Reject this request',
             after: [approval.summary],
-            note: 'Answering moves nothing by itself. The desk re-checks the price before it acts.',
+            note: 'Answering moves nothing by itself. The agent re-checks the price before it acts.',
           },
         },
       }
@@ -369,13 +369,13 @@ export function checkProposal(
         p.kind,
         'signin',
         'Check now',
-        'The desk looks at everything now and decides as it always does.',
+        'The agent looks at everything now and decides as it always does.',
       )
     case 'do_it_anyway': {
       if (facts.mode === 'shadow')
-        return { ok: false, why: 'In practice mode the desk spends nothing, even on your word.' }
+        return { ok: false, why: 'In practice mode the agent spends nothing, even on your word.' }
       const wait = p.decisionId ? facts.waits.get(p.decisionId) : undefined
-      if (!wait) return { ok: false, why: 'I cannot find a wait of the desk that is still standing.' }
+      if (!wait) return { ok: false, why: 'I cannot find a wait of the agent that is still standing.' }
       return {
         ok: true,
         proposal: {
@@ -392,7 +392,7 @@ export function checkProposal(
           card: {
             title: 'Do it anyway, on your word',
             before: [wait.summary],
-            note: 'The desk chose to wait. If you confirm, it acts now as your call, not its own. Every limit still holds, and the price is checked again first.',
+            note: 'The agent chose to wait. If you confirm, it acts now as your call, not its own. Every limit still holds, and the price is checked again first.',
           },
         },
       }
@@ -411,7 +411,7 @@ export function checkProposal(
           args: { as, amountUsdg: amount?.toString() ?? null },
           card: {
             title: amount ? `Withdraw $${formatUsd(amount)}` : 'Withdraw everything',
-            note: 'It goes to your own wallet, the owner of this desk, and nowhere else. The cost is shown before you sign.',
+            note: 'It goes to your own wallet, the owner of this agent, and nowhere else. The cost is shown before you sign.',
           },
         },
       }
@@ -421,20 +421,20 @@ export function checkProposal(
         p.kind,
         'wallet',
         'Sell everything to cash',
-        'Every holding becomes USDG in the desk. The cost is shown before you sign.',
+        'Every holding becomes USDG in the agent’s account. The cost is shown before you sign.',
       )
     case 'remove_assistant':
       return simple(
         p.kind,
         'session',
         'Remove the assistant',
-        'It loses all access at once and the desk stops. Your money stays in your account.',
+        'It loses all access at once and the agent stops. Your money stays in your account.',
       )
     case 'unpause':
       return simple(
         p.kind,
         'wallet',
-        'Restart the desk on-chain',
+        'Restart the agent on-chain',
         'If you removed the assistant, this brings it back too. Only your wallet can do this.',
       )
     case 'add_money': {
@@ -449,7 +449,7 @@ export function checkProposal(
           args: { amountUsdg: amount.toString() },
           card: {
             title: `Add $${formatUsd(amount)}`,
-            note: 'USDG moves from your wallet on Robinhood Chain into the desk. Only your wallet can send it.',
+            note: 'USDG moves from your wallet on Robinhood Chain into the agent’s account. Only your wallet can send it.',
           },
         },
       }
@@ -499,7 +499,7 @@ export function checkProposal(
       }
     }
     case 'close_desk': {
-      if (facts.lifecycle === 'closed') return { ok: false, why: 'This desk is already closed.' }
+      if (facts.lifecycle === 'closed') return { ok: false, why: 'This agent is already closed.' }
       const as = p.withdrawAs ?? 'usdg'
       return {
         ok: true,
@@ -508,7 +508,7 @@ export function checkProposal(
           path: 'wallet',
           args: { as },
           card: {
-            title: 'Close the desk',
+            title: 'Close the agent',
             after: [
               as === 'usdg' ? 'Every holding sold to USDG' : 'Every holding sent as it is',
               'Everything sent to your own wallet',
