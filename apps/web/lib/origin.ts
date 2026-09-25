@@ -7,9 +7,10 @@ export function publicUrl(request: Request): URL {
   const url = new URL(request.url)
   const host = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim()
   const proto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim()
-  if (host) url.host = host
-  if (proto === 'http' || proto === 'https') url.protocol = `${proto}:`
-  return url
+  if (!host) return url
+  const scheme = proto === 'http' || proto === 'https' ? proto : url.protocol.replace(':', '')
+  // Built whole: setting `url.host` to a name without a port keeps the container's port (…sslip.io:3007).
+  return new URL(`${scheme}://${host}${url.pathname}${url.search}`)
 }
 
 /**
