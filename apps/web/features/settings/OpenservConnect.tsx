@@ -78,80 +78,85 @@ export function OpenservConnect({ deskId }: { deskId: string }) {
   return (
     <div className="osc">
       {/* The card around this carries OpenServ's mark, name and tagline, so they are not repeated here. */}
+      <div className="osc-status" data-on={links.length > 0 ? '' : undefined}>
+        <span className="osc-dot" aria-hidden="true" />
+        {links.length > 0 ? c.linkedCount(links.length) : c.notLinked}
+      </div>
       <p className="osc-what">{c.what}</p>
 
       <ol className="osc-steps">
-        <li>
-          <strong>{c.steps.add.title}</strong>
-          <p>{c.steps.add.body}</p>
-          <a
-            className="btn-secondary ov-btn-sm osc-cta"
-            href={OPENSERV.agentUrl}
-            target="_blank"
-            rel="noreferrer noopener"
-          >
-            <ExternalLink aria-hidden="true" className="size-3.5" /> {c.steps.add.cta}
-          </a>
-          <small>{c.steps.add.pending}</small>
+        <li className="osc-step">
+          <span className="osc-num" aria-hidden="true">
+            1
+          </span>
+          <div className="osc-step-body">
+            <strong>{c.steps.add.title}</strong>
+            <p>{c.steps.add.body}</p>
+            <a className="st-btn osc-cta" href={OPENSERV.agentUrl} target="_blank" rel="noreferrer noopener">
+              <ExternalLink aria-hidden="true" className="size-3.5" /> {c.steps.add.cta}
+            </a>
+          </div>
         </li>
 
-        <li>
-          <strong>{c.steps.link.title}</strong>
-          <p>{c.steps.link.body}</p>
-          {code && !expired ? (
-            <div className="osc-code">
-              <span className="osc-muted">{c.steps.link.send}</span>
-              <div className="osc-code-row">
-                <code>{line}</code>
+        <li className="osc-step">
+          <span className="osc-num" aria-hidden="true">
+            2
+          </span>
+          <div className="osc-step-body">
+            <strong>{c.steps.link.title}</strong>
+            <p>{c.steps.link.body}</p>
+            {code && !expired ? (
+              <div className="osc-code">
+                <span className="osc-muted">{c.steps.link.send}</span>
+                <div className="osc-code-row">
+                  <code>{line}</code>
+                  <button
+                    type="button"
+                    className="st-btn st-btn--sm"
+                    onClick={() => {
+                      void navigator.clipboard?.writeText(line).then(() => setCopied(true))
+                    }}
+                  >
+                    {copied ? (
+                      <Check aria-hidden="true" className="size-3.5" />
+                    ) : (
+                      <Copy aria-hidden="true" className="size-3.5" />
+                    )}
+                    {copied ? c.steps.link.copied : c.steps.link.copy}
+                  </button>
+                </div>
+                <span className="osc-muted">
+                  {c.steps.link.expires(left ?? '')} {c.steps.link.waiting}
+                </span>
+              </div>
+            ) : (
+              <>
+                {expired && <p className="osc-why">{c.steps.link.expired}</p>}
                 <button
                   type="button"
-                  className="ap-chip-btn"
-                  onClick={() => {
-                    void navigator.clipboard?.writeText(line).then(() => setCopied(true))
-                  }}
+                  className="st-btn st-btn--primary osc-cta"
+                  disabled={pending}
+                  onClick={make}
                 >
-                  {copied ? (
-                    <Check aria-hidden="true" className="size-3.5" />
-                  ) : (
-                    <Copy aria-hidden="true" className="size-3.5" />
-                  )}
-                  {copied ? c.steps.link.copied : c.steps.link.copy}
+                  {pending ? c.steps.link.making : c.steps.link.make}
                 </button>
-              </div>
-              <span className="osc-muted">
-                {c.steps.link.expires(left ?? '')} {c.steps.link.waiting}
-              </span>
-            </div>
-          ) : (
-            <>
-              {expired && <p className="osc-why">{c.steps.link.expired}</p>}
-              <button
-                type="button"
-                className="btn-primary ov-btn-sm osc-cta"
-                disabled={pending}
-                onClick={make}
-              >
-                {pending ? c.steps.link.making : c.steps.link.make}
-              </button>
-            </>
-          )}
+              </>
+            )}
+          </div>
         </li>
       </ol>
 
-      <div className="osc-linked">
-        <strong>{c.linkedTitle}</strong>
-        {links.length === 0 ? (
-          <p className="osc-muted">{c.none}</p>
-        ) : (
+      {links.length > 0 && (
+        <div className="osc-linked">
+          <span className="osc-label">{c.linkedTitle}</span>
           <ul>
             {links.map((l) => (
               <LinkedRow key={l.id} link={l} onChange={refresh} />
             ))}
           </ul>
-        )}
-      </div>
+        </div>
+      )}
       {why && <p className="osc-why">{why}</p>}
-      <p className="osc-credit">{c.credit}</p>
     </div>
   )
 }
@@ -188,52 +193,55 @@ function LinkedRow({ link, onChange }: { link: LinkedWorkspace; onChange: () => 
           {c.unlink}
         </button>
       </div>
-      <div className="osc-allow">
-        <Switch
-          checked={link.allowChecks}
-          disabled={pending}
-          aria-label={c.allowChecks}
-          onCheckedChange={(v) => run(() => setAllowChecksAction(link.id, v))}
-        />
-        <span>
-          {c.allowChecks}
-          <small>{c.allowChecksNote}</small>
-        </span>
-      </div>
-      <div className="osc-push">
-        <strong>{c.steps.push.title}</strong>
-        <p className="osc-muted">{c.steps.push.body}</p>
-        {link.hasWebhook ? (
-          <p className="osc-on">
-            {c.steps.push.on}{' '}
-            <button
-              type="button"
-              className="osc-unlink"
-              disabled={pending}
-              onClick={() => run(() => removeWebhookAction(link.id))}
-            >
-              {c.steps.push.remove}
-            </button>
-          </p>
-        ) : (
-          <div className="osc-code-row">
-            <input
-              value={url}
-              placeholder={c.steps.push.placeholder}
-              onChange={(e) => setUrl(e.target.value.trim())}
-              aria-label={c.steps.push.title}
-            />
-            <button
-              type="button"
-              className="btn-secondary ov-btn-sm"
-              disabled={pending || !url}
-              onClick={() => run(() => saveWebhookAction(link.id, url))}
-            >
-              {c.steps.push.save}
-            </button>
-          </div>
-        )}
-      </div>
+      <details className="osc-options">
+        <summary>{c.options}</summary>
+        <div className="osc-allow">
+          <Switch
+            checked={link.allowChecks}
+            disabled={pending}
+            aria-label={c.allowChecks}
+            onCheckedChange={(v) => run(() => setAllowChecksAction(link.id, v))}
+          />
+          <span>
+            {c.allowChecks}
+            <small>{c.allowChecksNote}</small>
+          </span>
+        </div>
+        <div className="osc-push">
+          <strong>{c.steps.push.title}</strong>
+          <p className="osc-muted">{c.steps.push.body}</p>
+          {link.hasWebhook ? (
+            <p className="osc-on">
+              {c.steps.push.on}{' '}
+              <button
+                type="button"
+                className="osc-unlink"
+                disabled={pending}
+                onClick={() => run(() => removeWebhookAction(link.id))}
+              >
+                {c.steps.push.remove}
+              </button>
+            </p>
+          ) : (
+            <div className="osc-code-row">
+              <input
+                value={url}
+                placeholder={c.steps.push.placeholder}
+                onChange={(e) => setUrl(e.target.value.trim())}
+                aria-label={c.steps.push.title}
+              />
+              <button
+                type="button"
+                className="st-btn st-btn--sm"
+                disabled={pending || !url}
+                onClick={() => run(() => saveWebhookAction(link.id, url))}
+              >
+                {c.steps.push.save}
+              </button>
+            </div>
+          )}
+        </div>
+      </details>
       {why && <p className="osc-why">{why}</p>}
     </li>
   )

@@ -121,6 +121,7 @@ export const appCopy = {
     title: (name: string) => `Ask ${name}`,
     note: 'Ask what it holds and why, or tell it what to change. It shows you a card, and nothing changes until you confirm.',
     noAgent: 'Start an agent first, then talk to it here from any page.',
+    close: 'Close the chat',
   },
 
   overview: {
@@ -397,13 +398,13 @@ export const appCopy = {
     what: 'Linked, your workspace can talk to your agent, ask what it holds and why, and, if you allow it, ask it to look now. It can never move money: anything that would is sent back here for your signature.',
     steps: {
       add: {
-        title: '1. Add Shijima to OpenServ',
+        title: 'Add Shijima to OpenServ',
         body: 'Open Shijima on the OpenServ platform and add it to a workflow in your workspace.',
         cta: 'Open Shijima on OpenServ',
         pending: 'Listed on OpenServ; public once their review approves it.',
       },
       link: {
-        title: '2. Link your workspace',
+        title: 'Link your workspace',
         body: 'Make a one-time code and send it to Shijima in your workspace chat.',
         make: 'Make a link code',
         making: 'Making…',
@@ -415,7 +416,7 @@ export const appCopy = {
         waiting: 'Waiting for your workspace to send it…',
       },
       push: {
-        title: '3. Send decisions to your workspace (optional)',
+        title: 'Send decisions to your workspace',
         body: 'Paste a webhook trigger URL from your OpenServ workspace, and every decision your agent makes starts that workflow.',
         placeholder: 'https://api.openserv.ai/webhooks/trigger/…',
         save: 'Save',
@@ -431,6 +432,9 @@ export const appCopy = {
     allowChecksNote:
       'Its agents can then wake yours. Your limits still decide; it can never withdraw or raise them.',
     unlink: 'Unlink',
+    options: 'Options',
+    linkedCount: (n: number) => (n === 1 ? '1 workspace linked' : `${n} workspaces linked`),
+    notLinked: 'Not linked yet',
     credit: 'Runs on OpenServ · decisions by SERV Reasoning',
   },
 

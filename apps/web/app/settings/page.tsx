@@ -4,13 +4,13 @@ import { appCopy, DISCLOSURE_VERSION, deskCopy, short } from '@desk/shared'
 import type { Route } from 'next'
 import Link from 'next/link'
 import type { Address } from 'viem'
-import { Group, Row, Screen, ScreenTitle } from '@/components/kit'
-import { WalletChip } from '@/components/shell/app/WalletChip'
+import { Row, Screen, ScreenTitle } from '@/components/kit'
 import { TokenLogo } from '@/components/ui/token-logo'
 import { SignedOutCard } from '@/features/money/SignedOutCard'
+import { AccountPanel } from '@/features/settings/AccountPanel'
 import { AccountConnections } from '@/features/settings/Connections'
 import { Disclosure } from '@/features/settings/Disclosure'
-import { SettingsSide } from '@/features/settings/SettingsSide'
+import { SettingsTabs } from '@/features/settings/SettingsTabs'
 import { pub } from '@/lib/chain-build.server'
 import { db } from '@/lib/db'
 import { signedInAddress } from '@/lib/session'
@@ -45,9 +45,10 @@ async function accessOf(address: string, version: string) {
 }
 
 /**
- * The account's settings (DECISIONS F4): only real controls. Connections (Telegram for the whole wallet, OpenServ
- * per agent), the wallet and its gas, each agent and who can act for it, and the disclosure. The theme lives in
- * the header; limits, mode, sharing, copying and closing live on each agent's own settings.
+ * The account's settings (DECISIONS F4): only real controls, one tab at a time. Account (the wallet, its gas, where
+ * to check everything, the tour and disconnect), Connections (Telegram for the whole wallet, OpenServ per agent),
+ * each agent and who can act for it, and the disclosure. Limits, mode, sharing, copying and closing live on each
+ * agent's own settings.
  */
 export default async function AccountSettings() {
   const address = await signedInAddress().catch(() => undefined)
@@ -147,50 +148,38 @@ export default async function AccountSettings() {
     )
 
   return (
-    <Screen width={960} gap={8}>
+    <Screen width={760} gap={8}>
       <ScreenTitle title={c.title} sub={c.sub} />
-      <div className="kit-settings">
-        <div className="kit-settings-main">
-          <Group title={c.groups.account} id="wallet">
-            <Row top label={c.address}>
-              <span style={{ fontFamily: 'var(--fm)' }}>{short(address, 6, 4)}</span>
-            </Row>
-            <div style={{ padding: '4px 18px 16px', borderTop: '1px solid var(--bd)' }}>
-              <p style={{ margin: '12px 0 10px', fontSize: 12.5, color: 'var(--tx2)' }}>{c.gas}</p>
-              <WalletChip address={address} />
-            </div>
-          </Group>
-
-          <Group title={c.groups.connections} id="connections">
-            <div style={{ padding: 16 }}>
-              <AccountConnections
-                telegram={{
-                  linked: telegram.linked ? { username: telegram.linked.username } : null,
-                  pending: telegram.pending
-                    ? { code: telegram.pending.code, expiresAt: telegram.pending.codeExpiresAt.toISOString() }
-                    : null,
-                }}
-                agents={open.map((d) => ({ id: d.id, name: d.name ?? 'Agent' }))}
-              />
-            </div>
-          </Group>
-
-          <Group title={c.groups.access} id="agents">
-            {agentsList}
-          </Group>
-
-          <Group title={c.groups.agreed} id="disclosure">
-            <div style={{ padding: 16 }}>
+      <SettingsTabs
+        labels={{
+          account: c.groups.account,
+          connections: c.groups.connections,
+          agents: c.groups.access,
+          agreement: c.groups.agreed,
+        }}
+        panels={{
+          account: <AccountPanel address={address} />,
+          connections: (
+            <AccountConnections
+              telegram={{
+                linked: telegram.linked ? { username: telegram.linked.username } : null,
+                pending: telegram.pending
+                  ? { code: telegram.pending.code, expiresAt: telegram.pending.codeExpiresAt.toISOString() }
+                  : null,
+              }}
+              agents={open.map((d) => ({ id: d.id, name: d.name ?? 'Agent' }))}
+            />
+          ),
+          agents: <section className="st-section">{agentsList}</section>,
+          agreement: (
+            <section className="st-section st-section--pad">
               <Disclosure
                 acceptedOn={accepted ? accepted.toLocaleDateString('en-GB', { dateStyle: 'medium' }) : null}
               />
-            </div>
-          </Group>
-        </div>
-        <div className="kit-settings-side">
-          <SettingsSide verifyHref="/evidence" />
-        </div>
-      </div>
+            </section>
+          ),
+        }}
+      />
     </Screen>
   )
 }

@@ -11,7 +11,7 @@ import { TelegramConnect } from './TelegramConnect'
 
 const c = settingsCopy.connections
 
-/** One card in 21st's Connect Integration Cards shape (28170): a tile for the mark, a title, a line, a footer. */
+/** One card in 21st's Connect Integration Cards shape (28170): the mark beside its name and one line, then the controls. */
 function Card({
   icon,
   title,
@@ -27,11 +27,15 @@ function Card({
 }) {
   return (
     <div className={`connection-card${wide ? ' connection-card--wide' : ''}`}>
-      <span className="connection-mark" aria-hidden>
-        {icon}
-      </span>
-      <h3 className="type-body-strong text-ink">{title}</h3>
-      <p className="type-caption text-ink-secondary">{body}</p>
+      <div className="connection-head">
+        <span className="connection-mark" aria-hidden>
+          {icon}
+        </span>
+        <div className="min-w-0">
+          <h3 className="type-body-strong text-ink">{title}</h3>
+          <p className="type-caption text-ink-secondary">{body}</p>
+        </div>
+      </div>
       <div className="connection-foot">{children}</div>
     </div>
   )

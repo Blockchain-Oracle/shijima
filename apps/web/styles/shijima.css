@@ -492,29 +492,38 @@
 .connection-card {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 14px;
   min-width: 0;
-  padding: 16px;
-  border: 1px solid var(--ms-hairline);
-  border-radius: 12px;
+  padding: 18px;
+  border: 1px solid var(--bd);
+  border-radius: 16px;
+  background: var(--card);
 }
+.connection-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.connection-head h3 { margin: 0; }
+.connection-head p { margin: 2px 0 0; }
 .connection-mark {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   width: 44px;
   height: 44px;
-  margin-bottom: 8px;
-  border: 1px solid var(--ms-hairline);
-  border-radius: 10px;
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  background: var(--panel);
   color: var(--ink, currentColor);
 }
 .connection-foot {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: auto;
-  padding-top: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--bd);
 }
 .connection-rows {
   display: flex;

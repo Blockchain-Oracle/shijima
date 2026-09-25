@@ -39,4 +39,6 @@
 @import "./kit/shell.css";
 @import "./kit/wallet.css";
 @import "./kit/connect.css";
+@import "./kit/settings.css";
+@import "./kit/ask.css";
 @import "./agari/base.css";
