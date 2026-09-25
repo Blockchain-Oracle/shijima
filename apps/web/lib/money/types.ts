@@ -45,6 +45,12 @@ export interface MoveStep {
    * covers the amount; approvals are always for the exact amount, never unlimited.
    */
   approve?: { token: Address; spender: Address; amountRaw: string }
+  /**
+   * Relay's own gas limit for the step, as a decimal string. Sent with the transaction so the wallet does not
+   * estimate it again: right after an approval the wallet's node can be a block behind, see no allowance yet,
+   * and refuse a step that is fine.
+   */
+  gas?: string
 }
 
 export interface MovePlan {

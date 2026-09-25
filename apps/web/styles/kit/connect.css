@@ -166,3 +166,85 @@ button.wallet-row:hover {
 [data-theme="light"] .brand-logo .brand-on-light {
   display: block;
 }
+
+/* The account menu's top (components/shell/AccountBalances): the address to copy, then the wallet's balances on
+ * Robinhood Chain. */
+.header-account-menu {
+  min-width: 300px;
+}
+.acct-top {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--bd);
+}
+.acct-copy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--tx);
+  text-align: left;
+  cursor: pointer;
+}
+.acct-copy:hover {
+  border-color: var(--bd2);
+  background: var(--card2);
+}
+.acct-addr {
+  flex: 1;
+  min-width: 0;
+  font: 500 11.5px / 1.35 var(--fm);
+  word-break: break-all;
+}
+.acct-copy-icon {
+  flex-shrink: 0;
+  color: var(--tx2);
+}
+.acct-copied {
+  font-size: 11.5px;
+  color: var(--pos);
+}
+.acct-chain {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font: 600 10px / 1 var(--fm);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tx3);
+}
+.acct-bal {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.acct-bal-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tx);
+}
+.acct-bal-name small {
+  margin-left: 4px;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--tx3);
+}
+.acct-bal-val {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font: 600 13px / 1.25 var(--fm);
+  color: var(--tx);
+}
+.acct-bal-val small {
+  font: 400 11px / 1.2 var(--fm);
+  color: var(--tx3);
+}

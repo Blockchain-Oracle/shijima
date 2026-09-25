@@ -1,17 +1,17 @@
 'use client'
 
-import { lookOf, type Preset, percent, studioCopy } from '@desk/shared'
-import { Plus } from 'lucide-react'
+import { lookOf, percent, studioCopy } from '@desk/shared'
 import type { ReactNode } from 'react'
 import { AllocationDonut } from '@/components/ui/allocation-donut'
 import { TokenLogo, TokenStack } from '@/components/ui/token-logo'
 import { RulesEditor } from '@/features/desk/RulesEditor'
 import { cn } from '@/lib/utils'
-import { type DraftToken, draftTotalBps, NOTES_MAX, type StudioDraft, withPreset } from './draft'
-import { mixSlices, type Performance } from './StrategyCard'
+import { type DraftToken, draftTotalBps, NOTES_MAX, type StudioDraft } from './draft'
+import { mixSlices } from './StrategyCard'
 
 const I = studioCopy.identity
 const B = studioCopy.behaviour
+const F = studioCopy.flow
 
 type SetDraft = (update: (d: StudioDraft) => StudioDraft) => void
 
@@ -51,38 +51,18 @@ const withCashRest = (weights: Record<string, number>) => {
   return { weights, cashBps: Math.max(0, 10_000 - held) }
 }
 
-function Change({ pct }: { pct: number | null }) {
-  if (pct === null) return <span className="text-[11px] text-muted-foreground">—</span>
-  return (
-    <span
-      className={cn(
-        'font-[family-name:var(--font-data)] text-[13px] font-semibold tabular-nums',
-        pct >= 0 ? 'text-[var(--profit)]' : 'text-[var(--loss)]',
-      )}
-    >
-      {pct >= 0 ? '+' : '−'}
-      {Math.abs(pct).toFixed(1)}%
-    </span>
-  )
-}
-
 /**
- * Step 1: a name and a basket. The ready-made baskets are radio cards, after 21st's Radio Group with Plan Cards
- * (10156): logos, who it suits, and what it did over the last month. "Build your own" turns into logo tiles to
- * tap and a slider each, and cash is always the remainder, so the total cannot fail to reach 100%.
+ * "Build your own" (StrategyStep): logo tiles to tap and a slider each, and cash is always the remainder, so the
+ * total cannot fail to reach 100%.
  */
 export function BasketStep({
   draft,
   setDraft,
-  presets,
   tokens,
-  performance,
 }: {
   draft: StudioDraft
   setDraft: SetDraft
-  presets: Preset[]
   tokens: DraftToken[]
-  performance: Record<string, Performance>
 }) {
   const total = draftTotalBps(draft)
   const own = draft.preset === null
@@ -107,102 +87,6 @@ export function BasketStep({
 
   return (
     <div className="space-y-7">
-      <Field label={I.name} hint={I.nameHint}>
-        <input
-          className="strat-input text-ink"
-          value={draft.name}
-          maxLength={40}
-          placeholder={I.namePlaceholder}
-          onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
-        />
-      </Field>
-
-      <div role="radiogroup" aria-label={I.mix}>
-        <div className="desk-field-label">{I.mix}</div>
-        <div className="flex flex-col gap-2">
-          {presets.map((p) => {
-            const on = draft.preset === p.id
-            const held = Object.entries(p.weights)
-              .sort((a, b) => b[1] - a[1])
-              .map(([s]) => s)
-            return (
-              // biome-ignore lint/a11y/useSemanticElements: a whole card is the choice; role and state make it a radio.
-              <button
-                key={p.id}
-                type="button"
-                role="radio"
-                aria-checked={on}
-                onClick={() => setDraft((d) => withPreset(d, p))}
-                data-cursor="hover"
-                className={cn(
-                  'flex items-center gap-3 rounded-[var(--radius-lg)] border p-3 text-left transition-colors',
-                  on
-                    ? 'border-[var(--color-accent)] bg-[var(--color-accent-wash)]'
-                    : 'border-border hover:border-[var(--color-border-strong)]',
-                )}
-              >
-                <TokenStack symbols={held} size={26} max={3} className="min-w-[92px] shrink-0" />
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-baseline gap-2">
-                    <span className="truncate text-[14px] font-semibold text-foreground">{p.name}</span>
-                    <span className="sm:hidden">
-                      <Change pct={performance[p.id]?.changePct ?? null} />
-                    </span>
-                  </span>
-                  <span className="block truncate text-[12px] text-muted-foreground">{p.description}</span>
-                </span>
-                <span className="hidden flex-col items-end sm:flex">
-                  <Change pct={performance[p.id]?.changePct ?? null} />
-                  <span className="text-[10.5px] text-muted-foreground">{I.monthShort}</span>
-                </span>
-                <span
-                  className={cn(
-                    'flex size-4 shrink-0 items-center justify-center rounded-full border-2',
-                    on ? 'border-[var(--color-accent)]' : 'border-[var(--color-border-strong)]',
-                  )}
-                  aria-hidden
-                >
-                  {on && <span className="size-2 rounded-full bg-[var(--color-accent)]" />}
-                </span>
-              </button>
-            )
-          })}
-          {/* biome-ignore lint/a11y/useSemanticElements: the same radio card as the baskets above. */}
-          <button
-            type="button"
-            role="radio"
-            aria-checked={own}
-            onClick={() => setDraft((d) => ({ ...d, preset: null }))}
-            data-cursor="hover"
-            className={cn(
-              'flex items-center gap-3 rounded-[var(--radius-lg)] border border-dashed p-3 text-left transition-colors',
-              own
-                ? 'border-[var(--color-accent)] bg-[var(--color-accent-wash)]'
-                : 'border-border hover:border-[var(--color-border-strong)]',
-            )}
-          >
-            <span className="flex min-w-[92px] shrink-0 items-center">
-              <span className="flex size-[26px] items-center justify-center rounded-full border border-dashed border-[var(--color-border-strong)] text-muted-foreground">
-                <Plus className="size-3.5" aria-hidden />
-              </span>
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-[14px] font-semibold text-foreground">{I.own}</span>
-              <span className="block text-[12px] text-muted-foreground">{I.ownBody}</span>
-            </span>
-            <span
-              className={cn(
-                'flex size-4 shrink-0 items-center justify-center rounded-full border-2',
-                own ? 'border-[var(--color-accent)]' : 'border-[var(--color-border-strong)]',
-              )}
-              aria-hidden
-            >
-              {own && <span className="size-2 rounded-full bg-[var(--color-accent)]" />}
-            </span>
-          </button>
-        </div>
-      </div>
-
       {own && (
         <div>
           <div className="desk-field-label">{I.pick}</div>
@@ -317,8 +201,8 @@ export function BasketStep({
 }
 
 /**
- * Step 2: how strict, the limits, and the owner's notes. The two limits the contract itself holds are set apart,
- * because changing those later needs the wallet; the rest save instantly (design brief 8.6).
+ * Step 3: the two limits the account itself holds, up front; how strict, the notes and the protective rules wait
+ * under "More options", because most people keep the defaults.
  */
 export function LimitsStep({
   draft,
@@ -368,59 +252,58 @@ export function LimitsStep({
     </Field>
   )
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="strat-choice-title mb-4 text-ink">{B.title}</h3>
+    <div className="na-stack">
+      <div className="na-limits">
+        <p className="na-limits-body">{F.limitsBody}</p>
         <div className="grid gap-4 sm:grid-cols-2">
-          {pct('driftPct', B.drift, B.driftHint)}
-          {pct('maxPositionPct', B.position)}
-          {pct('lossStopPct', B.loss, B.lossHint)}
-          {usd('large', B.large, B.largeHint)}
+          {usd('perAction', F.perTrade, undefined, 250)}
+          {usd('daily', F.perDay, undefined, 1000)}
         </div>
       </div>
 
-      <div className="studio-chain-box">
-        <h3 className="strat-choice-title text-ink">{B.limitsTitle}</h3>
-        <p className="strat-choice-body mb-4">{B.limitsBody}</p>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {usd('perAction', B.perAction, undefined, 250)}
-          {usd('daily', B.daily, undefined, 1000)}
+      <details className="na-more">
+        <summary>{F.more}</summary>
+        <div className="na-more-body">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {pct('driftPct', B.drift, B.driftHint)}
+            {pct('maxPositionPct', B.position)}
+            {pct('lossStopPct', B.loss, B.lossHint)}
+            {usd('large', B.large, B.largeHint)}
+          </div>
+          <div>
+            <div className="mb-2 flex items-baseline justify-between">
+              <span className="desk-field-label mb-0">{B.notes}</span>
+              <span
+                className={cn(
+                  'strat-mono-10 tabular-nums',
+                  draft.notes.length >= NOTES_MAX ? 'text-vermilion' : 'text-ink-muted',
+                )}
+              >
+                {B.count(draft.notes.length, NOTES_MAX)}
+              </span>
+            </div>
+            <textarea
+              className="strat-input strat-textarea text-ink"
+              rows={3}
+              maxLength={NOTES_MAX}
+              value={draft.notes}
+              placeholder={B.notesPlaceholder}
+              aria-label={B.notes}
+              onChange={(e) => setDraft((d) => ({ ...d, notes: e.target.value.slice(0, NOTES_MAX) }))}
+            />
+          </div>
+          <div>
+            <span className="desk-field-label">{B.rulesTitle}</span>
+            <RulesEditor
+              rules={draft.rules ?? []}
+              tokens={tokens
+                .filter((t) => (draft.weights[t.symbol] ?? 0) > 0)
+                .map((t) => ({ symbol: t.symbol, name: t.name }))}
+              onChange={(rules) => setDraft((d) => ({ ...d, rules }))}
+            />
+          </div>
         </div>
-      </div>
-
-      <div>
-        <div className="mb-2 flex items-baseline justify-between">
-          <span className="desk-field-label mb-0">{B.notes}</span>
-          <span
-            className={cn(
-              'strat-mono-10 tabular-nums',
-              draft.notes.length >= NOTES_MAX ? 'text-vermilion' : 'text-ink-muted',
-            )}
-          >
-            {B.count(draft.notes.length, NOTES_MAX)}
-          </span>
-        </div>
-        <textarea
-          className="strat-input strat-textarea text-ink"
-          rows={4}
-          maxLength={NOTES_MAX}
-          value={draft.notes}
-          placeholder={B.notesPlaceholder}
-          aria-label={B.notes}
-          onChange={(e) => setDraft((d) => ({ ...d, notes: e.target.value.slice(0, NOTES_MAX) }))}
-        />
-        <p className="studio-hint">{B.notesHint}</p>
-      </div>
-      <div>
-        <h3 className="strat-choice-title mb-2 text-ink">{B.rulesTitle}</h3>
-        <RulesEditor
-          rules={draft.rules ?? []}
-          tokens={tokens
-            .filter((t) => (draft.weights[t.symbol] ?? 0) > 0)
-            .map((t) => ({ symbol: t.symbol, name: t.name }))}
-          onChange={(rules) => setDraft((d) => ({ ...d, rules }))}
-        />
-      </div>
+      </details>
     </div>
   )
 }

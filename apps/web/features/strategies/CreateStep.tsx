@@ -2,26 +2,27 @@
 
 import { USDG } from '@desk/chain'
 import { type Mandate, money, short, studioCopy } from '@desk/shared'
+import { ArrowRight, Loader2 } from 'lucide-react'
+import type { Route } from 'next'
+import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { type Address, encodeFunctionData, erc20Abi, type Hex, parseEther } from 'viem'
 import { robinhood } from 'viem/chains'
 import { useAccount, useSendTransaction, useSwitchChain } from 'wagmi'
 import { finishDeskAction, type PreparedDesk, prepareDeskAction } from '@/app/studio-actions'
-import { HeaderAccount } from '@/components/shell/HeaderAccount'
 import { SignInButton } from '@/components/shell/SignInButton'
-import { BridgeIn } from '@/features/desk/BridgeIn'
 import { browserClient } from '@/features/session/useDeskSession'
 import { Disclosure } from '@/features/settings/Disclosure'
-import { cn } from '@/lib/utils'
 import { dollarsToUnits, mandateJson } from './draft'
 
 const C = studioCopy.create
+const F = studioCopy.flow
 /**
- * When the wallet holds less than the estimated fee with room to spare, the order flips: money in first, then
- * create. Without an estimate, about a dollar of ETH is taken as enough; creating a desk cost about $0.30 on
- * mainnet on 20 Sep.
+ * ETH the wallet must hold to create: the chain's own estimate with a fifth on top, because the gas price moves a
+ * little between the estimate and the signature. Without an estimate, 0.00007 ETH: creating cost 1.56M gas at
+ * 0.036 gwei (0.000056 ETH) on 25 Sep. A 1.5x margin here once told a wallet holding 0.00008 ETH it had too little.
  */
-const FALLBACK_NEED = parseEther('0.0003')
+const FALLBACK_NEED = parseEther('0.00007')
 
 export interface Created {
   deskId: string
@@ -138,17 +139,17 @@ export function CreateStep({
 
   if (!signedIn) {
     return (
-      <div className="space-y-4">
-        <p className="strat-choice-body">{C.connect}</p>
-        <HeaderAccount signedInAs={undefined} />
+      <div className="na-stack">
+        <p className="na-note">{C.connect}</p>
+        <SignInButton className="na-cta" label={C.connectWallet} />
       </div>
     )
   }
 
   if (!accepted) {
     return (
-      <div className="space-y-4">
-        <p className="strat-choice-body">{C.disclosureFirst}</p>
+      <div className="na-stack">
+        <p className="na-note">{C.disclosureFirst}</p>
         <div className="studio-disclosure">
           <Disclosure acceptedOn={null} onAccepted={() => setAccepted(true)} />
         </div>
@@ -176,66 +177,96 @@ export function CreateStep({
     }
   }
 
-  const need = prepared?.ok && prepared.feeWei ? (BigInt(prepared.feeWei) * 3n) / 2n : FALLBACK_NEED
+  const need = prepared?.ok && prepared.feeWei ? (BigInt(prepared.feeWei) * 6n) / 5n : FALLBACK_NEED
   const noEth = eth !== null && eth < need
-  const fee =
+  // Dollars per ETH, from the server's own fee estimate, so the wallet's ETH can be shown in dollars too.
+  const ethUsd =
+    prepared?.ok && prepared.feeUsd !== null && prepared.feeWei && BigInt(prepared.feeWei) > 0n
+      ? prepared.feeUsd / (Number(prepared.feeWei) / 1e18)
+      : null
+  const inUsd = (wei: bigint) =>
+    ethUsd === null
+      ? `${(Number(wei) / 1e18).toFixed(5)} ETH`
+      : `$${((Number(wei) / 1e18) * ethUsd).toFixed(2)}`
+  const feeText =
     prepared?.ok && prepared.feeUsd !== null
-      ? C.feeValue(prepared.feeUsd < 0.01 ? 'under a cent' : `$${prepared.feeUsd.toFixed(2)}`)
+      ? F.feeValue(prepared.feeUsd < 0.01 ? 'under a cent' : `$${prepared.feeUsd.toFixed(2)}`)
       : C.feeUnknown
+  const busy = phase !== 'idle'
 
   return (
-    <div className="space-y-5">
-      <p className="strat-choice-body">{C.body}</p>
-      <dl className="agent-preview-facts">
-        <div>
-          <dt>{C.address}</dt>
-          <dd title={prepared?.ok ? prepared.address : undefined}>
+    <div className="na-stack">
+      <div className="na-route">
+        <div className="na-route-end">
+          <span className="na-label">{F.from}</span>
+          <b>{short(signedIn, 6, 4)}</b>
+        </div>
+        <div className="na-route-arrow" aria-hidden="true">
+          <span>{units !== null ? money(amount) : F.practiceOn}</span>
+          <ArrowRight className="size-4" />
+        </div>
+        <div className="na-route-end">
+          <span className="na-label">{F.to}</span>
+          <b title={prepared?.ok ? prepared.address : undefined}>
             {prepared?.ok ? short(prepared.address, 6, 4) : '…'}
-          </dd>
+          </b>
         </div>
+      </div>
+      <p className="na-note">{F.toNote}</p>
+
+      <div className="na-fee">
         <div>
-          <dt>{C.fee}</dt>
-          <dd>{fee}</dd>
+          <span className="na-label">{F.fee}</span>
+          <span>{feeText}</span>
         </div>
-        <div>
-          <dt>{C.confirmations}</dt>
-          <dd>{units !== null ? C.confirmationsFunded : C.confirmationsValue}</dd>
-        </div>
-      </dl>
-      <p className="studio-hint">{C.addressNote}</p>
-      <p className="strat-choice-body">{C.starts}</p>
+        {eth !== null && (
+          <span className={noEth ? 'na-fee-short' : 'na-fee-ok'}>{noEth ? null : F.feeOk(inUsd(eth))}</span>
+        )}
+      </div>
 
       {noEth && prepared?.ok && (
-        <div className="studio-chain-box space-y-3">
-          <h4 className="strat-choice-title text-ink">{C.noEth.title}</h4>
-          <p className="strat-choice-body">{C.noEth.body}</p>
-          <BridgeIn desk={prepared.address} owner={signedIn as Address} />
-          <p className="strat-choice-body">{C.noEth.after}</p>
-          <button type="button" className="strat-sensei" onClick={checkEth} data-cursor="hover">
-            {C.noEth.check}
-          </button>
+        <div className="na-warn na-warn--box">
+          <p>{F.feeShort(inUsd(need), inUsd(eth ?? 0n))}</p>
+          <div className="na-warn-actions">
+            <Link className="st-btn st-btn--sm st-btn--primary" href={'/bridge?dir=gas' as Route}>
+              {F.getEth}
+            </Link>
+            <button type="button" className="st-btn st-btn--sm" onClick={checkEth}>
+              {C.noEth.check}
+            </button>
+          </div>
         </div>
       )}
 
+      <div className="na-signs">
+        <span className="na-label">{F.signs}</span>
+        <ol>
+          <li data-done={phase === 'funding' || phase === 'arriving' ? '' : undefined}>
+            <span>1</span>
+            {F.signCreate}
+          </li>
+          {units !== null && (
+            <li>
+              <span>2</span>
+              {F.signFund(money(amount))}
+            </li>
+          )}
+        </ol>
+      </div>
+
       {!address ? (
-        <SignInButton
-          className="strat-confirm strat-confirm--live"
-          label={C.connectWallet}
-          signedInAs={signedIn ?? undefined}
-        />
+        <SignInButton className="na-cta" label={C.connectWallet} signedInAs={signedIn ?? undefined} />
       ) : !rightWallet ? (
-        <p className="type-caption text-warning">{C.wrongWallet}</p>
+        <p className="na-warn">{C.wrongWallet}</p>
       ) : (
         <button
           type="button"
           onClick={create}
-          disabled={!prepared?.ok || phase !== 'idle' || noEth}
-          className={cn(
-            'strat-confirm',
-            prepared?.ok && phase === 'idle' && !noEth ? 'strat-confirm--live' : 'strat-confirm--dead',
-          )}
+          disabled={!prepared?.ok || busy || noEth}
+          className="na-cta"
           data-cursor="hover"
         >
+          {busy && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
           {phase === 'wallet'
             ? C.wallet
             : phase === 'network'

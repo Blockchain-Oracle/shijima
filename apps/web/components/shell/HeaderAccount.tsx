@@ -8,6 +8,7 @@ import { type RefObject, useRef, useState } from 'react'
 import { robinhood } from 'viem/chains'
 import { useAccount, useDisconnect, useSwitchChain } from 'wagmi'
 import { TelegramConnect } from '@/features/settings/TelegramConnect'
+import { AccountBalances } from './AccountBalances'
 import { SignInButton } from './SignInButton'
 import type { HeaderTelegram } from './types'
 import { useFloatingMenus } from './useFloatingMenus'
@@ -69,20 +70,17 @@ export function HeaderAccount({
         </button>
         {open && (
           <div className="header-account-menu" role="menu">
-            <div className="header-account-pools">
-              <div className="header-account-row">
-                <span>{webCopy.account.signedInAs}</span>
-                <span className="val">{short(signedInAs, 6, 4)}</span>
-              </div>
-              {telegram?.linked && (
+            <AccountBalances address={signedInAs} />
+            {telegram?.linked && (
+              <div className="header-account-pools">
                 <div className="header-account-row">
                   <span>{webCopy.account.telegram}</span>
                   <span className="val val--profit">
                     {telegram.linked.username ? `@${telegram.linked.username}` : webCopy.account.telegramOn}
                   </span>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
             {/* Mounted only while the menu is open, so a code is made only when someone looks. */}
             {telegram && !telegram.linked && (
               <div className="header-account-telegram">

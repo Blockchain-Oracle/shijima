@@ -1,6 +1,8 @@
 'use client'
 
 import { deskCopy } from '@desk/shared'
+import { Plus, Trash2 } from 'lucide-react'
+import { TokenLogo } from '@/components/ui/token-logo'
 import { cn } from '@/lib/utils'
 
 /** A rule as the owner types it: a stock, a fall in percent, and how much to sell then. */
@@ -30,73 +32,70 @@ export function RulesEditor({
   className?: string
 }) {
   const r = deskCopy.rules
-  const nameOf = (symbol: string) => tokens.find((t) => t.symbol === symbol)?.name ?? symbol
   const update = (i: number, patch: Partial<DraftRule>) =>
     onChange(rules.map((rule, j) => (j === i ? { ...rule, ...patch } : rule)))
   const first = tokens[0]?.symbol ?? ''
   return (
-    <div className={cn('flex flex-col gap-3', className)}>
-      <p className="type-caption text-ink-secondary">{r.hint}</p>
-      {rules.length === 0 && <p className="type-caption text-ink-muted">{r.none}</p>}
+    <div className={cn('rule-list', className)}>
+      <p className="rule-hint">{r.hint}</p>
       {rules.map((rule, i) => (
-        <div key={rule.key ?? `${rule.symbol}:${rule.fallPct}:${rule.cutPct}`} className="desk-rule">
-          <div className="desk-rule-fields">
-            <label className="desk-field">
-              <span className="type-label-micro text-ink-muted">{r.stock}</span>
-              <span className="desk-input">
-                <select value={rule.symbol} onChange={(e) => update(i, { symbol: e.target.value })}>
-                  {tokens.map((t) => (
-                    <option key={t.symbol} value={t.symbol}>
-                      {t.name}
-                    </option>
-                  ))}
-                </select>
-              </span>
-            </label>
-            <label className="desk-field">
-              <span className="type-label-micro text-ink-muted">{r.fall}</span>
-              <span className="desk-input">
-                <input
-                  inputMode="decimal"
-                  value={rule.fallPct}
-                  onChange={(e) => update(i, { fallPct: e.target.value.replace(/[^0-9.]/g, '') })}
-                />
-                <span aria-hidden>%</span>
-              </span>
-            </label>
-            <label className="desk-field">
-              <span className="type-label-micro text-ink-muted">{r.cut}</span>
-              <span className="desk-input">
-                <input
-                  inputMode="decimal"
-                  value={rule.cutPct}
-                  onChange={(e) => update(i, { cutPct: e.target.value.replace(/[^0-9.]/g, '') })}
-                />
-                <span aria-hidden>%</span>
-              </span>
-            </label>
-          </div>
-          <p className="type-caption text-ink-secondary">
-            {r.sentence(nameOf(rule.symbol), rule.fallPct || '…', rule.cutPct || '…')}
-          </p>
+        <div key={rule.key ?? `${rule.symbol}:${rule.fallPct}:${rule.cutPct}`} className="rule-row">
+          <span className="rule-word">{r.if}</span>
+          <span className="rule-select">
+            <TokenLogo symbol={rule.symbol} size={18} />
+            <select
+              aria-label={r.stock}
+              value={rule.symbol}
+              onChange={(e) => update(i, { symbol: e.target.value })}
+            >
+              {tokens.map((t) => (
+                <option key={t.symbol} value={t.symbol}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </span>
+          <span className="rule-word">{r.fall}</span>
+          <span className="rule-num">
+            <input
+              inputMode="decimal"
+              aria-label={r.fall}
+              value={rule.fallPct}
+              onChange={(e) => update(i, { fallPct: e.target.value.replace(/[^0-9.]/g, '') })}
+            />
+            %
+          </span>
+          <span className="rule-word">{r.cut}</span>
+          <span className="rule-num">
+            <input
+              inputMode="decimal"
+              aria-label={r.cut}
+              value={rule.cutPct}
+              onChange={(e) => update(i, { cutPct: e.target.value.replace(/[^0-9.]/g, '') })}
+            />
+            %
+          </span>
           <button
             type="button"
-            className="type-caption text-ink-muted hover:text-ink"
+            className="rule-delete"
+            aria-label={r.remove}
+            title={r.remove}
             onClick={() => onChange(rules.filter((_, j) => j !== i))}
           >
-            {r.remove}
+            <Trash2 className="size-4" aria-hidden="true" />
           </button>
         </div>
       ))}
       {rules.length < MAX_DRAFT_RULES && (
         <button
           type="button"
-          className="desk-control"
+          className="rule-add"
           data-cursor="hover"
           onClick={() =>
             onChange([...rules, { symbol: first, fallPct: '3', cutPct: '50', key: crypto.randomUUID() }])
           }
         >
+          <Plus className="size-4" aria-hidden="true" />
           {r.add}
         </button>
       )}

@@ -1,41 +1,172 @@
 /* Ask Shijima (components/shell/app/AskDrawer): a launcher in the bottom-right corner and a chat window above
  * it, drawn at the page root so the app frame never clips it. */
-.ask-float { position: fixed; right: 24px; bottom: 24px; z-index: 90; display: flex; flex-direction: column; align-items: flex-end; gap: 14px; pointer-events: none; }
-.ask-float > * { pointer-events: auto; }
+.ask-float {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 14px;
+  pointer-events: none;
+}
+.ask-float > * {
+  pointer-events: auto;
+}
 .ask-launcher.logo-mark {
-  width: 58px; height: 58px; padding: 15px; border-radius: 999px; color: var(--tx);
-  background: var(--card); border: 1px solid color-mix(in srgb, var(--ac) 45%, var(--bd2));
-  box-shadow: 0 18px 40px -14px rgb(0 0 0 / 0.7), 0 0 0 4px color-mix(in srgb, var(--ac) 10%, transparent), 0 0 28px color-mix(in srgb, var(--ac) 22%, transparent);
-  cursor: pointer; transition: transform 180ms var(--ease), border-color 180ms var(--ease);
+  width: 58px;
+  height: 58px;
+  padding: 15px;
+  border-radius: 999px;
+  color: var(--tx);
+  background: var(--card);
+  border: 1px solid color-mix(in srgb, var(--ac) 45%, var(--bd2));
+  box-shadow:
+    0 18px 40px -14px rgb(0 0 0 / 0.7),
+    0 0 0 4px color-mix(in srgb, var(--ac) 10%, transparent),
+    0 0 28px color-mix(in srgb, var(--ac) 22%, transparent);
+  cursor: pointer;
+  transition:
+    transform 180ms var(--ease),
+    border-color 180ms var(--ease);
 }
-.ask-launcher.logo-mark:hover { transform: translateY(-2px); border-color: var(--ac); }
-.ask-launcher.logo-mark:focus-visible { outline: 2px solid var(--ac); outline-offset: 3px; }
-.ask-launcher[data-open] { padding: 0; }
-.ask-launcher[data-open] svg { width: 20px; height: 20px; }
+.ask-launcher.logo-mark:hover {
+  transform: translateY(-2px);
+  border-color: var(--ac);
+}
+.ask-launcher.logo-mark:focus-visible {
+  outline: 2px solid var(--ac);
+  outline-offset: 3px;
+}
+.ask-launcher[data-open] {
+  padding: 0;
+}
+.ask-launcher[data-open] svg {
+  width: 20px;
+  height: 20px;
+}
 .ask-panel {
-  display: flex; flex-direction: column; width: 400px; height: min(640px, calc(100dvh - 120px));
-  border: 1px solid var(--bd2); border-radius: 22px; background: var(--panel); overflow: hidden;
-  box-shadow: var(--shadow-pop); transform-origin: bottom right;
+  display: flex;
+  flex-direction: column;
+  width: 400px;
+  height: min(640px, calc(100dvh - 120px));
+  border: 1px solid var(--bd2);
+  border-radius: 22px;
+  background: var(--panel);
+  overflow: hidden;
+  box-shadow: var(--shadow-pop);
+  transform-origin: bottom right;
 }
-.ask-panel-head { display: flex; align-items: center; gap: 12px; padding: 14px 14px 14px 16px; border-bottom: 1px solid var(--bd); }
-.ask-panel-mark.logo-mark { width: 38px; height: 38px; padding: 9px; border-radius: 12px; background: var(--card2); color: var(--tx); }
-.ask-panel-titles { display: flex; flex-direction: column; min-width: 0; }
-.ask-panel-titles strong { font-size: 14.5px; color: var(--tx); }
-.ask-panel-titles span { font-size: 12px; color: var(--tx3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ask-panel-close { margin-left: auto; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 999px; color: var(--tx2); }
-.ask-panel-close:hover { background: var(--card2); color: var(--tx); }
-.ask-panel-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.ask-panel-body .desk-chat { height: 100%; min-height: 0; border: 0; border-radius: 0; background: transparent; }
-.ask-panel-empty { margin: 0; padding: 20px; font-size: 13px; color: var(--tx2); }
-.ask-panel-loading { display: flex; gap: 6px; padding: 20px; }
-.ask-panel-loading span { width: 7px; height: 7px; border-radius: 999px; background: var(--tx3); animation: ask-dot 1s infinite ease-in-out; }
-.ask-panel-loading span:nth-child(2) { animation-delay: 0.15s; }
-.ask-panel-loading span:nth-child(3) { animation-delay: 0.3s; }
-@keyframes ask-dot { 0%, 80%, 100% { opacity: 0.3; } 40% { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .ask-panel-loading span { animation: none; } }
+.ask-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 14px 14px 16px;
+  border-bottom: 1px solid var(--bd);
+}
+.ask-panel-mark.logo-mark {
+  width: 38px;
+  height: 38px;
+  padding: 9px;
+  border-radius: 12px;
+  background: var(--card2);
+  color: var(--tx);
+}
+.ask-panel-titles {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.ask-panel-titles strong {
+  font-size: 14.5px;
+  color: var(--tx);
+}
+.ask-panel-titles span {
+  font-size: 12px;
+  color: var(--tx3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ask-panel-close {
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  color: var(--tx2);
+}
+.ask-panel-close:hover {
+  background: var(--card2);
+  color: var(--tx);
+}
+.ask-panel-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ask-panel-body .desk-chat {
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.ask-panel-empty {
+  margin: 0;
+  padding: 20px;
+  font-size: 13px;
+  color: var(--tx2);
+}
+.ask-panel-loading {
+  display: flex;
+  gap: 6px;
+  padding: 20px;
+}
+.ask-panel-loading span {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--tx3);
+  animation: ask-dot 1s infinite ease-in-out;
+}
+.ask-panel-loading span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.ask-panel-loading span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes ask-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ask-panel-loading span {
+    animation: none;
+  }
+}
 /* A phone: the window takes the width, above the launcher and clear of the bottom bar. */
 @media (max-width: 640px) {
-  .ask-float { right: 12px; bottom: calc(84px + env(safe-area-inset-bottom)); }
-  .ask-panel { width: calc(100vw - 24px); height: calc(100dvh - 190px); }
-  .ask-launcher.logo-mark { width: 52px; height: 52px; padding: 13px; }
+  .ask-float {
+    right: 12px;
+    bottom: calc(84px + env(safe-area-inset-bottom));
+  }
+  .ask-panel {
+    width: calc(100vw - 24px);
+    height: calc(100dvh - 190px);
+  }
+  .ask-launcher.logo-mark {
+    width: 52px;
+    height: 52px;
+    padding: 13px;
+  }
 }

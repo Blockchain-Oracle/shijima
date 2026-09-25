@@ -504,8 +504,12 @@
   align-items: center;
   gap: 14px;
 }
-.connection-head h3 { margin: 0; }
-.connection-head p { margin: 2px 0 0; }
+.connection-head h3 {
+  margin: 0;
+}
+.connection-head p {
+  margin: 2px 0 0;
+}
 .connection-mark {
   display: flex;
   flex-shrink: 0;

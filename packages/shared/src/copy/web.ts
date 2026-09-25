@@ -82,6 +82,11 @@ export const webCopy = {
     telegramOff: 'Get approvals and alerts in Telegram',
     menu: 'Account menu',
     signedInAs: 'Signed in as',
+    copyAddress: 'Copy your address',
+    copied: 'Address copied',
+    onChain: 'On Robinhood Chain',
+    forFees: 'for fees',
+    balanceUnknown: 'Could not read',
   },
 
   moneyPill: {
@@ -671,11 +676,12 @@ export const deskCopy = {
   /** Protective rules [8.6]: carried out by arithmetic, never by reading prose. */
   rules: {
     title: 'Standing rules',
-    hint: 'A rule the agent carries out itself, by arithmetic: if a stock you hold falls this far below its reference, it sells this much of it. The assistant still picks the moment and can only wait with a reason.',
+    hint: 'Automatic safety: if a stock falls this far, the agent sells this much of it.',
     none: 'No standing rules.',
+    if: 'If',
     stock: 'Stock',
-    fall: 'Falls by',
-    cut: 'Sell',
+    fall: 'falls',
+    cut: 'sell',
     sentence: (name: string, fall: string, cut: string) =>
       `If ${name} falls more than ${fall}% below its reference, sell ${cut}% of it.`,
     add: 'Add a rule',
@@ -848,6 +854,8 @@ export const controlsCopy = {
     gas: 'Also send about $1 of ETH to my own wallet on Robinhood Chain, for my network fees',
     send: (chain: string) => `Send from ${chain}`,
     held: (amount: string, chain: string) => `Your wallet holds ${amount} USDC on ${chain}.`,
+    notEnough: (need: string, held: string, chain: string) =>
+      `This needs ${need} USDC on ${chain}, and your wallet holds ${held}. Send less or untick the ETH for fees.`,
     progress: {
       switching: (chain: string) => `Switching your wallet to ${chain}…`,
       signing: (n: number, of: number) => `Confirm in your wallet (${n} of ${of})…`,
@@ -858,6 +866,11 @@ export const controlsCopy = {
       failed:
         'It did not go through. If anything left your wallet, Relay returns it. Nothing reached the agent.',
       cancelled: 'You cancelled in your wallet. Nothing was sent.',
+      approvedOnly:
+        'Only the approval went through. Your USDC has not moved and is still in your wallet; press Send again to finish.',
+      why: (reason: string) => `Your wallet said: ${reason}`,
+      gasFailed:
+        'Your dollars arrived in your agent. The ETH for fees did not; if its USDC left your wallet, Relay returns it.',
     },
   },
   withdraw: {

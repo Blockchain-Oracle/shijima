@@ -39,6 +39,8 @@ export interface MoveState {
 
 const IDLE: MoveState = { phase: 'idle', plan: null, problem: null, hint: null, step: null, outcome: null }
 const RECEIPT_TIMEOUT_MS = 180_000
+/** How long to wait before the one retry of a step the wallet would not send. */
+const RETRY_AFTER_MS = 3_000
 const POLL_MS = 3_000
 const POLL_FOR_MS = 180_000
 
@@ -120,11 +122,19 @@ export function useMove(options: { owner?: string } = {}) {
           }).catch(() => 0n)
           if (allowance >= BigInt(step.approve.amountRaw)) continue
         }
-        const hash = await sendTransactionAsync({
+        const tx = {
           to: step.to,
           data: step.data,
           value: BigInt(step.value),
           chainId: step.chainId as never,
+          ...(step.gas ? { gas: BigInt(step.gas) } : {}),
+        }
+        // Right after an approval the wallet's node can be a block behind and refuse the next step. Once, after a
+        // pause, is enough; a person saying no is never retried.
+        const hash = await sendTransactionAsync(tx).catch(async (e: unknown) => {
+          if (rejected(e) || index === 0) throw e
+          await new Promise((r) => setTimeout(r, RETRY_AFTER_MS))
+          return sendTransactionAsync(tx)
         })
         // Kept before waiting, so a closed tab or a slow chain never loses where the money went.
         await stepSentAction(current.moveId, hash).catch(() => undefined)
@@ -137,7 +147,9 @@ export function useMove(options: { owner?: string } = {}) {
         if (receipt.status !== 'success') break
       }
     } catch (e) {
-      note = rejected(e) ? 'the owner said no in the wallet' : 'the wallet could not send it'
+      note = rejected(e)
+        ? 'the owner said no in the wallet'
+        : `the wallet could not send it: ${e instanceof Error ? e.message.split('\n')[0] : String(e)}`
     } finally {
       if (switched) await switchChainAsync({ chainId: home }).catch(() => undefined)
     }

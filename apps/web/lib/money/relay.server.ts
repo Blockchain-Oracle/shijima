@@ -105,7 +105,7 @@ interface RawQuote {
     description?: string
     kind: string
     requestId?: string
-    items: { data: { to: Address; data: Hex; value?: string; chainId: number } }[]
+    items: { data: { to: Address; data: Hex; value?: string; chainId: number; gas?: string } }[]
   }[]
   fees?: { gas?: { amountUsd?: string } }
   details: {
@@ -192,6 +192,7 @@ export async function relayQuote(input: {
           value: item.data.value ?? '0',
           kind: 'relay',
           label: step.description ?? 'Send to Relay',
+          ...(item.data.gas ? { gas: String(item.data.gas) } : {}),
         })
       }
     }
