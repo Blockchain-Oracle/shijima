@@ -1,0 +1,14 @@
+# Images are built from the git tree on the server; this keeps a local build just as clean.
+**/node_modules
+**/.next
+.pnpm-store
+.env
+.env.*
+**/.openserv.json
+var
+contracts/out
+contracts/cache
+contracts/broadcast
+docs/research
+*.log
+.claude
