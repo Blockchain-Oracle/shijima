@@ -909,8 +909,8 @@ Waiting on Abu: a $1 fund and a $1 withdraw on mainnet, by his own hand, if he w
 
 **Fri 25 Sep, 08:15 UTC. DEPLOYED ON COOLIFY (Abu's own server, the box Agari runs on, CLI context `agari-new`
 over the `agari-box` SSH tunnel).** Project `shijima`: Postgres 16 `shijima-db` `imax8f8l2kxe3u1h4ash1rz3` (db and
-user `desk`, internal only), `shijima-web` `rvqdneldfqkhjtywhlzlqnn1` at **https://shijima.useagari.xyz** (Agari's
-wildcard DNS, TLS by Traefik), `shijima-worker` `303mkwitemt1aefoawsxzi9k` (no domain). Both build from `main` with
+user `desk`, internal only), `shijima-web` `rvqdneldfqkhjtywhlzlqnn1` at **https://rvqdneldfqkhjtywhlzlqnn1.84.46.247.92.sslip.io** (Coolify's
+sslip.io address with a Let's Encrypt certificate, until Abu's own domain; never an Agari subdomain), `shijima-worker` `303mkwitemt1aefoawsxzi9k` (no domain). Both build from `main` with
 `apps/web/Dockerfile` and `apps/worker/Dockerfile` through a read-only GitHub deploy key, so **commit and push
 before `coolify deploy uuid <app>`**. The worker gets `.openserv.json` from the env `OPENSERV_STATE_JSON`.
 `desk_dev` was dumped after stopping the local worker and restored on the server: 69 decisions, 2 agents,

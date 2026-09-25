@@ -21,7 +21,7 @@ Vercel is needed now.
       free $1 runs for 2 people (`GIFT_CAP=2`). Top it up any time to raise the cap.
 - [x] ~~Switch the showcase agent to live.~~ Done 23 Sep: on its own, renamed "Shijima's own", $3.21 in it.
 
-- [x] ~~Deploy.~~ Done 25 Sep on your Coolify: https://shijima.useagari.xyz, the agent runs on the server now.
+- [x] ~~Deploy.~~ Done 25 Sep on your Coolify: https://rvqdneldfqkhjtywhlzlqnn1.84.46.247.92.sslip.io, the agent runs on the server now.
       Do not start the worker on the Mac again.
 
 ## Hackathon admin, whenever you have five minutes
