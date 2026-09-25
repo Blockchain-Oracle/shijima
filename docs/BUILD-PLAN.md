@@ -907,6 +907,20 @@ W1–W13) and for money to go in as any token and come out properly. Built in ma
   animated sidebar and 87 unused CSS classes are gone.
 Waiting on Abu: a $1 fund and a $1 withdraw on mainnet, by his own hand, if he wants them on the record.
 
+**Fri 25 Sep, 08:15 UTC. DEPLOYED ON COOLIFY (Abu's own server, the box Agari runs on, CLI context `agari-new`
+over the `agari-box` SSH tunnel).** Project `shijima`: Postgres 16 `shijima-db` `imax8f8l2kxe3u1h4ash1rz3` (db and
+user `desk`, internal only), `shijima-web` `rvqdneldfqkhjtywhlzlqnn1` at **https://shijima.useagari.xyz** (Agari's
+wildcard DNS, TLS by Traefik), `shijima-worker` `303mkwitemt1aefoawsxzi9k` (no domain). Both build from `main` with
+`apps/web/Dockerfile` and `apps/worker/Dockerfile` through a read-only GitHub deploy key, so **commit and push
+before `coolify deploy uuid <app>`**. The worker gets `.openserv.json` from the env `OPENSERV_STATE_JSON`.
+`desk_dev` was dumped after stopping the local worker and restored on the server: 69 decisions, 2 agents,
+2 owners, 15 migrations on both sides. The server worker took the lead at 08:10 UTC; OpenServ, Telegram and the
+gift sender connected; a manual `pnpm openserv:fire` ran through it and finished.
+**THE LOCAL WORKER MUST NEVER RUN AGAIN AGAINST MAINNET.** It has its own database, so the leader lock cannot see
+the server's worker: both would trade the same agents with the same operator key, and Telegram would fight over
+long polling. Local `desk_dev` is now a stale copy. Found: OpenServ's hourly cron last started a check on
+23 Sep 12:02 UTC; the worker's own timer has covered every hour since.
+
 ## 6. Schedule
 
 | Day | Work | Must be true by end of day |
