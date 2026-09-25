@@ -1,9 +1,11 @@
 import { EXPLORER } from '@desk/chain'
 import { appCopy, OPENSERV, settingsCopy, short } from '@desk/shared'
-import { ArrowUpRight, Bot, Send, Wallet } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import type { TelegramState } from '@/app/owner-actions'
+import { BrandLogo } from '@/components/ui/brand-logo'
+import { ChainLogo } from '@/components/ui/chain-logo'
 import { OpenservConnect } from './OpenservConnect'
 import { TelegramConnect } from './TelegramConnect'
 
@@ -59,7 +61,7 @@ export function AccountConnections({
     <div className="connections-grid">
       <Card
         wide
-        icon={<Send className="size-5" />}
+        icon={<BrandLogo brand="telegram" size={28} />}
         title={settingsCopy.telegram.title}
         body={settingsCopy.telegram.body}
       >
@@ -67,7 +69,7 @@ export function AccountConnections({
       </Card>
       <Card
         wide
-        icon={<Bot className="size-5" />}
+        icon={<BrandLogo brand="openserv" size={26} />}
         title={appCopy.settings.openserv.title}
         body={appCopy.openserv.tagline}
       >
@@ -114,13 +116,13 @@ export function Connections({
     <div className="connections-grid">
       <Card
         wide
-        icon={<Send className="size-5" />}
+        icon={<BrandLogo brand="telegram" size={28} />}
         title={settingsCopy.telegram.title}
         body={settingsCopy.telegram.body}
       >
         <TelegramConnect initial={telegram} />
       </Card>
-      <Card icon={<Wallet className="size-5" />} title={c.wallet} body={c.walletBody}>
+      <Card icon={<ChainLogo chainId={4663} size={28} />} title={c.wallet} body={c.walletBody}>
         <dl className="connection-rows">
           <div>
             <dt>{c.owner}</dt>
@@ -133,7 +135,7 @@ export function Connections({
         </dl>
         <Out href={`${EXPLORER}/address/${deskAddress}`}>{c.view}</Out>
       </Card>
-      <Card wide icon={<Bot className="size-5" />} title={c.agent} body={c.agentBody}>
+      <Card wide icon={<BrandLogo brand="openserv" size={26} />} title={c.agent} body={c.agentBody}>
         <dl className="connection-rows">
           <div>
             <dt>OpenServ</dt>

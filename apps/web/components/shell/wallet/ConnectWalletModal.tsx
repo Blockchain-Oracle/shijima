@@ -1,11 +1,12 @@
 'use client'
 
 import { webCopy } from '@desk/shared'
-import { ChevronLeft, Loader2, QrCode, Wallet } from 'lucide-react'
+import { ChevronLeft, Loader2, Wallet } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { robinhood } from 'viem/chains'
 import { type Connector, useAccount, useConnect, useConnectors, useDisconnect, useSwitchChain } from 'wagmi'
+import { BrandLogo } from '@/components/ui/brand-logo'
 import { Modal } from '@/components/ui/modal'
 import { Qr } from '@/components/ui/qr'
 import { isRejection, useSignIn } from './useSignIn'
@@ -187,8 +188,8 @@ export function ConnectWalletModal({
               onClick={() => void pick(walletConnect)}
               data-cursor="hover"
             >
-              <span className="wallet-row-icon wallet-row-icon--wc">
-                <QrCode className="h-4 w-4" />
+              <span className="wallet-row-icon">
+                <BrandLogo brand="walletconnect" size={36} />
               </span>
               <span className="wallet-row-text">
                 <span className="wallet-row-name">{W.walletConnect}</span>

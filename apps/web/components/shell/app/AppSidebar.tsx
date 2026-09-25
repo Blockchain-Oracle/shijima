@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { NetworkPill } from '@/components/kit'
+import { BrandLogo } from '@/components/ui/brand-logo'
 import { TokenLogo } from '@/components/ui/token-logo'
 import { GiftCard } from '@/features/gift/GiftCard'
 import { cn } from '@/lib/utils'
@@ -214,7 +215,13 @@ export function AppSidebar({
           <ThemeToggle />
         </div>
         <p className="kit-side-links kit-label">
-          <a href="https://platform.openserv.ai/agents/4513" target="_blank" rel="noreferrer noopener">
+          <a
+            href="https://platform.openserv.ai/agents/4513"
+            target="_blank"
+            rel="noreferrer noopener"
+            className="inline-flex items-center gap-1.5"
+          >
+            <BrandLogo brand="openserv" size={13} />
             {appCopy.sidebar.runsOn}
           </a>
           <span aria-hidden="true">·</span>

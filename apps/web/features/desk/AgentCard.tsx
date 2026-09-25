@@ -1,5 +1,5 @@
 import { deskCopy, money } from '@desk/shared'
-import { ArrowUpRight, Send } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { outcomeLabel } from '@/components/outcome'
@@ -8,6 +8,7 @@ import { StatusDot } from '@/components/ui/desk-kit'
 import { When } from '@/components/when'
 import type { DeskView } from '@/lib/desk.server'
 import './agent.css'
+import { BrandLogo } from '@/components/ui/brand-logo'
 
 const A = deskCopy.agent
 
@@ -95,7 +96,7 @@ export function AgentCard({ view }: { view: DeskView }) {
         <span>{live ? A.liveNote : A.practiceNote}</span>
         {view.isOwner && d.telegramLinked !== null ? (
           <span className="ag-tg" data-on={d.telegramLinked ? '' : undefined}>
-            <Send aria-hidden />
+            <BrandLogo brand="telegram" size={14} />
             {d.telegramLinked ? A.telegramOn : A.telegramOff}
           </span>
         ) : null}

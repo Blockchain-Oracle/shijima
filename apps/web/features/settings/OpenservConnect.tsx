@@ -77,16 +77,7 @@ export function OpenservConnect({ deskId }: { deskId: string }) {
 
   return (
     <div className="osc">
-      <header className="osc-head">
-        {/* Both marks, and the theme picks one: the site's theme is a toggle, not the system's setting. */}
-        <img
-          src="/brand/openserv-logo-white-for-dark-bg.svg"
-          alt="OpenServ"
-          className="osc-logo osc-logo--dark"
-        />
-        <img src="/brand/openserv-logo-black-for-light-bg.svg" alt="" className="osc-logo osc-logo--light" />
-        <p className="osc-tagline">{c.tagline}</p>
-      </header>
+      {/* The card around this carries OpenServ's mark, name and tagline, so they are not repeated here. */}
       <p className="osc-what">{c.what}</p>
 
       <ol className="osc-steps">

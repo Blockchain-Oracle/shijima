@@ -1094,20 +1094,6 @@ a.ov-stat:hover {
   gap: 0.9rem;
   margin-top: 0.4rem;
 }
-.osc-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.6rem 1rem;
-}
-.osc-logo {
-  height: 22px;
-  width: auto;
-}
-.osc-tagline {
-  font-size: 0.82rem;
-  color: var(--color-ink-secondary);
-}
 .osc-what {
   font-size: 0.82rem;
   line-height: 1.5;
@@ -1252,15 +1238,6 @@ a.ov-stat:hover {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-ink-muted);
-}
-.osc-logo--light {
-  display: none;
-}
-[data-theme="light"] .osc-logo--dark {
-  display: none;
-}
-[data-theme="light"] .osc-logo--light {
-  display: block;
 }
 
 /* ── /live ─────────────────────────────────────────────────────────────── */

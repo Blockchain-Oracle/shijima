@@ -1,7 +1,7 @@
 'use client'
 
 import { settingsCopy } from '@desk/shared'
-import { Check, QrCode, Send } from 'lucide-react'
+import { Check, QrCode } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useEffect, useState, useTransition } from 'react'
 import {
@@ -10,6 +10,7 @@ import {
   telegramStateAction,
   telegramUnlinkAction,
 } from '@/app/owner-actions'
+import { BrandLogo } from '@/components/ui/brand-logo'
 import { Button } from '@/components/ui/button'
 import { Qr as QrSvg } from '@/components/ui/qr'
 import { cn } from '@/lib/utils'
@@ -130,7 +131,7 @@ export function TelegramConnect({
             !link && 'pointer-events-none opacity-50',
           )}
         >
-          <Send className="size-4" aria-hidden />
+          <BrandLogo brand="telegram" size={18} className="rounded-full ring-1 ring-white/70" />
           {clicked ? t.openAgain : t.connect}
         </a>
         {link && !compact && (
