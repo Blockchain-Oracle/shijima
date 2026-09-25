@@ -462,3 +462,53 @@ export async function estimateFee(
     }
   }
 }
+
+/**
+ * Fee settings the page passes to the wallet, instead of the wallet's own guesses. A node refuses a transaction
+ * when the wallet holds less than gas limit x max fee, even though the real cost is lower, so a wallet left to add
+ * its own margins could not create an agent with the free gas (0.00008 ETH): it showed "sent" and the network
+ * never took it (25 Sep). A tenth on top of the chain's own gas estimate, a quarter on top of the current base fee,
+ * and no tip, which Robinhood Chain (Arbitrum) ignores. `ceilingWei` is what the wallet must hold.
+ */
+export async function feeSettings(
+  from: Address,
+  built: { to: Address; data: Hex },
+): Promise<
+  | {
+      ok: true
+      gas: bigint
+      maxFeePerGas: bigint
+      ceilingWei: bigint
+      costWei: bigint
+      usd: number
+      ethUsd: number
+    }
+  | { ok: false; why: string }
+> {
+  try {
+    const [estimate, block, ethUsd] = await Promise.all([
+      pub().estimateGas({ account: from, to: built.to, data: built.data }),
+      pub().getBlock({ blockTag: 'latest' }),
+      readFeed(pub(), ETH_USD_FEED),
+    ])
+    const base = block.baseFeePerGas ?? (await pub().getGasPrice())
+    const gas = (estimate * 11n) / 10n
+    const maxFeePerGas = (base * 5n) / 4n
+    const costWei = estimate * base
+    return {
+      ok: true,
+      gas,
+      maxFeePerGas,
+      ceilingWei: gas * maxFeePerGas,
+      costWei,
+      usd: (Number(costWei) / 1e18) * (Number(ethUsd.price) / 1e8),
+      ethUsd: Number(ethUsd.price) / 1e8,
+    }
+  } catch (e) {
+    const name = (e as { cause?: { data?: { errorName?: string } } }).cause?.data?.errorName
+    return {
+      ok: false,
+      why: `The chain would refuse this right now${name ? ` (${name})` : ''}. Nothing was sent.`,
+    }
+  }
+}

@@ -21,6 +21,7 @@ import { CHAIN_LOGOS, ChainLogo } from '@/components/ui/chain-logo'
 import type { FundChain } from './FundScreen'
 import { MoveFlow } from './MoveFlow'
 import { toRaw } from './SendScreen'
+import { useOriginBalance } from './useOriginBalance'
 
 const c = moneyCopy.bridge
 const t = moneyCopy.ticket
@@ -56,9 +57,9 @@ function HowItMoves() {
 
 /**
  * Bridge (W6), after the reference wallet's two-panel bridge and 21st's Multi-chain Swap (16251): the ticket on the
- * left, the route and Review on the right. Out sends USDG from your wallet to your same wallet on Base, Arbitrum,
- * Ethereum or BNB Chain as USDC or the chain's coin. In opens Fund, since money coming in belongs to an agent. Gas
- * swaps a dollar of USDG to ETH, or brings ETH from another chain when there is nothing here to pay for a swap.
+ * left, the route and Review on the right. In brings any token from Base, Arbitrum, Ethereum or BNB Chain into your
+ * own wallet here, as USDG or ETH, with no agent needed. Out sends USDG back out to your same wallet there. Gas
+ * swaps USDG you hold here to ETH, or brings ETH from another network in any token.
  */
 export function BridgeScreen({
   owner,
@@ -66,14 +67,15 @@ export function BridgeScreen({
   usdgRaw,
   eth,
   outChains,
-  gasChains,
+  inChains,
 }: {
   owner: string
   initialDir: Dir
   usdgRaw: string
   eth: string
   outChains: FundChain[]
-  gasChains: FundChain[]
+  /** Every token Relay takes on each other chain, for money in and for gas. */
+  inChains: FundChain[]
 }) {
   const [dir, setDir] = useState<Dir>(initialDir)
   const tabs = (
@@ -81,8 +83,8 @@ export function BridgeScreen({
       label={c.direction}
       fullWidth
       options={[
-        { value: 'out', label: c.dirs.out },
         { value: 'in', label: c.dirs.in },
+        { value: 'out', label: c.dirs.out },
         { value: 'gas', label: c.dirs.gas },
       ]}
       value={dir}
@@ -95,24 +97,9 @@ export function BridgeScreen({
       {dir === 'out' ? (
         <BridgeOut owner={owner} usdgRaw={usdgRaw} chains={outChains} tabs={tabs} />
       ) : dir === 'gas' ? (
-        <GetGas owner={owner} eth={eth} usdgRaw={usdgRaw} chains={gasChains} tabs={tabs} />
+        <GetGas owner={owner} eth={eth} usdgRaw={usdgRaw} chains={inChains} tabs={tabs} />
       ) : (
-        <div className="kit-money">
-          <FlowCard
-            icon={<ArrowLeftRight size={16} />}
-            title={c.inTitle}
-            badge={<BoundaryBadge kind="agent" />}
-          >
-            {tabs}
-            <p style={{ margin: 0, fontSize: 13.5, color: 'var(--tx2)', lineHeight: 1.55 }}>{c.inBody}</p>
-            <Link href={'/fund?from=chain' as Route} style={{ textDecoration: 'none' }}>
-              <Button fullWidth>{c.inCta} →</Button>
-            </Link>
-          </FlowCard>
-          <div className="kit-money-side">
-            <HowItMoves />
-          </div>
-        </div>
+        <FromChain owner={owner} chains={inChains} tabs={tabs} receive="usdg" choose />
       )}
     </Screen>
   )
@@ -232,8 +219,8 @@ function BridgeOut({
 }
 
 /**
- * Get gas: with a little ETH and a dollar of USDG, $1 of USDG swapped to ETH in your wallet; otherwise ETH comes
- * from another chain through Relay.
+ * Get gas: swap a dollar of USDG you already hold here into ETH, or bring ETH from another network in any token
+ * you hold there. The choice is yours; the swap is only offered when there is USDG and a little ETH to pay for it.
  */
 function GetGas({
   owner,
@@ -248,24 +235,30 @@ function GetGas({
   chains: FundChain[]
   tabs: ReactNode
 }) {
-  // The swap needs a dollar of USDG and a little ETH to pay for itself; without both, gas comes over Relay.
   const canSwap = Number(eth) > 0 && BigInt(usdgRaw) >= 1_000_000n
-  const [chainId, setChainId] = useState(chains[0]?.id ?? 8453)
-  const [amount, setAmount] = useState(canSwap ? '1' : '0.0005')
-  const [picking, setPicking] = useState(false)
-  const chain = chains.find((ch) => ch.id === chainId)
-  const native = chain?.tokens[0]
+  const [source, setSource] = useState<'here' | 'chain'>(canSwap ? 'here' : 'chain')
+  const [amount, setAmount] = useState('1')
+  const sourceTabs = (
+    <>
+      {tabs}
+      {canSwap && (
+        <Segmented
+          label={c.gasSource}
+          fullWidth
+          options={[
+            { value: 'here', label: c.gasSourceHere },
+            { value: 'chain', label: c.gasSourceChain },
+          ]}
+          value={source}
+          onChange={(v) => setSource(v as 'here' | 'chain')}
+        />
+      )}
+    </>
+  )
+  if (source === 'chain') return <FromChain owner={owner} chains={chains} tabs={sourceTabs} receive="eth" />
 
-  const input = useMemo(() => {
-    if (canSwap) {
-      const raw = toRaw(amount, USDG_DECIMALS)
-      return raw === null ? null : { kind: 'get_gas' as const, amountUsdg: raw.toString() }
-    }
-    const raw = native ? toRaw(amount, native.decimals) : null
-    if (raw === null || !native) return null
-    return { kind: 'get_gas' as const, origin: { chainId, token: native.address, amountRaw: raw.toString() } }
-  }, [canSwap, native, amount, chainId])
-
+  const raw = toRaw(amount, USDG_DECIMALS)
+  const input = raw === null ? null : { kind: 'get_gas' as const, amountUsdg: raw.toString() }
   return (
     <MoveFlow
       title={c.gasTitle}
@@ -274,54 +267,29 @@ function GetGas({
       input={input}
       reviewLabel={c.gasReview}
       doneTitle={c.gasDone}
-      route={{
-        from: canSwap
-          ? { chainId: ROBINHOOD, label: 'USDG' }
-          : { chainId, label: CHAIN_LOGOS[chainId]?.name ?? '' },
-        to: { chainId: ROBINHOOD, label: 'ETH' },
-      }}
+      route={{ from: { chainId: ROBINHOOD, label: 'USDG' }, to: { chainId: ROBINHOOD, label: 'ETH' } }}
       aside={
         <div className="kit-summary">
           <p style={{ margin: 0, fontSize: 12.5, color: 'var(--tx2)', lineHeight: 1.55 }}>
             {c.gasBody} {c.gasHave(Number(eth).toLocaleString('en-US', { maximumFractionDigits: 6 }))}
           </p>
-          <Link
-            href={'/wallet#gift' as Route}
-            style={{
-              display: 'inline-block',
-              marginTop: 10,
-              fontSize: 12.5,
-              color: 'var(--ac2)',
-              fontWeight: 600,
-            }}
-          >
-            {c.gift}
-          </Link>
         </div>
       }
       ticket={(q) => (
         <>
-          {tabs}
+          {sourceTabs}
           <TicketBox
             label={t.youPay}
-            foot={canSwap ? c.gasSwapNote : c.gasFromHint}
-            side={canSwap ? t.held(`${readable(usdgRaw, USDG_DECIMALS)} USDG`) : undefined}
+            foot={c.gasSwapNote}
+            side={t.held(`${readable(usdgRaw, USDG_DECIMALS)} USDG`)}
           >
             <TicketAmount value={amount} onChange={setAmount} label="Amount" />
-            {canSwap ? (
-              <AssetPill symbol="USDG" chainId={ROBINHOOD} />
-            ) : (
-              <AssetPill
-                symbol={native?.symbol ?? 'ETH'}
-                chainId={chainId}
-                onClick={() => setPicking(true)}
-              />
-            )}
+            <AssetPill symbol="USDG" chainId={ROBINHOOD} />
           </TicketBox>
           <TicketArrow />
           <TicketBox
             label={t.youGet}
-            foot={q.quote ? t.worth(dollars(Number(q.quote.usdgValue) / 1e6)) : ' '}
+            foot={q.quote ? t.worth(dollars(Number(q.quote.usdgValue) / 1e6)) : ' '}
           >
             <TicketQuoted
               text={q.quote ? readable(q.quote.receive.amountRaw, q.quote.receive.decimals) : null}
@@ -329,20 +297,164 @@ function GetGas({
             />
             <AssetPill symbol="ETH" chainId={ROBINHOOD} />
           </TicketBox>
+        </>
+      )}
+    />
+  )
+}
+
+/**
+ * Money from another network into the owner's own wallet on Robinhood Chain, through Relay: any token Relay takes
+ * on Base, Arbitrum, Ethereum or BNB Chain, with what the wallet holds of it there and a Max. It arrives as USDG
+ * (to spend, or to fund an agent later) or as ETH (for fees). No agent is needed.
+ */
+function FromChain({
+  owner,
+  chains,
+  tabs,
+  receive: fixed,
+  choose = false,
+}: {
+  owner: string
+  chains: FundChain[]
+  tabs: ReactNode
+  receive: 'usdg' | 'eth'
+  /** Let the owner pick what arrives; otherwise it is always `receive`. */
+  choose?: boolean
+}) {
+  const firstChain = chains[0]
+  // USDC first where the chain has it: it is what most people hold, and a dollar in is a dollar out.
+  const firstToken = firstChain?.tokens.find((tk) => tk.symbol === 'USDC') ?? firstChain?.tokens[0]
+  const [pick, setPick] = useState(firstChain && firstToken ? `${firstChain.id}:${firstToken.address}` : '')
+  const [receive, setReceive] = useState<'usdg' | 'eth'>(fixed)
+  const [amount, setAmount] = useState('')
+  const [picking, setPicking] = useState(false)
+  const [chainId, tokenAddress] = pick.split(':')
+  const chain = chains.find((ch) => ch.id === Number(chainId))
+  const token = chain?.tokens.find((tk) => tk.address === tokenAddress)
+  const held = useOriginBalance(chain?.id ?? 0, token?.address, owner)
+  const heldText = held !== null && token ? formatUnits(held, token.decimals) : null
+
+  const { input, invalid } = useMemo(() => {
+    const raw = token ? toRaw(amount, token.decimals) : null
+    if (raw === null || !chain || !token) return { input: null, invalid: null }
+    if (held !== null && raw > held)
+      return { input: null, invalid: moneyCopy.fund.moreThanHeld(token.symbol) }
+    return {
+      input: {
+        kind: 'get_gas' as const,
+        origin: { chainId: chain.id, token: token.address, amountRaw: raw.toString() },
+        receive,
+      },
+      invalid: null,
+    }
+  }, [amount, chain, token, held, receive])
+
+  const out = receive === 'usdg' ? 'USDG' : 'ETH'
+  return (
+    <MoveFlow
+      title={receive === 'usdg' ? c.inTitle : c.gasTitle}
+      icon={receive === 'usdg' ? <ArrowLeftRight size={16} /> : <Fuel size={16} />}
+      badge={<BoundaryBadge kind="wallet" />}
+      owner={owner}
+      input={input}
+      invalid={invalid}
+      reviewLabel={c.review}
+      doneTitle={receive === 'usdg' ? c.done : c.gasDone}
+      route={{
+        from: { chainId: chain?.id ?? 8453, label: chain?.name ?? '' },
+        to: { chainId: ROBINHOOD, label: 'Robinhood Chain' },
+      }}
+      aside={
+        <div className="kit-summary">
+          <p style={{ margin: 0, fontSize: 12.5, color: 'var(--tx2)', lineHeight: 1.55 }}>{c.inWallet}</p>
+          {receive === 'usdg' && (
+            <Link
+              href={'/fund?from=chain' as Route}
+              style={{
+                display: 'inline-block',
+                marginTop: 10,
+                fontSize: 12.5,
+                color: 'var(--ac2)',
+                fontWeight: 600,
+              }}
+            >
+              {c.fundInstead} →
+            </Link>
+          )}
+        </div>
+      }
+      ticket={(q) => (
+        <>
+          {tabs}
+          <TicketBox
+            label={t.youSend}
+            side={
+              heldText !== null && token ? (
+                <>
+                  {c.heldThere(
+                    `${readable(held?.toString() ?? '0', token.decimals)} ${token.symbol}`,
+                    chain?.name ?? '',
+                  )}
+                  {held !== null && held > 0n ? (
+                    <button type="button" onClick={() => setAmount(heldText)}>
+                      {t.max}
+                    </button>
+                  ) : null}
+                </>
+              ) : undefined
+            }
+            foot=" "
+          >
+            <TicketAmount
+              value={amount}
+              onChange={setAmount}
+              label="Amount"
+              invalid={Boolean(invalid && amount)}
+            />
+            {chain && token ? (
+              <AssetPill symbol={token.symbol} chainId={chain.id} onClick={() => setPicking(true)} />
+            ) : null}
+          </TicketBox>
+          <TicketArrow />
+          <TicketBox
+            label={t.youReceive}
+            foot={q.quote ? t.worth(dollars(Number(q.quote.usdgValue) / 1e6)) : ' '}
+          >
+            <TicketQuoted
+              text={q.quote ? readable(q.quote.receive.amountRaw, q.quote.receive.decimals) : null}
+              loading={q.loading}
+            />
+            <AssetPill symbol={out} chainId={ROBINHOOD} />
+          </TicketBox>
+          {choose && (
+            <Segmented
+              label={c.arrivesAs}
+              fullWidth
+              options={[
+                { value: 'usdg', label: c.asUsdg },
+                { value: 'eth', label: c.asEth },
+              ]}
+              value={receive}
+              onChange={(v) => setReceive(v as 'usdg' | 'eth')}
+            />
+          )}
           <AssetPicker
             open={picking}
             onClose={() => setPicking(false)}
             title={t.pickChainToken}
-            selected={String(chainId)}
-            options={chains.map((ch) => ({
-              key: String(ch.id),
-              symbol: ch.tokens[0]?.symbol ?? 'ETH',
-              name: ch.tokens[0]?.name ?? '',
-              chainId: ch.id,
-            }))}
+            selected={pick}
+            options={chains.flatMap((ch) =>
+              ch.tokens.map((tk) => ({
+                key: `${ch.id}:${tk.address}`,
+                symbol: tk.symbol,
+                name: tk.name,
+                chainId: ch.id,
+              })),
+            )}
             onPick={(key) => {
-              setChainId(Number(key))
-              setAmount(Number(key) === 56 ? '0.002' : '0.0005')
+              setPick(key)
+              setAmount('')
             }}
           />
         </>

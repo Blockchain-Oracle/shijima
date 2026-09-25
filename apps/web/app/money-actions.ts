@@ -49,6 +49,7 @@ function checked(input: MoveInput): MoveInput | null {
         kind: 'get_gas',
         ...(input.amountUsdg ? { amountUsdg: input.amountUsdg } : {}),
         ...(input.origin ? { origin: input.origin } : {}),
+        ...(input.receive === 'usdg' || input.receive === 'eth' ? { receive: input.receive } : {}),
       }
     default:
       return null

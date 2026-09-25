@@ -27,9 +27,10 @@ export type MoveInput =
   | { kind: 'bridge_out'; amountRaw: string; to: { chainId: number; token: Address } }
   /**
    * A dollar (or `amountUsdg` raw) of USDG swapped to ETH in the owner's wallet. With no ETH to pay for that swap,
-   * `origin` names where Relay brings gas from instead.
+   * `origin` names where Relay brings gas from instead. With `receive: 'usdg'` the same Relay route brings dollars
+   * to the owner's own wallet as USDG instead of ETH: money in with no agent needed.
    */
-  | { kind: 'get_gas'; amountUsdg?: string; origin?: MoveSource }
+  | { kind: 'get_gas'; amountUsdg?: string; origin?: MoveSource; receive?: 'eth' | 'usdg' }
 
 export interface MoveStep {
   chainId: number

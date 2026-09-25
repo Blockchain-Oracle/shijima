@@ -37,18 +37,13 @@ export default async function BridgePage({ searchParams }: { searchParams: Promi
   return (
     <BridgeScreen
       owner={address}
-      initialDir={dir === 'in' || dir === 'gas' ? dir : 'out'}
+      initialDir={dir === 'out' || dir === 'gas' ? dir : 'in'}
       usdgRaw={usdg?.balanceRaw ?? '0'}
       eth={formatUnits(ethRaw, 18)}
       outChains={others
         .map((ch) => ({ ...ch, tokens: ch.tokens.filter((t) => OUT_AS.test(t.symbol)) }))
         .filter((ch) => ch.tokens.length > 0)}
-      gasChains={others
-        .map((ch) => ({
-          ...ch,
-          tokens: ch.tokens.filter((t) => t.address === '0x0000000000000000000000000000000000000000'),
-        }))
-        .filter((ch) => ch.tokens.length > 0)}
+      inChains={others}
     />
   )
 }

@@ -598,6 +598,7 @@ async function planGetGas(owner: Address, input: Extract<MoveInput, { kind: 'get
     if (!input.origin) return { why: c.refusals.needOrigin, hint: { kind: 'need_origin' } }
     const origin = await relayToken(input.origin.chainId, input.origin.token)
     if (!origin || input.origin.chainId === CHAIN_ID) return { why: c.refusals.unknownChain }
+    const dollars = input.receive === 'usdg'
     let q: Awaited<ReturnType<typeof relayQuote>>
     try {
       q = await relayQuote({
@@ -606,14 +607,18 @@ async function planGetGas(owner: Address, input: Extract<MoveInput, { kind: 'get
         originChainId: input.origin.chainId,
         destinationChainId: CHAIN_ID,
         originCurrency: origin.address,
-        destinationCurrency: NATIVE,
+        destinationCurrency: dollars ? USDG : NATIVE,
         amountRaw: BigInt(input.origin.amountRaw),
       })
     } catch (e) {
       return { why: c.refusals.quote(e instanceof Error ? e.message : 'Relay did not answer') }
     }
     const fee = BigInt(Math.round(q.feeUsd * 1e6))
-    const worth = q.amountOutUsd !== null ? BigInt(Math.round(q.amountOutUsd * 1e6)) : 0n
+    const worth = dollars
+      ? q.amountOut
+      : q.amountOutUsd !== null
+        ? BigInt(Math.round(q.amountOutUsd * 1e6))
+        : 0n
     return {
       kind: 'get_gas',
       deskId: null,
@@ -621,17 +626,23 @@ async function planGetGas(owner: Address, input: Extract<MoveInput, { kind: 'get
       toChainId: CHAIN_ID,
       tokenIn: origin.address,
       amountIn: q.amountIn,
-      tokenOut: NATIVE,
+      tokenOut: dollars ? USDG : NATIVE,
       recipient: owner,
       steps: q.steps.map((s) => ({ ...s, label: c.steps.relay(s.label) })),
       lines: [
         c.lines.youSend(amountText(q.amountIn, origin.decimals, origin.symbol)),
-        c.lines.youGet(`${amountText(q.amountOut, 18, 'ETH')} on Robinhood Chain, about ${usd(worth)}`),
+        c.lines.youGet(
+          dollars
+            ? `${usd(q.amountOut)} of USDG in your wallet on Robinhood Chain`
+            : `${amountText(q.amountOut, 18, 'ETH')} on Robinhood Chain, about ${usd(worth)}`,
+        ),
         c.lines.cost(usd(fee)),
         c.lines.takes(q.timeEstimate ?? 30),
       ],
       send: { symbol: origin.symbol, amountRaw: q.amountIn.toString(), decimals: origin.decimals },
-      receive: { symbol: 'ETH', amountRaw: q.amountOut, decimals: 18, minimumRaw: q.minimumOut },
+      receive: dollars
+        ? { symbol: 'USDG', amountRaw: q.amountOut, decimals: USDG_DECIMALS, minimumRaw: q.minimumOut }
+        : { symbol: 'ETH', amountRaw: q.amountOut, decimals: 18, minimumRaw: q.minimumOut },
       usdgValue: worth,
       feeUsdg: fee,
       relayRequestId: q.requestId,

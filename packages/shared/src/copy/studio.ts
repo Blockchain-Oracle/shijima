@@ -63,6 +63,14 @@ export const studioCopy = {
     agree: 'I have read what I agree to',
     readTerms: 'Read it',
     edit: 'Edit',
+    broadcasting: 'Sent. Waiting for the network to pick it up…',
+    confirming: 'In the network. Confirming…',
+    txSent: 'Transaction',
+    notSeenYet:
+      'Your wallet says it sent this, but the network has not seen it yet. If it stays like this, open your wallet: cancel the pending transaction, then press Create again.',
+    unseen:
+      'The network never received this transaction, so nothing was spent and nothing was created. Open your wallet and cancel the pending one, then try again.',
+    walletSaid: (reason: string) => `Your wallet said: ${reason}`,
   },
   stepsAria: 'Creation progress',
   counter: (n: number, total: number) => `Step ${n} of ${total}`,

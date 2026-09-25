@@ -22,7 +22,7 @@ import { revalidatePath } from 'next/cache'
 import { type Address, encodeFunctionData, type Hex } from 'viem'
 import { mandateFromJson, mandateKey } from '@/features/strategies/draft'
 import { currentDeployment } from '@/lib/chain'
-import { estimateFee, pub } from '@/lib/chain-build.server'
+import { feeSettings, pub } from '@/lib/chain-build.server'
 import { db } from '@/lib/db'
 import { signedInAddress } from '@/lib/session'
 
@@ -49,8 +49,13 @@ export type PreparedDesk =
       to: Address
       data: Hex
       feeUsd: number | null
-      /** The same fee in wei, as a decimal string, so the page can tell whether the wallet can pay it. */
+      /** What the wallet must hold, in wei (gas limit x max fee), so the page can tell whether it can pay. */
       feeWei: string | null
+      /** The gas limit and max fee the page hands the wallet, as decimal strings; null lets the wallet choose. */
+      gas: string | null
+      maxFeePerGas: string | null
+      /** Dollars per ETH, to show the wallet's ETH in dollars. */
+      ethUsd: number | null
       /** True when the contract is already there: the owner signed before and the page was closed. */
       exists: boolean
     }
@@ -121,15 +126,7 @@ export async function prepareDeskAction(input: { name: string; mandate: unknown 
     })
     const code = await pub().getCode({ address: desk.address as Address })
     const exists = Boolean(code && code !== '0x')
-    const fee = exists
-      ? null
-      : await estimateFee(owner as Address, {
-          to: deployment.factory,
-          data,
-          sessionMay: false,
-          summary: '',
-          lines: [],
-        })
+    const fee = exists ? null : await feeSettings(owner as Address, { to: deployment.factory, data })
     return {
       ok: true,
       deskId: desk.id,
@@ -137,7 +134,10 @@ export async function prepareDeskAction(input: { name: string; mandate: unknown 
       to: deployment.factory,
       data,
       feeUsd: fee?.ok ? fee.usd : null,
-      feeWei: fee?.ok ? fee.wei.toString() : null,
+      feeWei: fee?.ok ? fee.ceilingWei.toString() : null,
+      gas: fee?.ok ? fee.gas.toString() : null,
+      maxFeePerGas: fee?.ok ? fee.maxFeePerGas.toString() : null,
+      ethUsd: fee?.ok ? fee.ethUsd : null,
       exists,
     }
   } catch (e) {

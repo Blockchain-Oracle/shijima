@@ -1,6 +1,6 @@
 'use client'
 
-import { USDG } from '@desk/chain'
+import { EXPLORER, USDG } from '@desk/chain'
 import { type Mandate, money, short, studioCopy } from '@desk/shared'
 import { ArrowRight, Loader2 } from 'lucide-react'
 import type { Route } from 'next'
@@ -33,7 +33,7 @@ export interface Created {
   fundedUsdg: string | null
 }
 
-type Phase = 'idle' | 'wallet' | 'network' | 'recording' | 'funding' | 'arriving'
+type Phase = 'idle' | 'wallet' | 'network' | 'included' | 'recording' | 'funding' | 'arriving'
 
 /**
  * Step 4 (design brief 8.4): read the disclosure once, then one wallet confirmation creates the desk. The desk's
@@ -66,6 +66,8 @@ export function CreateStep({
   const [eth, setEth] = useState<bigint | null>(null)
   const [phase, setPhase] = useState<Phase>('idle')
   const [problem, setProblem] = useState<string | null>(null)
+  const [note, setNote] = useState<string | null>(null)
+  const [sent, setSent] = useState<Hex | null>(null)
   const rightWallet = Boolean(signedIn && address?.toLowerCase() === signedIn.toLowerCase())
 
   const units = amount === '0' ? null : dollarsToUnits(amount)
@@ -160,30 +162,74 @@ export function CreateStep({
   if (prepared && !prepared.ok) return <p className="agent-form-error">{prepared.why}</p>
 
   const create = async () => {
-    if (!prepared?.ok) return
+    if (!prepared?.ok || !address) return
     setProblem(null)
+    setNote(null)
     try {
       if (chainId !== robinhood.id) await switchChainAsync({ chainId: robinhood.id })
       setPhase('wallet')
-      const hash = await sendTransactionAsync({ to: prepared.to, data: prepared.data, chainId: robinhood.id })
+      // The nonce comes from the network, not the wallet's memory: a wallet that remembers a send the network never
+      // took would otherwise queue this one behind it forever.
+      const nonce = await browserClient.getTransactionCount({ address, blockTag: 'pending' })
+      const hash = await sendTransactionAsync({
+        to: prepared.to,
+        data: prepared.data,
+        chainId: robinhood.id,
+        nonce,
+        ...(prepared.gas && prepared.maxFeePerGas
+          ? {
+              gas: BigInt(prepared.gas),
+              maxFeePerGas: BigInt(prepared.maxFeePerGas),
+              maxPriorityFeePerGas: 0n,
+            }
+          : {}),
+      })
+      setSent(hash)
       setPhase('network')
-      const receipt = await browserClient.waitForTransactionReceipt({ hash, timeout: 180_000 })
-      if (receipt.status !== 'success') throw new Error(C.failed)
+      await watch(hash)
       await finish(prepared.deskId, prepared.address, hash)
     } catch (e) {
       const message = e instanceof Error ? e.message : ''
-      setProblem(/reject|denied|cancel/i.test(message) ? C.cancelled : C.failed)
+      setProblem(
+        /reject|denied|cancel/i.test(message)
+          ? C.cancelled
+          : message === 'unseen'
+            ? F.unseen
+            : message === 'reverted'
+              ? C.failed
+              : `${C.failed}${message ? ` ${F.walletSaid(message.split('\n')[0] ?? '')}` : ''}`,
+      )
       setPhase('idle')
     }
   }
 
-  const need = prepared?.ok && prepared.feeWei ? (BigInt(prepared.feeWei) * 6n) / 5n : FALLBACK_NEED
+  /**
+   * After the wallet says "sent": first, does the network know this transaction at all? A wallet can report a hash
+   * the network refused. Then, is it in a block? Each stage is shown, with the hash to check on Blockscout.
+   */
+  const watch = async (hash: Hex) => {
+    const started = Date.now()
+    let seen = false
+    while (Date.now() - started < 180_000) {
+      const receipt = await browserClient.getTransactionReceipt({ hash }).catch(() => null)
+      if (receipt) {
+        if (receipt.status !== 'success') throw new Error('reverted')
+        return
+      }
+      if (!seen) {
+        seen = Boolean(await browserClient.getTransaction({ hash }).catch(() => null))
+        if (seen) setPhase('included')
+        else if (Date.now() - started > 25_000) setNote(F.notSeenYet)
+      }
+      await new Promise((r) => setTimeout(r, 2_500))
+    }
+    throw new Error(seen ? 'slow' : 'unseen')
+  }
+
+  const need = prepared?.ok && prepared.feeWei ? BigInt(prepared.feeWei) : FALLBACK_NEED
   const noEth = eth !== null && eth < need
   // Dollars per ETH, from the server's own fee estimate, so the wallet's ETH can be shown in dollars too.
-  const ethUsd =
-    prepared?.ok && prepared.feeUsd !== null && prepared.feeWei && BigInt(prepared.feeWei) > 0n
-      ? prepared.feeUsd / (Number(prepared.feeWei) / 1e18)
-      : null
+  const ethUsd = prepared?.ok ? prepared.ethUsd : null
   const inUsd = (wei: bigint) =>
     ethUsd === null
       ? `${(Number(wei) / 1e18).toFixed(5)} ETH`
@@ -270,20 +316,31 @@ export function CreateStep({
           {phase === 'wallet'
             ? C.wallet
             : phase === 'network'
-              ? C.network
-              : phase === 'recording'
-                ? C.recording
-                : phase === 'funding'
-                  ? C.funding(money(amount))
-                  : phase === 'arriving'
-                    ? C.fundingNetwork
-                    : chainId !== robinhood.id
-                      ? C.wrongNetwork
-                      : units !== null
-                        ? C.buttonFunded(money(amount))
-                        : C.button}
+              ? F.broadcasting
+              : phase === 'included'
+                ? F.confirming
+                : phase === 'recording'
+                  ? C.recording
+                  : phase === 'funding'
+                    ? C.funding(money(amount))
+                    : phase === 'arriving'
+                      ? C.fundingNetwork
+                      : chainId !== robinhood.id
+                        ? C.wrongNetwork
+                        : units !== null
+                          ? C.buttonFunded(money(amount))
+                          : C.button}
         </button>
       )}
+      {sent && phase !== 'idle' && (
+        <p className="na-note">
+          {F.txSent}{' '}
+          <a href={`${EXPLORER}/tx/${sent}`} target="_blank" rel="noreferrer">
+            {short(sent, 8, 6)} ↗
+          </a>
+        </p>
+      )}
+      {note && phase !== 'idle' && <p className="na-warn">{note}</p>}
       {problem && (
         <p className="agent-form-error" role="alert">
           {problem}
