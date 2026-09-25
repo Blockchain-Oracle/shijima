@@ -122,8 +122,8 @@ export const howCopy = {
   modes: {
     shadow: {
       title: 'Practice',
-      body: (checks: number) =>
-        `It watches and decides for real, and records what it would have done, but spends nothing. Every agent starts here. It can go live after ${checks} hours of practice, once you have read its report.`,
+      body: (_checks: number) =>
+        'It watches and decides for real, and records what it would have done, but spends nothing. Choose it when you create an agent, or switch to it and back at any time.',
     },
     askFirst: {
       title: 'Ask first',
@@ -304,9 +304,9 @@ export const howCopy = {
       a: 'Status shows the last check of every shared agent, the worker’s heartbeat, the trigger from OpenServ, and every data source, live. In Telegram, one pinned message is updated at every check.',
     },
     practice: {
-      q: 'Why does it start in practice?',
-      a: (checks: number) =>
-        `So you can see how it decides before it spends anything. After ${checks} hours of practice, and once you have read its report, you can let it ask first or act on its own.`,
+      q: 'What is practice?',
+      a: (_checks: number) =>
+        'A mode where it decides for real and spends nothing, so you can watch how it thinks first. New agents start live unless you pick practice, and you can switch either way at any time.',
     },
     vault: {
       q: 'Does idle cash earn anything?',

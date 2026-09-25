@@ -31,6 +31,8 @@ export interface Created {
   txHash: Hex | null
   /** The USDG put in straight after creation, in dollars, or null when none was sent. */
   fundedUsdg: string | null
+  /** How it started: live on its own, or practice. */
+  live: boolean
 }
 
 type Phase = 'idle' | 'wallet' | 'network' | 'included' | 'recording' | 'funding' | 'arriving'
@@ -67,6 +69,10 @@ export function CreateStep({
   const [phase, setPhase] = useState<Phase>('idle')
   const [problem, setProblem] = useState<string | null>(null)
   const [note, setNote] = useState<string | null>(null)
+  const [startMode, setStartMode] = useState<'on_its_own' | 'shadow'>('on_its_own')
+  // Read when the agent is recorded, so flipping it never re-prepares the transaction.
+  const startModeRef = useRef(startMode)
+  startModeRef.current = startMode
   const [sent, setSent] = useState<Hex | null>(null)
   const rightWallet = Boolean(signedIn && address?.toLowerCase() === signedIn.toLowerCase())
 
@@ -103,11 +109,24 @@ export function CreateStep({
   const finish = useCallback(
     async (deskId: string, desk: Address, txHash: Hex | null) => {
       setPhase('recording')
-      const done = await finishDeskAction({ deskId, txHash, mandate: mandateJson(mandate), readRequestId })
+      const done = await finishDeskAction({
+        deskId,
+        txHash,
+        mandate: mandateJson(mandate),
+        readRequestId,
+        mode: startModeRef.current,
+      })
       if (done.ok) {
         created.current = true
         const fundedUsdg = await fund(desk)
-        onCreated({ deskId, slug: done.slug, address: desk, txHash, fundedUsdg })
+        onCreated({
+          deskId,
+          slug: done.slug,
+          address: desk,
+          txHash,
+          fundedUsdg,
+          live: startModeRef.current !== 'shadow',
+        })
       } else {
         setProblem(done.why)
         setPhase('idle')
@@ -283,6 +302,27 @@ export function CreateStep({
           </div>
         </div>
       )}
+
+      <div className="na-startmode">
+        <span className="na-label">{F.starts}</span>
+        <div className="na-seg" role="radiogroup" aria-label={F.starts}>
+          {(['on_its_own', 'shadow'] as const).map((m) => (
+            // biome-ignore lint/a11y/useSemanticElements: a two-option switch drawn as one pill.
+            <button
+              key={m}
+              type="button"
+              role="radio"
+              aria-checked={startMode === m}
+              className={startMode === m ? 'is-on' : undefined}
+              onClick={() => setStartMode(m)}
+              disabled={busy}
+            >
+              <b>{m === 'on_its_own' ? F.startLive : F.startPractice}</b>
+              <small>{m === 'on_its_own' ? F.startLiveNote : F.startPracticeNote}</small>
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="na-signs">
         <span className="na-label">{F.signs}</span>

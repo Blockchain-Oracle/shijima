@@ -150,26 +150,18 @@ export function ControlFields({
           )}
         </>
       )
-    case 'mode': {
-      const live = view.shadowChecks >= view.goLiveChecks && view.reportOpened
+    case 'mode':
       return (
         <>
           <Choice
             options={(['shadow', 'ask_first', 'on_its_own'] as const).map((m) => [m, deskCopy.modes[m]])}
             value={state.mode}
             onChange={(mode) => set({ mode })}
-            disabled={(m) => m !== 'shadow' && view.mode === 'shadow' && !live}
           />
           <p className="type-caption text-ink-secondary">{deskCopy.modeNote[state.mode]}</p>
-          {view.mode === 'shadow' && !live && (
-            <p className="type-caption text-ink-muted">
-              {c.mode.locked(view.shadowChecks, view.goLiveChecks, view.reportOpened)}
-            </p>
-          )}
           {state.mode === 'on_its_own' && <p className="type-caption text-warning">{c.mode.onItsOwn}</p>}
         </>
       )
-    }
     case 'limits':
       return (
         <>

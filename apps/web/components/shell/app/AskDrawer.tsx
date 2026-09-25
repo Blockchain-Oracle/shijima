@@ -2,7 +2,7 @@
 
 import { appCopy } from '@desk/shared'
 import { X } from 'lucide-react'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -22,6 +22,10 @@ export function AskDrawer({ agents }: { agents: SidebarAgent[] }) {
   const pathname = usePathname()
   const reduce = useReducedMotion()
   const [open, setOpen] = useState(false)
+  const [everOpened, setEverOpened] = useState(false)
+  useEffect(() => {
+    if (open) setEverOpened(true)
+  }, [open])
   const [mounted, setMounted] = useState(false)
   const [chat, setChat] = useState<Chat | null>(null)
   const c = appCopy.ask
@@ -60,51 +64,59 @@ export function AskDrawer({ agents }: { agents: SidebarAgent[] }) {
   if (!mounted) return null
   return createPortal(
     <div className="ask-float">
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            key="panel"
-            role="dialog"
-            aria-label={target ? c.title(target.name) : c.button}
-            className="ask-panel"
-            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.97 }}
-            animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
-            exit={reduce ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.97 }}
-            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <header className="ask-panel-head">
-              <span className="ask-panel-mark logo-mark" aria-hidden="true">
-                <ShijimaMark />
-              </span>
-              <div className="ask-panel-titles">
-                <strong>{c.button}</strong>
-                <span>{target ? target.name : c.noAgent}</span>
-              </div>
-              <button
-                type="button"
-                className="ask-panel-close"
-                aria-label={c.close}
-                onClick={() => setOpen(false)}
-              >
-                <X className="size-4" aria-hidden="true" />
-              </button>
-            </header>
-            <div className="ask-panel-body">
-              {!target ? (
-                <p className="ask-panel-empty">{c.noAgent}</p>
-              ) : chat ? (
-                <DeskChat key={chat.deskId} deskId={chat.deskId} slug={chat.slug} initial={chat.turns} />
-              ) : (
-                <div className="ask-panel-loading" aria-hidden="true">
-                  <span />
-                  <span />
-                  <span />
-                </div>
-              )}
+      {/* Mounted from the first opening and kept: closing only hides it, so the conversation is still there. */}
+      {everOpened && (
+        <motion.div
+          key="panel"
+          role="dialog"
+          aria-label={target ? c.title(target.name) : c.button}
+          className="ask-panel"
+          aria-hidden={!open}
+          inert={!open}
+          initial={reduce ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.97 }}
+          animate={
+            open
+              ? { opacity: 1, y: 0, scale: 1, visibility: 'visible' as const }
+              : {
+                  opacity: 0,
+                  ...(reduce ? {} : { y: 12, scale: 0.97 }),
+                  transitionEnd: { visibility: 'hidden' as const },
+                }
+          }
+          transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <header className="ask-panel-head">
+            <span className="ask-panel-mark logo-mark" aria-hidden="true">
+              <ShijimaMark />
+            </span>
+            <div className="ask-panel-titles">
+              <strong>{c.button}</strong>
+              <span>{target ? target.name : c.noAgent}</span>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <button
+              type="button"
+              className="ask-panel-close"
+              aria-label={c.close}
+              onClick={() => setOpen(false)}
+            >
+              <X className="size-4" aria-hidden="true" />
+            </button>
+          </header>
+          <div className="ask-panel-body">
+            {!target ? (
+              <p className="ask-panel-empty">{c.noAgent}</p>
+            ) : chat ? (
+              <DeskChat key={chat.deskId} deskId={chat.deskId} slug={chat.slug} initial={chat.turns} />
+            ) : (
+              <div className="ask-panel-loading" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
 
       <button
         type="button"

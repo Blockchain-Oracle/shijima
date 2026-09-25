@@ -1,7 +1,8 @@
 'use client'
 
 import { X } from 'lucide-react'
-import { type ReactNode, useEffect, useId } from 'react'
+import { type ReactNode, useEffect, useId, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 /**
  * Agari's one overlay grammar (`styles/agari/modal.css`): a centred panel over a blurred scrim, never a bottom
@@ -26,6 +27,9 @@ export function Modal({
   children: ReactNode
 }) {
   const titleId = useId()
+  // Drawn at the page root: inside the app frame a fixed panel is clipped by the frame, not the screen.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
   useEffect(() => {
     if (!open) return
     const onKey = (event: KeyboardEvent) => {
@@ -40,8 +44,8 @@ export function Modal({
     }
   }, [open, onClose])
 
-  if (!open) return null
-  return (
+  if (!open || !mounted) return null
+  return createPortal(
     <div className="modal-root">
       <button type="button" className="modal-scrim" aria-label={closeLabel} tabIndex={-1} onClick={onClose} />
       <div className="modal" role="dialog" aria-modal="true" aria-labelledby={titleId}>
@@ -66,6 +70,7 @@ export function Modal({
         </div>
         <div className="modal-body">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

@@ -14,6 +14,7 @@ import {
   ownsDesk,
   readBackForOwner,
   registerDesk,
+  setDeskMode,
   skipTelegram,
   startDesk,
 } from '@desk/db'
@@ -153,6 +154,8 @@ export async function finishDeskAction(input: {
   txHash: string | null
   mandate: unknown
   readRequestId: string | null
+  /** How it starts: live on its own (the default since DECISIONS R8), asking first, or in practice. */
+  mode?: 'shadow' | 'ask_first' | 'on_its_own'
 }): Promise<FinishedDesk> {
   try {
     const owner = await signedInAddress()
@@ -217,6 +220,8 @@ export async function finishDeskAction(input: {
     await markDeskDeployed(db(), desk.id, deployTx)
     await applyMandate(db(), desk.id, draft.mandate, { actor: 'owner', via: 'web' }, readBack)
     await startDesk(db(), desk.id)
+    const mode = input.mode ?? 'on_its_own'
+    if (mode !== 'shadow') await setDeskMode(db(), desk.id, mode, { actor: 'owner', via: 'web' })
     // The owner's Telegram hears about the new agent from its first minute (DECISIONS F6). Never fails a publish:
     // Telegram is not money, and the owner can reconnect from Settings.
     await attachOwnerTelegram(db(), desk.id, desk.ownerId).catch((e) =>

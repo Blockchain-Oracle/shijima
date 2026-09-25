@@ -12,7 +12,6 @@
  * A proposal that fails a check is never shown as a card. The owner gets the reason in words instead.
  */
 import { APPROVED_TOKENS, type ApprovedToken } from '@desk/chain'
-import { GO_LIVE_CHECKS } from '@desk/db'
 import {
   alertsCopy,
   checkMandate,
@@ -325,15 +324,7 @@ export function checkProposal(
       return simple(p.kind, 'signin', 'Resume the agent', 'It carries on from its next check.')
     case 'set_mode': {
       if (!p.mode || p.mode === facts.mode) return { ok: false, why: 'The agent is already in that mode.' }
-      if (facts.mode === 'shadow' && p.mode !== 'shadow') {
-        if (facts.shadowChecks < GO_LIVE_CHECKS)
-          return {
-            ok: false,
-            why: `Not yet. Going live needs ${GO_LIVE_CHECKS} practice checks, and this agent has done ${facts.shadowChecks}.`,
-          }
-        if (!facts.reportOpened)
-          return { ok: false, why: 'Not yet. Going live needs you to read its practice report first.' }
-      }
+      // Any mode at any time (DECISIONS R8): the account's on-chain limits hold whatever the mode.
       const words = { shadow: 'Practice', ask_first: 'Ask me first', on_its_own: 'On its own' }
       return {
         ok: true,

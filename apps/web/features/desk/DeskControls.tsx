@@ -2,9 +2,25 @@
 
 import type { ButtonKind } from '@desk/core'
 import { controlsCopy as c, deskCopy } from '@desk/shared'
+import {
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  FlaskConical,
+  Gauge,
+  Hand,
+  HandCoins,
+  Pause,
+  Play,
+  RefreshCw,
+  ShieldCheck,
+  SlidersHorizontal,
+  UserCheck,
+  UserX,
+  Zap,
+} from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
-import { useState, useTransition } from 'react'
+import { type ReactNode, useState, useTransition } from 'react'
 import { proposeAction } from '@/app/owner-actions'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
@@ -158,10 +174,13 @@ export function ControlDialog({
   view,
   form,
   onClose,
+  initialMode,
 }: {
   view: ControlsView
   form: ControlForm | null
   onClose: () => void
+  /** The mode picked on the mode switch, so its dialog opens on that choice. */
+  initialMode?: ControlsView['mode'] | undefined
 }) {
   const m = view.mandate
   const pct = (bps: number) => String(bps / 100)
@@ -169,7 +188,7 @@ export function ControlDialog({
     amount: '',
     everything: false,
     asStocks: false,
-    mode: view.mode,
+    mode: initialMode ?? view.mode,
     perAction: '',
     daily: '',
     part: 'strategy',
@@ -222,17 +241,46 @@ export function ControlDialog({
         <>
           <ControlFields form={form} view={view} state={state} onChange={setState} />
           {why && <p className="type-caption text-loss">{why}</p>}
-          <Button onClick={review} disabled={pending || (form === 'mode' && state.mode === view.mode)}>
+          <button
+            type="button"
+            className="na-cta"
+            onClick={review}
+            disabled={pending || (form === 'mode' && state.mode === view.mode)}
+          >
             {pending ? c.reviewing : c.review}
-          </Button>
+          </button>
         </>
       )}
     </Modal>
   )
 }
 
-/** The buttons beside the chat. Each one makes the same card the chat would, and nothing happens until it is confirmed. */
-export function DeskControls({ view }: { view: ControlsView }) {
+const ICONS: Partial<Record<ControlForm, ReactNode>> = {
+  sellAll: <HandCoins aria-hidden="true" />,
+  pause: <Pause aria-hidden="true" />,
+  resume: <Play aria-hidden="true" />,
+  mode: <Gauge aria-hidden="true" />,
+  limits: <ShieldCheck aria-hidden="true" />,
+  checkNow: <RefreshCw aria-hidden="true" />,
+  editMandate: <SlidersHorizontal aria-hidden="true" />,
+  remove: <UserX aria-hidden="true" />,
+  restart: <UserCheck aria-hidden="true" />,
+}
+
+/**
+ * Every control, as icon tiles. Each one makes the same card the chat would, and nothing happens until it is
+ * confirmed. `bare` drops the panel's own heading where a tab already names it; `withoutMode` leaves the mode to
+ * the mode switch above.
+ */
+export function DeskControls({
+  view,
+  bare = false,
+  withoutMode = false,
+}: {
+  view: ControlsView
+  bare?: boolean
+  withoutMode?: boolean
+}) {
   const [open, setOpen] = useState<ControlForm | null>(null)
   if (view.lifecycle === 'closed') {
     return (
@@ -245,43 +293,94 @@ export function DeskControls({ view }: { view: ControlsView }) {
   const paused = view.state === 'paused_by_owner'
   // Money in and out open their own screens, where any token can go in and every way out is offered.
   const buttons: [ControlForm, string][] = [
-    ['sellAll', c.actions.sellAll],
     paused ? ['resume', c.actions.resume] : ['pause', c.actions.pause],
-    ['mode', c.actions.mode],
-    ['limits', c.actions.limits],
     ['checkNow', c.actions.checkNow],
+    ...(withoutMode ? [] : [['mode', c.actions.mode] as [ControlForm, string]]),
+    ['limits', c.actions.limits],
     ...(view.mandate ? [['editMandate', c.actions.editMandate] as [ControlForm, string]] : []),
+    ['sellAll', c.actions.sellAll],
     view.assistantRemoved ? ['restart', c.actions.restart] : ['remove', c.actions.removeAssistant],
   ]
+  const tiles = (
+    <div className="ctl-grid">
+      <Link href={`/fund?agent=${view.slug}` as Route} className="ctl-tile ctl-tile--primary">
+        <ArrowDownToLine aria-hidden="true" />
+        {c.actions.addMoney}
+      </Link>
+      <Link href={`/withdraw?agent=${view.slug}` as Route} className="ctl-tile">
+        <ArrowUpFromLine aria-hidden="true" />
+        {c.actions.withdraw}
+      </Link>
+      {buttons.map(([form, label]) => (
+        <button
+          key={form}
+          type="button"
+          className="ctl-tile"
+          data-tone={form === 'remove' || form === 'sellAll' ? 'danger' : undefined}
+          onClick={() => setOpen(form)}
+          data-cursor="hover"
+        >
+          {ICONS[form]}
+          {label}
+        </button>
+      ))}
+      {/* Keyed by the form, so each opening starts with a clean form and no card left from last time. */}
+      <ControlDialog key={open ?? 'none'} view={view} form={open} onClose={() => setOpen(null)} />
+    </div>
+  )
+  if (bare) return tiles
   return (
     <section className="desk-panel">
       <header className="desk-panel-head">
         <h2 className="type-label-micro text-ink-muted">{c.title}</h2>
       </header>
       <p className="type-caption text-ink-muted">{c.intro}</p>
-      <div className="desk-controls">
-        <Link href={`/fund?agent=${view.slug}` as Route} className="desk-control">
-          {c.actions.addMoney}
-        </Link>
-        <Link href={`/withdraw?agent=${view.slug}` as Route} className="desk-control">
-          {c.actions.withdraw}
-        </Link>
-        {buttons.map(([form, label]) => (
-          <button
-            key={form}
-            type="button"
-            className="desk-control"
-            data-tone={form === 'remove' ? 'danger' : undefined}
-            onClick={() => setOpen(form)}
-            data-cursor="hover"
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-      {/* Keyed by the form, so each opening starts with a clean form and no card left from last time. */}
-      <ControlDialog key={open ?? 'none'} view={view} form={open} onClose={() => setOpen(null)} />
+      {tiles}
     </section>
+  )
+}
+
+/**
+ * The mode, as three cards with the current one marked: practice, ask me first, on its own. Picking another opens
+ * the same confirm card as the chat's. Any mode at any time (DECISIONS R8).
+ */
+export function ModeSwitch({ view }: { view: ControlsView }) {
+  const [picked, setPicked] = useState<ControlsView['mode'] | null>(null)
+  if (view.lifecycle === 'closed') return null
+  const modes: [ControlsView['mode'], ReactNode][] = [
+    ['shadow', <FlaskConical key="s" aria-hidden="true" />],
+    ['ask_first', <Hand key="a" aria-hidden="true" />],
+    ['on_its_own', <Zap key="o" aria-hidden="true" />],
+  ]
+  return (
+    <div className="mode-switch" role="radiogroup" aria-label={c.actions.mode}>
+      {modes.map(([m, icon]) => {
+        const on = view.mode === m
+        return (
+          // biome-ignore lint/a11y/useSemanticElements: a whole card is the choice; role and state make it a radio.
+          <button
+            key={m}
+            type="button"
+            role="radio"
+            aria-checked={on}
+            className={on ? 'mode-card is-on' : 'mode-card'}
+            onClick={() => !on && setPicked(m)}
+          >
+            <span className="mode-card-icon">{icon}</span>
+            <b>{deskCopy.modes[m]}</b>
+            <small>{deskCopy.modeNote[m]}</small>
+            {on && <span className="mode-card-now">{c.current}</span>}
+          </button>
+        )
+      })}
+      <ControlDialog
+        key={picked ?? 'none'}
+        view={view}
+        form={picked ? 'mode' : null}
+        initialMode={picked ?? undefined}
+        onClose={() => setPicked(null)}
+      />
+    </div>
   )
 }
 

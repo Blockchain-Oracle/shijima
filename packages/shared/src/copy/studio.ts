@@ -63,6 +63,11 @@ export const studioCopy = {
     agree: 'I have read what I agree to',
     readTerms: 'Read it',
     edit: 'Edit',
+    starts: 'It starts',
+    startLive: 'Live',
+    startLiveNote: 'Trades on its own, inside your limits',
+    startPractice: 'Practice',
+    startPracticeNote: 'Decides for real, spends nothing',
     broadcasting: 'Sent. Waiting for the network to pick it up…',
     confirming: 'In the network. Confirming…',
     txSent: 'Transaction',
@@ -180,7 +185,7 @@ export const studioCopy = {
     title: 'Create your agent',
     body: 'This creates an account on Robinhood Chain that belongs to you. Only you can take money out. The assistant may trade inside it, within the limits above, and you can remove it at any time.',
     starts:
-      'It starts in practice: it decides for real and spends nothing. It can go live after a day of practice, once you have read its report.',
+      'It starts live unless you pick practice, and you can switch either way at any time from its settings.',
     address: 'Your agent’s address',
     addressNote: 'Known before it exists, so money can be sent to it first.',
     fee: 'Network fee',
@@ -216,6 +221,15 @@ export const studioCopy = {
   done: {
     kicker: 'You are all set',
     title: (name: string) => `${name} is on duty.`,
+    titleLive: (name: string) => `${name} is live`,
+    titlePractice: (name: string) => `${name} is practising`,
+    bodyLive:
+      'It trades on its own from now on, only inside your limits. Only your wallet can take money out.',
+    bodyPractice:
+      'It decides for real and spends nothing. Switch it to live on its page whenever you are ready.',
+    holds: 'It holds',
+    account: 'Its account',
+    copy: 'Copy the address',
     body: 'Shijima, your AI agent, starts in practice: it decides for real and spends nothing until you let it go live. The account belongs to your wallet, and only you can take money out.',
     funded: (amount: string) => `${amount} of USDG is in your account.`,
     tx: 'See the transaction ↗',
@@ -233,7 +247,7 @@ export const studioCopy = {
       skipped:
         'Skipped. Without Telegram, requests that need your answer only reach you here on the website.',
     },
-    open: 'Meet your agent →',
+    open: 'Open your agent →',
     another: 'Start another agent',
   },
 

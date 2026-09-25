@@ -790,10 +790,11 @@ export const sessionCopy = {
  * the confirmation are the same whichever way the owner asks.
  */
 export const controlsCopy = {
+  current: 'Now',
   title: 'Controls',
   intro: 'Each one shows you a card first. Nothing happens until you confirm it.',
   close: 'Close',
-  review: 'Show me the card',
+  review: 'Review',
   reviewing: 'Checking…',
   closed: 'This agent is closed. Its record stays readable.',
   actions: {
@@ -961,6 +962,18 @@ export const controlsCopy = {
 
 /** Settings: Telegram, the share link, the disclosure, and how it looks. */
 export const settingsCopy = {
+  titleShort: 'Agent settings',
+  tabs: {
+    trading: 'Trading',
+    plan: 'Plan',
+    connections: 'Connections',
+    sharing: 'Sharing',
+    agreement: 'Agreement',
+  },
+  modeTitle: 'How it trades',
+  controlsTitle: 'Controls',
+  browserKey: 'This browser’s key (advanced)',
+  closed: 'This agent is closed.',
   title: 'Settings',
   back: 'Back to your agent',
   controls: {
@@ -988,6 +1001,14 @@ export const settingsCopy = {
   connections: {
     title: 'Connections',
     body: 'What this agent is linked to. Telegram is yours to connect or disconnect; the other two are fixed.',
+    connect: 'Connect',
+    manage: 'Manage',
+    details: 'Details',
+    on: 'Connected',
+    off: 'Not connected',
+    fixed: 'Fixed',
+    linkedCount: (n: number) => (n === 1 ? '1 workspace' : `${n} workspaces`),
+    close: 'Close',
     wallet: 'Wallet',
     walletBody: 'The only address that can withdraw, change limits or close this agent.',
     owner: 'Your wallet',

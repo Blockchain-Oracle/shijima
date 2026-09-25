@@ -239,7 +239,10 @@ export async function startDesk(db: DbOrTx, deskId: string): Promise<void> {
 /** Who changed something, and from where. `chat` is the chat on the website or in Telegram. */
 export type By = { actor: 'owner' | 'desk' | 'system'; via: 'web' | 'telegram' | 'chain' | 'worker' | 'chat' }
 
-/** Going live is earned (design brief section 7): this many checks in practice, and the report opened. */
+/**
+ * Practice checks shown as a track record on a practice agent. No longer a gate: since 25 Sep the owner may go live
+ * at any time (DECISIONS R8), because the limits that matter are held by the account on chain in every mode.
+ */
 export const GO_LIVE_CHECKS = 24
 
 export type ModeChange =
@@ -249,8 +252,7 @@ export type ModeChange =
 
 /**
  * A mode change cancels pending approvals and standing deferrals: both were promises made under the old mode.
- * Leaving practice for a live mode is refused until the desk has done GO_LIVE_CHECKS practice checks AND the
- * owner has opened its report. Moving between the live modes, or back to practice, is always allowed.
+ * Any mode may be chosen at any time (DECISIONS R8); the on-chain caps hold whatever the mode.
  */
 export async function setDeskMode(
   db: Db,
@@ -266,11 +268,6 @@ export async function setDeskMode(
       .where(eq(desks.id, deskId))
       .for('update')
     if (!before || before.mode === mode) return { ok: true, changed: false }
-    if (before.mode === 'shadow' && mode !== 'shadow') {
-      if (before.checks < GO_LIVE_CHECKS)
-        return { ok: false, reason: 'practice_checks', checksDone: before.checks }
-      if (!before.reportOpenedAt) return { ok: false, reason: 'report_unread', checksDone: before.checks }
-    }
     // Guarded on the mode it was read as, so two changes at once cannot both pass the go-live check.
     const changed = await tx
       .update(desks)

@@ -701,3 +701,11 @@ copy its code, keep only Shijima's light and dark colours. Plan: `docs/PLAN-ROUN
   - No "first" claim, because none can be proven.
   Sources: Robinhood newsroom (Robinhood Chain mainnet, Stock Tokens, Agentic Trading, 1 July 2026); Glider
   (glider.fi, "Crypto assets, on autopilot"); xStocks (xstocks.fi).
+
+## R8 · 25 Sep · Going live is the owner's call, at any time
+
+New agents start **live (on its own)** unless the owner picks Practice when creating one, and any mode can be
+chosen at any time. The earlier rule (24 practice checks and the practice report opened before going live) is
+removed from `setDeskMode` and from the proposal checks. Why: Abu created an agent with $1 and it only ever said
+"Would have acted", with no way to switch. The limits that protect money (per trade, per day, loss stop, only the
+owner withdraws) are enforced by the account on chain in every mode, so the wait added friction, not safety.

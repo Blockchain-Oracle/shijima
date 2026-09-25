@@ -1,59 +1,85 @@
+'use client'
+
 import { EXPLORER } from '@desk/chain'
 import { appCopy, OPENSERV, settingsCopy, short } from '@desk/shared'
-import { ArrowUpRight } from 'lucide-react'
+import { ArrowUpRight, Check } from 'lucide-react'
 import Link from 'next/link'
-import type { ReactNode } from 'react'
+import { type ReactNode, useState } from 'react'
 import type { TelegramState } from '@/app/owner-actions'
 import { BrandLogo } from '@/components/ui/brand-logo'
 import { ChainLogo } from '@/components/ui/chain-logo'
+import { Modal } from '@/components/ui/modal'
 import { OpenservConnect } from './OpenservConnect'
 import { TelegramConnect } from './TelegramConnect'
 
 const c = settingsCopy.connections
 
-/** One card in 21st's Connect Integration Cards shape (28170): the mark beside its name and one line, then the controls. */
-function Card({
-  icon,
-  title,
+/**
+ * One integration, after 21st's Connect Integration Cards (7ovr, 28170): the mark, the name, one line, and a footer
+ * with its status and the action. Everything else (codes, QR, steps, addresses) opens in a dialog.
+ */
+function IntegrationCard({
+  mark,
+  name,
   body,
+  status,
+  action,
   children,
-  wide = false,
 }: {
-  icon: ReactNode
-  title: string
+  mark: ReactNode
+  name: string
   body: string
+  status: { on: boolean; label: string }
+  action: string
   children: ReactNode
-  wide?: boolean
 }) {
+  const [open, setOpen] = useState(false)
   return (
-    <div className={`connection-card${wide ? ' connection-card--wide' : ''}`}>
-      <div className="connection-head">
-        <span className="connection-mark" aria-hidden>
-          {icon}
+    <div className="int-card">
+      <span className="int-mark" aria-hidden="true">
+        {mark}
+      </span>
+      <h3 className="int-name">{name}</h3>
+      <p className="int-body">{body}</p>
+      <div className="int-foot">
+        <span className="int-status" data-on={status.on ? '' : undefined}>
+          {status.on && <Check className="size-3.5" aria-hidden="true" />}
+          {status.label}
         </span>
-        <div className="min-w-0">
-          <h3 className="type-body-strong text-ink">{title}</h3>
-          <p className="type-caption text-ink-secondary">{body}</p>
-        </div>
+        <button type="button" className="int-action" onClick={() => setOpen(true)}>
+          {action}
+          <ArrowUpRight className="size-4" aria-hidden="true" />
+        </button>
       </div>
-      <div className="connection-foot">{children}</div>
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        eyebrow={c.title}
+        title={name}
+        description={body}
+        closeLabel={c.close}
+      >
+        {children}
+      </Modal>
     </div>
   )
 }
 
 function Out({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <a href={href} target="_blank" rel="noreferrer" className="connection-link" data-cursor="hover">
+    <a href={href} target="_blank" rel="noreferrer" className="connection-link">
       {children}
       <ArrowUpRight className="size-3.5" aria-hidden />
     </a>
   )
 }
 
-/**
- * The account's Connections (DECISIONS F4, F6): Telegram once, for the wallet and every agent in it, then OpenServ,
- * whose workspaces link to one agent each, so it is listed per agent.
- */
+const telegramStatus = (t: TelegramState) =>
+  t?.linked
+    ? { on: true, label: t.linked.username ? `@${t.linked.username}` : c.on }
+    : { on: false, label: c.off }
+
+/** The account's connections (DECISIONS F4, F6): Telegram once for the wallet, then OpenServ per agent. */
 export function AccountConnections({
   telegram,
   agents,
@@ -62,23 +88,25 @@ export function AccountConnections({
   agents: { id: string; name: string }[]
 }) {
   return (
-    <div className="connections-grid">
-      <Card
-        wide
-        icon={<BrandLogo brand="telegram" size={28} />}
-        title={settingsCopy.telegram.title}
+    <div className="int-grid">
+      <IntegrationCard
+        mark={<BrandLogo brand="telegram" size={28} />}
+        name={settingsCopy.telegram.title}
         body={settingsCopy.telegram.body}
+        status={telegramStatus(telegram)}
+        action={telegram?.linked ? c.manage : c.connect}
       >
         <TelegramConnect initial={telegram} />
-      </Card>
-      <Card
-        wide
-        icon={<BrandLogo brand="openserv" size={26} />}
-        title={appCopy.settings.openserv.title}
+      </IntegrationCard>
+      <IntegrationCard
+        mark={<BrandLogo brand="openserv" size={26} />}
+        name={appCopy.settings.openserv.title}
         body={appCopy.openserv.tagline}
+        status={{ on: false, label: agents.length === 0 ? appCopy.settings.openserv.none : c.off }}
+        action={c.connect}
       >
         {agents.length === 0 ? (
-          <p className="type-caption text-ink-muted">
+          <p className="na-note">
             {appCopy.settings.openserv.none}{' '}
             <Link href="/agents/new" className="text-accent">
               {appCopy.sidebar.newAgent} →
@@ -92,16 +120,12 @@ export function AccountConnections({
             </div>
           ))
         )}
-      </Card>
+      </IntegrationCard>
     </div>
   )
 }
 
-/**
- * One agent's Connections (UX-PLAN §6): Telegram (the wallet's, shown here too), and the two
- * fixed links, the wallet that owns the desk and the OpenServ agent that checks it. Each fixed card points at the
- * public page where anyone can confirm it.
- */
+/** One agent's connections: Telegram, the wallet that owns it, and the OpenServ agent that checks it. */
 export function Connections({
   deskId,
   ownerAddress,
@@ -117,29 +141,23 @@ export function Connections({
   openservLinked?: number
 }) {
   return (
-    <div className="connections-grid">
-      <Card
-        wide
-        icon={<BrandLogo brand="telegram" size={28} />}
-        title={settingsCopy.telegram.title}
+    <div className="int-grid">
+      <IntegrationCard
+        mark={<BrandLogo brand="telegram" size={28} />}
+        name={settingsCopy.telegram.title}
         body={settingsCopy.telegram.body}
+        status={telegramStatus(telegram)}
+        action={telegram?.linked ? c.manage : c.connect}
       >
         <TelegramConnect initial={telegram} />
-      </Card>
-      <Card icon={<ChainLogo chainId={4663} size={28} />} title={c.wallet} body={c.walletBody}>
-        <dl className="connection-rows">
-          <div>
-            <dt>{c.owner}</dt>
-            <dd title={ownerAddress}>{short(ownerAddress, 6, 4)}</dd>
-          </div>
-          <div>
-            <dt>{c.desk}</dt>
-            <dd title={deskAddress}>{short(deskAddress, 6, 4)}</dd>
-          </div>
-        </dl>
-        <Out href={`${EXPLORER}/address/${deskAddress}`}>{c.view}</Out>
-      </Card>
-      <Card wide icon={<BrandLogo brand="openserv" size={26} />} title={c.agent} body={c.agentBody}>
+      </IntegrationCard>
+      <IntegrationCard
+        mark={<BrandLogo brand="openserv" size={26} />}
+        name={c.agent}
+        body={c.agentBody}
+        status={{ on: openservLinked > 0, label: openservLinked > 0 ? c.linkedCount(openservLinked) : c.off }}
+        action={openservLinked > 0 ? c.manage : c.connect}
+      >
         <dl className="connection-rows">
           <div>
             <dt>OpenServ</dt>
@@ -155,7 +173,26 @@ export function Connections({
           <Out href={OPENSERV.identity.url}>{c.openIdentity}</Out>
         </div>
         <OpenservConnect deskId={deskId} />
-      </Card>
+      </IntegrationCard>
+      <IntegrationCard
+        mark={<ChainLogo chainId={4663} size={28} />}
+        name={c.wallet}
+        body={c.walletBody}
+        status={{ on: true, label: short(ownerAddress, 6, 4) }}
+        action={c.details}
+      >
+        <dl className="connection-rows">
+          <div>
+            <dt>{c.owner}</dt>
+            <dd title={ownerAddress}>{short(ownerAddress, 6, 4)}</dd>
+          </div>
+          <div>
+            <dt>{c.desk}</dt>
+            <dd title={deskAddress}>{short(deskAddress, 6, 4)}</dd>
+          </div>
+        </dl>
+        <Out href={`${EXPLORER}/address/${deskAddress}`}>{c.view}</Out>
+      </IntegrationCard>
     </div>
   )
 }
