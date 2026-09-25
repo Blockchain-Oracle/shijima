@@ -919,7 +919,9 @@ gift sender connected; a manual `pnpm openserv:fire` ran through it and finished
 **THE LOCAL WORKER MUST NEVER RUN AGAIN AGAINST MAINNET.** It has its own database, so the leader lock cannot see
 the server's worker: both would trade the same agents with the same operator key, and Telegram would fight over
 long polling. Local `desk_dev` is now a stale copy. Found: OpenServ's hourly cron last started a check on
-23 Sep 12:02 UTC; the worker's own timer has covered every hour since.
+23 Sep 12:02 UTC; the worker's own timer has covered every hour since. Cause: `fe6207c` renamed desk to agent in
+`HOURLY_GOAL`, which must match the platform's workflow goal word for word, so every hourly run was answered as a
+chat question. Fixed in `1232dcd`; the 10:00 UTC run wrote a `cron` check at 10:03:41 and finished.
 
 ## 6. Schedule
 
