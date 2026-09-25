@@ -5,9 +5,10 @@ import { type Mandate, money, short, studioCopy } from '@desk/shared'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { type Address, encodeFunctionData, erc20Abi, type Hex, parseEther } from 'viem'
 import { robinhood } from 'viem/chains'
-import { useAccount, useConnect, useSendTransaction, useSwitchChain } from 'wagmi'
+import { useAccount, useSendTransaction, useSwitchChain } from 'wagmi'
 import { finishDeskAction, type PreparedDesk, prepareDeskAction } from '@/app/studio-actions'
 import { HeaderAccount } from '@/components/shell/HeaderAccount'
+import { SignInButton } from '@/components/shell/SignInButton'
 import { BridgeIn } from '@/features/desk/BridgeIn'
 import { browserClient } from '@/features/session/useDeskSession'
 import { Disclosure } from '@/features/settings/Disclosure'
@@ -57,7 +58,6 @@ export function CreateStep({
   onCreated: (c: Created) => void
 }) {
   const { address, chainId } = useAccount()
-  const { connect, connectors } = useConnect()
   const { switchChainAsync } = useSwitchChain()
   const { sendTransactionAsync } = useSendTransaction()
   const [accepted, setAccepted] = useState(Boolean(disclosureOn))
@@ -218,14 +218,11 @@ export function CreateStep({
       )}
 
       {!address ? (
-        <button
-          type="button"
+        <SignInButton
           className="strat-confirm strat-confirm--live"
-          onClick={() => connectors[0] && connect({ connector: connectors[0] })}
-          data-cursor="hover"
-        >
-          {C.connectWallet}
-        </button>
+          label={C.connectWallet}
+          signedInAs={signedIn ?? undefined}
+        />
       ) : !rightWallet ? (
         <p className="type-caption text-warning">{C.wrongWallet}</p>
       ) : (

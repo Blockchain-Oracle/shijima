@@ -17,6 +17,7 @@
     "@desk/shared": "workspace:*",
     "@number-flow/react": "0.6.2",
     "@tanstack/react-query": "5.103.1",
+    "@walletconnect/ethereum-provider": "2.25.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "idb-keyval": "6.3.0",

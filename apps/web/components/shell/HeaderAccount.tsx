@@ -5,15 +5,17 @@ import type { Route } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { type RefObject, useRef, useState } from 'react'
-import { useDisconnect } from 'wagmi'
+import { robinhood } from 'viem/chains'
+import { useAccount, useDisconnect, useSwitchChain } from 'wagmi'
 import { TelegramConnect } from '@/features/settings/TelegramConnect'
 import { SignInButton } from './SignInButton'
 import type { HeaderTelegram } from './types'
 import { useFloatingMenus } from './useFloatingMenus'
 
 /**
- * The account corner, in Agari's shape (`HeaderAccount.tsx`): "Connect" until a wallet is connected, then
- * "Sign in", then the address pill and its menu. Signing in proves the wallet with one message, costs nothing
+ * The account corner, in Agari's shape (`HeaderAccount.tsx`): "Connect wallet", which opens the picker and
+ * signs in, then the address pill and its menu, with a "Switch to Robinhood Chain" button beside it whenever the
+ * wallet is on another network. Signing in proves the wallet with one message, costs nothing
  * and moves nothing. Every transaction that moves money is a separate signature, asked for when it happens.
  */
 export function HeaderAccount({
@@ -25,6 +27,9 @@ export function HeaderAccount({
 }) {
   const router = useRouter()
   const { disconnect } = useDisconnect()
+  const { isConnected, chainId } = useAccount()
+  const { switchChain, isPending: switching } = useSwitchChain()
+  const wrongNetwork = isConnected && chainId !== robinhood.id
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const refs = useRef<ReadonlyArray<RefObject<HTMLElement | null>>>([menuRef])
@@ -39,7 +44,18 @@ export function HeaderAccount({
 
   if (signedInAs) {
     return (
-      <div className="relative" ref={menuRef} data-cursor="hover">
+      <div className="relative flex items-center gap-2" ref={menuRef} data-cursor="hover">
+        {wrongNetwork && (
+          <button
+            type="button"
+            className="wallet-network"
+            title={webCopy.wrongNetwork.body}
+            disabled={switching}
+            onClick={() => switchChain({ chainId: robinhood.id })}
+          >
+            {switching ? webCopy.wrongNetwork.switching : webCopy.wrongNetwork.switchTo}
+          </button>
+        )}
         <button
           type="button"
           className="wallet-pill"
@@ -106,5 +122,5 @@ export function HeaderAccount({
     )
   }
 
-  return <SignInButton />
+  return <SignInButton signedInAs={signedInAs} />
 }

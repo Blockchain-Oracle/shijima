@@ -20,11 +20,13 @@ catalog:
   "@types/node": ^24.0.0
 
 # Build scripts are denied by default in pnpm 11. esbuild is needed by tsx and vitest.
+# @reown/appkit came with @walletconnect/ethereum-provider (25 Sep); its postinstall is not needed, we draw our own QR.
 # The rest came with @coinbase/agentkit (23 Sep): husky hooks, a TOS notice and optional native
 # builds with pure-JS fallbacks. Checked and denied.
 allowBuilds:
   '@coinbase/x402': false
   '@opensea/seaport-js': false
+  '@reown/appkit': false
   bigint-buffer: false
   bufferutil: false
   esbuild: true

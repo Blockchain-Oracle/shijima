@@ -2,7 +2,7 @@ import { CHAIN_ID, makePublicClient } from '@desk/chain'
 import { ensureOwner } from '@desk/db'
 import { errorText } from '@desk/shared'
 import { db } from '@/lib/db'
-import { sameOrigin } from '@/lib/origin'
+import { publicUrl, sameOrigin } from '@/lib/origin'
 import { getSession } from '@/lib/session'
 
 /**
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     const { message, signature } = (await request.json()) as { message: string; signature: `0x${string}` }
     if (!session.nonce) return Response.json({ error: 'Ask for a nonce first.' }, { status: 400 })
 
-    const url = new URL(request.url)
+    const url = publicUrl(request)
     const valid = await makePublicClient().verifySiweMessage({
       message,
       signature,
