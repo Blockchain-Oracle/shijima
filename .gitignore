@@ -33,3 +33,10 @@ docs/research/glider/shots/
 docs/research/ux/shots/
 docs/research/masayume/shots/
 docs/research/glider/font-specimen.png
+
+# Written by `next dev` on every start; not part of the product.
+apps/web/AGENTS.md
+apps/web/CLAUDE.md
+
+# Local screenshots
+/masayume.png
