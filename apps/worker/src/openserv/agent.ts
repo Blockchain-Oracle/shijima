@@ -27,8 +27,10 @@ export const AGENT_DESCRIPTION =
   'Shijima (しじま) is an AI agent that keeps one person’s basket of US Stock Tokens on plan around the clock, on Robinhood Chain, inside limits their own account enforces. It decides only WHEN to move, never what to own, and fingerprints every decision on-chain. Link your workspace to your agent with a code from the website (send: link ABC123), then ask it how your portfolio is doing, why it waited, or to check now. Anything that moves money comes back as a link to confirm on your agent’s page.'
 
 /** Our own workflow's goal and task, as provisioned. Only a task that carries both runs the review pass. */
+// Word for word what the platform's workflow holds: `doTask` recognises its own hourly run by it. It still says
+// "desk" for the same reason the workflow name does; renaming it here alone made every hourly run a chat question.
 export const HOURLY_GOAL =
-  'Every hour, check each running agent against its owner mandate and act only within the limits that agent enforces on-chain.'
+  'Every hour, check each running desk against its owner mandate and act only within the limits that desk enforces on-chain.'
 export const HOURLY_TASK = 'Run the hourly desk review'
 
 /**
