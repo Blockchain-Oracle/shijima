@@ -973,4 +973,9 @@
   }
 }
 /* On Review the create button is the action, so Back sits under it rather than floating over it. */
-.na-actions.na-actions--static { position: static; backdrop-filter: none; -webkit-backdrop-filter: none; background: transparent; }
+.na-actions.na-actions--static {
+  position: static;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: transparent;
+}
