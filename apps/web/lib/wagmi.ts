@@ -31,7 +31,8 @@ export const config = createConfig({
   chains: [robinhood, base, arbitrum, mainnet, bsc],
   connectors: [
     injected(),
-    ...(walletConnectProjectId
+    // Only in the browser: WalletConnect's provider reaches for indexedDB as soon as it loads, which a server has not.
+    ...(walletConnectProjectId && typeof window !== 'undefined'
       ? [
           walletConnect({
             projectId: walletConnectProjectId,

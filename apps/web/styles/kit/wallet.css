@@ -981,3 +981,59 @@
 .kit-bal-qr:hover {
   color: var(--tx);
 }
+
+/* The asset toggle (components/kit/ticket AssetToggle): two assets, a thumb that slides under the chosen one. */
+.kit-asset-toggle {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  flex: none;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--bd2);
+  background: var(--panel);
+  cursor: pointer;
+}
+.kit-asset-toggle:focus-visible {
+  outline: 2px solid var(--ac);
+  outline-offset: 2px;
+}
+.kit-asset-toggle-thumb {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  border-radius: 999px;
+  background: var(--card2);
+  border: 1px solid color-mix(in srgb, var(--ac) 55%, transparent);
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.kit-asset-toggle[data-right] .kit-asset-toggle-thumb {
+  transform: translateX(100%);
+}
+.kit-asset-toggle-side {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 4px;
+  color: var(--tx3);
+  opacity: 0.6;
+  transition:
+    opacity 200ms,
+    color 200ms;
+}
+.kit-asset-toggle-side strong {
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.kit-asset-toggle-side[data-on] {
+  color: var(--tx);
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .kit-asset-toggle-thumb {
+    transition: none;
+  }
+}

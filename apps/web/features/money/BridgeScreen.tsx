@@ -10,6 +10,7 @@ import { BoundaryBadge, Button, Callout, FlowCard, Screen, ScreenTitle, Segmente
 import {
   AssetPicker,
   AssetPill,
+  AssetToggle,
   dollars,
   readable,
   TicketAmount,
@@ -419,26 +420,25 @@ function FromChain({
           <TicketArrow />
           <TicketBox
             label={t.youReceive}
-            foot={q.quote ? t.worth(dollars(Number(q.quote.usdgValue) / 1e6)) : ' '}
+            foot={`${receive === 'usdg' ? c.asUsdg : c.asEth}${q.quote ? ` · ${t.worth(dollars(Number(q.quote.usdgValue) / 1e6))}` : ''}`}
           >
             <TicketQuoted
               text={q.quote ? readable(q.quote.receive.amountRaw, q.quote.receive.decimals) : null}
               loading={q.loading}
             />
-            <AssetPill symbol={out} chainId={ROBINHOOD} />
+            {choose ? (
+              <AssetToggle
+                left="USDG"
+                right="ETH"
+                value={out}
+                chainId={ROBINHOOD}
+                label={c.arrivesAs}
+                onChange={(v) => setReceive(v === 'ETH' ? 'eth' : 'usdg')}
+              />
+            ) : (
+              <AssetPill symbol={out} chainId={ROBINHOOD} />
+            )}
           </TicketBox>
-          {choose && (
-            <Segmented
-              label={c.arrivesAs}
-              fullWidth
-              options={[
-                { value: 'usdg', label: c.asUsdg },
-                { value: 'eth', label: c.asEth },
-              ]}
-              value={receive}
-              onChange={(v) => setReceive(v as 'usdg' | 'eth')}
-            />
-          )}
           <AssetPicker
             open={picking}
             onClose={() => setPicking(false)}

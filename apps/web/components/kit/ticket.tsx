@@ -107,6 +107,48 @@ export function AssetPill({
   )
 }
 
+/**
+ * Two assets in one pill, a thumb under the chosen one: tap anywhere and it slides to the other. Used where the
+ * owner picks what arrives, USDG or ETH, right on the asset instead of a row of buttons under the ticket.
+ */
+export function AssetToggle<A extends string, B extends string>({
+  left,
+  right,
+  value,
+  chainId,
+  onChange,
+  label,
+}: {
+  left: A
+  right: B
+  value: A | B
+  chainId: number
+  onChange: (value: A | B) => void
+  label: string
+}) {
+  const onRight = value === right
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={onRight}
+      aria-label={label}
+      title={label}
+      className="kit-asset-toggle"
+      data-right={onRight ? '' : undefined}
+      onClick={() => onChange(onRight ? left : right)}
+    >
+      <span className="kit-asset-toggle-thumb" aria-hidden="true" />
+      {[left, right].map((sym) => (
+        <span key={sym} className="kit-asset-toggle-side" data-on={sym === value ? '' : undefined}>
+          <AssetMark symbol={sym} chainId={chainId} size={22} />
+          <strong>{sym}</strong>
+        </span>
+      ))}
+    </button>
+  )
+}
+
 /** One side of the ticket: a label row, then the amount on the left and the asset on the right. */
 export function TicketBox({
   label,

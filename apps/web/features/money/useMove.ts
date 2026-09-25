@@ -60,8 +60,13 @@ export function useMove(options: { owner?: string } = {}) {
   const plan = useCallback(async (next: MoveInput, replaces?: string) => {
     input.current = next
     setState({ ...IDLE, phase: 'planning' })
+    // A failed request is not the chain refusing: say what happened. The usual cause is a page loaded before the
+    // site was updated, whose request the new server no longer recognises; a reload fixes it.
     const result = await planMoveAction(next, replaces).catch(
-      (): PlanResult => ({ ok: false, why: moneyCopy.refusals.refusedByChain }),
+      (e: unknown): PlanResult => ({
+        ok: false,
+        why: moneyCopy.refusals.unreachable(e instanceof Error ? (e.message.split('\n')[0] ?? '') : ''),
+      }),
     )
     if (result.ok) setState({ ...IDLE, phase: 'ready', plan: result.plan })
     else setState({ ...IDLE, phase: 'idle', problem: result.why, hint: result.hint ?? null })

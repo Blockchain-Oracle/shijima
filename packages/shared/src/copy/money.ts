@@ -60,6 +60,8 @@ export const moneyCopy = {
     tokenContract: 'That address is a token contract, not a wallet. Money sent there is lost.',
     toYourAgent: 'That is one of your agents. Use Add money instead, so it is recorded as money in.',
     refusedByChain: 'The chain would refuse this right now. Nothing was sent.',
+    unreachable: (reason: string) =>
+      `Could not reach Shijima's server${reason ? ` (${reason})` : ''}. Nothing was sent. Reload the page and try again.`,
     quote: (why: string) => `No price for that right now: ${why}`,
     expired: 'That price has expired. Here is a fresh one.',
     needOrigin:
