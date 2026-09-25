@@ -16,6 +16,7 @@ export interface TabSpec {
 export function TabbedCard({ tabs, panels }: { tabs: TabSpec[]; panels: Record<string, ReactNode> }) {
   const ids = tabs.map((t) => t.id)
   const [tab, setTab] = useState(ids[0] ?? '')
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the tab ids are fixed for the page's life
   useEffect(() => {
     const fromHash = () => {
       const h = window.location.hash.slice(1)
@@ -24,7 +25,6 @@ export function TabbedCard({ tabs, panels }: { tabs: TabSpec[]; panels: Record<s
     fromHash()
     window.addEventListener('hashchange', fromHash)
     return () => window.removeEventListener('hashchange', fromHash)
-    // biome-ignore lint/correctness/useExhaustiveDependencies: the tab ids are fixed for the page's life
   }, [])
   return (
     <Tabs
