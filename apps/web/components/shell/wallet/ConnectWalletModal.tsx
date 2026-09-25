@@ -108,11 +108,15 @@ export function ConnectWalletModal({
     }
     if (qr) connector.emitter.on('message', onMessage)
     try {
-      await connectAsync({ connector })
+      // WalletConnect loads on first use, and its very first connect can fail while it starts; one retry covers it.
+      await connectAsync({ connector }).catch((e) => {
+        if (!qr || isRejection(e)) throw e
+        return connectAsync({ connector })
+      })
       started.current = false
       setStep('verify')
     } catch (e) {
-      setProblem(isRejection(e) ? W.rejected : e instanceof Error ? e.message.split('\n')[0] : undefined)
+      setProblem(isRejection(e) ? W.rejected : (e instanceof Error && e.message.split('\n')[0]) || W.failed)
       setStep('pick')
     } finally {
       if (qr) connector.emitter.off('message', onMessage)

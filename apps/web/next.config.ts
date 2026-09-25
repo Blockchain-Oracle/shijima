@@ -25,6 +25,8 @@ const csp = [
   // A rehearsal points the browser at a local fork over plain http; production reads only over https.
   `connect-src 'self' https: wss:${localRpc ? ` ${localRpc}` : ''}`,
   "worker-src 'self' blob:",
+  // WalletConnect's Verify API: a hidden frame that lets a phone wallet confirm this site is who it says it is.
+  "frame-src 'self' https://verify.walletconnect.org https://verify.walletconnect.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

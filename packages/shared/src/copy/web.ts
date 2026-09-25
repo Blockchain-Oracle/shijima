@@ -124,6 +124,7 @@ export const webCopy = {
     connectedAs: 'Connected',
     other: 'Use another wallet',
     rejected: 'You declined in your wallet. Nothing happened.',
+    failed: 'That wallet did not connect. Try again.',
     close: 'Close',
   },
 
