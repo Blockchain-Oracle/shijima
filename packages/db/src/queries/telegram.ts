@@ -144,7 +144,19 @@ export async function claimTelegramOwnerLink(db: Db, code: string, chat: Chat): 
           ne(desks.ownerId, pending.ownerId),
         ),
       )
-    if (otherOwner || otherDesk) return { ok: false, reason: 'another_desk' }
+    // A fresh code is the owner signed in on the website, asking for this chat: the chat moves to that wallet.
+    // One Telegram talks for one wallet at a time, so its links to any other wallet or agent end here (25 Sep: a
+    // chat still tied to an old wallet ignored every new code, and Start seemed to do nothing).
+    if (otherOwner || otherDesk) {
+      await tx
+        .update(telegramOwners)
+        .set({ status: 'revoked', revokedAt: now })
+        .where(and(eq(telegramOwners.telegramUserId, chat.userId), eq(telegramOwners.status, 'linked')))
+      await tx
+        .update(telegramLinks)
+        .set({ status: 'revoked', revokedAt: now })
+        .where(and(eq(telegramLinks.telegramUserId, chat.userId), eq(telegramLinks.status, 'linked')))
+    }
     // A new chat for the same wallet replaces the old one, and every other code still waiting dies with it.
     await tx
       .update(telegramOwners)

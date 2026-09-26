@@ -1008,6 +1008,21 @@ export const settingsCopy = {
     off: 'Not connected',
     fixed: 'Fixed',
     linkedCount: (n: number) => (n === 1 ? '1 workspace' : `${n} workspaces`),
+    openserv: {
+      name: 'OpenServ',
+      body: 'Shijima’s agent runs on OpenServ: its hourly workflow wakes it, and SERV Reasoning makes each timing call.',
+      running: (at: string) => `Running · last run ${at}`,
+      waiting: 'Waiting for its next hourly run',
+      schedTitle: 'Woken by OpenServ every hour',
+      sched: (at: string | null, n: number) =>
+        at ? `Last run ${at} · ${n} run${n === 1 ? '' : 's'} in 24 hours` : 'No hourly run recorded yet',
+      servTitle: 'Decisions reasoned with SERV',
+      serv: (at: string | null, n: number) =>
+        at ? `Last call ${at} · ${n} call${n === 1 ? '' : 's'} in 24 hours` : 'No call yet',
+      idTitle: 'Its identity',
+      id: (agent: number, token: number) => `OpenServ agent #${agent} · ERC-8004 #${token} on Base`,
+      advanced: 'Advanced: talk to your agent from your own OpenServ workspace',
+    },
     close: 'Close',
     wallet: 'Wallet',
     walletBody: 'The only address that can withdraw, change limits or close this agent.',

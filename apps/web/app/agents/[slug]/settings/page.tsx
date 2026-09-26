@@ -2,7 +2,7 @@ import {
   deskById,
   deskIdBySlug,
   disclosureAccepted,
-  openservForDesk,
+  openservPulse,
   ownerIdOf,
   telegramForOwner,
 } from '@desk/db'
@@ -26,6 +26,14 @@ import { loadDesk } from '@/lib/desk.server'
 import { signedInAddress } from '@/lib/session'
 
 export const dynamic = 'force-dynamic'
+
+const pulseView = (p: Awaited<ReturnType<typeof openservPulse>>) => ({
+  lastRun: p.lastRun?.toISOString() ?? null,
+  runs24h: p.runs24h,
+  lastServ: p.lastServ?.toISOString() ?? null,
+  servCalls24h: p.servCalls24h,
+})
+
 export const metadata = { title: 'Settings' }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -40,11 +48,11 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
   if (!desk || !viewer || viewer.toLowerCase() !== desk.ownerAddress.toLowerCase()) notFound()
 
   const ownerId = await ownerIdOf(db(), viewer)
-  const [view, telegram, accepted, openserv] = await Promise.all([
+  const [view, telegram, accepted, pulse] = await Promise.all([
     loadDesk(slug),
     ownerId ? telegramForOwner(db(), ownerId) : Promise.resolve({ linked: null, pending: null }),
     ownerId ? disclosureAccepted(db(), ownerId, DISCLOSURE_VERSION) : Promise.resolve(null),
-    openservForDesk(db(), desk.id),
+    openservPulse(db()),
   ])
 
   const open = desk.lifecycle !== 'closed'
@@ -88,7 +96,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
                   deskId={desk.id}
                   ownerAddress={desk.ownerAddress}
                   deskAddress={desk.address}
-                  openservLinked={openserv.linked.length}
+                  pulse={pulseView(pulse)}
                   telegram={{
                     linked: telegram.linked ? { username: telegram.linked.username } : null,
                     pending: telegram.pending

@@ -108,9 +108,10 @@ export function createBot(token: string, deps: TelegramDeps): Bot {
 
   bot.command('start', async (ctx) => {
     const payload = ctx.match?.trim()
+    // A code first: it is the owner asking, from the website, to link this chat, even when it is linked already.
+    if (payload && CODE.test(payload)) return void (await link(ctx, payload))
     const linked = await deskOf(ctx.from?.id)
     if (linked) return ctx.reply(...(await menuMessage(linked.desk.id, 'home', ctx.from?.id)))
-    if (payload && CODE.test(payload)) return void (await link(ctx, payload))
     return unlinked(ctx)
   })
 

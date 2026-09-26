@@ -5,7 +5,7 @@
  */
 import { eq, sql } from 'drizzle-orm'
 import type { DbOrTx } from '../client'
-import { workerBeats } from '../schema'
+import { servCalls, wakes, workerBeats } from '../schema'
 
 /**
  * The session advisory lock the worker holds for its whole life (apps/worker/src/leader.ts). Any fixed number;
@@ -295,4 +295,38 @@ export async function statusDesks(db: DbOrTx, ownerAddress: string | undefined):
       ? { at: new Date(r.last_at), status: r.last_status ?? '', trigger: r.last_trigger ?? '' }
       : undefined,
   }))
+}
+
+/** What the OpenServ card shows: the hourly workflow's last run and its runs today, and the last SERV call. */
+export interface OpenservPulse {
+  lastRun: Date | null
+  runs24h: number
+  lastServ: Date | null
+  servCalls24h: number
+}
+
+export async function openservPulse(db: DbOrTx): Promise<OpenservPulse> {
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000)
+  const [[runs], [serv]] = await Promise.all([
+    db
+      .select({
+        last: sql<Date | null>`max(${wakes.startedAt})`,
+        n: sql<number>`count(*) filter (where ${wakes.startedAt} > ${since})`,
+      })
+      .from(wakes)
+      .where(eq(wakes.trigger, 'cron')),
+    db
+      .select({
+        last: sql<Date | null>`max(${servCalls.at})`,
+        n: sql<number>`count(*) filter (where ${servCalls.at} > ${since})`,
+      })
+      .from(servCalls),
+  ])
+  const date = (v: Date | string | null | undefined) => (v ? new Date(v) : null)
+  return {
+    lastRun: date(runs?.last),
+    runs24h: Number(runs?.n ?? 0),
+    lastServ: date(serv?.last),
+    servCalls24h: Number(serv?.n ?? 0),
+  }
 }

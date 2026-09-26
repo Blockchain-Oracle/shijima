@@ -709,3 +709,17 @@ chosen at any time. The earlier rule (24 practice checks and the practice report
 removed from `setDeskMode` and from the proposal checks. Why: Abu created an agent with $1 and it only ever said
 "Would have acted", with no way to switch. The limits that protect money (per trade, per day, loss stop, only the
 owner withdraws) are enforced by the account on chain in every mode, so the wait added friction, not safety.
+
+## R9 · 26 Sep · OpenServ is shown working, not "connected"
+
+OpenServ stays behind the scenes in the app: its hourly workflow wakes the agent and SERV Reasoning makes the
+timing calls. The OpenServ card in Settings now shows that live ("Running · last run 18:03", runs and SERV calls in
+the last 24 hours, agent #4513, ERC-8004 #95396) instead of "Not connected". Linking your own OpenServ workspace
+stays, folded under "Advanced", for people who already use OpenServ. Why: Abu found "connect OpenServ" confusing,
+and most users never need a workspace; judges still see OpenServ doing real work on every page that matters.
+
+## R10 · 26 Sep · The free $1 is one per person, while the gift wallet can pay
+
+One claim per wallet and one per internet connection, ever (was one per connection per day). No fixed cap: the
+offer runs while the gift wallet holds $1 USDG and about 0.0001 ETH per gift. Also on 26 Sep: a new Telegram link
+code moves the chat to the wallet that made it, one wallet per Telegram at a time, and /start reads the code first.

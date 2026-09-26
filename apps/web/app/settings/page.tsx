@@ -1,5 +1,5 @@
 import { deskAbi } from '@desk/chain'
-import { desksOfOwner, disclosureAccepted, ensureOwner, telegramForOwner } from '@desk/db'
+import { desksOfOwner, disclosureAccepted, ensureOwner, openservPulse, telegramForOwner } from '@desk/db'
 import { appCopy, DISCLOSURE_VERSION, deskCopy, short } from '@desk/shared'
 import type { Route } from 'next'
 import Link from 'next/link'
@@ -16,6 +16,14 @@ import { db } from '@/lib/db'
 import { signedInAddress } from '@/lib/session'
 
 export const dynamic = 'force-dynamic'
+
+const pulseView = (p: Awaited<ReturnType<typeof openservPulse>>) => ({
+  lastRun: p.lastRun?.toISOString() ?? null,
+  runs24h: p.runs24h,
+  lastServ: p.lastServ?.toISOString() ?? null,
+  servCalls24h: p.servCalls24h,
+})
+
 export const metadata = { title: appCopy.settings.meta }
 
 const ZERO = '0x0000000000000000000000000000000000000000'
@@ -58,10 +66,11 @@ export default async function AccountSettings() {
 
   const [desks, owner] = await Promise.all([desksOfOwner(db(), address), ensureOwner(db(), address)])
   const open = desks.filter((d) => d.lifecycle !== 'closed')
-  const [accepted, telegram, access] = await Promise.all([
+  const [accepted, telegram, access, pulse] = await Promise.all([
     disclosureAccepted(db(), owner.id, DISCLOSURE_VERSION),
     telegramForOwner(db(), owner.id),
     Promise.all(open.map((d) => accessOf(d.address, d.contractVersion))),
+    openservPulse(db()),
   ])
 
   const agentsList =
@@ -168,6 +177,7 @@ export default async function AccountSettings() {
                   : null,
               }}
               agents={open.map((d) => ({ id: d.id, name: d.name ?? 'Agent' }))}
+              pulse={pulseView(pulse)}
             />
           ),
           agents: <section className="st-section">{agentsList}</section>,

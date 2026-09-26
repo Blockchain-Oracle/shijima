@@ -74,6 +74,68 @@ function Out({ href, children }: { href: string; children: ReactNode }) {
   )
 }
 
+/** The OpenServ pulse as the page receives it: ISO times, so it crosses from server to browser as plain data. */
+export interface PulseView {
+  lastRun: string | null
+  runs24h: number
+  lastServ: string | null
+  servCalls24h: number
+}
+
+/** "13:02" today, "Fri 13:02" on another day, in the reader's own time zone. */
+const hhmm = (iso: string | null) => {
+  if (!iso) return null
+  const at = new Date(iso)
+  const time = at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  return at.toDateString() === new Date().toDateString()
+    ? time
+    : `${at.toLocaleDateString([], { weekday: 'short' })} ${time}`
+}
+
+/**
+ * OpenServ, shown working rather than "not connected": the hourly workflow that wakes the agent, the SERV calls it
+ * reasons with, and its IDs. Linking your own workspace is an advanced extra, folded away (DECISIONS R9).
+ */
+function OpenservCard({ pulse, children }: { pulse: PulseView | null; children?: ReactNode }) {
+  const o = c.openserv
+  const fresh = pulse?.lastRun ? Date.now() - new Date(pulse.lastRun).getTime() < 2 * 60 * 60 * 1000 : false
+  return (
+    <IntegrationCard
+      mark={<BrandLogo brand="openserv" size={26} />}
+      name={o.name}
+      body={o.body}
+      status={{ on: fresh, label: fresh ? o.running(hhmm(pulse?.lastRun ?? null) ?? '') : o.waiting }}
+      action={c.details}
+    >
+      <ul className="int-facts">
+        <li>
+          <b>{o.schedTitle}</b>
+          <span>{o.sched(hhmm(pulse?.lastRun ?? null), pulse?.runs24h ?? 0)}</span>
+        </li>
+        <li>
+          <b>{o.servTitle}</b>
+          <span>{o.serv(hhmm(pulse?.lastServ ?? null), pulse?.servCalls24h ?? 0)}</span>
+        </li>
+        <li>
+          <b>{o.idTitle}</b>
+          <span>{o.id(OPENSERV.agentId, OPENSERV.identity.tokenId)}</span>
+          <span className="flex flex-wrap gap-x-4 gap-y-1">
+            <Out href={OPENSERV.agentUrl}>{c.openAgent}</Out>
+            <Out href={OPENSERV.identity.url}>{c.openIdentity}</Out>
+            <Out href="/compare">{appCopy.credit.compare}</Out>
+          </span>
+        </li>
+      </ul>
+      {children && (
+        <details className="na-more">
+          <summary>{o.advanced}</summary>
+          <div className="na-more-body">{children}</div>
+        </details>
+      )}
+    </IntegrationCard>
+  )
+}
+
 const telegramStatus = (t: TelegramState) =>
   t?.linked
     ? { on: true, label: t.linked.username ? `@${t.linked.username}` : c.on }
@@ -83,9 +145,11 @@ const telegramStatus = (t: TelegramState) =>
 export function AccountConnections({
   telegram,
   agents,
+  pulse = null,
 }: {
   telegram: TelegramState
   agents: { id: string; name: string }[]
+  pulse?: PulseView | null
 }) {
   return (
     <div className="int-grid">
@@ -98,13 +162,7 @@ export function AccountConnections({
       >
         <TelegramConnect initial={telegram} />
       </IntegrationCard>
-      <IntegrationCard
-        mark={<BrandLogo brand="openserv" size={26} />}
-        name={appCopy.settings.openserv.title}
-        body={appCopy.openserv.tagline}
-        status={{ on: false, label: agents.length === 0 ? appCopy.settings.openserv.none : c.off }}
-        action={c.connect}
-      >
+      <OpenservCard pulse={pulse}>
         {agents.length === 0 ? (
           <p className="na-note">
             {appCopy.settings.openserv.none}{' '}
@@ -120,7 +178,7 @@ export function AccountConnections({
             </div>
           ))
         )}
-      </IntegrationCard>
+      </OpenservCard>
     </div>
   )
 }
@@ -131,14 +189,13 @@ export function Connections({
   ownerAddress,
   deskAddress,
   telegram,
-  openservLinked = 0,
+  pulse = null,
 }: {
   deskId: string
   ownerAddress: string
   deskAddress: string
   telegram: TelegramState
-  /** How many OpenServ workspaces this desk is linked to. */
-  openservLinked?: number
+  pulse?: PulseView | null
 }) {
   return (
     <div className="int-grid">
@@ -151,29 +208,9 @@ export function Connections({
       >
         <TelegramConnect initial={telegram} />
       </IntegrationCard>
-      <IntegrationCard
-        mark={<BrandLogo brand="openserv" size={26} />}
-        name={c.agent}
-        body={c.agentBody}
-        status={{ on: openservLinked > 0, label: openservLinked > 0 ? c.linkedCount(openservLinked) : c.off }}
-        action={openservLinked > 0 ? c.manage : c.connect}
-      >
-        <dl className="connection-rows">
-          <div>
-            <dt>OpenServ</dt>
-            <dd>{c.agentId(OPENSERV.agentId)}</dd>
-          </div>
-          <div>
-            <dt>ERC-8004</dt>
-            <dd>#{OPENSERV.identity.tokenId}</dd>
-          </div>
-        </dl>
-        <div className="flex flex-wrap gap-x-4 gap-y-1">
-          <Out href={OPENSERV.agentUrl}>{c.openAgent}</Out>
-          <Out href={OPENSERV.identity.url}>{c.openIdentity}</Out>
-        </div>
+      <OpenservCard pulse={pulse}>
         <OpenservConnect deskId={deskId} />
-      </IntegrationCard>
+      </OpenservCard>
       <IntegrationCard
         mark={<ChainLogo chainId={4663} size={28} />}
         name={c.wallet}
