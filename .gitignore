@@ -40,3 +40,9 @@ apps/web/CLAUDE.md
 
 # Local screenshots
 /masayume.png
+
+# Notes written for and by coding assistants (plans, research, decision logs, handoffs, prompts, the video plan).
+# They stay on the machine; the product is documented in README.md and the docs site.
+docs/*
+!docs/RECORD-SCHEMA.md
+apps/web/.21st/
