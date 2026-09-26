@@ -150,8 +150,6 @@ export const webCopy = {
     /** The chart library's licence asks for a visible link to TradingView; this is it, so the charts carry no logo. */
     charts: 'Charts by TradingView',
     docs: 'Docs',
-    /** The docs site, when NEXT_PUBLIC_DOCS_URL is set. */
-    fullDocs: 'Full documentation',
   },
 
   states: {

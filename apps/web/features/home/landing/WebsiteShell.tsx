@@ -18,7 +18,6 @@ import './responsive.css'
 const LINKS = [
   { href: '/how-it-works', label: H.nav.how },
   { href: '/live', label: H.nav.live },
-  { href: '/docs', label: H.nav.docs },
 ] as const
 
 /** The floating nav pill (the reference's Nav). On phones the links hide and only the brand and the button stay. */
@@ -43,6 +42,9 @@ function Nav({ signedIn }: { signedIn: boolean }) {
             {l.label}
           </Link>
         ))}
+        <a href={DOCS_SITE_URL} target="_blank" rel="noreferrer">
+          {H.nav.docs}
+        </a>
       </nav>
       <span className="nav-theme">
         <ThemeToggle />
@@ -68,12 +70,9 @@ function SiteFooter() {
       </div>
       <nav aria-label={f.howItWorks}>
         <Link href="/how-it-works">{f.howItWorks}</Link>
-        <Link href="/docs">{f.docs}</Link>
-        {DOCS_SITE_URL && (
-          <a href={DOCS_SITE_URL} target="_blank" rel="noreferrer">
-            {f.fullDocs}
-          </a>
-        )}
+        <a href={DOCS_SITE_URL} target="_blank" rel="noreferrer">
+          {f.docs}
+        </a>
         <Link href={'/how-it-works#withdraw-without-us' as Route}>{f.withdraw}</Link>
         <Link href="/live">{H.nav.live}</Link>
         <Link href="/status">{f.status}</Link>
@@ -87,7 +86,7 @@ function SiteFooter() {
 }
 
 /**
- * The website's shell (/, /home, /how-it-works, /docs): the reference landing's nav pill, the page, and its
+ * The website's shell (/, /home, /how-it-works): the reference landing's nav pill, the page, and its
  * footer, on the landing canvas. The app has its own shell.
  */
 export function WebsiteShell({ signedIn, children }: { signedIn: boolean; children: ReactNode }) {
