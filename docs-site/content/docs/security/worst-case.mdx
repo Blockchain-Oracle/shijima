@@ -1,0 +1,30 @@
+---
+title: The honest worst case
+description: What could go wrong, with numbers, and what is not promised.
+sources:
+  - contracts/src/Desk.sol
+  - README.md
+  - packages/core/src/wake/gate.ts
+---
+
+## If the operator key were stolen
+
+The thief could **not** take your money out. They could only make bad trades inside your contract's guards.
+
+Every guarded trade must return at least 92% of the Chainlink value. Each dollar traded counts against your daily limit. So the most they could lose you is about **8% of your daily limit in each daily window, plus pool fees**. The window is fixed, so across the boundary between two windows that can happen twice in a row: **up to about 16% of your daily limit** in a short time.
+
+<Example>
+Your per-day limit is **$50**. A thief with the operator key makes the worst trades the contract allows. They lose you at most about **$4** in one window, plus pool fees, or about **$8** if they time it across two windows. Then you press **Remove the assistant**, and it stops.
+</Example>
+
+The same bound applies to a session key, for the few days it lives. Vault moves are not counted against your limits, but the money stays in your contract.
+
+## Other honest limits
+
+- **The contract is not audited.** It is small, has no upgrade path and no admin. Amounts are small.
+- **One operator key serves every agent today.** The contract already supports a key per agent.
+- **Weekend moves over 8%.** If a price moves more than 8% from the last feed update, your agent's trades are refused by your contract by design. Only you can sell then. The record says so.
+- **Your agent predicts nothing.** It claims no edge. Weekend prices are a poor guide to Monday in either direction.
+- **Stock Tokens are not shares.** No ownership of the company and no shareholder rights.
+- **Savings can be slow to leave.** Taking cash out of the vault depends on what the vault has available at that moment.
+- **If Shijima's worker stops**, your agent stops looking. Your money stays where it is, and you can still withdraw, even [without our website](/security/withdraw-without-us).

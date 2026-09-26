@@ -1,0 +1,42 @@
+---
+title: Fund an agent
+description: Any token, from your wallet or another chain. It lands in your agent as USDG, or as the stock itself.
+sources:
+  - apps/web/features/money/FundScreen.tsx
+  - apps/web/lib/money/plan.server.ts
+  - apps/web/lib/money/relay.server.ts
+  - packages/shared/src/copy/money.ts
+---
+
+Open <AppLink href="/fund">Fund an agent</AppLink>, choose **Into which agent**, then where the money comes **From**.
+
+## From your wallet
+
+| You hold, on Robinhood Chain | What happens |
+|---|---|
+| USDG | Goes straight in. One signature. |
+| ETH | Swapped to USDG on <Named name="uniswap" /> on the way in, never worse than 1% under the quote. |
+| A Stock Token your agent trades | Goes in as it is. |
+| Any other Stock Token | Sold to USDG on the way in. |
+
+## From another chain
+
+Choose **Another chain**, then the chain and the token: ETH, USDC, USDT and more on <Named name="base" />, <Named name="arbitrum" />, <Named name="ethereum" /> or <Named name="bnb" />. <Named name="relay" /> brings it to Robinhood Chain and hands your agent USDG, usually within a minute, for about 1% all in.
+
+Your wallet sends the money straight to Relay. It never passes through Shijima.
+
+## From anywhere
+
+**From anywhere** shows your agent's address as a QR code. Any wallet or exchange can send **USDG on Robinhood Chain** to it.
+
+## Review, then sign
+
+As you type, the page prices the move about half a second after you stop, and every 30 seconds after. The summary shows what you pay, what your agent gets, the cost all in, the time, and how many signatures it needs.
+
+Press **Review**, then **Confirm and sign**. Each step opens in your wallet; keep the tab open until it finishes.
+
+- A price holds for **60 seconds**. After that, review again.
+- An approval, when one is needed, is for that **exact amount** only.
+- The least you can move is **$1**. From another chain, $20 or more is better value, because part of Relay's fee is fixed.
+
+Money arriving wakes your agent. It starts buying toward your plan on its next look, within your per-trade limit.

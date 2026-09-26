@@ -1,5 +1,6 @@
 import { docsCopy as D, type DocBlock } from '@desk/shared'
 import { Info } from 'lucide-react'
+import { DOCS_SITE_URL } from '@/lib/docs-site'
 import './docs.css'
 
 function Block({ b }: { b: DocBlock }) {
@@ -54,6 +55,17 @@ export function DocsPage() {
         <p className="section-eyebrow">しじま · {D.title}</p>
         <h1 className="doc-title">{D.title}</h1>
         <p className="doc-lead">{D.lead}</p>
+        {DOCS_SITE_URL && (
+          <p className="doc-note">
+            <Info aria-hidden />
+            <span>
+              {D.site.body}{' '}
+              <a href={DOCS_SITE_URL} target="_blank" rel="noreferrer">
+                {D.site.cta} ↗
+              </a>
+            </span>
+          </p>
+        )}
       </header>
       <div className="doc-grid">
         <nav className="doc-toc" aria-label={D.onThisPage}>

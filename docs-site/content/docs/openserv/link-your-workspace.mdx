@@ -1,0 +1,53 @@
+---
+title: Link your own workspace
+description: Optional. Talk to your agent from your OpenServ workspace, let your workspace's agents ask for a look, and send every decision to a workflow.
+sources:
+  - apps/web/features/settings/OpenservConnect.tsx
+  - apps/web/app/openserv-actions.ts
+  - apps/worker/src/openserv/talk.ts
+  - apps/worker/src/openserv/sessions.ts
+  - apps/worker/src/openserv/capabilities.ts
+  - packages/shared/src/openserv.ts
+  - packages/shared/src/webhook-box.ts
+---
+
+You do not need OpenServ to use Shijima. This is for people who already work in an <Named name="openserv" /> workspace and want their agent there too. There is no “Sign in with OpenServ”; instead you link a workspace with a one-time code.
+
+<Steps>
+<Step>
+### Add Shijima to OpenServ
+In your agent's **Settings**, open **Connections**, then the **OpenServ agent** card. Step 1, **Add Shijima to OpenServ**: press **Open Shijima on OpenServ**. It opens agent 4513 on the platform. Add it to a workspace of yours.
+</Step>
+<Step>
+### Make a link code
+Step 2, **Link your workspace**: press **Make a link code**. The page shows the line to send, for example `link ABC12345`, with **Copy**. The code **works once, for 30 minutes**, and the page counts down.
+</Step>
+<Step>
+### Send it in your workspace
+Paste the line into Shijima's chat in your workspace. Shijima answers “Linked. This workspace now talks to …”. On the website, the card shows your workspace under **Linked workspaces** within seconds.
+</Step>
+</Steps>
+
+## What you can do from there
+
+Ask in the workspace chat, or as a task:
+
+```text
+How is my portfolio doing?
+Why did you wait on Nvidia?
+Check now
+```
+
+The answers come from the same brain as the website and Telegram. **Anything that moves money comes back as a link** to confirm on your agent's page. Nothing changes from OpenServ alone.
+
+## Options, per workspace
+
+| Option | What it does |
+|---|---|
+| **Let it ask for a look now** | Lets agents in your workspace wake yours with `check_now`. Your limits still decide; it can never withdraw or raise a limit. At most once every ten minutes. |
+| **Send decisions to your workspace** | Paste a webhook trigger URL from OpenServ (`https://api.openserv.ai/webhooks/trigger/…`) and press **Save**. After each check, your agent posts its decisions to it, which starts that workflow. |
+| **Unlink** | Ends the link. |
+
+Only OpenServ webhook URLs are accepted, so a saved webhook can never make Shijima post anywhere else. They are stored encrypted.
+
+Every decision that OpenServ asked for says so on its record, with the workspace, the task and the run that asked.

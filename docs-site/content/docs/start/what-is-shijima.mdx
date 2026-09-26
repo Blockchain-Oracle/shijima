@@ -1,0 +1,44 @@
+---
+title: Shijima in one screen
+description: What it is, what it does for you, and what it will never do.
+sources:
+  - README.md
+  - docs/DECISIONS.md
+  - packages/shared/src/copy/how.ts
+---
+
+Shijima gives you an **AI agent that looks after a basket of US Stock Tokens** on Robinhood Chain. You put in USDG, a digital dollar. You pick a strategy, such as The giants or The whole US market. Your agent keeps your money on that plan around the clock, including nights and weekends when New York is shut.
+
+*Shijima* (しじま) is the stillness of deep night: the hours when nothing moves and no one is watching. Those are the hours it works.
+
+<Example>
+You put in **$100** and pick a basket that is 40% Nvidia, 30% an S&P 500 fund and 30% cash. Your agent buys about **$40** of Nvidia and **$30** of the fund, and keeps **$30** as cash.
+
+On Saturday Nvidia jumps. Your $40 is now worth **$48**, which is 44% of your money, not 40%. Your agent notices, works out that about **$4.80** should be sold to get back to plan, and decides *when* to sell it: now, part now, after New York reopens, or not at all. It tells you why.
+</Example>
+
+## You decide, it times
+
+| You decide | Your agent decides |
+|---|---|
+| What to hold, and in what shares | When to move back to your plan |
+| The most per trade and per day | Whether to do all of it, part of it, or wait |
+| When it stops after a loss | Nothing else |
+
+It never picks a stock, never predicts a price, and never adds a holding you did not choose.
+
+## Why the nights and weekends
+
+The US market is shut for most of the week. Stock Tokens keep trading on Robinhood Chain anyway. On weekends nobody can create or redeem them, so nothing ties a token's price to the real stock, and prices drift. Real money trades in those hours. Your agent is the one watching yours.
+
+## What you can check
+
+- **Your money is in your own contract.** Only your wallet can take it out, and only to itself. [What it can and cannot do](/security/what-it-can-do).
+- **Your limits are held by the chain.** A trade over them is refused by the network, not by our goodwill. [Limits](/agent/limits).
+- **Every decision is written down**, with its reasons, and its fingerprint goes on the chain with the trade. Anyone can press **Check it**. [The record](/agent/record).
+
+<Callout type="warn" title="Stock Tokens are not shares">
+A Stock Token follows a US stock's price. It gives you no ownership of the company and no shareholder rights. People in the US, the UK, Canada, Switzerland and some other places may not hold them.
+</Callout>
+
+Next: [sign in with your wallet](/start/sign-in).

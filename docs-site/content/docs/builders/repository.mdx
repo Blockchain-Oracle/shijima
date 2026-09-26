@@ -1,0 +1,48 @@
+---
+title: Repository layout
+description: A pnpm monorepo. Two apps, four packages, the contracts, and this docs site on its own.
+sources:
+  - README.md
+  - pnpm-workspace.yaml
+  - package.json
+  - packages/db/src/schema
+---
+
+```text
+contracts/        Desk.sol and DeskFactory.sol. Foundry, OpenZeppelin 5. One EIP-1167 clone per owner.
+packages/shared/  Canonical hashing, the record schema, the market calendar, strategies, every user-facing word.
+packages/chain/   Chain reads and operator writes: quotes, feeds, the 30-minute average, addresses, tokens.json.
+packages/db/      Postgres with Drizzle: 36 tables, 15 migrations. Records hash-chained under an advisory lock.
+packages/core/    The engine: reconcile, value, needs, pre-gate, decide, gate, act, record, grade. The chat.
+apps/worker/      The clock, the operator key, the sender, the OpenServ agent, the Telegram bot, the gift sender.
+apps/web/         Next.js 16. Every screen. Holds no key.
+docs/             Architecture, decisions, the record format, and the build log.
+docs-site/        This site. Fumadocs on Next.js 16, built and deployed on its own.
+scripts/          Token list builder, strategy checks, dev wallets, rehearsal tools.
+```
+
+## Stack
+
+| Job | Choice |
+|---|---|
+| Language | TypeScript 6, strict. Node 24. |
+| Web | Next.js 16, React 19, Tailwind 4, wagmi 3 and viem 2, Sign-In With Ethereum, iron-session |
+| Database | Postgres 16, Drizzle ORM |
+| Agent platform | `@openserv-labs/sdk` and `@openserv-labs/client`, pinned |
+| Reasoning | SERV Reasoning through the `openai` SDK 5 with OpenServ's base URL |
+| Signing | Coinbase AgentKit's `ViemWalletProvider` for the operator |
+| Telegram | grammY |
+| Bridging | Relay's API |
+| Contracts | Foundry, Solidity 0.8.28, OpenZeppelin 5 |
+| Tooling | pnpm 11 workspaces with a version catalog, Biome, Vitest |
+
+## Rules the code keeps
+
+- **Money is a bigint** in code and a decimal string in a record. Floats only for display.
+- **Every user-facing word** lives in `packages/shared/src/copy`.
+- **Tokens are keyed by address**, never by symbol.
+- **No price without its source and age.**
+- **Migrations are additive.** The production database holds the real record.
+- Pinned versions in `pnpm-workspace.yaml` are deliberate.
+
+`docs-site/` is not in the pnpm workspace. It has its own lockfile, so it installs and builds without the rest of the repo.

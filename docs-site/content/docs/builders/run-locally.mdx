@@ -1,0 +1,64 @@
+---
+title: Run it locally
+description: Postgres, the web app and, for anything that spends money, a local fork of mainnet first.
+sources:
+  - README.md
+  - .env.example
+  - apps/web/.env.example
+  - apps/worker/src/env.ts
+  - docs/ARCHITECTURE.md
+---
+
+You need Node 24, pnpm 11, Postgres 16 and Foundry.
+
+```bash
+pnpm install && ./contracts/setup.sh
+createdb desk_dev && createdb desk_test
+cp .env.example .env              # keys and dev wallets; keep it mode 600
+cp apps/web/.env.example apps/web/.env.local
+pnpm db:migrate
+pnpm web:dev                      # the website on http://localhost:3007
+```
+
+## Environment
+
+**Root `.env`** (the worker and scripts):
+
+| Name | What for |
+|---|---|
+| `ALCHEMY_KEY` | RPC for Robinhood Chain (an archive node) |
+| `SERV_API_KEY` | SERV Reasoning |
+| `DATABASE_URL`, `TEST_DATABASE_URL`, `REHEARSAL_DATABASE_URL` | Postgres |
+| `OPERATOR_ADDRESS`, `OPERATOR_PRIVATE_KEY` | The operator. Small amounts only. |
+| `DEPLOYER_ADDRESS`, `DEPLOYER_PRIVATE_KEY` | Deploying contracts, the ERC-8004 identity |
+| `FINNHUB_API_KEY` | News and earnings dates |
+| `OPENSERV_USER_API_KEY` | Registering the agent on OpenServ |
+| `OPENSERV_WEBHOOK_KEY` | Encrypts saved workspace webhooks. Same value in the web app. |
+| `TELEGRAM_BOT_TOKEN` | The Telegram bot |
+| `GIFT_PRIVATE_KEY` | The free $1 sender. Optional. |
+
+**`apps/web/.env.local`**: `DATABASE_URL`, `SESSION_SECRET`, `OPERATOR_ADDRESS`, `OPENSERV_WEBHOOK_KEY`, `TREASURY_ADDRESS`. Optional: `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`, `GIFT_CAP`, `TELEGRAM_BOT_USERNAME`. The web app gets no private key.
+
+<Callout type="error" title="Never run a local worker against mainnet while the server's runs">
+The leader lock lives in the database. A local worker on its own database cannot see the server's worker, and both would trade the same agents with the same key. Use a fork.
+</Callout>
+
+## Rehearse on a fork
+
+Anything that spends money can be rehearsed on a local fork of mainnet, at no cost:
+
+```bash
+anvil --fork-url <your alchemy url> --silent
+pnpm rehearsal:reset              # a throwaway database that matches the fork
+RPC_URL=http://127.0.0.1:8545 pnpm desk:wake
+```
+
+With `RPC_URL` set, the tools use the `desk_rehearsal` database and refuse the real one, and they print **REHEARSAL** instead of **LIVE**. Anvil's gas price is about ten times the real one, so top the operator up with `cast rpc anvil_setBalance` and never read costs off a fork.
+
+## The docs site
+
+```bash
+cd docs-site
+pnpm install
+pnpm dev                          # http://localhost:3008
+```

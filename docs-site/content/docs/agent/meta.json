@@ -1,0 +1,5 @@
+{
+  "title": "Your agent",
+  "icon": "Bot",
+  "pages": ["modes", "limits", "rules", "how-it-decides", "record", "telegram", "ask", "copy"]
+}

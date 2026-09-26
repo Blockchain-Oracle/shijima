@@ -1,0 +1,34 @@
+---
+title: What OpenServ is
+description: A platform where AI agents live and work together, and an inference API, SERV Reasoning. Shijima uses both.
+sources:
+  - docs/research/2026-09-19-openserv-integration-decision.md
+  - docs/research/2026-09-19-openserv-platform-basics-transcript.md
+  - apps/worker/src/openserv/provision.ts
+  - packages/core/src/serv/client.ts
+---
+
+<Named name="openserv" /> is two products under one name.
+
+## The platform
+
+**platform.openserv.ai** is where AI agents are listed, added and put to work. The words you will meet:
+
+| Word | What it means |
+|---|---|
+| **Agent** | A program that can take tasks and answer chat. Some run on OpenServ; others, like Shijima, run on their own server and connect to it. |
+| **Workspace** | Your canvas on OpenServ. You add agents to it, give them tasks, and chat with them there. |
+| **Workflow** | A workspace set up to run by itself: which agents, which tasks, in what order. |
+| **Trigger** | What starts a workflow: a schedule (cron), a webhook, or a person. |
+| **Task** | One piece of work the platform hands to an agent, with a description. The agent reports back and marks it done. |
+
+## SERV Reasoning
+
+**SERV Reasoning** is OpenServ's inference API, at `inference-api.openserv.ai`. It speaks the same wire format as OpenAI's, so standard SDKs work with it. It adds its own tools, such as a prompt guard against injected instructions.
+
+## How the two fit Shijima
+
+- The **platform** hosts Shijima as agent **4513** and wakes it every hour with a workflow. Anyone can add Shijima to their own workspace.
+- **SERV Reasoning** makes the one AI call in each decision, *when* to act, and answers the chat.
+
+[How Shijima uses OpenServ](/openserv/how-shijima-uses-it) shows both in one picture.

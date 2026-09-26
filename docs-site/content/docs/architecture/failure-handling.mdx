@@ -1,0 +1,68 @@
+---
+title: Failure handling
+description: A write-ahead sender, one leader, and a resolver that settles anything a crash left behind. Proven by killing the process on mainnet.
+sources:
+  - apps/worker/src/sender.ts
+  - apps/worker/src/landing.ts
+  - apps/worker/src/leader.ts
+  - apps/worker/src/index.ts
+  - apps/worker/src/review.ts
+  - packages/db/src/queries/status.ts
+  - packages/db/src/schema/enums.ts
+  - apps/worker/src/gift.ts
+  - docs/BUILD-PLAN.md
+---
+
+## The write-ahead sender
+
+A transaction is written down **before** it is broadcast, so after any crash the worker knows exactly what might be in flight.
+
+<Sequence name="send" />
+
+Each action moves through these states:
+
+| State | Meaning |
+|---|---|
+| `planned` | The record is saved; nothing is signed yet. |
+| `prepared` | Signed. Its hash, nonce and deadline are saved. The signed bytes are not. |
+| `sent` | Broadcast. |
+| `confirmed` · `reverted` | A receipt was found. |
+| `never_landed` | It provably never made it, and its nonce can be reused. |
+
+Before signing, the sender simulates the call, reads the nonce the chain has mined, and checks the operator has enough ETH. A failure there ends the action at once as `refused`, with its cause, and nothing is broadcast.
+
+## The resolver
+
+It runs when the worker starts, and before every send. For each unsettled action it looks for a receipt. With none, it decides:
+
+| Situation | Verdict |
+|---|---|
+| Still `planned` | never signed |
+| Past its on-chain deadline, plus 60 seconds for lagging nodes | never landed: the contract would now refuse it |
+| Its nonce was used by another transaction | never landed |
+| Anything else | wait, and send nothing new until it is settled |
+
+The deadline inside every operator call is what makes “never landed” a fact rather than a guess.
+
+**Proven on mainnet, 20 September.** The worker was killed right after broadcasting a seal. On restart the resolver found it in block 68039547 and settled the record. One transaction, no duplicate: <Addr value="0xa96b98f44bf41ca55af3cca476a77029e66fbc2ce7796b1b1e0dcab21f071ec8" tx short />.
+
+## One leader
+
+Two workers sending with the same key would fight over nonces, and Telegram allows only one bot connection. So at start the worker takes a Postgres **session advisory lock**, held on one connection for its whole life. A second worker that cannot take it exits. Command-line tools that send take the same lock, so they refuse while the worker runs.
+
+Inside the worker, one pass runs at a time; a second clock that fires meanwhile joins the pass in flight. Agents are handled one after another.
+
+<Callout type="warn" title="One worker per database, one worker per chain">
+The lock lives in the database. A second worker pointed at a **different** database cannot see it, and would trade the same agents with the same key. The production worker runs on the server; a local worker must never run against mainnet.
+</Callout>
+
+## When the outside world fails
+
+- **SERV Reasoning** late, down or malformed: no decision, recorded as failed. Nothing is traded on a guess.
+- **A price, feed or halt status** that cannot be read: that stock is not valued and not traded, and the record names the source.
+- **OpenServ** unreachable: the worker's own timer keeps looking every five minutes.
+- **Telegram** down: messages wait in the outbox.
+- **The operator low on ETH**: a warning, and sends are refused before signing rather than stuck.
+- **A crash mid-look**: a look still marked running after 15 minutes is swept as interrupted at the next start.
+
+The gift sender uses the same pattern: each transfer's hash and nonce are journaled before broadcast, so a retry never pays twice.

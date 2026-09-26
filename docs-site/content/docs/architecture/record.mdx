@@ -1,0 +1,61 @@
+---
+title: The record and hash chain
+description: A frozen JSON format, canonical bytes, keccak256, a chain of records in Postgres, and fingerprints on the chain in the same transaction as each trade.
+sources:
+  - docs/RECORD-SCHEMA.md
+  - packages/shared/src/schemas/record.ts
+  - packages/shared/src/hashing.ts
+  - packages/db/src/queries/records.ts
+  - packages/core/src/wake/record.ts
+  - apps/worker/src/review.ts
+  - apps/web/components/check-it.tsx
+---
+
+## One record per decision
+
+Every decision is a JSON object, validated against a strict schema **before** it is hashed. A body that does not match is refused. The current version is **2**; versions 0 and 1 still parse, because records already on the chain were made with them. A version is never edited, only added.
+
+The main fields:
+
+| Field | Holds |
+|---|---|
+| `schemaVersion`, `chainId`, `desk` | Which format, and which agent. The agent's address and chain are **inside** the hash, so a fingerprint fits exactly one agent. |
+| `seq`, `prevHash` | Its place in this agent's record, gap-free from 1, and the fingerprint of the one before. |
+| `mode`, `mandate` | The mode, and the fingerprint of the exact instructions in force. |
+| `valuation`, `need`, `candidate` | What it was worth, why arithmetic looked, and the move it proposed. The AI never proposes one. |
+| `blockers`, `evidence` | Rules that stopped it before any AI call, and exactly what the AI was shown, each item with an id. |
+| `serv` | The AI call: prompt version, model, latency, and its answer word for word. `null` if it was not asked. |
+| `gate`, `outcome`, `preview` | The limits check, what it decided, and what would be sent. |
+
+A field that does not apply is `null`, never missing. Amounts are decimal strings, never floats.
+
+**Not hashed:** `result` (the transaction and what was really received) is added after the trade. `private` holds what only you may see, such as headline text.
+
+## Hashing
+
+```text
+fingerprint = keccak256( canonicalJson(record) )
+```
+
+Canonical JSON here is RFC 8785 on a record with no floats: keys sorted, no whitespace, standard escaping. Shijima's own implementation is about sixty lines with no dependency, and it was cross-checked against Python's `json.dumps(sort_keys=True)` hashed by Foundry's `cast keccak`.
+
+## The chain in Postgres
+
+`appendRecord` runs in one database transaction under a per-agent advisory lock (`pg_advisory_xact_lock`):
+
+1. Take the last record's `seq` and fingerprint.
+2. Build the new body with `seq + 1` and `prevHash` = that fingerprint (zeros for the first).
+3. Refuse a body that names another agent.
+4. Save it, read it back, and hash it again before commit.
+
+Unique indexes on `(agent, seq)` and on the fingerprint make a fork or a duplicate impossible.
+
+## The chain on Robinhood Chain
+
+- A **trade or vault move** carries its record's fingerprint as `decisionHash`, in the same transaction.
+- A decision **without** a trade is sealed by the next action, or by the **daily seal**: a `checkpoint` call carrying the newest record's fingerprint, sent when 24 hours have passed since the last seal. Because each record holds `prevHash`, that one fingerprint commits to every record before it.
+- The contract keeps its own `seq` and `head`. Its `seq` counts on-chain actions only; the database's counts every record. The worker cross-checks them on each look.
+
+## Check it, in the browser
+
+The decision page's **Check it** runs entirely in the reader's browser: it rebuilds the canonical bytes, hashes them, walks `prevHash` to the sealing record if needed, fetches the transaction receipt from the public RPC, and compares the `decisionHash` in the event. [How to use it](/agent/record#check-it).

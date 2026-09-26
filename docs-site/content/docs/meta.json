@@ -1,0 +1,19 @@
+{
+  "title": "Shijima Docs",
+  "pages": [
+    "index",
+    "---Start here---",
+    "start",
+    "---Use Shijima---",
+    "agent",
+    "money",
+    "---How it works---",
+    "openserv",
+    "architecture",
+    "security",
+    "---Build---",
+    "builders",
+    "---Need a hand?---",
+    "help"
+  ]
+}

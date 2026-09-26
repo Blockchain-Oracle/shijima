@@ -1,0 +1,37 @@
+---
+title: Put money in, take it out
+description: Fund your agent from Robinhood Chain or from Base, Arbitrum, Ethereum or BNB Chain. Withdraw always lands in your own wallet.
+sources:
+  - apps/web/lib/money/relay.server.ts
+  - apps/web/lib/money/plan.server.ts
+  - packages/shared/src/copy/money.ts
+  - contracts/src/Desk.sol
+---
+
+## Put money in
+
+Open <AppLink href="/fund">Fund</AppLink> and pick where the money comes from:
+
+- **Your wallet**, on Robinhood Chain. USDG goes straight in. ETH is swapped to USDG on the way in.
+- **Another chain**: <Named name="base" />, <Named name="arbitrum" />, <Named name="ethereum" /> or <Named name="bnb" />. <Named name="relay" /> brings it in as USDG, usually within a minute, for about 1% all in.
+- **From anywhere**: any wallet or exchange can send USDG to your agent's address, shown as a QR code.
+
+The least you can put in is **$1**. From another chain, $20 or more is better value, because part of Relay's fee is fixed.
+
+<Example>
+You send **$50 of USDC on Base**. Relay delivers about **$49.50 of USDG** into your agent. Money arriving wakes your agent, and it starts buying toward your plan, no more than your per-trade limit at a time.
+</Example>
+
+## Take money out
+
+Open <AppLink href="/withdraw">Withdraw</AppLink> and choose:
+
+- **Cash**: some or all of your USDG.
+- **One stock**: take it as it is, or sell it to cash. Sold cash stays in your agent until you take it out.
+- **Everything**: as cash (selling first), or as it is, stocks and all.
+
+It always lands in **your own wallet**. The contract has no way to pay anyone else, Shijima included. From your wallet you can [send](/money/send-and-receive) it anywhere or [bridge it out](/money/bridge) to another chain.
+
+If this website ever goes away, you can still withdraw with the block explorer alone: [withdraw without us](/security/withdraw-without-us).
+
+The [Money](/money/wallet) section covers each screen in full.

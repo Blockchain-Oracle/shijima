@@ -1,0 +1,71 @@
+---
+title: The wake loop
+description: Two clocks, one look per five-minute slot, and every step from reading the chain to a Telegram message.
+sources:
+  - apps/worker/src/index.ts
+  - apps/worker/src/review.ts
+  - packages/core/src/jobs/prices.ts
+  - packages/core/src/wake/wake.ts
+  - packages/core/src/wake/reconcile.ts
+  - packages/core/src/wake/valuation.ts
+  - packages/core/src/wake/needs.ts
+  - packages/core/src/wake/consider.ts
+  - packages/core/src/wake/pregate.ts
+  - packages/core/src/wake/decide.ts
+  - packages/core/src/wake/gate.ts
+  - packages/core/src/wake/plan.ts
+  - packages/core/src/wake/commit.ts
+  - packages/core/src/wake/vault.ts
+  - apps/worker/src/telegram/outbox.ts
+---
+
+## Two clocks
+
+| Clock | When | Trigger name |
+|---|---|---|
+| **OpenServ** | The workflow's cron, at the top of every hour | `cron` |
+| **The worker's timer** | A pass every 15 seconds; each agent is looked at once per five-minute slot | `watch`, or `tick` for the hour's slot and quiet days |
+
+A look is stored with its slot time, and the database allows **one look per agent per slot**. Whichever clock arrives first does the work; the other finds it already done. At the top of the hour the timer waits four minutes, so OpenServ gets the first go and its trigger is really used.
+
+Other triggers: `manual` for “check now”, and `copy` when a leader you follow moved.
+
+## One pass of the worker
+
+Each pass, in order:
+
+1. Pending “check now” requests.
+2. For each running agent: its look, then grading at the reopen, then the daily seal if one is due.
+3. Copying leaders' moves to followers.
+4. Price logging and price alerts.
+5. Market facts: multiplier events such as splits every hour, earnings dates every 12 hours.
+6. A check that the operator has enough ETH for gas.
+
+## One look
+
+<Sequence name="wake" />
+
+In the code (`packages/core/src/wake/`):
+
+| Step | File | What it does |
+|---|---|---|
+| Start | `wake.ts` | Skips an agent with no mandate, not running, or whose assistant was removed. Claims the slot. |
+| Reconcile | `reconcile.ts` | Reads the contract. Checks it is a clone of our implementation, with our operator and the right owner. Owner calls since the last look are accepted; anything else flags **needs attention**. |
+| Value | `valuation.ts` | Every holding at its pool's 30-minute average. Money in or out moves the loss baseline. |
+| Loss stop | `loss-stop.ts` | First breach stops trading; a second in a row pauses the contract on chain. |
+| Approved | `approved.ts` | Runs requests you approved, with a fresh price and no AI call. |
+| Vault | `vault.ts` | Takes cash out of savings if buys need it. |
+| Needs | `needs.ts` | Arithmetic. Up to three candidates. None: a watching look writes nothing. |
+| Consider | `consider.ts` | Per candidate: market read, gate, pre-gate, an owner's earlier answer, a standing wait, then SERV, then the gate again on the sized move. |
+| Plan | `plan.ts` | Applies your mode: would have, ask, or act. Large actions ask. |
+| Commit | `commit.ts` | One database transaction: the record, plus any wait, request or message. The send happens after it commits. |
+| Sweep | `vault.ts` | Idle cash into savings, when worth it. |
+| Finish | `wake.ts` | Queues the status message and closes the look. |
+
+Messages go out through an **outbox**: the look writes them to Postgres, and the Telegram bot sends them after the pass. A message is never lost to a Telegram hiccup, and never sent for a trade that did not confirm.
+
+## Savings sweeps
+
+Only an agent that acts on its own sweeps. It moves the idle part of your cash target into the Morpho vault when there is at least **$10** to move and a month of interest is at least three times the network fee of going in and out. Before buys, it takes out enough to cover them, keeping three times your per-trade limit loose.
+
+Next: [what the contract enforces](/architecture/contract).

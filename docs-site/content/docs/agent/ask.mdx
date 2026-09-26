@@ -1,0 +1,47 @@
+---
+title: Ask Shijima
+description: Talk to your agent from any page. It explains and proposes; nothing changes until you confirm.
+sources:
+  - apps/web/components/shell/app/AskDrawer.tsx
+  - packages/core/src/ask/proposal.ts
+  - packages/core/src/ask/answer.ts
+  - packages/core/src/ask/context.ts
+  - packages/db/src/queries/chat.ts
+  - apps/worker/src/ask.ts
+---
+
+Press **⌘J** (Ctrl+J on Windows), or the chat button at the bottom right, on any page. **Esc** closes it. It talks about the agent on screen, or your first agent.
+
+## What you can ask
+
+- “How is my portfolio doing?”
+- “Why did you wait on Nvidia?”
+- “Check now.”
+- “Sell half my Tesla if it falls 4%.”
+- “Switch me to Ask me first.”
+
+It answers from your agent's own record and settings, and cites them. It cannot see anything else, and it will not quote facts it was not given.
+
+## It proposes, you confirm
+
+When you ask for a change, it shows a **card** with exactly what would change. Press **Confirm** or **Not now**. A card expires after 10 minutes. Who has to confirm depends on what it touches:
+
+| What it proposes | You confirm with |
+|---|---|
+| Change strategy, weights, notes, agent limits or rules · pause, resume, change mode · answer a request · check now · price alerts · “do it anyway” | your signed-in session |
+| Withdraw · remove the assistant · lower the limits on the chain | your browser's session key, if you set one up |
+| Sell everything · sell some · unpause the contract · add money · close the agent | your wallet |
+
+Raising the limits on the chain always needs your wallet.
+
+## “Do it anyway”
+
+If your agent chose to wait, you can overrule it from the chat. It is a second confirmation, and the trade still goes through every limit check and your contract. The record marks it as **your** call, not your agent's, and it is left out of your agent's timing grades. It is not available in Practice.
+
+## Limits on chatting
+
+6 messages a minute and 150 a day, each up to 1,000 characters.
+
+## Where the answers come from
+
+Your message is saved, and the worker answers it with one call to SERV Reasoning. The same brain answers in [Telegram](/agent/telegram) and in [your OpenServ workspace](/openserv/link-your-workspace).

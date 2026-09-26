@@ -1,0 +1,34 @@
+---
+title: Withdraw
+description: From an agent back to your own wallet, the only place its account will pay.
+sources:
+  - apps/web/features/money/WithdrawScreen.tsx
+  - contracts/src/Desk.sol
+  - packages/shared/src/copy/money.ts
+---
+
+Open <AppLink href="/withdraw">Withdraw</AppLink>, choose **From which agent**, then **What to take out**:
+
+| Choice | Options | Where it ends up |
+|---|---|---|
+| **Cash** | Some or all. Leave it empty for all of it. | Your wallet |
+| **One stock** | **Take it as it is** | Your wallet, as the Stock Token |
+| | **Sell it to cash** | Your agent, as cash. Take the cash out after. |
+| **Everything** | **As cash, selling first** | Your wallet, as USDG |
+| | **As it is, stocks and all** | Your wallet, each token as it is |
+
+Cash in savings comes out of the vault first when needed. Sales are never worse than 1% under the quote.
+
+## To your wallet only
+
+Your agent's contract has one way to pay out, `withdraw`, and it always pays **its owner**. There is no address field to get wrong and no way for anyone to redirect it: not Shijima, not the agent's key.
+
+After it lands, **Send it on** or **Bridge it out** from your wallet.
+
+## Withdrawing is not a loss
+
+Money in and out is recorded apart from trading. A $2 withdrawal shows as $2 out, not as a $2 loss, and your loss stop counts from the new amount.
+
+## If the website is gone
+
+You can withdraw with Blockscout alone: [withdraw without us](/security/withdraw-without-us).

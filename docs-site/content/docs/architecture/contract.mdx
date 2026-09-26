@@ -1,0 +1,82 @@
+---
+title: The agent contract
+description: One small contract per owner, cloned from a verified implementation. No upgrade path, no admin. Its guards hold even if the operator key is stolen.
+sources:
+  - contracts/src/Desk.sol
+  - contracts/src/DeskFactory.sol
+  - apps/web/app/studio-actions.ts
+  - packages/chain/deployments.json
+  - packages/chain/tokens.json
+---
+
+Every agent is a **Desk**: a minimal clone (EIP-1167) of one implementation, created by **DeskFactory**. Solidity 0.8.28, OpenZeppelin 5. There is no upgrade path and no admin. The owner is fixed at creation and never changes.
+
+## Creating one
+
+`createDesk(config, salt)` clones the implementation and sets **owner = the caller**, always. So nobody can create an agent that belongs to someone else. `predictDesk(owner, salt)` gives the address before it exists. The website fills the config: Shijima's operator, your two limits, and all 16 approved Stock Tokens with their pinned pools and price feeds.
+
+## Who can call what
+
+| Function | Owner | Session key | Operator (the agent) |
+|---|---|---|---|
+| `buy` | yes | no | yes, guarded |
+| `sell` | yes | yes, guarded | yes, guarded |
+| `sweepToVault` · `redeemFromVault` | yes | no | yes |
+| `checkpoint` | yes | no | yes, even while paused |
+| `pause` | yes | yes | yes |
+| `unpause` | yes | no | no |
+| `withdraw` (to the owner only) | yes | yes | **no** |
+| `batch` (several calls, one signature) | yes | yes | **no** |
+| `setLimits` | yes | lower only | no |
+| `setOperator` · `allowToken` · `disallowToken` · `grantSession` | yes | no | no |
+| `revokeOperator` | yes | yes | no |
+
+The **session key** is optional: a key your browser holds for up to 7 days, so small safe actions like pausing or lowering a limit do not need your wallet each time.
+
+## The guards on the operator
+
+Every operator trade must pass all of these, or the whole transaction reverts:
+
+- **Per-trade and per-day limits.** The day is a fixed window that restarts 24 hours after it began, at the next trade. A sale counts at the **larger** of the USDG it received and the feed's value of what it sold.
+- **An 8% price floor**, computed in the contract from the Chainlink feed (`BAND_BPS = 800`). A buy must get at least 92% of the tokens the feed price says; a sale must get at least 92% of the feed value.
+- **A healthy feed**: a positive price, no older than 6 days, and the token not reporting its price as paused.
+- **The pinned pool.** The owner pins each token's Uniswap fee tier. The operator never chooses a pool, so it cannot route through an empty or seeded one.
+- **Allowed tokens only** for buys, up to 16. A token the owner disallows can still be sold.
+- **A deadline** and a non-zero **decision hash** on every call.
+- **Not paused.** Only `checkpoint` and `pause` work while paused.
+- **Output to the desk.** Every swap's recipient is the contract itself. Approvals are set for the exact amount and reset to zero after.
+
+The contract cannot receive ETH. Trades, sweeps, redeems and withdrawals are protected against re-entry.
+
+## The on-chain record
+
+`buy`, `sell`, `sweepToVault`, `redeemFromVault` and `checkpoint` each take a `decisionHash` and extend the contract's own chain:
+
+```text
+seq  = seq + 1
+head = keccak256(abi.encode(head, seq, decisionHash))
+```
+
+Each emits an event carrying the hash: `Bought`, `Sold` (with `countedUsdg`), `Swept`, `Redeemed` or `Checkpoint`. The TypeScript side computes the same head, so the contract and the database can be compared at any time.
+
+## Deployments
+
+<Facts>
+  <Fact label="v1 factory, 22 Sep"><Addr value="0xB0Df8d1ca6eDA2700a2D145bab2675109A2e89f1" /></Fact>
+  <Fact label="v1 implementation (verified on Blockscout)"><Addr value="0x90ff69C78014d06e3f09DC0985E83Cd8338aFe0F" /></Fact>
+  <Fact label="v0 factory, 20 Sep"><Addr value="0x35A40883BAD8874F8fB5592c72c4385226070958" /></Fact>
+  <Fact label="v0 implementation"><Addr value="0x99a3f0DD497d60308F138f420902BbB2b6406565" /></Fact>
+</Facts>
+
+## Proven on mainnet
+
+The limits were tested with the real operator key, on purpose, and the chain refused:
+
+- An over-limit buy: reverted `OverPerActionCap`, <Addr value="0x58bb2963585a850ca8f96c19ec44f5de7ce4209becc8d6d57f8948136b8d956f" tx short />.
+- An operator withdrawal: reverted `NotOwner`, <Addr value="0x96cad9fe012236fcf12e81d3695b310a40b9424b1705594e5adb75e68dd2ad59" tx short />.
+
+The first real trade, decided by SERV and sealed with its fingerprint: <Addr value="0xba777e7301184adb276376a27981e8afc7009d732679299f250bb21172765cdf" tx short />.
+
+<Callout type="warn" title="Not audited">
+The contract is small and has no upgrade path or admin, but it has not been audited. Amounts are small.
+</Callout>

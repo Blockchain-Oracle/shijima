@@ -1,0 +1,38 @@
+---
+title: The free $1
+description: A few early sign-ups get $1 of USDG and a little ETH, enough to create an agent and make a real trade.
+sources:
+  - apps/worker/src/gift.ts
+  - apps/web/app/gift-actions.ts
+  - packages/db/src/queries/gifts.ts
+  - apps/web/features/gift/GiftCard.tsx
+  - packages/shared/src/copy/gift.ts
+---
+
+To try Shijima without buying anything, some wallets can claim **$1 of USDG plus 0.00008 ETH** (about 30¢) for network fees. That ETH covers creating an agent, putting the $1 in, and taking it out later.
+
+<Callout type="warn" title="It is capped, and it runs out">
+Only a small number of dollars are handed out. The card shows how many are left, for example **2 left**. When it reaches zero it says **All the free dollars are gone.**
+</Callout>
+
+## Who can claim
+
+- You must be signed in. The $1 goes to the wallet you signed in with.
+- One claim per wallet.
+- One claim per internet connection per day. We keep a salted hash of the connection's address, not the address itself.
+
+## How to claim
+
+Find the card **Free $1 to try** on your Wallet page, in step 2 of creating an agent, or in the sidebar. Slide **Slide to claim your $1**.
+
+It says **Claimed. It will arrive in your wallet in about a minute.** Then **Sent: $1 and a little ETH for fees are in your wallet**, with links to both transfers on the explorer.
+
+## Is $1 enough to do anything?
+
+Yes. Your agent's smallest trade is **$0.20**, and Shijima pays the network fee for every trade your agent makes. So $1 is enough for a real, live trade you can check on the chain.
+
+## Behind the card
+
+The website only writes your claim into a queue. The worker holds the gift wallet's key and sends the USDG first, then the ETH. Each transfer is saved before it is broadcast, so a retry after a restart never pays twice.
+
+Next: [create your first agent](/start/first-agent).

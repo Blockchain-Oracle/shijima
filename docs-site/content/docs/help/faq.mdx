@@ -1,0 +1,48 @@
+---
+title: Questions
+description: Short answers to what people ask first.
+sources:
+  - packages/shared/src/copy/how.ts
+  - packages/shared/src/copy/docs.ts
+  - docs/DECISIONS.md
+---
+
+### Can Shijima take my money?
+
+No. Your money is in a contract you own. Only your wallet can withdraw, and a withdrawal can only pay your wallet. Your agent can trade inside your limits, and nothing else. [What it can never do](/security/what-it-can-do).
+
+### What if this website disappears?
+
+Your money stays in your contract. You can withdraw with the block explorer alone. [The steps](/security/withdraw-without-us).
+
+### Does my agent predict prices?
+
+No. It does not pick stocks, forecast prices, or claim to beat acting at once. It decides *when* to make the moves your own plan calls for. After the reopen it grades its own waits against acting at once, whichever way that went.
+
+### What does the AI see?
+
+Only facts about the hour: the session, each price against its reference and how old that is, the cost of the trade, the token's status, headlines that name the company, and your notes. Headlines are shown to it as quoted data, and it may cite only the facts it was given.
+
+### How much does it cost?
+
+Trading on Shijima is free: no fee per trade and none on what you hold. Shijima pays the network fee for your agent's trades. You pay a few cents of ETH for what you sign yourself. [Who pays which fee](/money/fees).
+
+### How little can I start with?
+
+$1. The smallest trade is $0.20. Some early sign-ups can [claim $1 free](/start/free-dollar) while it lasts.
+
+### Can I make it trade right now?
+
+Ask it to **check now**, and it looks at once; it still decides. **Do it anyway**, in the chat, makes a trade your agent chose not to, on a second confirmation. It is recorded and graded as your call, and it is not available in Practice.
+
+### How do I know it is awake?
+
+The pinned Telegram message updates every hour. The app's **Status** page shows the worker's heartbeat, the last look of every shared agent, the OpenServ trigger and every data source.
+
+### Why a Stock Token and not a share?
+
+Stock Tokens are what trade on Robinhood Chain around the clock. A Stock Token follows a US stock's price, but it is not a share: no ownership and no shareholder rights. People in the US, the UK, Canada, Switzerland and some other places may not hold them.
+
+### Is the contract audited?
+
+No. It is small, has no upgrade path and no admin, and amounts are small. [The honest worst case](/security/worst-case).

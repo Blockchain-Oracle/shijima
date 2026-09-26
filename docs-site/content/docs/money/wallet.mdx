@@ -1,0 +1,36 @@
+---
+title: Your wallet and your agents
+description: Two kinds of account. Your wallet is yours as always. Each agent is its own contract that only your wallet can empty.
+sources:
+  - apps/web/features/wallet/WalletHome.tsx
+  - packages/shared/src/copy/money.ts
+  - contracts/src/Desk.sol
+---
+
+When you sign in, <AppLink href="/wallet">Wallet</AppLink> is home. It shows two things, read from the chain just now:
+
+- **Your agents**: all the money your agents hold, as cash, stocks and savings. Tap to see each agent.
+- **Your wallet**, on Robinhood Chain: every token in it, priced, with a total.
+
+The buttons move money between them: **Fund an agent**, **Receive**, **Withdraw**, **Send**, **Bridge**, and **Evidence**.
+
+## Two accounts, one owner
+
+| | Your wallet | Your agent's account |
+|---|---|---|
+| What it is | The wallet you signed in with | A contract created for you by the agent factory |
+| Who controls it | You | You own it; Shijima's operator key may trade inside your limits |
+| Who can take money out | You | Only you, and only to your wallet |
+| Holds | Anything | USDG, the Stock Tokens it trades, and savings-vault shares |
+
+<Diagram name="money" />
+
+## What your agent holds
+
+- **Cash**: USDG, a digital dollar on Robinhood Chain.
+- **Stocks**: Stock Tokens from its approved list of 16.
+- **Savings**: idle cash in the Steakhouse USDG vault on <Named name="morpho" />, when your agent acts on its own. It is taken back out when a buy needs it. The rate changes; your agent shows the live one.
+
+<Callout type="warn" title="Never send ETH to an agent">
+Your agent's contract cannot receive ETH. Send it USDG, or use Fund, which swaps ETH to USDG on the way in.
+</Callout>

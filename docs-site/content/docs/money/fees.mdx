@@ -1,0 +1,32 @@
+---
+title: Who pays which fee
+description: Shijima pays the network fee for every trade your agent makes. You pay for what you sign yourself.
+sources:
+  - packages/shared/src/copy/docs.ts
+  - packages/shared/src/copy/how.ts
+  - apps/web/app/copy-actions.ts
+  - apps/web/lib/chain-build.server.ts
+---
+
+| What | Who pays | Roughly |
+|---|---|---|
+| A trade, vault move or daily seal by your agent | **Shijima**, from the operator's ETH | about 5¢ each |
+| Creating your agent | You, in ETH from your wallet | about 30¢ |
+| Adding money, withdrawing, sending, bridging | You, in ETH from your wallet | a few cents each |
+| Moving money across chains | You, to Relay | about 1% all in |
+| Copying an agent with a fee | You, once, in USDG | $0 to $5, 80% to the creator, 20% to Shijima |
+| Trading, or holding money in Shijima | nobody | free |
+
+Every screen shows the network fee before you sign.
+
+<Example>
+You put in **$20** and your agent makes **10 trades** this month. You paid about **30¢** to create it and a few cents to fund it. Shijima paid about **50¢** for the 10 trades. Shijima took nothing from your $20.
+</Example>
+
+## Out of ETH?
+
+Open [Bridge → Get gas](/money/bridge#get-gas): swap $1 of USDG to ETH, or bring ETH from another chain. Or claim [the free $1](/start/free-dollar), which includes some.
+
+## Why no fee per trade
+
+An agent that is paid per trade is paid to trade too much. Shijima's only income is its 20% share of copy fees.

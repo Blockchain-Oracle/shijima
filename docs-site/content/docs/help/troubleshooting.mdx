@@ -1,0 +1,53 @@
+---
+title: Troubleshooting
+description: Wrong network, no ETH for fees, a stuck transaction, and the other messages you might see.
+sources:
+  - packages/shared/src/copy/docs.ts
+  - packages/shared/src/copy/web.ts
+  - apps/web/components/shell/WrongNetworkBanner.tsx
+  - apps/web/lib/chain-build.server.ts
+---
+
+First find which stage you are at: signing in, a signature in your wallet, a transaction on the chain, or Relay delivering across chains. Open the transaction link before trying again.
+
+## My wallet is on the wrong network
+
+The app shows **Wrong network** with **Switch to Robinhood Chain**. Press it and approve in your wallet. If your wallet does not know Robinhood Chain, add it:
+
+<Facts>
+  <Fact label="Network">Robinhood Chain</Fact>
+  <Fact label="Chain ID">4663</Fact>
+  <Fact label="RPC">`https://rpc.mainnet.chain.robinhood.com`</Fact>
+  <Fact label="Currency">ETH</Fact>
+  <Fact label="Explorer">`https://robinhoodchain.blockscout.com`</Fact>
+</Facts>
+
+Signing in works on any network; transactions need Robinhood Chain.
+
+## No ETH for the network fee
+
+Every transaction you sign costs a few cents of ETH on Robinhood Chain. Open [Bridge → Get gas](/money/bridge#get-gas) and swap $1 of USDG to ETH, or bring ETH from another chain. Or claim [the free $1](/start/free-dollar), which includes some. Creating an agent shows **Get ETH for fees** when your wallet is short.
+
+Your agent's own trades never need your ETH. Shijima pays those.
+
+## A transaction is stuck as pending in my wallet
+
+- **Wait a minute first.** Robinhood Chain is fast; most transactions land in seconds.
+- **Open it on Blockscout.** If it is there and confirmed, the app will catch up.
+- **Still pending, not on Blockscout?** Your wallet may have sent it with too low a fee, or be waiting on an earlier one. Use your wallet's **Speed up** or **Cancel** on the oldest pending transaction. Do not send the same move again until the first is settled.
+- **The app says “May have been sent”.** Your wallet sent it, but the app lost track. Open the transaction link before trying again.
+
+## Other messages
+
+| You see | What it means |
+|---|---|
+| “That price has expired. Here is a fresh one.” | Prices hold for 60 seconds. Review the fresh one before you sign. |
+| **On its way** | Relay is still delivering. It usually lands within a minute; the link follows it. |
+| “Approval given, nothing moved” | The approval is only for that exact amount. Review again to finish. |
+| “That address is a token contract, not a wallet.” | Money sent to a token contract is lost. Use the wallet address instead. |
+| “The chain would refuse this right now. Nothing was sent.” | A simulation failed before your wallet was asked. Check the amount and your balance, then try again. |
+| “The price of … is more than 8% from the last official update. Only you can sell right now.” | Your contract refuses your agent's trades on that stock for now. You can still sell it yourself. |
+
+## The site is down
+
+Your money is safe in your contract. [Withdraw on Blockscout](/security/withdraw-without-us): open your agent, **Write proxy**, connect your wallet, call `withdraw`.

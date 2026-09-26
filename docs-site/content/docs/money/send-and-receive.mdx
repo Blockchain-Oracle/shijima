@@ -1,0 +1,25 @@
+---
+title: Send and receive
+description: Send USDG, ETH or a Stock Token from your wallet to any address on Robinhood Chain, and share an address to be paid.
+sources:
+  - apps/web/features/money/SendScreen.tsx
+  - packages/shared/src/copy/money.ts
+---
+
+## Send
+
+<AppLink href="/send">Send</AppLink> moves **USDG, ETH or a Stock Token** from your own wallet to any address on Robinhood Chain.
+
+- Paste the address, or press **SCAN** to read a QR code with your camera. Nothing leaves your device.
+- It refuses a **token contract** as the recipient: money sent to a token contract is lost.
+- It points you to **Fund** if the address is one of your own agents, so the money counts as money in.
+
+<Callout type="warn" title="Sends cannot be undone">
+Check the address. Anything sent to the wrong one is gone, and everyone can see the transfer.
+</Callout>
+
+## Receive
+
+**Receive** opens a sheet with your wallet's address, or one of your agents', as text and a QR code, to be paid on Robinhood Chain.
+
+Only USDG and Stock Tokens should go to an agent's address. **Never send ETH to an agent**: its contract cannot receive it.

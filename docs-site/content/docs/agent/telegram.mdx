@@ -1,0 +1,52 @@
+---
+title: Telegram
+description: Connect once and every agent you own reports to the same chat. Approve, pause and ask from there.
+sources:
+  - apps/web/features/settings/TelegramConnect.tsx
+  - apps/worker/src/telegram/bot.ts
+  - apps/worker/src/telegram/outbox.ts
+  - packages/shared/src/copy/telegram.ts
+---
+
+<Named name="telegram" /> is how your agent reaches you when you are not on the site.
+
+## Connect
+
+<Steps>
+<Step>
+### Press Connect Telegram
+In Settings, under Connections. You can do it before you have an agent: Telegram links to your **wallet**, so every agent you have, and every one you create later, reports to the same chat.
+</Step>
+<Step>
+### Open the bot
+Press **Open in Telegram**, or scan the QR code. It opens **@ShijimaBot** with a one-time code already filled in. The code works once, for 10 minutes. You can also send the code to the bot yourself.
+</Step>
+<Step>
+### Done
+The page turns to **Connected as @yourname**. **Disconnect** removes it.
+</Step>
+</Steps>
+
+The bot only talks in private chats, and only to the Telegram account that linked.
+
+## What it sends
+
+- **One pinned status message**, edited in place after each hourly look. It never pings you. A ↻ button refreshes it.
+- **Approval needed**, with **Approve** and **Reject** buttons, when your agent is in Ask me first or an action is large. Answering on the website instead updates the Telegram message too.
+- **I did this**, when it acts. **I would have done this**, in Practice. **I chose not to act**, when the choice is worth knowing about.
+- **Heads up** alerts, such as the loss stop, and your price alerts.
+- **The report is ready**, after the market reopens.
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `/start` | Link, or show the menu |
+| `/portfolio` | What your agent holds |
+| `/record` | Its latest decisions |
+| `/pause` · `/resume` | Pause or resume your agent |
+| `/ask` | Ask it something |
+| `/agents` | Switch between your agents |
+| `/help` | The list of commands |
+
+You can also just write to it in plain words. It answers like [Ask Shijima](/agent/ask). A change it proposes shows **Confirm** and **Not now** in Telegram when your sign-in is enough. Anything that needs your wallet shows **Confirm on the website**.

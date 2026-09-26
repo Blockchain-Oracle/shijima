@@ -1,0 +1,60 @@
+/* Diagrams, logos and small content blocks. Colours come from the theme tokens in global.css, so every picture
+   flips with the theme. */
+:root { --diagram-label: var(--surface); --danger: #B42318; }
+.dark { --danger: #F87171; }
+
+.logo-dark { display: none; }
+.dark .logo-light { display: none; }
+.dark .logo-dark { display: inline; }
+.logo { position: relative; display: inline-flex; flex: none; vertical-align: middle; }
+.logo img { width: 100%; height: 100%; object-fit: contain; border-radius: 5px; margin: 0; }
+.dark .logo img.logo-dark { display: block; }
+.named { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; white-space: nowrap; }
+
+.diagram-scroll { overflow-x: auto; border-block: 1px solid var(--color-fd-border); background: var(--color-fd-background); padding: 12px; -webkit-overflow-scrolling: touch; }
+.diagram-scroll:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+.diagram-scroll-dialog { border-bottom: 0; }
+.diagram-svg { display: block; height: auto; font-family: var(--font-body), sans-serif; }
+.diagram-title { font-size: 14.5px; font-weight: 650; fill: var(--diagram-ink); letter-spacing: -0.2px; }
+.diagram-title-small { font-size: 13.5px; }
+.diagram-sub { font-size: 11.5px; fill: var(--diagram-muted); }
+.diagram-group { font-family: var(--font-mono), monospace; font-size: 10.5px; letter-spacing: 1.1px; fill: var(--diagram-muted); }
+.diagram-edge { font-size: 11.5px; fill: var(--diagram-ink); font-weight: 500; }
+.diagram-edge-read { fill: var(--diagram-muted); }
+.diagram-edge-never { fill: var(--danger); font-weight: 650; }
+.diagram-step { font-family: var(--font-mono), monospace; font-weight: 600; fill: var(--diagram-accent); }
+.dark .diagram-step { fill: var(--brand); }
+.diagram-expand { display: inline-flex; align-items: center; gap: 7px; padding: 7px 10px; border: 1px solid var(--color-fd-border); border-radius: 6px; color: var(--color-fd-primary); font-size: 12px; line-height: 1.4; min-height: 36px; }
+.diagram-expand:hover { border-color: var(--brand); }
+.architecture-dialog { width: min(1320px, 96vw); max-width: 96vw; max-height: 94dvh; }
+.architecture-legend { gap: 14px; }
+.legend-item { display: inline-flex; align-items: center; gap: 7px; }
+.swatch { display: inline-block; width: 20px; border-top: 2px solid var(--brand); }
+.architecture-legend .swatch-read, .architecture-legend .swatch-reply { border-top: 2px dashed var(--color-fd-muted-foreground); }
+.architecture-legend .swatch-money { border-top-width: 3px; }
+.architecture-legend .swatch-never { border-top: 2px dotted var(--danger); }
+.text-kind { color: var(--color-fd-muted-foreground); font-size: 12px; }
+
+/* Partner cards */
+.partners { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin: 20px 0 28px; }
+.partner { display: flex; gap: 12px; align-items: center; padding: 12px 14px; border: 1px solid var(--color-fd-border); border-radius: 10px; background: var(--surface); text-decoration: none; color: var(--color-fd-foreground); min-width: 0; }
+a.partner:hover { border-color: var(--brand); }
+.partner strong { display: block; font-size: 14px; font-weight: 650; line-height: 1.35; }
+.partner small { display: block; font-size: 12px; color: var(--color-fd-muted-foreground); line-height: 1.5; }
+
+/* Facts: a key-value card for addresses and numbers */
+.facts { border: 1px solid var(--color-fd-border); border-radius: 10px; background: var(--surface); margin: 20px 0 28px; overflow: hidden; }
+.facts > div { display: grid; grid-template-columns: minmax(120px, 34%) minmax(0, 1fr); gap: 12px; padding: 11px 16px; border-top: 1px solid var(--color-fd-border); font-size: 13.5px; line-height: 1.6; }
+.facts > div:first-child { border-top: 0; }
+.facts dt { color: var(--color-fd-muted-foreground); }
+.facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.facts a:not(.addr) { color: var(--color-fd-primary); text-decoration: underline; text-underline-offset: 3px; }
+.facts code, .addr { font-family: var(--font-mono), monospace; font-size: 12.5px; }
+.addr { color: var(--color-fd-primary); text-decoration: none; overflow-wrap: anywhere; }
+.addr:hover { text-decoration: underline; }
+@media (max-width: 560px) { .facts > div { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
+
+/* A dollars example, kept visibly apart from prose */
+.example { border: 1px solid var(--color-fd-border); border-left: 3px solid var(--brand); border-radius: 10px; background: var(--surface); padding: 14px 18px; margin: 22px 0; font-size: 14.5px; line-height: 1.75; }
+.example > span { display: block; font-family: var(--font-mono), monospace; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--color-fd-primary); margin-bottom: 4px; }
+.example p { margin: 6px 0 !important; }

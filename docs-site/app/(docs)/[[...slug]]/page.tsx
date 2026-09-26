@@ -1,0 +1,31 @@
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { DocsBody, DocsDescription, DocsPage, MarkdownCopyButton } from 'fumadocs-ui/layouts/docs/page';
+import { createRelativeLink } from 'fumadocs-ui/mdx';
+import { source } from '@/lib/source';
+import { site, sourceUrl } from '@/lib/site';
+import { getMDXComponents } from '@/components/mdx';
+
+type Props = {params:Promise<{slug?:string[]}>};
+export default async function Page({ params }: Props) {
+  const {slug} = await params;
+  const page = source.getPage(slug);
+  if (!page) notFound();
+  const home = !slug?.length;
+  const MDX = page.data.body;
+  return <DocsPage toc={page.data.toc} breadcrumb={{enabled:!home}} footer={{enabled:!home}} className={home ? 'welcome-page' : ''}>
+    <div id="main-content" tabIndex={-1}>
+      <h1 className="page-title">{page.data.title}</h1>
+      <DocsDescription className="page-description">{page.data.description}</DocsDescription>
+      {!home && <div className="page-tools"><span>Reviewed {site.reviewed}</span><MarkdownCopyButton markdownUrl={`/raw/${page.slugs.join('/')}`}/></div>}
+      <DocsBody><MDX components={getMDXComponents({a:createRelativeLink(source,page)})}/></DocsBody>
+      {!!page.data.sources?.length && <details className="source-notes"><summary>Source notes</summary><p>This page was checked against the code on {site.reviewed}. These are the files it follows.</p><ul>{page.data.sources.map(path=><li key={path}><a href={sourceUrl(path)} target="_blank" rel="noreferrer">{path}</a></li>)}</ul></details>}
+    </div>
+  </DocsPage>;
+}
+export function generateStaticParams() { return source.generateParams(); }
+export async function generateMetadata({params}: Props): Promise<Metadata> {
+  const page=source.getPage((await params).slug);if(!page)notFound();
+  const shareImage = {url:'/opengraph-image',width:1200,height:630,type:'image/png',alt:'Shijima Docs'};
+  return {title:page.data.title,description:page.data.description,alternates:{canonical:page.url},openGraph:{title:page.data.title,description:page.data.description,type:'article',images:[shareImage]},twitter:{card:'summary_large_image',title:page.data.title,description:page.data.description,images:[shareImage]}};
+}

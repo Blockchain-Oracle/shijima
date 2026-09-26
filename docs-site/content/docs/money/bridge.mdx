@@ -1,0 +1,40 @@
+---
+title: Bridge and get gas
+description: Bring money into your own wallet, take USDG out to another chain, or get the few cents of ETH every move needs.
+sources:
+  - apps/web/features/money/BridgeScreen.tsx
+  - apps/web/lib/money/relay.server.ts
+  - packages/shared/src/copy/money.ts
+---
+
+<AppLink href="/bridge">Bridge</AppLink> moves money between Robinhood Chain and <Named name="base" />, <Named name="arbitrum" />, <Named name="ethereum" /> or <Named name="bnb" />, through <Named name="relay" />. It has three tabs.
+
+## In
+
+Brings money **into your own wallet** on Robinhood Chain from another network. Choose what it **Arrives as**:
+
+- **USDG**, to spend or fund an agent.
+- **ETH**, for network fees.
+
+Nobody else can be the recipient. To put money straight into an agent instead, use [Fund](/money/fund) → Another chain.
+
+## Out
+
+Takes **USDG** from your wallet on Robinhood Chain to **the same wallet** on another chain, arriving as a token Relay offers there, such as USDC. Nobody else can be the recipient. If your USDG is still in an agent, [withdraw](/money/withdraw) it first.
+
+## Get gas
+
+Every move you sign on Robinhood Chain costs a few cents of ETH. **Get gas** gives you two ways:
+
+- **Swap $1 of USDG to ETH**, on Uniswap, into your own wallet.
+- **Bring ETH from another chain**, which arrives as ETH on Robinhood Chain.
+
+Or claim [the free $1](/start/free-dollar) while it lasts, which includes some gas.
+
+## How a bridge moves
+
+1. The server asks Relay for a price and shows you every step.
+2. Your wallet signs. Nothing moves before that.
+3. Relay fills it on the other side, and the app follows it to the end. **On its way** means Relay is still delivering; it usually lands within a minute.
+
+Relay costs about 1% all in. The least you can bridge is $1, but $20 or more is better value, because part of the fee is fixed. Relay does not carry Stock Tokens.

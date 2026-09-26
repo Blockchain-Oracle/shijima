@@ -1,0 +1,50 @@
+---
+title: What your agent can and can never do
+description: It can trade inside your limits. It can never take your money out, raise a limit, or pick a pool.
+sources:
+  - contracts/src/Desk.sol
+  - apps/web/app/studio-actions.ts
+  - apps/web/lib/session.ts
+---
+
+Your agent acts through one key, the **operator key**, held by Shijima's worker. Your contract decides what that key may do. The rules are in the contract's code, which is verified on Blockscout, and nobody can change them: there is no upgrade path and no admin.
+
+<Diagram name="money" />
+
+## It can
+
+- **Buy and sell** allowed Stock Tokens, inside your per-trade and per-day limits, through the pool you pinned, within 8% of the Chainlink price.
+- **Move idle cash** into the savings vault and back. The money stays in your contract.
+- **Seal** its record on the chain with a `checkpoint`.
+- **Pause** your contract, for example when the loss stop fires.
+
+Every trade's output goes back into your contract.
+
+## It can never
+
+- **Withdraw.** Only your wallet, or a session key you set up, can call `withdraw`, and it pays only your wallet.
+- **Send your money anywhere else.** No function in the contract takes a recipient address.
+- **Raise or change a limit**, allow a new token, or give itself a new key.
+- **Unpause** your contract. Only your wallet can.
+- **Choose a pool.** You pinned each token's pool when your agent was created.
+- **Trade on a bad price.** A dead or paused feed, or a price more than 8% off the feed, and the chain refuses.
+- **Trade while paused.**
+
+## What the website can do
+
+The website holds **no key**. It shows you screens, writes your requests into the database, and builds the transactions you sign in your own wallet. If it were broken into, it could not move a cent.
+
+## What Shijima the company can do
+
+The same as the operator key, and no more: trade inside your limits. Shijima has no admin key over your contract, cannot upgrade it, and cannot withdraw from it.
+
+## You are always in control
+
+| You want to | Do this |
+|---|---|
+| Stop trading now | **Pause**, on your agent or in Telegram. Instant and free. |
+| Take the agent's key away | **Remove the assistant** (`revokeOperator`). Your contract also pauses. |
+| Get everything back | **Withdraw** → Everything, or **Close the agent**: one signature sells or sends everything to your wallet and removes the assistant. |
+| Leave without our website | [Withdraw on Blockscout](/security/withdraw-without-us). |
+
+Pause is a setting: it stops your agent and cancels any request waiting for your answer. Removing the assistant is on the chain, and only your wallet can restart it.

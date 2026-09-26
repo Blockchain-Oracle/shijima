@@ -1,0 +1,66 @@
+---
+title: Commands
+description: The scripts in the root package.json, grouped by what they touch.
+sources:
+  - package.json
+  - apps/worker/package.json
+  - contracts/package.json
+---
+
+Run from the repo root with `pnpm <name>`. Commands that send a transaction take the worker's leader lock, so they refuse while a worker runs on the same database.
+
+## Checks
+
+| Command | What it does |
+|---|---|
+| `lint` · `format` | Biome check, and fix |
+| `typecheck` | Every package, and the scripts |
+| `test` | Vitest |
+| `--filter @desk/contracts test:fork` | Contract tests on a mainnet fork |
+
+## Web and worker
+
+| Command | What it does |
+|---|---|
+| `web:dev` · `web:build` | The website on port 3007 |
+| `worker:start` · `worker:dev` | The worker: the clock, the sender, OpenServ, Telegram, gifts |
+| `db:migrate` · `db:generate` | Apply, or create, a migration. Additive only. |
+
+## One agent, by hand
+
+| Command | What it does |
+|---|---|
+| `desk:wake [--dry]` | One real look at the dev agent. `--dry` commits nothing. |
+| `desk:review` | One pass of the worker, by hand |
+| `desk:mandate --preset <id>` | Set the dev agent's strategy |
+| `desk:mode <mode>` · `desk:pause` · `desk:resume` | Mode and pause |
+| `desk:approvals` · `desk:approve` · `desk:reject` | Answer requests |
+| `desk:grade` | Grade decisions after the reopen |
+| `desk:resolve` | Settle anything a crash left behind |
+| `desk:skeleton` | The whole money path once, live. `--kill-after-send` and `--kill-before-send` are the crash drills. |
+| `desk:ask` | Ask the chat from the terminal |
+| `desk:link` | Make a Telegram link code |
+
+## Chain and data
+
+| Command | What it does |
+|---|---|
+| `tokens:build` | Rebuild the approved token list from live chain data |
+| `strategies:verify` | Fail if any strategy uses a stale feed, a thin pool or a costly round trip |
+| `abis:build` | Regenerate TypeScript ABIs after a contract change |
+| `prices:log` · `prices:backfill` · `prices:facts` | The price log |
+| `dev:prove-limits [--send]` | Ask the contract, with the operator key, to break each limit. It must refuse every time. |
+| `dev:desk` · `dev:funds` | Dev agent and dev wallets |
+| `rehearsal:reset` | A fresh rehearsal database for a fork |
+| `records:import` | Import records, re-checking each fingerprint against the chain |
+
+## OpenServ
+
+| Command | What it does |
+|---|---|
+| `openserv:provision` | Register the agent and its hourly workflow |
+| `openserv:fire` | Run the workflow now instead of waiting for the hour |
+
+## Contracts
+
+`./contracts/deploy.sh <label>` deploys and records the addresses in `packages/chain/deployments.json`. `./contracts/verify.sh <label>` publishes the source.

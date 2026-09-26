@@ -21,6 +21,11 @@ export const docsCopy = {
   title: 'Docs',
   lead: 'Everything Shijima does, how to use it, and how it is built. Users first, builders after.',
   onThisPage: 'On this page',
+  /** Shown when the docs site is deployed (NEXT_PUBLIC_DOCS_URL). */
+  site: {
+    body: 'The full documentation has step-by-step guides, the architecture with diagrams, and every contract address.',
+    cta: 'Open the full documentation',
+  },
   groups: ['Use it', 'Build on it'] as const,
   sections: [
     {

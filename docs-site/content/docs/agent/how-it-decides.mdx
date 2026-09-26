@@ -1,0 +1,99 @@
+---
+title: How it decides
+description: Arithmetic finds what needs doing, fixed rules refuse what is forbidden, and the AI answers one question, when.
+sources:
+  - packages/core/src/wake/wake.ts
+  - packages/core/src/wake/consider.ts
+  - packages/core/src/wake/needs.ts
+  - packages/core/src/wake/pregate.ts
+  - packages/core/src/wake/gate.ts
+  - packages/core/src/wake/decide.ts
+  - packages/core/src/wake/deferral.ts
+  - packages/shared/src/schemas/timing.ts
+  - packages/core/src/jobs/grade.ts
+  - apps/worker/src/review.ts
+  - packages/shared/src/copy/how.ts
+---
+
+## How often it looks
+
+Your agent looks at your account and the market **every five minutes**. Most looks find nothing to do and write nothing. If a whole day goes by with nothing written, it writes one line that it looked and found nothing to do, so a quiet day is on the record too.
+
+It thinks harder, and may call the AI, only when something moves:
+
+- a holding drifts from its target by more than you allow
+- the price gap to the reference moves by 1%
+- money arrives in your account
+- one of your [standing rules](/agent/rules) fires
+- a new headline names a company you hold
+- you answer a request, or ask it to check now
+
+## The steps
+
+<Steps>
+<Step>
+### Read your account
+Balances, limits, and whether your agent still has access. Money you added or took out is recognised as that, never as a gain or a loss.
+</Step>
+<Step>
+### Value what you hold
+On each pool's average price over the last 30 minutes, never on a frozen feed. A holding it cannot price is not valued and not traded.
+</Step>
+<Step>
+### Find what drifted (arithmetic)
+A holding must be further from its target than your tolerance, and the drift must be worth more than five times what one trade costs. Nothing under $0.20 is worth the network fee. Up to three trades per look, your rules first, then sales, then buys.
+</Step>
+<Step>
+### Refuse what a rule forbids (fixed rules)
+Trading paused in the token, or its status cannot be read. A price feed that is missing, paused or older than 6 days. A price more than 8% from the Chainlink feed, or moving fast right now. A buy within two days of the company's earnings. A token you have not allowed.
+</Step>
+<Step>
+### Ask one question: when? (AI)
+<Named name="openserv" /> SERV Reasoning sees the hour, each price against its reference and how old that is, the cost of the trade, the token's status, recent headlines naming the company, and your notes. It answers with one of four choices, its confidence, its reasons, and why it turned down each other choice.
+</Step>
+<Step>
+### Check the limits again (arithmetic)
+The same sums your contract will do, rounding included. It also refuses a trade priced more than 3% from the reference, or costing more than 1%, unless it is a protective sale from your rules. This step can refuse what the AI chose. The AI can never get past it.
+</Step>
+<Step>
+### Act, ask, or write down
+Depending on [your mode](/agent/modes). Then every look goes into [the record](/agent/record).
+</Step>
+</Steps>
+
+<Sequence name="wake" />
+
+## The four answers
+
+| Answer | What happens |
+|---|---|
+| **Act now** | The whole move, now. |
+| **Act in part** | 25%, 50% or 75% of it now. |
+| **Wait for the reopen** | Nothing now. It remembers the wait until 30 minutes after New York opens, unless something changes first: the gap moves by 1%, a new headline names the company, the drift grows by half your tolerance, or money arrives. |
+| **Decline** | Nothing. The record says why. |
+
+If the AI's answer is late, malformed, cites a fact it was not given, or refuses, your agent does nothing that hour and writes down that it failed. It never falls back to a guess.
+
+## The reference price
+
+Every price is compared with a reference, and the record says which one:
+
+- **While the market is open**: the Chainlink feed's last official update.
+- **Outside regular hours**: the pool's own price at the last regular close, 16:00 New York.
+
+A gap under 0.5% counts as in line. Weekend prices are a poor guide to Monday in either direction, and your agent never claims otherwise.
+
+## Marking its own homework
+
+After New York reopens, each decision is graded against the one alternative it really had, at the price each would have got in the same pool, 30 minutes after the open. A difference under **0.25%** is “no real difference”, because that is inside the cost of trading. It grades the timing call, not whether the market happened to go up.
+
+## Where AI is and is not used
+
+| Step | Who does it |
+|---|---|
+| What needs doing | arithmetic |
+| What is forbidden | fixed rules |
+| When to do it | SERV Reasoning |
+| Whether it fits your limits | arithmetic, then your contract |
+
+The AI never picks a stock, never sets a size, and never sends anything.

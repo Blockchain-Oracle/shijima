@@ -1,0 +1,34 @@
+---
+title: Modes
+description: Practice, Ask me first, On its own. Pick any of them at any time.
+sources:
+  - packages/shared/src/copy/web.ts
+  - packages/shared/src/copy/how.ts
+  - packages/core/src/wake/plan.ts
+  - packages/core/src/wake/approved.ts
+  - docs/DECISIONS.md
+---
+
+Your agent has three modes. They change only what happens *after* it decides. It looks, reasons and writes the record the same way in all three.
+
+| Mode | What it does with a decision to act |
+|---|---|
+| **Practice** | Writes down what it would have done. Spends nothing. |
+| **Ask me first** | Asks you, on the website or in Telegram, before each action. |
+| **On its own** | Acts inside your limits and tells you what it did. Still asks first for a large action. |
+
+Change mode in your agent's **Settings**, under **Trading**, or ask for it in the chat. It is a setting, not a transaction, so it is instant and free. Changing mode cancels any request still waiting for your answer.
+
+## Ask me first
+
+When your agent wants to act, you get **Approval needed** with **Approve** and **Reject**, in Telegram and on the website. A request expires an hour after the check that raised it. If you do not answer, nothing happens and the record says it expired.
+
+When you approve, your agent does not simply send what it planned earlier. It reads the price and your account again, runs every check again with no AI call, and acts only if the fresh result is within 0.5% of what you were shown. Otherwise it records “approved, conditions changed, not executed”.
+
+## On its own
+
+It acts inside your limits without asking. One exception: an action at or above your **Ask me first above** amount ($100 unless you change it) is sent to you as a request, marked as large.
+
+## Practice
+
+See [Live or Practice](/start/live-or-practice). Every decision is real; only the money stays still.

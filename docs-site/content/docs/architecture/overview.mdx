@@ -1,0 +1,60 @@
+---
+title: System overview
+description: A website that holds no key, one worker that holds the operator key, Postgres between them, and a contract per owner on Robinhood Chain.
+sources:
+  - apps/web/Dockerfile
+  - apps/worker/Dockerfile
+  - apps/worker/src/index.ts
+  - apps/worker/src/review.ts
+  - apps/worker/src/sender.ts
+  - apps/web/lib/money/relay.server.ts
+  - contracts/src/Desk.sol
+  - contracts/src/DeskFactory.sol
+  - packages/chain/src/addresses.ts
+  - docs/BUILD-PLAN.md
+---
+
+<Diagram name="system" />
+
+## The parts
+
+| Part | Runs on | What it does | Holds a key? |
+|---|---|---|---|
+| **Web app** | Coolify, Next.js 16 | Sign-in, every screen, requests into the database. Builds the transactions **you** sign. | No. It cannot move money even if it is broken into. |
+| **Postgres 16** | Coolify, internal only | Agents, mandates, the record, approvals, chat, the Telegram outbox, money moves. | No |
+| **Worker** | Coolify, one Node 24 process | The clock, the engine, the write-ahead sender, the OpenServ agent, the Telegram bot, the chat, the gift sender. | Yes: the operator key, and the gift wallet's key |
+| **DeskFactory** | Robinhood Chain | Creates one agent contract per owner, as a minimal clone. | No admin |
+| **Desk** (your agent) | Robinhood Chain | Holds your money. Enforces your limits. Pays only you. | Owned by your wallet |
+| **Uniswap v3** | Robinhood Chain | The pools every trade goes through, one pinned pool per token. | |
+| **Chainlink feeds** | Robinhood Chain | The price your contract checks every trade against. | |
+| **Morpho vault** | Robinhood Chain | Steakhouse USDG, where idle cash earns. | |
+| **Relay** | across chains | Brings money in from Base, Arbitrum, Ethereum and BNB Chain, and out. | |
+| **SERV Reasoning** | OpenServ | The one timing question, and the chat. | |
+| **Telegram** | Telegram | Status, alerts and approvals, through Shijima's own bot. | |
+
+## Two rules the whole design follows
+
+**Only the worker acts for you.** The website writes a request (an approval, a chat message, a “check now”) into Postgres. The worker picks it up within seconds and does the work. So the one process with a Shijima key is also the one process that decides. Transactions you make yourself, such as creating, funding or withdrawing, are built by the website and signed in your own wallet.
+
+**Money never passes through Shijima.** It moves between your wallet, your own contract, the pools and the vault. Relay bridges go from your wallet to Relay's contracts directly. The worker's key can only ask your contract to trade inside your limits, and the output always lands back in your contract.
+
+## Money and exact numbers
+
+Money is a whole number (`bigint`) in code and an exact decimal string in a record. A float would not hash the same way twice, and a record that cannot be re-hashed proves nothing. The limits check off the chain repeats the contract's own integer sums, rounding included, so the worker never sends a trade the chain will refuse.
+
+## Addresses
+
+<Facts>
+  <Fact label="Chain">Robinhood Chain mainnet, id 4663 · RPC `https://rpc.mainnet.chain.robinhood.com`</Fact>
+  <Fact label="DeskFactory v1"><Addr value="0xB0Df8d1ca6eDA2700a2D145bab2675109A2e89f1" /></Fact>
+  <Fact label="Desk implementation v1"><Addr value="0x90ff69C78014d06e3f09DC0985E83Cd8338aFe0F" /></Fact>
+  <Fact label="USDG"><Addr value="0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168" /></Fact>
+  <Fact label="Uniswap v3 SwapRouter02"><Addr value="0xCaf681a66D020601342297493863E78C959E5cb2" /></Fact>
+  <Fact label="Uniswap v3 factory"><Addr value="0x1f7d7550B1b028f7571E69A784071F0205FD2EfA" /></Fact>
+  <Fact label="Morpho vault, Steakhouse USDG"><Addr value="0xBeEff033F34C046626B8D0A041844C5d1A5409dd" /></Fact>
+  <Fact label="Showcase agent"><Addr value="0xC61DDE99B72add803E47B1bcA17B4bf8819618B1" /></Fact>
+</Facts>
+
+The first version (v0, factory <Addr value="0x35A40883BAD8874F8fB5592c72c4385226070958" short />) made the first real trades on 20 September and stays on the chain as history. The showcase agent moved to v1 on 22 September.
+
+Next: [one wake, step by step](/architecture/wake-loop).

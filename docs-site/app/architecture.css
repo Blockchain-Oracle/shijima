@@ -1,0 +1,119 @@
+.architecture {
+  container: architecture / inline-size;
+  border: 1px solid var(--color-fd-border);
+  border-radius: 12px;
+  background: var(--surface);
+  overflow: hidden;
+  margin: 28px 0;
+}
+.architecture-toolbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 22px 20px 12px; }
+.architecture-heading { min-width: 0; }
+.architecture-heading h3 { margin: 5px 0 8px; font-family: var(--font-display); font-size: 20px; letter-spacing: -.5px; font-weight: 600; line-height: 1.3; }
+.architecture-heading p { font-size: 13px; color: var(--color-fd-muted-foreground); line-height: 1.7; max-width: 60ch; margin: 0; }
+.architecture-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 16px; flex-shrink: 0; }
+.architecture-kicker, .architecture-detail-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: .06em; color: var(--color-fd-primary); text-transform: uppercase; }
+.architecture-hint { display: flex; align-items: flex-start; gap: 8px; padding: 0 20px 16px; font-size: 12px; line-height: 1.7; color: var(--color-fd-muted-foreground); margin: 0; }
+.architecture-hint svg { flex: none; margin-top: 3px; }
+.architecture-panel { container: map / inline-size; min-width: 0; }
+.architecture-wide-map { display: none; }
+.architecture-canvas-scroll { border-block: 1px solid var(--color-fd-border); }
+.architecture-canvas { background: var(--color-fd-background); }
+.architecture-node { border-radius: 12px; padding: 12px 14px; text-align: left; display: flex; flex-direction: column; justify-content: center; gap: 5px; }
+.architecture-node:hover { box-shadow: inset 0 0 0 1px var(--brand); }
+.architecture-node:focus-visible { outline: 3px solid var(--brand); outline-offset: 3px; }
+.architecture-node-index { font-family: var(--font-mono); font-size: 9px; color: var(--color-fd-primary); }
+.architecture-node-title { font-family: var(--font-display); font-size: 15px; line-height: 1.25; letter-spacing: -.35px; font-weight: 600; }
+.architecture-node-subtitle { font-size: 11px; line-height: 1.4; color: var(--color-fd-muted-foreground); }
+.architecture-detail { padding: 19px 20px; border-bottom: 1px solid var(--color-fd-border); }
+.architecture-detail > strong { display: block; font-family: var(--font-display); font-size: 17px; line-height: 1.4; margin: 7px 0 8px; }
+.architecture-detail p { font-size: 14px; line-height: 1.75; margin: 8px 0; }
+.architecture-permission { color: var(--color-fd-muted-foreground); }
+.architecture-permission > span { display: block; color: var(--color-fd-foreground); font-weight: 600; margin-top: 16px; }
+.architecture-caption { padding: 14px 20px 0; font-size: 12px; color: var(--color-fd-muted-foreground); line-height: 1.75; }
+.architecture-footer { display: flex; justify-content: space-between; gap: 14px; align-items: center; flex-wrap: wrap; padding: 16px 20px; }
+.architecture-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; font-size: 11px; color: var(--color-fd-muted-foreground); }
+.architecture-legend i { width: 18px; border-top: 2px solid var(--brand); }
+.architecture-legend i.is-read { border-top: 2px dashed var(--color-fd-muted-foreground); margin-left: 8px; }
+.architecture-download { display: flex; gap: 7px; align-items: center; color: var(--color-fd-primary); font-size: 12px; min-height: 44px; }
+.architecture-connections { padding: 14px 20px; border-top: 1px solid var(--color-fd-border); font-size: 14px; }
+.architecture-connections summary { cursor: pointer; padding-block: 8px; }
+.architecture-connections ol { list-style: decimal; padding-left: 18px; margin: 14px 0 0; line-height: 1.9; }
+.architecture-connections li { margin: 8px 0; overflow-wrap: anywhere; }
+.architecture-connections svg { display: inline; vertical-align: middle; margin: 0 5px; }
+.architecture-dialog { container: expanded-map / inline-size; }
+.architecture-dialog .dialog-heading { flex-wrap: wrap; }
+.architecture-dialog .dialog-heading h2 { min-width: 0; overflow-wrap: anywhere; }
+.architecture-dialog .dialog-heading > button { flex: none; width: 44px; height: 44px; }
+
+.compact-map { padding: 20px; border-block: 1px solid var(--color-fd-border); background: var(--color-fd-background); }
+.compact-map-picker { margin-bottom: 24px; }
+.compact-map-picker label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+.compact-map-picker select {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 10px 30px 10px 12px;
+  border: 1px solid var(--color-fd-border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--color-fd-foreground);
+  font: inherit;
+  font-size: 16px;
+  scroll-margin-block: 150px 24px;
+}
+.compact-map-picker select:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+.compact-map-picker p { font-size: 12px; line-height: 1.65; color: var(--color-fd-muted-foreground); margin: 8px 0 0; }
+.compact-map-network { display: flex; flex-direction: column; gap: 18px; }
+.compact-map-current { border: 1px solid var(--brand); border-radius: 10px; padding: 18px; background: var(--surface); box-shadow: inset 3px 0 0 var(--brand); }
+.compact-map-current .compact-map-subtitle { color: var(--color-fd-muted-foreground); font-size: 13px; margin-bottom: 12px; }
+.compact-map-explanation { border-top: 1px solid var(--color-fd-border); margin-top: 12px; }
+.compact-map-explanation summary { font-size: 13px; padding-block: 12px 4px; min-height: 44px; cursor: pointer; color: var(--color-fd-primary); }
+.compact-map-branch h4 { font-family: var(--font-mono); font-size: 11px; font-weight: 500; line-height: 1.6; letter-spacing: .04em; text-transform: uppercase; color: var(--color-fd-muted-foreground); margin: 0 0 8px; }
+.compact-map-branch ul { display: grid; gap: 12px; list-style: none; padding: 0; margin: 0; }
+.compact-map-connection { display: flex; flex-direction: column; min-width: 0; }
+.compact-map-link { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-width: 0; min-height: 56px; padding: 14px; border: 1px solid var(--color-fd-border); border-radius: 8px; background: var(--surface); color: var(--color-fd-foreground); text-align: left; }
+.compact-map-link:hover { border-color: var(--brand); }
+.compact-map-link > span { min-width: 0; overflow-wrap: anywhere; }
+.compact-map-link > svg { flex: none; color: var(--color-fd-primary); }
+.compact-map-link strong { display: block; font-family: var(--font-display); font-size: 14px; font-weight: 550; line-height: 1.5; }
+.compact-map-link small { display: block; margin-top: 4px; font-size: 12px; line-height: 1.6; color: var(--color-fd-muted-foreground); }
+.compact-map-arrow { display: flex; align-items: center; gap: 12px; padding: 8px 14px; min-height: 52px; color: var(--color-fd-primary); }
+.compact-map-arrow > svg { flex: none; }
+.compact-map-arrow > span { border-left: 2px solid var(--brand); padding-left: 12px; font-size: 13px; line-height: 1.6; color: var(--color-fd-foreground); overflow-wrap: anywhere; }
+.compact-map-arrow small { display: block; font-size: 11px; color: var(--color-fd-muted-foreground); }
+.compact-map-endpoint { display: block; font-size: 12px; font-weight: 600; margin-bottom: 3px; }
+.compact-map-arrow[data-kind=read] { color: var(--color-fd-muted-foreground); }
+.compact-map-arrow[data-kind=read] > span { border-left: 2px dashed var(--color-fd-muted-foreground); }
+.compact-map-end { font-size: 13px; line-height: 1.7; color: var(--color-fd-muted-foreground); margin: 0; }
+
+@container map (min-width: 560px) {
+  .compact-map-branch ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .compact-map-link { flex: 1; }
+}
+@container map (min-width: 1040px) {
+  .compact-map { display: none; }
+  .architecture-wide-map { display: block; }
+}
+@container architecture (max-width: 520px) {
+  .architecture-toolbar { display: grid; grid-template-columns: minmax(0, 1fr); padding: 16px 14px 12px; gap: 14px; }
+  .architecture-actions { grid-row: 1; flex-direction: row-reverse; justify-content: space-between; align-items: center; width: 100%; gap: 8px; }
+  .architecture-actions .brand { font-size: 12px; gap: 5px; }
+  .architecture-actions .brand svg { width: 17px; height: 21px; }
+  .architecture-actions .architecture-expand { min-height: 44px; }
+  .architecture-heading h3 { font-size: 20px; }
+  .architecture-hint { padding-inline: 14px; }
+  .architecture-footer { padding: 14px; }
+  .architecture-caption, .architecture-connections { padding-inline: 14px; }
+}
+@container map (max-width: 420px) {
+  .compact-map { padding: 16px 12px; }
+  .compact-map-current { padding: 16px 14px; }
+}
+@container expanded-map (max-width: 520px) {
+  .architecture-dialog .dialog-heading { display: grid; grid-template-columns: minmax(0, 1fr) 44px; gap: 8px; }
+  .architecture-dialog .dialog-heading h2 { grid-area: 2 / 1; }
+  .architecture-dialog .dialog-heading > button { grid-area: 2 / 2; }
+  .architecture-dialog .dialog-heading .brand { display: inline-flex; grid-area: 1 / 1 / 2 / 3; justify-self: end; font-size: 12px; }
+  .architecture-dialog .dialog-heading .brand svg { width: 17px; height: 21px; }
+}

@@ -1,0 +1,48 @@
+---
+title: Withdraw without our website
+description: If Shijima disappears, your money is still in your contract. Take it out with Blockscout and your wallet alone.
+sources:
+  - packages/shared/src/copy/how.ts
+  - contracts/src/Desk.sol
+  - packages/chain/src/addresses.ts
+---
+
+Your money sits in your own contract on the public chain, not with us. You can take it out with the block explorer alone. You need the wallet that owns the agent and a few cents of ETH on Robinhood Chain.
+
+<Steps>
+<Step>
+### Open your agent on the explorer
+Go to `https://robinhoodchain.blockscout.com/address/` followed by your agent's address. The address is on your agent's page and in its settings. If you have lost it, open your own wallet's address on Blockscout and find the transaction that created your agent through the factory.
+</Step>
+<Step>
+### Open Contract, then Write proxy
+Your agent is a proxy of a verified contract, so Blockscout shows every function. Press **Connect wallet** there and connect the wallet that owns the agent.
+</Step>
+<Step>
+### Stop the assistant (optional)
+Call `revokeOperator`. It takes no arguments. From then on Shijima's key can do nothing, and your contract is paused.
+</Step>
+<Step>
+### Call withdraw
+`withdraw(token, amount)`:
+- `token`: the token's address, from the list below.
+- `amount`: in the token's smallest unit. USDG has 6 decimals, so $25 is `25000000`. Stock Tokens have 18. The largest number, `115792089237316195423570985008687907853269984665640564039457584007913129639935`, means all of it.
+</Step>
+<Step>
+### Confirm in your wallet
+The tokens go to your wallet, the only place they can go. Repeat for each token you hold. Stock Tokens arrive as they are, to sell wherever you like.
+</Step>
+</Steps>
+
+## Token addresses
+
+<Facts>
+  <Fact label="USDG · your agent's cash"><Addr value="0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168" /></Fact>
+  <Fact label="steakUSDG · savings-vault shares"><Addr value="0xBeEff033F34C046626B8D0A041844C5d1A5409dd" /></Fact>
+</Facts>
+
+Savings-vault shares come out as vault shares. Redeem them at the vault yourself for USDG. Each Stock Token's address is on its token page on Blockscout, and in your agent's **Read proxy** tab under `allTokens`.
+
+<Callout title="If Blockscout is down">
+The same calls work from any tool that can send a transaction, for example Foundry's `cast send <agent> "withdraw(address,uint256)" <token> <amount>` signed by the owner's key.
+</Callout>

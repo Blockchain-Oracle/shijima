@@ -1,0 +1,5 @@
+{
+  "title": "Money",
+  "icon": "Wallet",
+  "pages": ["wallet", "fund", "withdraw", "send-and-receive", "bridge", "fees"]
+}

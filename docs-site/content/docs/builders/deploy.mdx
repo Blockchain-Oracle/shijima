@@ -1,0 +1,45 @@
+---
+title: Deploy on Coolify
+description: One Coolify project with four apps. Each builds from main with its own Dockerfile.
+sources:
+  - apps/web/Dockerfile
+  - apps/worker/Dockerfile
+  - docs-site/Dockerfile
+  - docs/BUILD-PLAN.md
+---
+
+Shijima runs on a self-hosted <a href="https://coolify.io" target="_blank" rel="noreferrer">Coolify</a> server, in one project, **shijima**:
+
+| App | Built from | Port | Address |
+|---|---|---|---|
+| `shijima-db` | Postgres 16 | internal only | none |
+| `shijima-web` | `apps/web/Dockerfile` | 3007 | https://shijima.xyz |
+| `shijima-worker` | `apps/worker/Dockerfile` | none | none: it only connects out |
+| docs | `docs-site/Dockerfile`, base directory `/docs-site` | 3000 | https://docs.shijima.xyz |
+
+Each builds from the `main` branch through a read-only deploy key. **Commit and push before you deploy**: Coolify builds what is on GitHub, not what is on your machine.
+
+## The web app
+
+`node:24-slim`, pnpm 11, `pnpm --filter @desk/web build`, then `next start` on 3007. `curl` is installed because Coolify's health check runs it; without it, a green build is rolled back as unhealthy. Give it the web variables from [Run it locally](/builders/run-locally), with `DATABASE_URL` pointing at `shijima-db` on the internal network.
+
+## The worker
+
+`node:24-slim`, no port. On start it writes the OpenServ agent's saved credentials from the variable `OPENSERV_STATE_JSON` into `.openserv.json` (readable by its owner only), then runs the worker. It needs no public address: the OpenServ SDK connects out through OpenServ's own proxy.
+
+Run **exactly one** worker per database. It takes the leader lock on start; a second one exits.
+
+## The docs site
+
+The same pattern as the web app: `node:22-slim`, `pnpm install --frozen-lockfile`, `pnpm build`, `next start` on 3000. Build-time variables:
+
+| Name | Value |
+|---|---|
+| `NEXT_PUBLIC_DOCS_URL` | the docs site's own https address |
+| `NEXT_PUBLIC_APP_URL` | the web app's address |
+
+The web app links here through its own `NEXT_PUBLIC_DOCS_URL`.
+
+## Migrations
+
+`pnpm db:migrate` applies Drizzle migrations. They are additive only: the production database holds the real record of real trades, and nothing on the money path is ever deleted.

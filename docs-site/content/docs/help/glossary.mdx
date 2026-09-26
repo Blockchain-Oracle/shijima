@@ -1,0 +1,33 @@
+---
+title: Glossary
+description: Every word the app uses, in one line each.
+sources:
+  - packages/shared/src/copy/docs.ts
+  - docs/RECORD-SCHEMA.md
+---
+
+| Word | Meaning |
+|---|---|
+| **Agent** | Your AI agent, and the contract account it trades from. Code calls it a *desk*. |
+| **Agent account** | Your own contract on Robinhood Chain. It holds the money and pays only you. |
+| **Stock Token** | A token that follows a US stock or fund's price. Not a share: no ownership of the company and no shareholder rights. |
+| **USDG** | A digital dollar on Robinhood Chain. Your agent keeps its cash in it. $1 is 1 USDG. |
+| **Strategy** | A basket: which Stock Tokens to hold, what share of each, and how much cash. |
+| **Target** | The share of your money a holding should be. With $1,000 and a 40% Nvidia target, the target is $400 of Nvidia. |
+| **Drift** | How far a holding's share has moved from its target share. Nvidia at 44% of your money on a 40% target has drifted 4 points. |
+| **Tolerance** | How many points a share may drift before your agent considers a trade. 3 unless you change it. |
+| **Reference price** | What a price is compared with: the last official update while the market is open, the last regular close outside it. |
+| **Gap** | How far the pool's price is from the reference. |
+| **Practice** | A mode where your agent decides for real and spends nothing. |
+| **Live** | Ask me first or On its own: your agent can trade real money, inside your limits. |
+| **Operator key** | The key Shijima's worker uses to trade for your agent. It cannot withdraw. |
+| **Session key** | An optional key in your browser, for up to 7 days, for small safe actions without your wallet. |
+| **Gas** | The network fee, paid in ETH. Shijima pays it for your agent's trades; you pay it for what you sign. |
+| **Relay** | The service that moves money between chains, for Fund, Bridge and Get gas. |
+| **Savings** | Idle cash in the Steakhouse USDG vault on Morpho, earning its live rate until a buy needs it. |
+| **Fingerprint** | A hash of a decision's record, put on the chain so anyone can check it later. |
+| **Seal** | Putting a fingerprint on the chain. Trades seal themselves; a daily seal covers the rest. |
+| **Record** | Every decision your agent made, with its reasons, in order. |
+| **Loss stop** | The loss at which your agent stops trading, 15% unless you change it. |
+| **SERV Reasoning** | OpenServ's AI service. It makes the one timing call in each decision. |
+| **OpenServ** | The platform where Shijima is listed as an agent and woken every hour. |

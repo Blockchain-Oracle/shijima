@@ -1,0 +1,5 @@
+{
+  "title": "Architecture",
+  "icon": "Blocks",
+  "pages": ["overview", "wake-loop", "contract", "record", "failure-handling"]
+}

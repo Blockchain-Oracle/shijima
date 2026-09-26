@@ -1,0 +1,32 @@
+---
+title: Live or Practice
+description: New agents start live. Practice is always one tap away, in either direction.
+sources:
+  - docs/DECISIONS.md
+  - apps/web/features/strategies/CreateStep.tsx
+  - packages/core/src/wake/plan.ts
+  - packages/shared/src/copy/how.ts
+---
+
+**Live** means your agent trades for real, inside your limits. **Practice** means it looks, thinks and decides exactly as it would live, then writes down what it *would have* done and spends nothing.
+
+New agents start **Live** unless you choose Practice when you create one. You can switch either way at any time, in your agent's **Settings**, under **Trading**. No transaction is needed to switch.
+
+## Which to choose
+
+| | Live | Practice |
+|---|---|---|
+| Looks at your account and the market | yes | yes |
+| Asks SERV Reasoning when to act | yes | yes |
+| Writes every decision in the record | yes | yes, as “would have” |
+| Spends money | yes, inside your limits | never |
+| Telegram tells you | “I did this” | “I would have done this” |
+| Idle cash goes to the savings vault | when it acts on its own | no |
+
+Practice is useful when you want to watch how it thinks before trusting it with money, or when you have not funded it yet.
+
+## Why live is the default
+
+Your money's protections are the same in every mode. Your contract refuses any trade over your per-trade or per-day limit, and only your wallet can ever withdraw. A waiting period in Practice added friction, not safety, so it was removed on 25 September. Your agent's practice checks are still counted and shown as its track record.
+
+Live has two flavours, **Ask me first** and **On its own**. See [modes](/agent/modes).

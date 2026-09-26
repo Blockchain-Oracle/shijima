@@ -1,0 +1,45 @@
+---
+title: Your guide to Shijima.
+description: An AI agent that keeps your basket of US Stock Tokens on plan around the clock on Robinhood Chain. It can trade inside your limits. It can never take your money out.
+icon: House
+---
+
+<WelcomeActions />
+
+## Four ways in
+
+<ProductMap />
+
+## What would you like to do?
+
+<JourneyList />
+
+## What is running today
+
+Shijima runs on **Robinhood Chain mainnet** (chain 4663) with real money. Every agent is its own contract, created by one factory:
+
+<Facts>
+  <Fact label="Agent factory (v1)"><Addr value="0xB0Df8d1ca6eDA2700a2D145bab2675109A2e89f1" /></Fact>
+  <Fact label="Agent contract code (verified)"><Addr value="0x90ff69C78014d06e3f09DC0985E83Cd8338aFe0F" /></Fact>
+  <Fact label="The live showcase agent"><Addr value="0xC61DDE99B72add803E47B1bcA17B4bf8819618B1" /></Fact>
+  <Fact label="On OpenServ">Agent 4513, woken by the workflow “Hourly desk review”</Fact>
+  <Fact label="Identity">ERC-8004 on Base, token 95396</Fact>
+</Facts>
+
+<Partners
+  items={[
+    { name: 'robinhood', job: 'The chain your agent and its money live on' },
+    { name: 'openserv', job: 'Hosts the agent; SERV Reasoning makes the timing call' },
+    { name: 'uniswap', job: 'The pools every trade goes through' },
+    { name: 'chainlink', job: 'The price feeds your contract checks each trade against' },
+    { name: 'relay', job: 'Brings money in from other chains, and out' },
+    { name: 'telegram', job: 'Tells you when your agent acts or needs you' },
+  ]}
+/>
+
+## More to read
+
+- [Shijima in one screen](/start/what-is-shijima)
+- [How your agent decides](/agent/how-it-decides)
+- [What it can never do](/security/what-it-can-do)
+- [A plain word for every term](/help/glossary)

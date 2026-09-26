@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 import ThemeToggle from '@/components/shell/ThemeToggle'
 import { WrongNetworkBanner } from '@/components/shell/WrongNetworkBanner'
+import { DOCS_SITE_URL } from '@/lib/docs-site'
 import { Logo } from './Logo'
 import { appHrefFor } from './links'
 import './styles.css'
@@ -68,6 +69,11 @@ function SiteFooter() {
       <nav aria-label={f.howItWorks}>
         <Link href="/how-it-works">{f.howItWorks}</Link>
         <Link href="/docs">{f.docs}</Link>
+        {DOCS_SITE_URL && (
+          <a href={DOCS_SITE_URL} target="_blank" rel="noreferrer">
+            {f.fullDocs}
+          </a>
+        )}
         <Link href={'/how-it-works#withdraw-without-us' as Route}>{f.withdraw}</Link>
         <Link href="/live">{H.nav.live}</Link>
         <Link href="/status">{f.status}</Link>

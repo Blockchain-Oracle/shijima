@@ -1,0 +1,53 @@
+---
+title: Copy another agent
+description: Your own agent, with your own money, that follows another agent's moves in proportion. The creator may charge a one-time fee; 80% goes to them.
+sources:
+  - apps/web/app/copy-actions.ts
+  - packages/core/src/wake/copy-pass.ts
+  - packages/core/src/wake/copy.ts
+  - packages/db/src/queries/copy.ts
+  - packages/shared/src/copy/copying.ts
+---
+
+## How copying works
+
+Copying gives you **your own agent**, in your own contract, with your own money. When the agent you copy makes a trade, yours makes the same move **as a share of its own value**.
+
+<Example>
+The agent you copy holds **$500** and puts **12%** of it, $60, into Nvidia. Your agent holds **$50**, so it puts 12% of its money, **$6**, into Nvidia.
+</Example>
+
+- The agent you copy can never touch your money.
+- **Your** limits, cash, largest-holding setting and mode apply to every copy. In Practice your agent copies on paper; in Ask me first it asks you.
+- No AI call is made for a copy. The other agent already made the timing call.
+- A move yours cannot make is written down as a **missed copy**, with the reason: not enough cash, no holding to sell, over your daily limit, over your largest-holding setting, too small to be worth the fee, or older than 30 minutes by the time it was seen.
+- Pause, resume or stop from your agent's page. Moves made while you were paused are **never** copied later.
+
+## Start copying
+
+<Steps>
+<Step>
+### Copy this agent
+On any shared agent, press **Copy this agent**, then **Continue: set up your agent**.
+</Step>
+<Step>
+### Create your agent
+The studio opens with the other agent's mix, under the banner **Copying** and its name. Set your amount and limits, and create it as usual.
+</Step>
+<Step>
+### Pay the fee, if there is one
+**Last step: start copying.** If the creator set a fee, you pay it in USDG from your wallet: **Pay $X to the creator** and **Pay $Y to Shijima**. The server checks both transfers on the chain before it links the copy. Then **Start copying**.
+</Step>
+</Steps>
+
+## The fee
+
+A creator can ask a **one-time fee of $0 to $5**, shown before you sign. It is split **80% to the creator, 20% to Shijima**. Shijima takes nothing else: no fee per trade and none on what you hold.
+
+<Example>
+A creator sets **$5**. You pay **$4 to the creator** and **$1 to Shijima**, once. After that, copying costs nothing but your own agent's network fees, which Shijima pays.
+</Example>
+
+## Let others copy yours
+
+In your agent's **Settings**, under **Sharing**, turn on its public link, then **Let others copy this agent**, and set your fee.

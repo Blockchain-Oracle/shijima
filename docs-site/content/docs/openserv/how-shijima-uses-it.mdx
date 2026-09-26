@@ -1,0 +1,63 @@
+---
+title: How Shijima uses OpenServ
+description: Agent 4513, the hourly workflow that wakes it, SERV Reasoning for the timing call, and its identity on Base.
+sources:
+  - packages/shared/src/openserv.ts
+  - apps/worker/src/openserv/agent.ts
+  - apps/worker/src/openserv/provision.ts
+  - apps/worker/src/openserv/serve.ts
+  - apps/worker/src/openserv/capabilities.ts
+  - apps/worker/src/agentkit.ts
+  - apps/worker/src/openserv/identity.ts
+  - packages/core/src/serv/client.ts
+  - packages/core/src/serv/prompts/timing.ts
+  - apps/worker/src/review.ts
+---
+
+<Facts>
+  <Fact label="Agent">`shijima`, id 4513, <a href="https://platform.openserv.ai/agents/4513" target="_blank" rel="noreferrer">open on OpenServ</a></Fact>
+  <Fact label="Workflow">“Hourly desk review”, id 13895</Fact>
+  <Fact label="Trigger">cron `0 * * * *`, UTC: the top of every hour</Fact>
+  <Fact label="Reasoning">SERV Reasoning, model `gpt-5.4-mini`, prompt `timing.v2`</Fact>
+  <Fact label="Identity">ERC-8004 on Base, token <a href="https://www.8004scan.io/agents/base/95396" target="_blank" rel="noreferrer">95396</a></Fact>
+</Facts>
+
+<Diagram name="openserv" />
+
+## The hourly workflow wakes it
+
+The workflow **Hourly desk review** has one cron trigger, at the top of every hour. Each hour OpenServ hands Shijima a task, “Run the hourly desk review”.
+
+Shijima overrides the SDK's task handler (`doTask`), so **OpenServ's own model never decides what Shijima does**. When the task's words match the workflow exactly, Shijima runs the same review of every agent that its own timer runs, then writes a summary to the task's log and marks it done.
+
+The worker also keeps its own clock, looking every five minutes. At the top of the hour it holds back for four minutes, so OpenServ gets the first go. Each look is keyed to its five-minute slot, so whichever clock arrives first does the work and the other finds it done. If OpenServ is unreachable, your agent carries on and says so.
+
+## SERV Reasoning makes the timing call
+
+In each decision, the one AI step is a call to SERV Reasoning:
+
+- One fixed system prompt, `timing.v2`, the same for every owner. Your data goes in the message.
+- A strict JSON answer: one of `ACT_NOW`, `ACT_PART` (25, 50 or 75%), `WAIT_REOPEN` or `DECLINE`, with confidence, reasons that cite evidence by id, and the options it turned down.
+- SERV's own `serv_prompt_guard` and `serv_shadow_agent` tools are on.
+- A 60-second timeout. Any refusal, malformed answer or unknown citation means no decision, recorded as failed.
+
+The chat, in the app, in Telegram and in OpenServ workspaces, is answered by SERV Reasoning too, with its own prompt.
+
+## Signing with AgentKit
+
+The operator key that signs your agent's trades is wrapped in Coinbase AgentKit's `ViemWalletProvider`. AgentKit only signs. Everything else, the write-ahead record, the nonce and the settling, is Shijima's own sender.
+
+## Its identity on Base
+
+Shijima has an **ERC-8004** agent identity on Base, token **95396**, with its own agent card. ERC-8004 is a standard for putting an AI agent's identity on a chain, so anyone can look it up.
+
+## What other workspaces can ask it
+
+Anyone can add Shijima to a workspace. Without a link, it can only describe itself and read public agent status. A workspace [linked to your agent](/openserv/link-your-workspace) can also:
+
+| Capability | What it does |
+|---|---|
+| `agent_status` | Your agent's current state |
+| `latest_decisions` | Its latest 1 to 20 decisions |
+| `check_now` | Ask it to look now, only if you allowed it |
+| `propose_change` | Propose a change, which comes back as a link for you to confirm |

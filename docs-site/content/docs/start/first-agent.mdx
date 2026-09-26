@@ -1,0 +1,71 @@
+---
+title: Create your first agent
+description: Four short steps, Strategy, Amount, Limits and Review, then two confirmations in your wallet.
+sources:
+  - apps/web/features/strategies/Studio.tsx
+  - apps/web/features/strategies/StrategyStep.tsx
+  - apps/web/features/strategies/MoneyStep.tsx
+  - apps/web/features/strategies/StudioFields.tsx
+  - apps/web/features/strategies/CreateStep.tsx
+  - apps/web/app/studio-actions.ts
+  - packages/shared/src/presets.ts
+  - packages/shared/src/copy/studio.ts
+---
+
+Open <AppLink href="/agents/new">Create an agent</AppLink>. The studio has four steps. **Continue →** moves on, **← Back** goes back, and nothing is sent until the last step.
+
+<Steps>
+<Step>
+### Strategy: pick a basket
+
+Choose one of **20 strategies**, each a basket of Stock Tokens plus cash. Search by name or stock, filter with the chips (Broad, Tech, AI, Oil & metals, Safer, Bold), or sort with the **Sort** menu: Popular, Best 30 days, Most cash, A to Z.
+
+Or choose **Build your own**: tap the stocks you want and set a share for each. Whatever is left is cash. **Even split** shares it out evenly. The shares and cash must add up to 100%.
+</Step>
+<Step>
+### Amount: how much it looks after
+
+The default is **$20**. Quick picks are $1, $10, $20, $50, $100 and **Max**. The least is **$1**. You see what your amount buys of each stock, in dollars.
+
+Tick **Practice with no money** to start with $0 and watch it decide first. Short of USDG? The step links to Bridge to bring some in, and shows the [free $1](/start/free-dollar) card while it lasts.
+</Step>
+<Step>
+### Limits: the most it may spend
+
+| Setting | Starts at | Held by |
+|---|---|---|
+| **Per trade** | $10 | your contract on the chain |
+| **Per day** | $50 | your contract on the chain |
+| Rebalance when a holding drifts by | 3% | the agent |
+| Most in any one stock | 50% | the agent |
+| Stop everything after a loss of | 15% | the agent |
+| Ask me first above | $100 | the agent |
+
+The last four sit under **More options**, with **Notes for your agent** (up to 600 characters) and [standing rules](/agent/rules). [Limits](/agent/limits) explains each one.
+</Step>
+<Step>
+### Review: name it and create it
+
+Give it a name, or keep the strategy's name. Read the summary; each part has an **Edit** link. Read and accept the one-page disclosure the first time. Choose how it starts under **It starts**:
+
+- **Live**: trades on its own, inside your limits. This is the default.
+- **Practice**: decides for real, spends nothing.
+
+The page shows the network fee, “about $X in ETH, from your wallet”. If your wallet is short of ETH, **Get ETH for fees** takes you to Bridge. Then press **Create and put in $X**.
+</Step>
+</Steps>
+
+## What your wallet signs
+
+1. **Create your agent account.** One call to the agent factory creates a contract that belongs to your wallet, with your per-trade and per-day limits and the approved Stock Tokens. The factory always makes the caller the owner, so nobody can create an agent that belongs to someone else.
+2. **Move $X of USDG into it.** A plain USDG transfer to your agent's address. Skipped in Practice with no money.
+
+The fee is a few cents of ETH, and the page sets a small margin on top so a small wallet's transaction is accepted.
+
+## After it is created
+
+A card says **“Name” is live** (or **is practising**), shows what it holds and its account address, with **Copy the address**. From here:
+
+- [Connect Telegram](/agent/telegram) so it can reach you.
+- [Talk to it](/agent/ask) with **Ask Shijima** (⌘J).
+- Change [its mode](/agent/modes) or [limits](/agent/limits) any time in its Settings.
