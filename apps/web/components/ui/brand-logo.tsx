@@ -2,15 +2,39 @@ import { cn } from '@/lib/utils'
 
 /**
  * A partner's real mark, never a stand-in icon. OpenServ's comes from its own brand files, cut to the mark alone
- * and drawn white or black as the theme asks; Telegram and WalletConnect are Simple Icons' marks (CC0) in each
- * brand's own colour, as their brand pages show them.
+ * and drawn white or black as the theme asks. Telegram, WalletConnect and Chainlink are Simple Icons' marks (CC0)
+ * in each brand's colour; Coinbase is its round logomark; Uniswap and Morpho are their token logos, Relay its mark.
  */
-export type Brand = 'openserv' | 'telegram' | 'walletconnect'
+export type Brand =
+  | 'openserv'
+  | 'telegram'
+  | 'walletconnect'
+  | 'uniswap'
+  | 'chainlink'
+  | 'morpho'
+  | 'coinbase'
+  | 'relay'
 
 const LABEL: Record<Brand, string> = {
   openserv: 'OpenServ',
   telegram: 'Telegram',
   walletconnect: 'WalletConnect',
+  uniswap: 'Uniswap',
+  chainlink: 'Chainlink',
+  morpho: 'Morpho',
+  coinbase: 'Coinbase',
+  relay: 'Relay',
+}
+
+/** The file for each mark in public/brand: official artwork, SVG where the brand publishes one. */
+const FILE: Record<Exclude<Brand, 'openserv'>, string> = {
+  telegram: 'telegram.svg',
+  walletconnect: 'walletconnect.svg',
+  uniswap: 'uniswap.png',
+  chainlink: 'chainlink.svg',
+  morpho: 'morpho.png',
+  coinbase: 'coinbase.svg',
+  relay: 'relay.png',
 }
 
 export function BrandLogo({
@@ -39,7 +63,7 @@ export function BrandLogo({
   return (
     <span className={cn('brand-logo', className)} style={{ width: size, height: size }}>
       {/* biome-ignore lint/performance/noImgElement: a small static brand mark */}
-      <img src={`/brand/${brand}.svg`} alt={alt} />
+      <img src={`/brand/${FILE[brand]}`} alt={alt} />
     </span>
   )
 }

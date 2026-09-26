@@ -42,9 +42,16 @@
 }
 
 @media (max-width: 620px) {
-  .landing-shell .hero-band {
-    padding: 56px 20px 0;
-    min-height: 540px;
+  .landing-shell .hero-stage {
+    padding: 44px 14px 0;
+  }
+
+  .landing-shell .hero-mock {
+    margin-top: 36px;
+  }
+
+  .landing-shell .screens-band {
+    padding: 0 14px;
   }
 
   .landing-shell .hero-line {

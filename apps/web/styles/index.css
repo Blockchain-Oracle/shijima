@@ -39,6 +39,7 @@
 @import "./kit/shell.css";
 @import "./kit/wallet.css";
 @import "./kit/connect.css";
+@import "./kit/marquee.css";
 @import "./kit/settings.css";
 @import "./kit/ask.css";
 @import "./kit/new-agent.css";

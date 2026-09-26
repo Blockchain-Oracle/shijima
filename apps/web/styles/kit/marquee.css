@@ -1,0 +1,50 @@
+/* LogoMarquee (components/ui/logo-marquee.tsx), after 21st's Logo Cloud Marquee: the row is the list twice, so
+ * sliding it by half its width lands exactly where it began. Faded at both edges; hover pauses it. */
+
+.lm-mask {
+  overflow: hidden;
+  min-width: 0;
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+
+.lm-track {
+  display: flex;
+  width: max-content;
+  animation: lmSlide 36s linear infinite;
+}
+
+.lm-track.lm-reverse {
+  animation-direction: reverse;
+}
+
+.lm-mask:hover .lm-track {
+  animation-play-state: paused;
+}
+
+.lm-item {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  padding: 0 22px;
+  white-space: nowrap;
+}
+
+@keyframes lmSlide {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lm-track {
+    animation: none;
+  }
+
+  .lm-mask {
+    overflow-x: auto;
+  }
+}

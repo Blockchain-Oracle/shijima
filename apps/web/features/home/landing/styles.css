@@ -216,69 +216,125 @@
   text-align: center;
 }
 
-/* The band: a near-black stage. Behind the screens a giant disc, dark half and hatched green half, rises like a
- * sun and turns slowly. */
-.landing-shell .hero-band {
+/* The stage (21st Hero with Mockup): a faint grid fading out, the copy, then the live agent's screen rising
+ * into a soft accent glow. */
+.landing-shell .hero-stage {
   position: relative;
-  display: flex;
-  flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--lx-line);
   border-radius: 28px;
   background: var(--lx-band);
-  padding: 72px 40px 0;
-  min-height: 620px;
+  padding: 64px 40px 0;
   box-shadow: 0 60px 140px -80px var(--lx-shade);
+  isolation: isolate;
 }
 
-/* the disc */
-.landing-shell .hero-band::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: min(920px, 120vw);
-  aspect-ratio: 1;
-  transform: translate(-50%, 42%);
-  border-radius: 50%;
-  border: 1px solid var(--lx-line-2);
-  background:
-    linear-gradient(90deg, var(--lx-coin-dark) 0 50%, transparent 50%),
-    repeating-linear-gradient(120deg, transparent 0 16px, rgb(255 255 255 / 0.28) 16px 19px),
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--ac) 78%, #ffffff),
-      var(--ac) 70%,
-      color-mix(in srgb, var(--ac) 72%, #000000)
-    );
-  box-shadow:
-    0 0 120px color-mix(in srgb, var(--ac) 19%, transparent),
-    0 0 340px color-mix(in srgb, var(--ac) 11%, transparent);
-  animation: landCoinTurn 90s linear infinite;
-  pointer-events: none;
-}
-
-/* a soft veil, so the copy zone stays dark and legible */
-.landing-shell .hero-band::after {
+.landing-shell .hero-stage::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgb(var(--lx-veil) / 0.9) 6%,
-    rgb(var(--lx-veil) / 0.45) 44%,
-    rgb(var(--lx-veil) / 0) 78%
-  );
+  z-index: -1;
+  background-image:
+    linear-gradient(var(--lx-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--lx-line) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 70% 55% at 50% 0%, #000 30%, transparent 100%);
   pointer-events: none;
 }
 
-@keyframes landCoinTurn {
+.landing-shell .hero-copy .land-logo {
+  margin: 0 auto 26px;
+}
+
+.landing-shell .hero-in {
+  animation: landRise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.landing-shell .hero-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 22px 0 0;
+  color: var(--tx3);
+  font: 600 12px / 1 var(--fm);
+  letter-spacing: 0.02em;
+}
+
+.landing-shell .hero-mock {
+  position: relative;
+  width: min(1080px, 100%);
+  margin: 52px auto 0;
+}
+
+.landing-shell .hero-halo {
+  position: absolute;
+  left: 50%;
+  top: -12%;
+  width: 70%;
+  height: 70%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--ac) 34%, transparent), transparent);
+  filter: blur(40px);
+  animation: heroGlow 6s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+.landing-shell .hero-screen {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--lx-line-2);
+  border-bottom: 0;
+  border-radius: 18px 18px 0 0;
+  background: var(--card);
+  padding: 8px 8px 0;
+  box-shadow:
+    0 -1px 0 0 color-mix(in srgb, var(--ac) 30%, transparent),
+    0 -30px 90px -40px color-mix(in srgb, var(--ac) 40%, transparent);
+  transition: transform 0.5s cubic-bezier(0.22, 0.9, 0.3, 1);
+}
+
+.landing-shell .hero-screen:hover {
+  transform: translateY(-6px);
+}
+
+.landing-shell .hero-screen img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 11px 11px 0 0;
+}
+
+.landing-shell .hero-screen .shot-light,
+[data-theme="light"] .landing-shell .hero-screen .shot-dark {
+  display: none;
+}
+
+[data-theme="light"] .landing-shell .hero-screen .shot-light {
+  display: block;
+}
+
+@keyframes heroGlow {
   from {
-    transform: translate(-50%, 42%) rotate(0deg);
+    opacity: 0.6;
+    transform: translateX(-50%) scale(0.92);
   }
   to {
-    transform: translate(-50%, 42%) rotate(360deg);
+    opacity: 1;
+    transform: translateX(-50%) scale(1.06);
   }
+}
+
+/* The three screens now stand on their own stage in "One agent, everywhere", peeking up from its bottom edge. */
+.landing-shell .screens-band {
+  position: relative;
+  overflow: hidden;
+  margin-top: 40px;
+  border: 1px solid var(--lx-line);
+  border-radius: 28px;
+  background: var(--lx-band);
+  padding: 0 40px;
 }
 
 @keyframes landRise {
@@ -362,7 +418,7 @@
   background: var(--lx-pill-hover);
 }
 
-.landing-shell .land-pill .live-dot {
+.landing-shell .live-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
@@ -429,12 +485,14 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .landing-shell .hero-copy {
+  .landing-shell .hero-copy,
+  .landing-shell .hero-in,
+  .landing-shell .hero-halo {
     animation: none;
   }
 
-  .landing-shell .hero-band::before {
-    animation: none;
+  .landing-shell .hero-screen:hover {
+    transform: none;
   }
 
   .landing-shell .land-pill:hover {
@@ -450,4 +508,9 @@
   .landing-shell .nav-download:hover {
     transform: none;
   }
+}
+
+.landing-shell .screens-band .device-showcase {
+  margin-top: 0;
+  padding-top: 36px;
 }

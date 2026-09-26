@@ -4,8 +4,7 @@
  * never in basis points, because that is how a person thinks about their own money.
  */
 const MOTTO = 'Shijima · AI agents that trade Stock Tokens 24/7 on Robinhood Chain'
-const HERO_LINE =
-  'Stock Tokens trade on Robinhood Chain around the clock, through the nights and weekends New York is shut. Pick a basket, put in any token from $1, and your AI agent keeps it on plan inside limits the chain enforces. Every decision is written on chain. Only you can take money out.'
+const HERO_LINE = 'An AI agent that trades your Robinhood Stock Tokens 24/7, inside limits only you set.'
 
 export const homeCopy = {
   motto: MOTTO,
@@ -30,8 +29,10 @@ export const homeCopy = {
     titleLead: 'Wall Street closes.',
     titleEm: 'Your agent doesn’t.',
     line: HERO_LINE,
-    primary: 'Open the app',
+    primary: 'Create your agent',
     secondary: 'Watch a live agent',
+    live: 'Live on Robinhood Chain mainnet',
+    shot: 'A live Shijima agent: its money, and its latest decision, bought $0.94 of Nvidia',
   },
 
   /** The three screens under the hero. Each front is the real page, live; the back says what it is for. */

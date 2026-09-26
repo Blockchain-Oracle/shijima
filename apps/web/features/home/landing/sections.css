@@ -37,15 +37,21 @@
 /* ── Built-on strip ── */
 
 .landing-shell .built-on {
-  display: flex;
-  align-items: center;
-  gap: 26px;
-  flex-wrap: wrap;
+  display: grid;
+  gap: 18px;
   width: min(1180px, calc(100% - 40px));
   margin: 74px auto 0;
   border-top: 1px solid var(--bd);
   border-bottom: 1px solid var(--bd);
-  padding: 22px 4px;
+  padding: 22px 0;
+}
+
+.landing-shell .built-on-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .landing-shell .built-on-label {
@@ -55,24 +61,10 @@
   text-transform: uppercase;
 }
 
-.landing-shell .built-on-names {
-  display: flex;
-  gap: 22px;
-  flex-wrap: wrap;
-}
-
-.landing-shell .built-on-names span {
-  color: var(--tx2);
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-}
-
 .landing-shell .built-on-stats {
   display: flex;
   gap: 20px;
   flex-wrap: wrap;
-  margin-left: auto;
   color: var(--tx3);
   font: 600 12px / 1 var(--fm);
 }
@@ -82,38 +74,37 @@
   font-weight: 800;
 }
 
-/* The live prices ride the strip as its second line. */
+.landing-shell .built-on-logos .lm-item {
+  color: var(--tx);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+/* The live prices: a second row, sliding the other way, each stock with its own logo. */
 .landing-shell .built-on-prices {
   display: flex;
   align-items: center;
   gap: 18px;
-  flex-basis: 100%;
   min-width: 0;
-  overflow: hidden;
   border-top: 1px dashed var(--bd);
   padding-top: 16px;
-  color: var(--tx3);
-  font: 600 11.5px / 1 var(--fm);
-  mask-image: linear-gradient(90deg, #000 85%, transparent);
 }
 
-.landing-shell .built-on-prices > span:first-child {
+.landing-shell .built-on-prices > .built-on-label {
   flex: none;
 }
 
-.landing-shell .built-on-prices ul {
-  display: flex;
-  gap: 18px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  white-space: nowrap;
+.landing-shell .built-on-prices .lm-item {
+  color: var(--tx2);
+  font: 600 12.5px / 1 var(--fm);
 }
 
-.landing-shell .built-on-prices li b {
-  margin-right: 6px;
+.landing-shell .built-on-prices .lm-item b {
+  margin-right: 4px;
   color: var(--tx);
-  font-weight: 700;
+  font-family: var(--fs);
+  font-weight: 800;
 }
 
 /* ── Shared section chrome ── */

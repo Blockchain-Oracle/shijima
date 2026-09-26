@@ -13,6 +13,9 @@ import { ArrowDownToLine, ArrowRight, ArrowUpRight, Bot, Fingerprint, KeyRound }
 import type { Route } from 'next'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { BrandLogo } from '@/components/ui/brand-logo'
+import { ChainLogo } from '@/components/ui/chain-logo'
+import { LogoMarquee, type MarqueeItem } from '@/components/ui/logo-marquee'
 import { Qr } from '@/components/ui/qr'
 import { Sparkline } from '@/components/ui/sparkline'
 import { TokenLogo, TokenStack } from '@/components/ui/token-logo'
@@ -37,45 +40,66 @@ const dollars = (n: number) => `$${n.toFixed(2)}`
 const usdRaw = (raw: string | null) => (raw === null ? '—' : money((Number(raw) / 1e6).toString()))
 const wholeDollars = (raw: string) => `$${Math.round(Number(raw) / 1e6).toLocaleString('en-US')}`
 
-/* ── Hero ── */
+/* ── Hero: 21st.dev's Hero with Mockup (Launch UI), in Shijima's colours ── */
 
-function Hero({
-  appHref,
-  bot,
-  botLink,
-  latest,
-}: {
-  appHref: string
-  bot: string
-  botLink: string
-  latest: ChatLatest | null
-}) {
+function Hero({ appHref }: { appHref: string }) {
   return (
     <section className="land-hero" aria-label={H.hero.aria}>
-      <div className="hero-band">
+      <div className="hero-stage">
         <div className="hero-copy">
-          <h1>
+          <Logo size={56} glow />
+          <h1 className="hero-in" style={{ animationDelay: '80ms' }}>
             {H.hero.titleLead}
             <br />
             <em>{H.hero.titleEm}</em>
           </h1>
-          <p className="hero-line">{H.hero.line}</p>
-          <div className="hero-actions">
-            <Link className="land-pill" href={appHref as Route}>
+          <p className="hero-line hero-in" style={{ animationDelay: '180ms' }}>
+            {H.hero.line}
+          </p>
+          <div className="hero-actions hero-in" style={{ animationDelay: '280ms' }}>
+            <Link className="land-cta cta-sheen" href={appHref as Route}>
               {H.hero.primary} <ArrowRight size={16} aria-hidden />
             </Link>
-            <Link className="land-pill" href={SHOWCASE_ROUTE}>
+            <Link className="land-secondary" href={SHOWCASE_ROUTE}>
               <span className="live-dot" aria-hidden /> {H.hero.secondary}
             </Link>
           </div>
+          <p className="hero-live hero-in" style={{ animationDelay: '360ms' }}>
+            <ChainLogo chainId={4663} size={16} /> {H.hero.live}
+          </p>
         </div>
-        <DeviceShowcase appHref={appHref} bot={bot} botLink={botLink} latest={latest} />
+        <div className="hero-mock hero-in" style={{ animationDelay: '460ms' }}>
+          <span className="hero-halo" aria-hidden />
+          <Link className="hero-screen" href={SHOWCASE_ROUTE}>
+            {/* biome-ignore lint/performance/noImgElement: a fixed screenshot per theme; CSS shows the one that matches */}
+            <img
+              className="shot-dark"
+              src="/landing/agent-dark.png"
+              alt={H.hero.shot}
+              width={1264}
+              height={549}
+            />
+            {/* biome-ignore lint/performance/noImgElement: as above, for the light theme */}
+            <img className="shot-light" src="/landing/agent-light.png" alt="" width={1264} height={549} />
+          </Link>
+        </div>
       </div>
     </section>
   )
 }
 
-/* ── Built on, with the real numbers and the live prices ── */
+/* ── Built on: 21st.dev's Logo Cloud Marquee, with the real marks, the real numbers and the live prices ── */
+
+const PARTNERS: MarqueeItem[] = [
+  { key: 'rh', label: 'Robinhood Chain', logo: <ChainLogo chainId={4663} size={24} /> },
+  { key: 'os', label: 'OpenServ · SERV Reasoning', logo: <BrandLogo brand="openserv" size={24} /> },
+  { key: 'uni', label: 'Uniswap', logo: <BrandLogo brand="uniswap" size={24} /> },
+  { key: 'link', label: 'Chainlink', logo: <BrandLogo brand="chainlink" size={24} /> },
+  { key: 'morpho', label: 'Morpho', logo: <BrandLogo brand="morpho" size={24} /> },
+  { key: 'cb', label: 'Coinbase AgentKit', logo: <BrandLogo brand="coinbase" size={24} /> },
+  { key: 'relay', label: 'Relay', logo: <BrandLogo brand="relay" size={24} /> },
+  { key: 'tg', label: 'Telegram', logo: <BrandLogo brand="telegram" size={24} /> },
+]
 
 function BuiltOnStrip({
   stats,
@@ -89,40 +113,43 @@ function BuiltOnStrip({
   const b = H.builtOn
   return (
     <Reveal as="div" className="built-on">
-      <span className="built-on-label">{b.label}</span>
-      <div className="built-on-names">
-        {b.names.map((name) => (
-          <span key={name}>{name}</span>
-        ))}
-      </div>
-      <div className="built-on-stats">
-        {stats ? (
-          <>
+      <div className="built-on-row">
+        <span className="built-on-label">{b.label}</span>
+        <div className="built-on-stats">
+          {stats ? (
+            <>
+              <span>
+                <b>{stats.trades.toLocaleString('en-US')}</b> {b.trades}
+              </span>
+              <span>
+                <b>{wholeDollars(stats.movedUsdg)}</b> {b.moved}
+              </span>
+            </>
+          ) : null}
+          {vaultRateBps !== null ? (
             <span>
-              <b>{stats.trades.toLocaleString('en-US')}</b> {b.trades}
+              <b>{(vaultRateBps / 100).toFixed(1)}%</b> {b.rate}
             </span>
-            <span>
-              <b>{wholeDollars(stats.movedUsdg)}</b> {b.moved}
-            </span>
-          </>
-        ) : null}
-        {vaultRateBps !== null ? (
-          <span>
-            <b>{(vaultRateBps / 100).toFixed(1)}%</b> {b.rate}
-          </span>
-        ) : null}
+          ) : null}
+        </div>
       </div>
+      <LogoMarquee items={PARTNERS} seconds={40} className="built-on-logos" />
       {prices.length > 0 ? (
         <div className="built-on-prices">
-          <span>{b.prices}</span>
-          <ul>
-            {prices.map((p) => (
-              <li key={p.symbol}>
-                <b>{p.symbol}</b>
-                {p.price}
-              </li>
-            ))}
-          </ul>
+          <span className="built-on-label">{b.prices}</span>
+          <LogoMarquee
+            reverse
+            seconds={Math.max(30, prices.length * 4)}
+            items={prices.map((p) => ({
+              key: p.symbol,
+              logo: <TokenLogo symbol={p.symbol} size={22} />,
+              label: (
+                <>
+                  <b>{nameOf(p.symbol)}</b> {p.price}
+                </>
+              ),
+            }))}
+          />
         </div>
       ) : null}
     </Reveal>
@@ -131,22 +158,25 @@ function BuiltOnStrip({
 
 /* ── One agent, everywhere ── */
 
-function Platforms() {
+function Platforms({
+  appHref,
+  bot,
+  botLink,
+  latest,
+}: {
+  appHref: string
+  bot: string
+  botLink: string
+  latest: ChatLatest | null
+}) {
   const p = H.platforms
   return (
     <Reveal id="everywhere" className="land-section" label={p.label}>
       <span className="section-label">{p.label}</span>
       <h2>{p.title}</h2>
       <p className="section-sub">{p.sub}</p>
-      <div className="platform-grid">
-        {p.cards.map((card, index) => (
-          <article className="platform-card" key={card.title} style={{ transitionDelay: `${index * 90}ms` }}>
-            <span className="platform-meta">{card.meta}</span>
-            <h3>{card.title}</h3>
-            <p>{card.body}</p>
-            <span className="platform-spec">{card.spec}</span>
-          </article>
-        ))}
+      <div className="screens-band">
+        <DeviceShowcase appHref={appHref} bot={bot} botLink={botLink} latest={latest} />
       </div>
     </Reveal>
   )
@@ -560,8 +590,8 @@ function FooterCta({ appHref }: { appHref: string }) {
 }
 
 /**
- * The landing, in the reference landing's order (W12): the hero band with the rising disc and the three live
- * screens, the Built-on strip with the real numbers and live prices, one agent everywhere, how the money moves,
+ * The landing, in the reference landing's order (W12): the hero with the live agent's screen, the Built-on
+ * marquee with the real marks, numbers and live prices, the three live screens, how the money moves,
  * then what is live on chain, the live agents, the strategies and how to check it, then Get Shijima and the
  * closing call. The nav pill and the footer come from the website shell.
  */
@@ -596,9 +626,9 @@ export function LandingPage({
   const botLink = `https://t.me/${bot || settingsCopy.telegram.bot}`
   return (
     <>
-      <Hero appHref={appHref} bot={bot} botLink={botLink} latest={latest} />
+      <Hero appHref={appHref} />
       <BuiltOnStrip stats={stats} vaultRateBps={vaultRateBps} prices={prices} />
-      <Platforms />
+      <Platforms appHref={appHref} bot={bot} botLink={botLink} latest={latest} />
       <MoneyModel weekendFact={weekendFact} />
       <OnChainNow factory={factory} showcase={showcase} />
       <LiveAgents agents={agents} />
