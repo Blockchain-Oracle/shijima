@@ -6,6 +6,20 @@ on:
 jobs:
   typescript:
     runs-on: ubuntu-latest
+    # The database tests run against a throwaway Postgres; the name must end in _test or the setup refuses it.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: desk
+          POSTGRES_PASSWORD: desk
+          POSTGRES_DB: desk_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U desk -d desk_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://desk:desk@localhost:5432/desk_test
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

@@ -37,6 +37,12 @@ const ARCHITECTURE_TABLES = [
   'worker_beats',
   'room_posts',
   'takes',
+  // Rounds 3 to 5: copying, the free $1, Telegram per wallet, OpenServ workspaces, money moves.
+  'copy_links',
+  'gift_claims',
+  'telegram_owners',
+  'openserv_links',
+  'money_moves',
 ]
 
 const UINT256_MAX = 2n ** 256n - 1n

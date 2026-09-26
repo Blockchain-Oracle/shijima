@@ -11,19 +11,21 @@ import { resolve } from 'node:path'
 import { errorText } from '@desk/shared'
 import { PlatformClient } from '@openserv-labs/client'
 import { WORKER_ROOT } from '../cli/context'
-import { AGENT_NAME } from './agent'
+import { AGENT_DESCRIPTION, AGENT_NAME } from './agent'
 
 const WORKFLOW_NAME = 'Hourly desk review'
 // From the marketplace's own agents: 5 is "Finance and Technology", 3 is "Research and Analysis".
 const CATEGORY_IDS = [5, 3]
 
 const USAGE = [
-  'Shijima runs from its own web app, not from a chat here: open the app, sign in with your wallet, and create an',
-  'agent in one signature. Its account is a contract you own on Robinhood Chain; you pick the Stock Tokens',
-  'and their weights, and the limits it can never pass are set in that contract.',
-  'Every hour Shijima checks each running agent and decides only when to act: now, in part, at the reopen, or',
-  'not at all. Every decision, including doing nothing, is recorded, fingerprinted on-chain, and graded at the',
-  'reopen. Start in Shadow (it only says what it would do), then Ask first (Telegram approvals), then On its own.',
+  'Shijima runs from its own web app at https://shijima.xyz: sign in with any wallet, pick one of twenty strategies',
+  'or build your own, choose how much USDG, set its limits, and confirm. Its account is a contract you own on',
+  'Robinhood Chain; the agent may trade inside it but never withdraw, and your per-trade and per-day limits are',
+  'enforced by that contract. An OpenServ workflow wakes Shijima every hour and it also watches every few minutes;',
+  'it decides only when to act: now, in part, at the reopen, or not at all, with SERV Reasoning. Every decision,',
+  'including doing nothing, is recorded and fingerprinted on-chain. Agents start live; Practice and Ask me first',
+  'are one tap away. To talk to your agent from an OpenServ workspace, make a link code in its Settings and send',
+  '"link CODE" in the workspace chat.',
 ].join(' ')
 
 const EXPECTED =
@@ -50,8 +52,9 @@ try {
   const client = new PlatformClient({ apiKey: userApiKey })
   const current = await client.get<Record<string, unknown>>(`/agents/${agentId}`)
 
+  // `--avatar` uploads assets/avatar.jpg again, for when the logo changes (25 Sep: the listing still had the old one).
   let avatarUrl = current.avatar_url as string | null
-  if (!avatarUrl) {
+  if (!avatarUrl || process.argv.includes('--avatar')) {
     const { url } = await client.erc8004.presignIpfsUrl({ workflowId })
     const form = new FormData()
     form.append(
@@ -71,7 +74,7 @@ try {
   const submit = process.argv.includes('--submit')
   await client.put(`/agents/${agentId}`, {
     name: current.name,
-    capabilities_description: current.capabilities_description,
+    capabilities_description: AGENT_DESCRIPTION,
     endpoint_url: current.endpoint_url,
     kind: 'external',
     is_built_by_agent_builder: false,
