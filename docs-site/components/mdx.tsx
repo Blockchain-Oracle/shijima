@@ -7,6 +7,7 @@ import { Addr, Example, Fact, Facts } from './content';
 import { Diagram } from './diagram';
 import { Logo, Named, Partners } from './logo';
 import { Sequence } from './sequence';
+import { Clip, Shot } from './shot';
 import { AppLink, JourneyList, ProductMap, WelcomeActions } from './welcome';
 
 export function getMDXComponents(components?: MDXComponents) {
@@ -23,6 +24,8 @@ export function getMDXComponents(components?: MDXComponents) {
     Facts,
     Diagram,
     Sequence,
+    Shot,
+    Clip,
     Logo,
     Named,
     Partners,

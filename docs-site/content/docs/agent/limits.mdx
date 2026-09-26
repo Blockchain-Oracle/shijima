@@ -18,6 +18,8 @@ sources:
 
 Both are written into your agent's contract when you create it. A trade over either one is **refused by the network**, whoever sends it. Your agent's key cannot change them; only your wallet can.
 
+<Shot name="start/first-agent-limits" alt="The setup screen has per-trade and per-day limits and extra agent settings under More options." caption="You set the hard limits when you create the agent." />
+
 A sale counts at the larger of what it really received and what the price feed says the tokens were worth. So a sale into a weak pool can never slip under the limit.
 
 The day is a fixed 24-hour window. It starts with the first trade after the last window ended, and resets 24 hours later.
@@ -40,6 +42,8 @@ In your agent's **Settings**, under **Trading**, open **Limits on the chain**. T
 | **Ask me first above** | $100 | In On its own, larger actions come to you as a request. |
 
 These are settings, not transactions. Change them under **Edit what you told it**, or in the chat.
+
+<Shot name="agent/limits-in-use" alt="A public agent page shows its spending today, room before the loss stop and the limits it currently uses." caption="A live agent shows how much room remains inside its own limits." />
 
 ## The loss stop
 

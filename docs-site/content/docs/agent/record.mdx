@@ -23,6 +23,8 @@ Every decision your agent makes goes into its record, including the ones where i
 
 Open your agent's **Record** to see them day by day. Open any decision for its own page.
 
+<Shot name="agent/record-list" alt="The public record lists decisions by day and offers filters for outcomes, tokens and Practice or Live." caption="The record includes actions and quiet checks." />
+
 ## The fingerprint
 
 A decision's **fingerprint** is a hash of its record: the record is written out in one exact way (canonical JSON, keys sorted, no spaces), and hashed with keccak256. Change one character and the fingerprint changes completely.
@@ -41,6 +43,8 @@ On any decision page, press **Check it**. Your own browser, not our server:
 3. Asks Robinhood Chain's public RPC for the transaction and compares the fingerprint in its event.
 
 It then says **It matches**, **It does NOT match**, or that the record is not sealed yet and when the next seal is due. **Download this record** and **Show the exact bytes** let you check it with your own tools.
+
+<Shot name="agent/record-proof" alt="A decision's Proof section shows that the browser-computed fingerprint matches the stored record and public network." caption="Check it compares the record with the chain in your browser." />
 
 <Callout title="Check it with no code of ours">
 Take the record body as downloaded. Serialise it with sorted keys and no spaces (in Python: `json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False)`). Hash those bytes with keccak256, for example `cast keccak`. Compare with `decisionHash` in the agent contract's `Bought`, `Sold`, `Swept`, `Redeemed` or `Checkpoint` event.
