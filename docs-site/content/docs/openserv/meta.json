@@ -1,5 +1,5 @@
 {
   "title": "OpenServ",
-  "icon": "Network",
+  "icon": "logo:openserv",
   "pages": ["what-is-openserv", "how-shijima-uses-it", "link-your-workspace"]
 }

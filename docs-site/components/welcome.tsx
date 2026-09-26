@@ -1,6 +1,7 @@
 import Link from 'next/link';
-import { ArrowRight, ArrowUpRight, Bot, ChevronRight, Network, ShieldCheck, Wallet } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Bot, ChevronRight, ShieldCheck, Wallet } from 'lucide-react';
 import { Brand } from './brand';
+import { Logo } from './logo';
 import { appUrl } from '@/lib/site';
 import mapStyles from './product-map.module.css';
 
@@ -27,11 +28,16 @@ export function WelcomeActions() {
   );
 }
 
+/** OpenServ's real mark, sized like the Lucide icons beside it. */
+function OpenServMark({ size }: { size?: number | string; 'aria-hidden'?: 'true' }) {
+  return <Logo name="openserv" size={Number(size ?? 22)} label />;
+}
+
 const journeys = [
   { title: 'Create your first agent', short: 'Start', description: 'Sign in, pick a strategy, set limits, go live or practise.', href: '/start/first-agent', icon: Bot },
   { title: 'Move money in and out', short: 'Money', description: 'Fund from any chain, withdraw to your wallet, get gas.', href: '/money/wallet', icon: Wallet },
   { title: 'Check what it can and cannot do', short: 'Safety', description: 'The limits the contract holds, and the honest worst case.', href: '/security/what-it-can-do', icon: ShieldCheck },
-  { title: 'See how it runs on OpenServ', short: 'OpenServ', description: 'The hourly workflow, SERV Reasoning and your own workspace.', href: '/openserv/how-shijima-uses-it', icon: Network },
+  { title: 'See how it runs on OpenServ', short: 'OpenServ', description: 'The hourly workflow, SERV Reasoning and your own workspace.', href: '/openserv/how-shijima-uses-it', icon: OpenServMark },
 ];
 
 export function JourneyList() {
