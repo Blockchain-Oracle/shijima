@@ -2,9 +2,9 @@
  * The free $1 (PLAN-ROUND-3 D3). The website queues a claim; the worker sends it and settles it here.
  *
  * The rules live in `queueGift`, inside one transaction under one lock, so two claims arriving together can never
- * both squeeze under the cap or both pass the IP check: one wallet once, one IP a day, 20 in all.
+ * both squeeze under the cap or both pass the IP check: one wallet once, one connection once, and only as many as the gift wallet can pay.
  */
-import { and, asc, count, eq, gt, sql } from 'drizzle-orm'
+import { and, asc, count, eq, inArray, sql } from 'drizzle-orm'
 import type { Db, DbOrTx } from '../client'
 import { type GiftAttempt, type GiftLeg, giftClaims } from '../schema'
 
@@ -21,7 +21,7 @@ export type GiftRow = typeof giftClaims.$inferSelect
 
 export type GiftQueued =
   | { ok: true; row: GiftRow; requeued: boolean }
-  | { ok: false; reason: 'already' | 'ip_today' | 'all_gone'; row?: GiftRow }
+  | { ok: false; reason: 'already' | 'ip_used' | 'all_gone'; row?: GiftRow }
 
 /**
  * Queues the gift for a signed-in wallet. A wallet whose earlier claim failed is queued again (a retry), and the
@@ -47,12 +47,12 @@ export async function queueGift(
     }
     const [total] = await tx.select({ n: count() }).from(giftClaims)
     if ((total?.n ?? 0) >= input.cap) return { ok: false, reason: 'all_gone' }
-    const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+    // One per connection, ever (25 Sep, Abu): a fresh wallet on the same connection cannot claim a second dollar.
     const [sameIp] = await tx
       .select({ n: count() })
       .from(giftClaims)
-      .where(and(eq(giftClaims.ipHash, input.ipHash), gt(giftClaims.createdAt, dayAgo)))
-    if ((sameIp?.n ?? 0) > 0) return { ok: false, reason: 'ip_today' }
+      .where(eq(giftClaims.ipHash, input.ipHash))
+    if ((sameIp?.n ?? 0) > 0) return { ok: false, reason: 'ip_used' }
     const [row] = await tx
       .insert(giftClaims)
       .values({
@@ -72,6 +72,15 @@ export async function queueGift(
 export async function giftOfWallet(db: DbOrTx, wallet: string): Promise<GiftRow | undefined> {
   const [row] = await db.select().from(giftClaims).where(eq(giftClaims.wallet, wallet.toLowerCase()))
   return row
+}
+
+/** Claims on file that the worker has not paid yet: they are owed out of the gift wallet's current balance. */
+export async function giftsOwed(db: DbOrTx): Promise<number> {
+  const [row] = await db
+    .select({ n: count() })
+    .from(giftClaims)
+    .where(inArray(giftClaims.status, ['queued', 'sending']))
+  return row?.n ?? 0
 }
 
 /** How many gifts are spoken for: every claim on file counts, sent or still on its way. */

@@ -100,7 +100,7 @@ check(
 )
 const sameIp = await queueGift(db, { wallet: fresh(), ipHash: 'ip-a', cap: CAP })
 check(
-  !sameIp.ok && sameIp.reason === 'ip_today',
+  !sameIp.ok && sameIp.reason === 'ip_used',
   `a new wallet on A's connection is refused (${sameIp.ok ? 'ok' : sameIp.reason})`,
 )
 
