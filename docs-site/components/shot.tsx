@@ -38,9 +38,51 @@ const shotGuides: Record<string, GuidePoint[]> = {
     { x: 80, y: 45, label: 'The preview confirms Practice.' },
   ],
   'money/wallet-overview': [
-    { x: 32, y: 67, label: 'See what your agents hold.' },
-    { x: 73, y: 62, label: 'See tokens in your own wallet.' },
-    { x: 88, y: 73, label: 'Use the money actions below.' },
+    { x: 20, y: 59, label: 'See what your agents hold.' },
+    { x: 75, y: 55, label: 'See tokens in your own wallet.' },
+    { x: 61, y: 78, label: 'Use the money actions below.' },
+  ],
+  'money/fund-wallet': [
+    { x: 32, y: 44, label: 'Choose your wallet or another chain.' },
+    { x: 21, y: 59, label: 'Pick the token and enter an amount.' },
+    { x: 76, y: 52, label: 'Read what the agent will receive.' },
+  ],
+  'money/fund-review': [
+    { x: 32, y: 44, label: 'Check the source network and token.' },
+    { x: 76, y: 55, label: 'Compare the amount, minimum and cost.' },
+    { x: 78, y: 92, label: 'Signing comes only after this review.' },
+  ],
+  'money/bridge-in': [
+    { x: 32, y: 44, label: 'Choose In, Out or Get gas.' },
+    { x: 42, y: 59, label: 'Pick the source token and network.' },
+    { x: 43, y: 79, label: 'Choose USDG or ETH for your wallet.' },
+  ],
+  'money/withdraw-review': [
+    { x: 32, y: 44, label: 'Choose cash, one stock or everything.' },
+    { x: 21, y: 60, label: 'Check the amount leaving the agent.' },
+    { x: 75, y: 62, label: 'Review the owner-only destination before confirming.' },
+  ],
+  'money/send': [
+    { x: 21, y: 55, label: 'Choose the token and amount.' },
+    { x: 20, y: 75, label: 'Enter and check the recipient address.' },
+    { x: 76, y: 51, label: 'Review the transfer before signing.' },
+  ],
+  'agent/modes-settings': [
+    { x: 17, y: 40, label: 'Open Trading in your agent settings.' },
+    { x: 26, y: 64, label: 'Practice records decisions without spending.' },
+    { x: 55, y: 64, label: 'Ask me first requests approval.' },
+    { x: 84, y: 64, label: 'On its own acts inside your limits.' },
+  ],
+  'agent/rules-draft': [
+    { x: 66, y: 38, label: 'Choose Rules in the instruction editor.' },
+    { x: 46, y: 58, label: 'Choose the stock and fall threshold.' },
+    { x: 39, y: 67, label: 'Set the share to sell.' },
+    { x: 60, y: 80, label: 'Review the draft before applying it.' },
+  ],
+  'agent/telegram-connect': [
+    { x: 38, y: 40, label: 'Open Connections in agent settings.' },
+    { x: 25, y: 66, label: 'Find the Telegram card.' },
+    { x: 36, y: 79, label: 'Connect your chat from here.' },
   ],
   'agent/limits-in-use': [
     { x: 76, y: 34, label: 'Compare recent spending with the daily cap.' },

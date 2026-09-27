@@ -39,7 +39,15 @@ Shijima gives you an agent that watches. It is not a trading bot and it does not
 
 ## Demo video
 
-The demo video link goes here before submission. Until then, the fastest way to see it working:
+<p align="center">
+  <a href="https://shijima.xyz/demo">
+    <img src="apps/web/public/demo/cover.png" width="960" alt="Watch Shijima work: an agent setup screen with the Shijima moon and a play button" />
+  </a>
+</p>
+
+**[Open the guided demo](https://shijima.xyz/demo).** It has short sign-in and agent-setup recordings, then links to a real decision, its transaction and the live record. The full narrated film will be added when it is ready.
+
+You can also follow the proof directly:
 
 1. Open [shijima.xyz/live](https://shijima.xyz/live): counts of agents, confirmed trades, SERV calls and OpenServ runs, read from the record, and every transaction linked to Blockscout.
 2. Open a real decision: [showcase decision #22](https://shijima.xyz/agents/showcase/decision/22), a $0.94 Nvidia buy at 74% confidence. Scroll to the proof and press **Check it**. Your browser rebuilds the record, hashes it, and compares it with the hash in the [mainnet transaction](https://robinhoodchain.blockscout.com/tx/0x0384d7636143c86344217ac6d279b60e9d9418b5864052a1c3b605c591481e4b).
@@ -61,83 +69,33 @@ The demo video link goes here before submission. Until then, the fastest way to 
 
 ## Architecture
 
-```mermaid
-flowchart LR
-  subgraph You
-    W["Your wallet"]
-    TG["Telegram<br/>@ShijimaBot"]
-  end
+<p align="center">
+  <a href="https://docs.shijima.xyz/architecture/overview">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset=".github/assets/system-dark.png" />
+      <source media="(prefers-color-scheme: light)" srcset=".github/assets/system-light.png" />
+      <img src=".github/assets/system-light.png" width="960" alt="Shijima architecture: your wallet, the read-only web app, OpenServ's workflow and reasoning, the signing worker, your Desk contract, pools and vault" />
+    </picture>
+  </a>
+</p>
 
-  subgraph Shijima["Shijima (Coolify)"]
-    WEB["apps/web<br/>Next.js, reads only,<br/>holds no key"]
-    WK["apps/worker<br/>review loop, sender,<br/>Telegram bot, gift sender"]
-    CORE["packages/core<br/>needs, refusals,<br/>WHEN decision, gate"]
-    DB[("Postgres<br/>hash-chained records")]
-  end
-
-  subgraph OpenServ
-    OS["Agent 4513<br/>workflow: Hourly desk review"]
-    SERV["SERV Reasoning<br/>inference-api.openserv.ai"]
-  end
-
-  subgraph RH["Robinhood Chain mainnet (4663)"]
-    DESK["Your Desk contract<br/>caps, owner-only withdraw"]
-    UNI[Uniswap v3 pools]
-    CL[Chainlink feeds]
-    VAULT["Steakhouse USDG<br/>Morpho vault"]
-  end
-
-  AK["Coinbase AgentKit<br/>ViemWalletProvider"]
-  ID["ERC-8004 identity 95396<br/>on Base"]
-
-  W -- "create, fund, withdraw<br/>(you sign)" --> DESK
-  W --> WEB
-  WEB --> DB
-  OS -- "hourly cron" --> WK
-  OS -.- ID
-  WK --> CORE
-  CORE -- "one question: when?" --> SERV
-  CORE --> DB
-  WK -- "signs through" --> AK
-  AK -- "buy, sell, sweep,<br/>checkpoint" --> DESK
-  DESK --> UNI
-  DESK --> CL
-  DESK --> VAULT
-  WK --> TG
-```
+[Open the detailed system map](https://docs.shijima.xyz/architecture/overview) · [Edit the Mermaid source](.github/diagrams/readme-system.mmd)
 
 The web app holds no signing key ([`apps/web/.env.example`](apps/web/.env.example)), so it cannot move money even if it is compromised. The worker is the only process that sends a transaction, one at a time, with a write-ahead journal so a crash never sends twice ([`sender.ts`](apps/worker/src/sender.ts)).
 
 **One hourly check, start to finish:**
 
-```mermaid
-sequenceDiagram
-  autonumber
-  participant OS as OpenServ workflow
-  participant WK as Worker
-  participant CORE as packages/core
-  participant SERV as SERV Reasoning
-  participant AK as AgentKit signer
-  participant DESK as Desk contract
-  participant TG as Telegram
+<p align="center">
+  <a href="https://docs.shijima.xyz/architecture/wake-loop">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset=".github/assets/hourly-check-dark.png" />
+      <source media="(prefers-color-scheme: light)" srcset=".github/assets/hourly-check-light.png" />
+      <img src=".github/assets/hourly-check-light.png" width="960" alt="One hourly check: OpenServ wakes the worker, fixed rules may refuse, SERV chooses timing, the decision is recorded before the signed Desk action, and Telegram tells the owner" />
+    </picture>
+  </a>
+</p>
 
-  OS->>WK: Run the hourly desk review (cron 0 * * * *)
-  WK->>CORE: wake each running agent, keyed on (agent, hour)
-  CORE->>CORE: read balances, value on the pool's 30-minute average
-  CORE->>CORE: find drift past tolerance, worth the trading cost?
-  alt nothing drifted, or a hard refusal (paused, bad feed, out of band)
-    CORE-->>WK: record "nothing to do" or the refusal
-  else something needs doing
-    CORE->>SERV: now, in part, wait for reopen, or not at all?
-    SERV-->>CORE: choice, reasons, rejected options, confidence
-    CORE->>CORE: check the answer, re-run the contract's limit maths
-    CORE->>AK: planned action + decision hash
-    AK->>DESK: buy / sell (signed by AgentKit's wallet provider)
-    DESK->>DESK: per-trade cap, daily cap, 8% oracle band, pinned pool
-    DESK-->>WK: event with the decision hash, or a revert
-  end
-  WK->>TG: tell the owner what happened
-```
+[Open the full wake loop](https://docs.shijima.xyz/architecture/wake-loop) · [Edit the Mermaid source](.github/diagrams/readme-hourly-check.mmd)
 
 The worker also runs its own five-minute timer as a safety net. If OpenServ's hourly run has not arrived four minutes into the hour, the worker takes that check itself; whichever arrives first does the work, and the other finds it done ([`review.ts`](apps/worker/src/review.ts)).
 

@@ -1,0 +1,29 @@
+flowchart LR
+  YOU["Your wallet"]
+
+  subgraph OS["OpenServ"]
+    CLOCK["Hourly workflow"]
+    SERV["SERV Reasoning"]
+  end
+
+  subgraph APP["Shijima · Coolify"]
+    WEB["Web app<br/>no signing key"]
+    WORKER["Worker + AgentKit<br/>only Shijima signer"]
+    DB[("Postgres<br/>decision records")]
+  end
+
+  subgraph CHAIN["Robinhood Chain mainnet · 4663"]
+    DESK["Your Desk contract<br/>hard limits · owner-only withdrawal"]
+    POOL["Uniswap v3 pools"]
+    VAULT["Morpho USDG vault"]
+  end
+
+  YOU -->|"sign in"| WEB
+  YOU -->|"create · fund · withdraw"| DESK
+  WEB -->|"requests + reads"| DB
+  CLOCK -->|"wake"| WORKER
+  WORKER -->|"ask when"| SERV
+  WORKER -->|"hash + outcome"| DB
+  WORKER -->|"signed action + decision hash"| DESK
+  DESK -->|"swap"| POOL
+  DESK -->|"idle cash"| VAULT

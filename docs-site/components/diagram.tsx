@@ -146,6 +146,7 @@ export function Diagram({ name }: { name: DiagramName }) {
       subtitle={diagram.subtitle}
       note={diagram.note}
       minWidth={660}
+      expandedWidth={diagram.width}
       legend={used.map((kind) => (
         <span key={kind} className="legend-item">
           <Swatch kind={kind} /> {kindWords[kind]}

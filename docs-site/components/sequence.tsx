@@ -101,6 +101,7 @@ export function Sequence({ name }: { name: SequenceName }) {
       subtitle={data.subtitle}
       note={data.note}
       minWidth={data.actors.length * 118}
+      expandedWidth={Math.max(800, data.actors.length * 160)}
       legend={
         <>
           <span className="legend-item"><Swatch kind="action" /> A call or a write</span>

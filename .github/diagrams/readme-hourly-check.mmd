@@ -1,0 +1,24 @@
+sequenceDiagram
+  autonumber
+  participant O as OpenServ
+  participant W as Worker
+  participant S as SERV Reasoning
+  participant R as Record
+  participant D as Desk contract
+  participant T as Telegram
+
+  O->>W: Wake the hourly check
+  W->>D: Read balances, limits, prices
+  W->>W: Find drift and apply fixed refusals
+  alt Nothing to do or refused
+    W->>R: Save the outcome
+  else A trade may help
+    W->>S: When should it act?
+    S-->>W: Choice, reasons, confidence
+    W->>W: Recheck the owner's limits
+    W->>R: Hash decision and plan the send
+    W->>D: AgentKit-signed action + hash
+    D-->>W: Receipt or revert
+    W->>R: Append the actual result
+  end
+  W->>T: Tell the owner what happened

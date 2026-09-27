@@ -18,6 +18,7 @@ import './responsive.css'
 const LINKS = [
   { href: '/how-it-works', label: H.nav.how },
   { href: '/live', label: H.nav.live },
+  { href: '/demo', label: 'Demo' },
 ] as const
 
 /** The floating nav pill (the reference's Nav). On phones the links hide and only the brand and the button stay. */
@@ -75,6 +76,7 @@ function SiteFooter() {
         </a>
         <Link href={'/how-it-works#withdraw-without-us' as Route}>{f.withdraw}</Link>
         <Link href="/live">{H.nav.live}</Link>
+        <Link href={'/demo' as Route}>Demo</Link>
         <Link href="/status">{f.status}</Link>
         <a href="https://www.tradingview.com/" target="_blank" rel="noreferrer">
           {f.charts}

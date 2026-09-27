@@ -13,7 +13,7 @@ import type { HeaderProps } from './types'
  * nav pill, the page and its footer: it is read before anyone signs in, and it stays reachable after. Everything
  * else is the app, with its sidebar. The live prices ride the landing's Built-on strip now, not a ticker here.
  */
-const WEBSITE = ['/', '/home', '/how-it-works', '/docs']
+const WEBSITE = ['/', '/home', '/how-it-works', '/docs', '/demo']
 
 function isWebsite(pathname: string | null) {
   if (!pathname) return false
