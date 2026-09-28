@@ -45,7 +45,7 @@ Shijima gives you an agent that watches. It is not a trading bot and it does not
   </a>
 </p>
 
-**[Open the guided demo](https://shijima.xyz/demo).** It has short sign-in and agent-setup recordings, then links to a real decision, its transaction and the live record. The full narrated film will be added when it is ready.
+**[Watch the demo on YouTube](https://youtu.be/XLl5Exzo3KI)**, or [on shijima.xyz/demo](https://shijima.xyz/demo) with links to a real decision, its transaction and the live record.
 
 You can also follow the proof directly:
 

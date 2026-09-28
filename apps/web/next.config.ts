@@ -26,7 +26,8 @@ const csp = [
   `connect-src 'self' https: wss:${localRpc ? ` ${localRpc}` : ''}`,
   "worker-src 'self' blob:",
   // WalletConnect's Verify API: a hidden frame that lets a phone wallet confirm this site is who it says it is.
-  "frame-src 'self' https://verify.walletconnect.org https://verify.walletconnect.com",
+  // YouTube's no-cookie player: the demo film on /demo.
+  "frame-src 'self' https://verify.walletconnect.org https://verify.walletconnect.com https://www.youtube-nocookie.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
