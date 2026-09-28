@@ -1176,3 +1176,33 @@
 .done-links button:hover {
   color: var(--tx);
 }
+
+/* An amount too small to trade, with the two one-tap ways out: put in enough, or a strategy that fits. */
+.na-fix {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent);
+  background: color-mix(in srgb, var(--warn) 8%, transparent);
+}
+.na-fix p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--tx2);
+}
+.na-fix b {
+  color: var(--tx);
+}
+.na-fix-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.na-fix-actions .na-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}

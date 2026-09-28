@@ -10,6 +10,7 @@ import { AgentActivity } from '@/features/agent/AgentActivity'
 import { AgentMoney } from '@/features/agent/AgentMoney'
 import { LatestDecision } from '@/features/agent/LatestDecision'
 import { Portfolio } from '@/features/agent/Portfolio'
+import { TooSmallToTrade } from '@/features/agent/TooSmallToTrade'
 import { CopyButton } from '@/features/copy/CopyButton'
 import { CopyingBar } from '@/features/copy/CopyingBar'
 import { DeskChat } from '@/features/desk/DeskChat'
@@ -102,6 +103,7 @@ export default async function AgentPage({
         contractVersion={d.contractVersion}
       >
         <AgentMoney address={d.address} balances={view.plate} />
+        <TooSmallToTrade view={view} />
         {view.isOwner && (
           <div className="ap-actions">
             <QuickActions view={controlsOf(view)} />

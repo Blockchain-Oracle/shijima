@@ -10,7 +10,7 @@ import { AllocationDonut } from '@/components/ui/allocation-donut'
 import { TokenStack } from '@/components/ui/token-logo'
 import { CopyFinish } from '@/features/copy/CopyFinish'
 import { type Created, CreateStep } from './CreateStep'
-import { type DraftToken, draftToMandate, draftTotalBps, type StudioDraft } from './draft'
+import { type DraftToken, draftToMandate, draftTotalBps, limitsFor, type StudioDraft } from './draft'
 import { FirstSteps } from './FirstSteps'
 import { amountProblem, MoneyStep, useUsdgBalance } from './MoneyStep'
 import { mixSlices, type Performance } from './StrategyCard'
@@ -69,6 +69,8 @@ export function Studio({
     if (step === 1 && draftTotalBps(draft) !== 10_000) return setProblem(S.identity.mustAddUp)
     const short = step === 2 ? amountProblem(draft.amount, balance, draft.weights) : null
     if (short) return setProblem(short)
+    // Until the owner sets their own, the limits follow the amount just chosen.
+    if (step === 2 && !draft.limitsSet) setDraft((d) => ({ ...d, ...limitsFor(d) }))
     if (step === 3 && !result.ok) return setProblem(`${result.problems.join('. ')}.`)
     setProblem(null)
     setDir(1)

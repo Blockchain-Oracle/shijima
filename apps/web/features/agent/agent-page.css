@@ -624,3 +624,44 @@
 .ap-balances > div:last-child dd {
   color: var(--ac2, var(--color-ink));
 }
+
+/* Cash it can never spend: the plan's buys are all under the smallest trade. Said plainly, with the ways out. */
+.ap-stuck {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--color-warning) 40%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 8%, transparent);
+}
+.ap-stuck-text {
+  flex: 1;
+  min-width: 0;
+}
+.ap-stuck-text b {
+  font-size: 14px;
+  color: var(--color-ink);
+}
+.ap-stuck-text p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-ink-secondary);
+}
+.ap-stuck-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ap-chip-btn--primary {
+  border-color: var(--color-accent);
+  color: var(--color-ink);
+}
+@media (max-width: 720px) {
+  .ap-stuck {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

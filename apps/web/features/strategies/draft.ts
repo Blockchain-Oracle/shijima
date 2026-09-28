@@ -31,6 +31,8 @@ export interface StudioDraft {
   rules?: DraftRule[]
   /** The USDG to put in at creation, in dollars as typed. '0' starts in practice with no money. Older drafts have none. */
   amount?: string
+  /** True once the owner types a limit themselves. Until then the limits follow the amount. */
+  limitsSet?: boolean
 }
 
 export interface DraftRule {
@@ -76,6 +78,20 @@ export const withPreset = (draft: StudioDraft, preset: Preset): StudioDraft => (
   // A one-fund preset holds 90%: the largest holding allowed rises to fit it, and never falls below 50%.
   maxPositionPct: String(presetMaxPositionBps(preset) / 100),
 })
+
+/**
+ * Limits sized to the money going in, while the owner has not set their own: one trade can cover the largest first
+ * buy twice over, and one day can put the whole amount to work, so the first rebalance is never held back by a
+ * default meant for someone else's balance. Never below $1, and the ask-first line never below one trade.
+ */
+export function limitsFor(d: StudioDraft): Pick<StudioDraft, 'perAction' | 'daily' | 'large'> {
+  const amount = Number(d.amount) || 0
+  if (amount <= 0) return { perAction: d.perAction, daily: d.daily, large: d.large }
+  const widest = Math.max(0, ...Object.values(d.weights)) / 10_000
+  const perAction = Math.max(1, Math.ceil(amount * widest * 2))
+  const daily = Math.max(perAction, Math.ceil(amount))
+  return { perAction: String(perAction), daily: String(daily), large: String(Math.max(100, perAction)) }
+}
 
 export const draftTotalBps = (d: StudioDraft) =>
   d.cashBps + Object.values(d.weights).reduce((a, b) => a + b, 0)

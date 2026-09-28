@@ -1,17 +1,17 @@
 'use client'
 
 import { USDG } from '@desk/chain'
-import { studioCopy } from '@desk/shared'
+import { PRESETS, type Preset, studioCopy } from '@desk/shared'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { type Address, erc20Abi, formatUnits } from 'viem'
 import { ChainLogo } from '@/components/ui/chain-logo'
-import { TokenLogo } from '@/components/ui/token-logo'
+import { TokenLogo, TokenStack } from '@/components/ui/token-logo'
 import { GiftCard } from '@/features/gift/GiftCard'
 import { browserClient } from '@/features/session/useDeskSession'
 import { cn } from '@/lib/utils'
-import { type DraftToken, dollarsToUnits, type StudioDraft } from './draft'
+import { type DraftToken, dollarsToUnits, type StudioDraft, withPreset } from './draft'
 import { mixSlices } from './StrategyCard'
 
 const M = studioCopy.money
@@ -25,6 +25,20 @@ const MIN_TRADE_UNITS = 200_000n
 const dollars = (n: number) =>
   `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
+/** The least amount, in dollars to the cent, whose smallest first buy reaches the minimum trade. */
+export function leastToTrade(weights: Record<string, number>): number | null {
+  const smallest = Math.min(...Object.values(weights).filter((w) => w > 0))
+  if (!Number.isFinite(smallest)) return null
+  return Math.ceil((Number(MIN_TRADE_UNITS) * 10_000) / smallest / 10_000) / 100
+}
+
+/** A ready-made strategy this amount can really trade, preferring one that shares a tag with the current one. */
+function fittingPreset(amount: number, current: string | null): Preset | null {
+  const tags = PRESETS.find((p) => p.id === current)?.tags ?? []
+  const fits = PRESETS.filter((p) => p.id !== current && amount >= (leastToTrade(p.weights) ?? Infinity))
+  return fits.find((p) => p.tags.some((t) => tags.includes(t))) ?? fits[0] ?? null
+}
+
 /**
  * A problem with the amount, in words, or null. '0' is the practice choice and is always fine. An amount whose
  * smallest first buy falls under the engine's minimum trade is refused too: the agent would hold only cash.
@@ -37,11 +51,8 @@ export function amountProblem(
   if (!amount || amount === '0') return null
   const units = dollarsToUnits(amount)
   if (units === null || units < BigInt(MIN_USDG) * 1_000_000n) return M.tooLow
-  const smallest = Math.min(...Object.values(weights).filter((w) => w > 0))
-  if (Number.isFinite(smallest) && (units * BigInt(smallest)) / 10_000n < MIN_TRADE_UNITS) {
-    const least = Math.ceil((Number(MIN_TRADE_UNITS) * 10_000) / smallest / 10_000) / 100
-    return M.tooSmallToTrade(dollars(least))
-  }
+  const least = leastToTrade(weights)
+  if (least !== null && Number(amount) < least) return M.tooSmallToTrade(dollars(least))
   if (balanceUsdg !== null && balanceUsdg > 0n && units > balanceUsdg)
     return M.tooMuch(dollars(Number(formatUnits(balanceUsdg, 6))))
   return null
@@ -89,7 +100,9 @@ export function MoneyStep({
   const set = (a: string) => setDraft((d) => ({ ...d, amount: a }))
   const have = balance === null ? null : Number(formatUnits(balance, 6))
   const short = !practice && have !== null && value > have
-  const tooSmall = practice || value < MIN_USDG ? null : amountProblem(amount, null, draft.weights)
+  const least = leastToTrade(draft.weights)
+  const tooSmall = !practice && value >= MIN_USDG && least !== null && value < least
+  const fits = tooSmall ? fittingPreset(value, draft.preset) : null
   // The first time the wallet is read: an untouched $20 becomes what the wallet holds, when that is less and at
   // least the $1 minimum, so a wallet with the free $1 starts at $1 instead of at a warning.
   const fitted = useRef(false)
@@ -146,7 +159,26 @@ export function MoneyStep({
         ))}
       </div>
 
-      {!short && tooSmall && <p className="na-warn">{tooSmall}</p>}
+      {tooSmall && least !== null && (
+        <div className="na-fix" role="status">
+          <p>
+            <b>{M.cannotTradeTitle}</b> {M.cannotTradeBody(dollars(value), dollars(least))}
+          </p>
+          <div className="na-fix-actions">
+            {(have === null || have >= least) && (
+              <button type="button" className="na-chip is-on" onClick={() => set(least.toFixed(2))}>
+                {M.putIn(dollars(least))}
+              </button>
+            )}
+            {fits && (
+              <button type="button" className="na-chip" onClick={() => setDraft((d) => withPreset(d, fits))}>
+                <TokenStack symbols={Object.keys(fits.weights)} max={3} size={18} />
+                {M.switchTo(fits.name)}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       {short && (
         <p className="na-warn">
           {F.notEnough(dollars(have ?? 0))} <Link href={'/bridge' as Route}>{F.addUsdg} →</Link>

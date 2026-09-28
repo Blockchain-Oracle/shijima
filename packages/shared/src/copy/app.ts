@@ -273,6 +273,13 @@ export const appCopy = {
       ask: 'Ask Shijima',
       all: 'Every decision',
     },
+    tooSmall: {
+      title: 'Your agent can’t buy yet.',
+      body: (cash: string, more: string) =>
+        `It holds ${cash} in cash, but split across its plan each buy is under 20¢, the smallest trade, so every check ends in “nothing to do”. Add ${more} more, or pick a plan with fewer stocks.`,
+      add: (more: string) => `Add ${more}`,
+      plan: 'Change the plan',
+    },
     money: {
       title: 'Agent account',
       address: 'Its address on Robinhood Chain',

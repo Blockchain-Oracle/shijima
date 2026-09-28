@@ -1,6 +1,7 @@
 'use client'
 
 import { controlsCopy as c, deskCopy, usd } from '@desk/shared'
+import { TokenLogo } from '@/components/ui/token-logo'
 import { cn } from '@/lib/utils'
 import type { ControlsView } from './DeskControls'
 import { type DraftRule, RulesEditor } from './RulesEditor'
@@ -198,10 +199,24 @@ export function ControlFields({
 
 const PARTS: MandatePart[] = ['strategy', 'weights', 'limits', 'notes', 'rules']
 
-function Pct({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function Pct({
+  label,
+  value,
+  onChange,
+  symbol,
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  /** A token, or USDG for cash: its real logo sits beside the label. */
+  symbol?: string
+}) {
   return (
     <label className="desk-field">
-      <span className="type-label-micro text-ink-muted">{label}</span>
+      <span className="flex items-center gap-2 type-label-micro text-ink-muted">
+        {symbol && <TokenLogo symbol={symbol} size={18} />}
+        {label}
+      </span>
       <span className="desk-input">
         <input
           inputMode="decimal"
@@ -253,11 +268,17 @@ function MandateFields({
               <Pct
                 key={t.symbol}
                 label={t.name}
+                symbol={t.symbol}
                 value={state.weights[t.symbol] ?? ''}
                 onChange={(v) => set({ weights: { ...state.weights, [t.symbol]: v } })}
               />
             ))}
-            <Pct label={e.cash} value={state.cashPct} onChange={(cashPct) => set({ cashPct })} />
+            <Pct
+              label={e.cash}
+              symbol="USDG"
+              value={state.cashPct}
+              onChange={(cashPct) => set({ cashPct })}
+            />
           </div>
           <p className={cn('type-caption', Math.abs(total - 100) < 0.01 ? 'text-ink-muted' : 'text-warning')}>
             {e.total(`${total.toFixed(total % 1 === 0 ? 0 : 1)}%`)}

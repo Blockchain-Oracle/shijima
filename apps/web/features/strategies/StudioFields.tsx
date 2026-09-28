@@ -232,7 +232,7 @@ export function LimitsStep({
           className="strat-input text-ink"
           inputMode="decimal"
           value={draft[key]}
-          onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.value }))}
+          onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.value, limitsSet: true }))}
         />
       </span>
       {slideTo !== undefined && (
@@ -244,7 +244,7 @@ export function LimitsStep({
           step={1}
           aria-label={label}
           value={Math.min(slideTo, Math.max(1, Number(draft[key]) || 1))}
-          onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.value }))}
+          onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.value, limitsSet: true }))}
           className="mt-2 w-full cursor-pointer"
           style={{ accentColor: 'var(--color-accent)' }}
         />

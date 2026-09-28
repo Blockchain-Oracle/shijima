@@ -12,13 +12,13 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { CopySettings } from '@/features/copy/CopySettings'
 import { DeskControls, ModeSwitch } from '@/features/desk/DeskControls'
-import { Mandate } from '@/features/desk/DeskPanels'
 import { DeskSessionProvider } from '@/features/session/DeskSessionProvider'
 import { OwnerSessionPanel } from '@/features/session/OwnerSessionPanel'
 import { AgentSettingsTabs } from '@/features/settings/AgentSettingsTabs'
 import { CloseDeskButton } from '@/features/settings/CloseDeskButton'
 import { Connections } from '@/features/settings/Connections'
 import { Disclosure } from '@/features/settings/Disclosure'
+import { PlanPanel } from '@/features/settings/PlanPanel'
 import { ShareToggle } from '@/features/settings/ShareToggle'
 import { controlsOf } from '@/lib/controls'
 import { db } from '@/lib/db'
@@ -89,7 +89,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
               ) : (
                 <p className="na-note">{s.closed}</p>
               ),
-            plan: view ? <Mandate view={view} /> : null,
+            plan: view?.mandate ? <PlanPanel plan={view.mandate} controls={open ? controls : null} /> : null,
             connections: (
               <div className="st-stack">
                 <Connections

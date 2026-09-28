@@ -177,6 +177,11 @@ export const studioCopy = {
     practiceOn: 'Practice with no money. You can add USDG later.',
     tooLow: 'Put in at least $1, or start in practice with no money.',
     tooMuch: (amount: string) => `That is more than your wallet holds (${amount}).`,
+    cannotTradeTitle: 'Too small to trade yet.',
+    cannotTradeBody: (amount: string, least: string) =>
+      `${amount} split across this strategy makes each buy under 20¢, the smallest trade, so your agent would only hold cash. It needs ${least}, or a strategy with fewer stocks.`,
+    putIn: (least: string) => `Put in ${least}`,
+    switchTo: (name: string) => `Switch to ${name}`,
     tooSmallToTrade: (least: string) =>
       `Too little to split across this strategy: each buy would be under 20¢, the smallest trade, so it would only hold cash. Put in at least ${least}, or pick a strategy with fewer stocks.`,
     side: (amount: string) => `Putting in ${amount}`,
