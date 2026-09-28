@@ -19,15 +19,29 @@ const F = studioCopy.flow
 const CHOICES = ['1', '10', '20', '50', '100'] as const
 /** The free $1 (PLAN-ROUND-3 D3) must be able to trade, so $1 is the floor. Our gas on a small trade is our cost. */
 export const MIN_USDG = 1
+/** The engine's smallest trade, MIN_TRADE_USDG in packages/core/src/wake/needs.ts: a first buy below it never happens. */
+const MIN_TRADE_UNITS = 200_000n
 
 const dollars = (n: number) =>
   `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
-/** A problem with the amount, in words, or null. '0' is the practice choice and is always fine. */
-export function amountProblem(amount: string | undefined, balanceUsdg: bigint | null): string | null {
+/**
+ * A problem with the amount, in words, or null. '0' is the practice choice and is always fine. An amount whose
+ * smallest first buy falls under the engine's minimum trade is refused too: the agent would hold only cash.
+ */
+export function amountProblem(
+  amount: string | undefined,
+  balanceUsdg: bigint | null,
+  weights: Record<string, number> = {},
+): string | null {
   if (!amount || amount === '0') return null
   const units = dollarsToUnits(amount)
   if (units === null || units < BigInt(MIN_USDG) * 1_000_000n) return M.tooLow
+  const smallest = Math.min(...Object.values(weights).filter((w) => w > 0))
+  if (Number.isFinite(smallest) && (units * BigInt(smallest)) / 10_000n < MIN_TRADE_UNITS) {
+    const least = Math.ceil((Number(MIN_TRADE_UNITS) * 10_000) / smallest / 10_000) / 100
+    return M.tooSmallToTrade(dollars(least))
+  }
   if (balanceUsdg !== null && balanceUsdg > 0n && units > balanceUsdg)
     return M.tooMuch(dollars(Number(formatUnits(balanceUsdg, 6))))
   return null
@@ -75,6 +89,7 @@ export function MoneyStep({
   const set = (a: string) => setDraft((d) => ({ ...d, amount: a }))
   const have = balance === null ? null : Number(formatUnits(balance, 6))
   const short = !practice && have !== null && value > have
+  const tooSmall = practice || value < MIN_USDG ? null : amountProblem(amount, null, draft.weights)
   // The first time the wallet is read: an untouched $20 becomes what the wallet holds, when that is less and at
   // least the $1 minimum, so a wallet with the free $1 starts at $1 instead of at a warning.
   const fitted = useRef(false)
@@ -131,6 +146,7 @@ export function MoneyStep({
         ))}
       </div>
 
+      {!short && tooSmall && <p className="na-warn">{tooSmall}</p>}
       {short && (
         <p className="na-warn">
           {F.notEnough(dollars(have ?? 0))} <Link href={'/bridge' as Route}>{F.addUsdg} →</Link>

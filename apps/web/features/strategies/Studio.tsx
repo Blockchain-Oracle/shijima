@@ -67,7 +67,7 @@ export function Studio({
 
   const advance = () => {
     if (step === 1 && draftTotalBps(draft) !== 10_000) return setProblem(S.identity.mustAddUp)
-    const short = step === 2 ? amountProblem(draft.amount, balance) : null
+    const short = step === 2 ? amountProblem(draft.amount, balance, draft.weights) : null
     if (short) return setProblem(short)
     if (step === 3 && !result.ok) return setProblem(`${result.problems.join('. ')}.`)
     setProblem(null)

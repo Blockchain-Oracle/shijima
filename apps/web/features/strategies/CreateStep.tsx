@@ -9,7 +9,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { type Address, encodeFunctionData, erc20Abi, type Hex, parseEther } from 'viem'
 import { robinhood } from 'viem/chains'
 import { useAccount, useSendTransaction, useSwitchChain } from 'wagmi'
-import { finishDeskAction, type PreparedDesk, prepareDeskAction } from '@/app/studio-actions'
+import {
+  finishDeskAction,
+  fundedDeskAction,
+  type PreparedDesk,
+  prepareDeskAction,
+} from '@/app/studio-actions'
 import { SignInButton } from '@/components/shell/SignInButton'
 import { browserClient } from '@/features/session/useDeskSession'
 import { Disclosure } from '@/features/settings/Disclosure'
@@ -84,7 +89,7 @@ export function CreateStep({
    * next screen offers Add money; nothing is lost.
    */
   const fund = useCallback(
-    async (desk: Address): Promise<string | null> => {
+    async (deskId: string, desk: Address): Promise<string | null> => {
       if (units === null) return null
       try {
         setPhase('funding')
@@ -95,7 +100,9 @@ export function CreateStep({
         })
         setPhase('arriving')
         const receipt = await browserClient.waitForTransactionReceipt({ hash, timeout: 180_000 })
-        return receipt.status === 'success' ? amount : null
+        if (receipt.status !== 'success') return null
+        void fundedDeskAction(deskId)
+        return amount
       } catch {
         return null
       }
@@ -118,7 +125,7 @@ export function CreateStep({
       })
       if (done.ok) {
         created.current = true
-        const fundedUsdg = await fund(desk)
+        const fundedUsdg = await fund(deskId, desk)
         onCreated({
           deskId,
           slug: done.slug,

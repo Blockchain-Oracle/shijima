@@ -14,6 +14,7 @@ import {
   ownsDesk,
   readBackForOwner,
   registerDesk,
+  requestCheck,
   setDeskMode,
   skipTelegram,
   startDesk,
@@ -233,6 +234,22 @@ export async function finishDeskAction(input: {
   } catch (e) {
     console.error(`[studio] finish: ${errorText(e)}`)
     return { ok: false, why: studioCopy.create.failed }
+  }
+}
+
+/**
+ * The first money has landed in a new desk. Its opening check ran seconds before, against an empty account, so
+ * this asks for one more at once: the balance shows and the first buys are considered now, not at the next slot.
+ */
+export async function fundedDeskAction(deskId: string): Promise<{ ok: boolean }> {
+  try {
+    const owner = await signedInAddress()
+    if (!owner || !(await ownsDesk(db(), deskId, owner))) return { ok: false }
+    const asked = await requestCheck(db(), { deskId, requestedBy: owner, via: 'web' })
+    return { ok: asked.ok }
+  } catch (e) {
+    console.error(`[studio] funded check: ${errorText(e)}`)
+    return { ok: false }
   }
 }
 
