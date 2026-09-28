@@ -1,11 +1,11 @@
 import { appCopy, marketsCopy } from '@desk/shared'
 import type { Route } from 'next'
 import Link from 'next/link'
-import type { ReactNode } from 'react'
 import { Answer } from '@/components/answer'
 import { Pill, Screen, ScreenTitle, StatusPill, type TxStatus } from '@/components/kit'
 import { TokenLogo } from '@/components/ui/token-logo'
 import { When } from '@/components/when'
+import { MoneyEmpty, StatGrid } from '@/features/money/MoneyParts'
 
 interface AgentRef {
   id: string
@@ -45,56 +45,46 @@ function statusOf(r: ActivityRow): { status: TxStatus; label: string } {
   return { status: 'confirmed', label }
 }
 
-function Row({ first, children }: { first: boolean; children: ReactNode }) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 14,
-        padding: '16px 18px',
-        borderTop: first ? 'none' : '1px solid var(--bd)',
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
 /**
- * Activity, as the reference wallet lists it (apps/web/src/wallet/ActivityScreen.tsx): a title with its pill, one
- * line of what this is, chip filters, then one bordered panel of rows. Each row: a round mark, the agent and what
- * it did, a quiet detail line, and on the right its status and the way to open it. Requests that wait on you are
- * answered right in their row.
+ * Activity, as the reference wallet lists it (apps/web/src/wallet/ActivityScreen.tsx): a title with its pill, the
+ * counts as 21st's Stats Grid (29195), tabs, then one bordered feed after 21st's Audit Log With Icon Tiles (28483).
+ * Each row: the stock's real logo in its tile, the agent with a BUY/SELL tag, what it did, when, and on the right
+ * its status and the way to open it. Requests that wait on you are answered right in their row. Nothing yet is
+ * 21st's Empty State (1435), with real logos in its tiles.
  */
 export function ActivityScreen({
   tab,
   rows,
   needs,
+  agents,
 }: {
   tab: 'all' | 'needs' | 'trades'
   rows: ActivityRow[]
   needs: NeedRow[]
+  /** How many agents the owner has: with none, the empty state offers to create one. */
+  agents: number
 }) {
   const c = appCopy.activity
   const trades = rows.filter((r) => TRADED.has(r.outcome) && !r.shadow)
+  const practice = rows.filter((r) => r.shadow).length
   const shown = tab === 'trades' ? trades : rows
   const tabs = [
-    { key: 'all', label: c.tabs.all },
-    { key: 'needs', label: needs.length > 0 ? `${c.tabs.needs} · ${needs.length}` : c.tabs.needs },
-    { key: 'trades', label: c.tabs.trades },
+    { key: 'all', label: c.tabs.all, count: null },
+    { key: 'needs', label: c.tabs.needs, count: needs.length > 0 ? needs.length : null },
+    { key: 'trades', label: c.tabs.trades, count: null },
   ] as const
 
   const empty = tab === 'needs' ? needs.length === 0 : shown.length === 0
+  const n = (v: number) => v.toLocaleString('en-US')
 
   return (
-    <Screen width={760} gap={18}>
+    <Screen width={1024} gap={18}>
       <ScreenTitle
         title={c.title}
         sub={c.sub}
         right={
           <Pill
-            label={needs.length > 0 ? `${needs.length} WAITING` : 'UP TO DATE'}
+            label={needs.length > 0 ? c.waiting(needs.length) : c.upToDate}
             tone={needs.length > 0 ? 'warn' : 'pos'}
             dot
             pulse={needs.length > 0}
@@ -102,136 +92,117 @@ export function ActivityScreen({
         }
       />
 
-      <nav aria-label={c.title} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {tabs.map((t) => {
-          const active = tab === t.key
-          return (
-            <Link
-              key={t.key}
-              href={(t.key === 'all' ? '/activity' : `/activity?tab=${t.key}`) as Route}
-              aria-current={active ? 'page' : undefined}
-              style={{
-                padding: '5px 12px',
-                borderRadius: 999,
-                border: active ? '1px solid var(--ac)' : '1px solid var(--bd)',
-                background: active ? 'color-mix(in srgb, var(--ac) 12%, transparent)' : 'transparent',
-                color: active ? 'var(--tx)' : 'var(--tx2)',
-                fontSize: 12,
-                fontWeight: 600,
-                textDecoration: 'none',
-              }}
-            >
-              {t.label}
-            </Link>
-          )
-        })}
+      <StatGrid
+        label={c.title}
+        cells={[
+          { key: 'decisions', value: n(rows.length), label: c.stats.decisions, note: c.stats.decisionsNote },
+          {
+            key: 'trades',
+            value: n(trades.length),
+            label: c.stats.trades,
+            note: c.stats.tradesNote,
+            ...(trades.length > 0 ? { tone: 'pos' as const } : {}),
+          },
+          { key: 'practice', value: n(practice), label: c.stats.practice, note: c.stats.practiceNote },
+          {
+            key: 'needs',
+            value: n(needs.length),
+            label: c.stats.needs,
+            note: c.stats.needsNote,
+            ...(needs.length > 0 ? { tone: 'warn' as const } : {}),
+          },
+        ]}
+      />
+
+      <nav aria-label={c.title} className="mn-tabs">
+        {tabs.map((t) => (
+          <Link
+            key={t.key}
+            href={(t.key === 'all' ? '/activity' : `/activity?tab=${t.key}`) as Route}
+            aria-current={tab === t.key ? 'page' : undefined}
+          >
+            {t.label}
+            {t.count !== null ? <b>{t.count}</b> : null}
+          </Link>
+        ))}
       </nav>
 
       {empty ? (
-        <div
-          style={{
-            padding: 18,
-            border: '1px dashed var(--bd2)',
-            borderRadius: 13,
-            textAlign: 'center',
-            fontSize: 12,
-            color: 'var(--tx3)',
-            lineHeight: 1.5,
-          }}
+        <MoneyEmpty
+          marks={
+            tab === 'trades'
+              ? [{ token: 'NVDA' }, { token: 'USDG' }, { token: 'AAPL' }]
+              : [{ token: 'USDG' }, { chain: 4663 }, { token: 'SPY' }]
+          }
+          title={c.emptyTitles[tab]}
+          body={c.emptyBodies[tab]}
         >
-          {tab === 'needs' ? c.noneNeeds : tab === 'trades' ? c.noneTrades : c.noneAll}
-        </div>
+          {tab === 'all' ? (
+            agents === 0 ? (
+              <Link href={'/agents/new' as Route} className="mn-btn" data-primary>
+                {c.emptyCta}
+              </Link>
+            ) : null
+          ) : (
+            <Link href={'/activity' as Route} className="mn-btn">
+              {c.emptyAll}
+            </Link>
+          )}
+        </MoneyEmpty>
       ) : (
-        <div
-          style={{
-            border: '1px solid var(--bd)',
-            borderRadius: 16,
-            background: 'var(--panel)',
-            overflow: 'hidden',
-          }}
-        >
+        <div className="mn-feed">
           {tab === 'needs'
-            ? needs.map((n, i) => (
-                <Row key={n.approvalId} first={i === 0}>
-                  <TokenLogo symbol={n.symbol ?? 'CASH'} size={38} />
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 600 }}>
-                      {n.agent.name} ·{' '}
-                      <span style={{ color: 'var(--warn)' }}>{c.tabs.needs.toLowerCase()}</span>
+            ? needs.map((r) => (
+                <div key={r.approvalId} className="mn-feed-row">
+                  <span className="mn-feed-mark">
+                    <TokenLogo symbol={r.symbol ?? 'CASH'} size={30} />
+                  </span>
+                  <div className="mn-feed-body">
+                    <div className="mn-feed-title">
+                      <span className="mn-feed-name">{r.agent.name}</span>
+                      <StatusPill status="pending" label={c.tabs.needs.toUpperCase()} />
                     </div>
-                    <div style={{ fontSize: 12.5, color: 'var(--tx2)', marginTop: 3, lineHeight: 1.45 }}>
-                      {n.summary}
-                    </div>
-                    <div style={{ marginTop: 10 }}>
-                      <Answer deskId={n.agent.id} approvalId={n.approvalId} expiresAt={n.expiresAt} />
+                    <div className="mn-feed-text">{r.summary}</div>
+                    <div style={{ marginTop: 8 }}>
+                      <Answer deskId={r.agent.id} approvalId={r.approvalId} expiresAt={r.expiresAt} />
                     </div>
                   </div>
-                  <div
-                    style={{
-                      alignSelf: 'flex-start',
-                      fontSize: 10.5,
-                      fontFamily: 'var(--fm)',
-                      color: 'var(--tx3)',
-                    }}
-                  >
-                    <When at={n.createdAt} />
+                  <div className="mn-feed-right">
+                    <span className="mn-feed-meta">
+                      <When at={r.createdAt} />
+                    </span>
                   </div>
-                </Row>
+                </div>
               ))
-            : shown.map((r, i) => {
+            : shown.map((r) => {
                 const s = statusOf(r)
+                const side = r.side ? c.sides[r.side] : undefined
                 return (
-                  <Row key={`${r.agent.id}-${r.seq}`} first={i === 0}>
-                    <TokenLogo symbol={r.symbol ?? 'CASH'} size={38} />
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ fontSize: 13.5, fontWeight: 600 }}>{r.agent.name}</div>
-                      <div
-                        title={r.summary}
-                        style={{
-                          fontSize: 12.5,
-                          color: 'var(--tx2)',
-                          marginTop: 3,
-                          lineHeight: 1.45,
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                        }}
-                      >
+                  <div key={`${r.agent.id}-${r.seq}`} className="mn-feed-row">
+                    <span className="mn-feed-mark">
+                      <TokenLogo symbol={r.symbol ?? 'CASH'} size={30} />
+                    </span>
+                    <div className="mn-feed-body">
+                      <div className="mn-feed-title">
+                        <span className="mn-feed-name">{r.agent.name}</span>
+                        {side && r.symbol ? (
+                          <span className="mn-side" data-side={r.side}>
+                            {side} {r.symbol}
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="mn-feed-text" title={r.summary}>
                         {r.summary}
                       </div>
-                      <div
-                        style={{ fontSize: 10.5, color: 'var(--tx3)', fontFamily: 'var(--fm)', marginTop: 4 }}
-                      >
+                      <div className="mn-feed-meta">
                         <When at={r.at} /> · #{r.seq}
                       </div>
                     </div>
-                    <div
-                      style={{
-                        marginLeft: 'auto',
-                        textAlign: 'right',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'flex-end',
-                        gap: 6,
-                        flex: 'none',
-                      }}
-                    >
+                    <div className="mn-feed-right">
                       <StatusPill status={s.status} label={s.label} />
-                      <Link
-                        href={`/agents/${r.agent.slug}/decision/${r.seq}` as Route}
-                        style={{
-                          fontSize: 10.5,
-                          color: 'var(--ac2)',
-                          fontWeight: 700,
-                          fontFamily: 'var(--fm)',
-                          textDecoration: 'none',
-                        }}
-                      >
-                        {c.open} ↗
-                      </Link>
+                      <Link href={`/agents/${r.agent.slug}/decision/${r.seq}` as Route}>{c.open} ↗</Link>
                     </div>
-                  </Row>
+                  </div>
                 )
               })}
         </div>

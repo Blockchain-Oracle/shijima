@@ -1,10 +1,11 @@
 'use client'
 
 import type { ButtonKind } from '@desk/core'
-import { controlsCopy as c, deskCopy } from '@desk/shared'
+import { controlsCopy as c, deskCopy, settingsCopy } from '@desk/shared'
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
+  ChevronRight,
   FlaskConical,
   Gauge,
   Hand,
@@ -14,6 +15,7 @@ import {
   RefreshCw,
   ShieldCheck,
   SlidersHorizontal,
+  TriangleAlert,
   UserCheck,
   UserX,
   Zap,
@@ -22,12 +24,13 @@ import type { Route } from 'next'
 import Link from 'next/link'
 import { type ReactNode, useState, useTransition } from 'react'
 import { proposeAction } from '@/app/owner-actions'
-import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { ControlFields, type ControlForm, type FormState } from './ControlForms'
 import type { ChatCard } from './chat-model'
 import { ProposalCard } from './ProposalCard'
 import { encodeRules } from './RulesEditor'
+
+const t = settingsCopy.trading
 
 export interface ControlsView {
   deskId: string
@@ -267,19 +270,60 @@ const ICONS: Partial<Record<ControlForm, ReactNode>> = {
   restart: <UserCheck aria-hidden="true" />,
 }
 
+/** One line under each tile, so a tile says what it does before it is pressed. */
+const NOTES: Partial<Record<ControlForm, string>> = {
+  pause: t.tiles.pause,
+  resume: t.tiles.resume,
+  checkNow: t.tiles.checkNow,
+  limits: t.tiles.limits,
+  editMandate: t.tiles.editMandate,
+  sellAll: t.tiles.sellAll,
+  remove: t.tiles.remove,
+  restart: t.tiles.restart,
+}
+
+function Tile({
+  icon,
+  label,
+  note,
+  tone,
+}: {
+  icon: ReactNode
+  label: string
+  note?: string | undefined
+  tone?: 'primary' | 'danger' | undefined
+}) {
+  return (
+    <>
+      <span className="ctl-chip" data-tone={tone}>
+        {icon}
+      </span>
+      <span className="ctl-text">
+        <b>{label}</b>
+        {note && <small>{note}</small>}
+      </span>
+      <ChevronRight className="ctl-go" aria-hidden="true" />
+    </>
+  )
+}
+
 /**
- * Every control, as icon tiles. Each one makes the same card the chat would, and nothing happens until it is
- * confirmed. `bare` drops the panel's own heading where a tab already names it; `withoutMode` leaves the mode to
- * the mode switch above.
+ * Every control, as icon tiles in four labelled groups (money, running, what it may do, stop), after 21st's Quick
+ * Actions Grid (24848): an icon chip, the action and one line, with the ones that sell or cut access in the danger
+ * tone. Each one makes the same card the chat would, and nothing happens until it is confirmed. `bare` drops the
+ * panel's own heading where a tab already names it; `withoutMode` leaves the mode to the mode switch above.
  */
 export function DeskControls({
   view,
   bare = false,
   withoutMode = false,
+  withoutPlan = false,
 }: {
   view: ControlsView
   bare?: boolean
   withoutMode?: boolean
+  /** Leave the limits and the plan to the Plan tab, which has its own buttons for both. */
+  withoutPlan?: boolean
 }) {
   const [open, setOpen] = useState<ControlForm | null>(null)
   if (view.lifecycle === 'closed') {
@@ -291,39 +335,91 @@ export function DeskControls({
     )
   }
   const paused = view.state === 'paused_by_owner'
+  const button = ([form, label]: [ControlForm, string]) => (
+    <button
+      key={form}
+      type="button"
+      className="ctl-tile"
+      data-tone={form === 'remove' || form === 'sellAll' ? 'danger' : undefined}
+      onClick={() => setOpen(form)}
+      data-cursor="hover"
+    >
+      <Tile
+        icon={ICONS[form]}
+        label={label}
+        note={NOTES[form]}
+        tone={form === 'remove' || form === 'sellAll' ? 'danger' : undefined}
+      />
+    </button>
+  )
   // Money in and out open their own screens, where any token can go in and every way out is offered.
-  const buttons: [ControlForm, string][] = [
-    paused ? ['resume', c.actions.resume] : ['pause', c.actions.pause],
-    ['checkNow', c.actions.checkNow],
-    ...(withoutMode ? [] : [['mode', c.actions.mode] as [ControlForm, string]]),
-    ['limits', c.actions.limits],
-    ...(view.mandate ? [['editMandate', c.actions.editMandate] as [ControlForm, string]] : []),
-    ['sellAll', c.actions.sellAll],
-    view.assistantRemoved ? ['restart', c.actions.restart] : ['remove', c.actions.removeAssistant],
+  const groups: [string, ReactNode, boolean?][] = [
+    [
+      t.groups.money,
+      <>
+        <Link href={`/fund?agent=${view.slug}` as Route} className="ctl-tile ctl-tile--primary">
+          <Tile
+            icon={<ArrowDownToLine aria-hidden="true" />}
+            label={c.actions.addMoney}
+            note={t.tiles.addMoney}
+            tone="primary"
+          />
+        </Link>
+        <Link href={`/withdraw?agent=${view.slug}` as Route} className="ctl-tile">
+          <Tile
+            icon={<ArrowUpFromLine aria-hidden="true" />}
+            label={c.actions.withdraw}
+            note={t.tiles.withdraw}
+          />
+        </Link>
+      </>,
+    ],
+    [
+      t.groups.running,
+      <>
+        {button(paused ? ['resume', c.actions.resume] : ['pause', c.actions.pause])}
+        {button(['checkNow', c.actions.checkNow])}
+        {!withoutMode && button(['mode', c.actions.mode])}
+      </>,
+    ],
+    ...(withoutPlan
+      ? []
+      : [
+          [
+            t.groups.rules,
+            <>
+              {button(['limits', c.actions.limits])}
+              {view.mandate && button(['editMandate', c.actions.editMandate])}
+            </>,
+          ] as [string, ReactNode],
+        ]),
+    [
+      t.groups.stop,
+      <>
+        {button(['sellAll', c.actions.sellAll])}
+        {button(
+          view.assistantRemoved ? ['restart', c.actions.restart] : ['remove', c.actions.removeAssistant],
+        )}
+      </>,
+      true,
+    ],
   ]
   const tiles = (
-    <div className="ctl-grid">
-      <Link href={`/fund?agent=${view.slug}` as Route} className="ctl-tile ctl-tile--primary">
-        <ArrowDownToLine aria-hidden="true" />
-        {c.actions.addMoney}
-      </Link>
-      <Link href={`/withdraw?agent=${view.slug}` as Route} className="ctl-tile">
-        <ArrowUpFromLine aria-hidden="true" />
-        {c.actions.withdraw}
-      </Link>
-      {buttons.map(([form, label]) => (
-        <button
-          key={form}
-          type="button"
-          className="ctl-tile"
-          data-tone={form === 'remove' || form === 'sellAll' ? 'danger' : undefined}
-          onClick={() => setOpen(form)}
-          data-cursor="hover"
+    <div className="ctl-groups">
+      {groups.map(([title, items, danger]) => (
+        <section
+          key={title}
+          className={danger ? 'ctl-group ctl-group--danger' : 'ctl-group'}
+          aria-label={title}
         >
-          {ICONS[form]}
-          {label}
-        </button>
+          <h4 className="ctl-group-title">
+            {danger && <TriangleAlert aria-hidden="true" />}
+            {title}
+          </h4>
+          <div className="ctl-grid">{items}</div>
+        </section>
       ))}
+      <p className="ctl-hint">{t.confirmFirst}</p>
       {/* Keyed by the form, so each opening starts with a clean form and no card left from last time. */}
       <ControlDialog key={open ?? 'none'} view={view} form={open} onClose={() => setOpen(null)} />
     </div>
@@ -340,9 +436,48 @@ export function DeskControls({
   )
 }
 
+const money = (raw: string | null) =>
+  raw === null
+    ? t.unset
+    : `$${(Number(raw) / 1e6).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+
 /**
- * The mode, as three cards with the current one marked: practice, ask me first, on its own. Picking another opens
- * the same confirm card as the chat's. Any mode at any time (DECISIONS R8).
+ * Where the agent stands, above its controls, in the Stats Grid cells the Plan tab uses (21st 29195): running or
+ * paused, the cash it holds, and the two caps its contract enforces.
+ */
+export function TradingStatus({ view }: { view: ControlsView }) {
+  const paused = view.state === 'paused_by_owner'
+  const state = view.assistantRemoved ? 'removed' : paused ? 'paused' : 'running'
+  const cells: [string, ReactNode, string | null][] = [
+    [
+      t.status,
+      <span key="s" className="ts-state" data-state={state}>
+        <i aria-hidden="true" />
+        {t[state]}
+      </span>,
+      deskCopy.modes[view.mode],
+    ],
+    [t.cash, money(view.cashUsdg), null],
+    [t.perTrade, money(view.perActionCapUsdg), t.onChain],
+    [t.perDay, money(view.dailyCapUsdg), t.onChain],
+  ]
+  return (
+    <div className="pl-limits ts-grid">
+      {cells.map(([label, value, note]) => (
+        <div key={label}>
+          <span className="pl-limit-value">{value}</span>
+          <span className="pl-limit-label">{label}</span>
+          {note && <small>{note}</small>}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/**
+ * The mode, as three cards with the current one marked: practice, ask me first, on its own. After 21st's Feature
+ * Toggle Switch Cards (22208): an icon chip and a radio ring on each card, the chosen one tinted. Picking another
+ * opens the same confirm card as the chat's. Any mode at any time (DECISIONS R8).
  */
 export function ModeSwitch({ view }: { view: ControlsView }) {
   const [picked, setPicked] = useState<ControlsView['mode'] | null>(null)
@@ -366,10 +501,15 @@ export function ModeSwitch({ view }: { view: ControlsView }) {
             className={on ? 'mode-card is-on' : 'mode-card'}
             onClick={() => !on && setPicked(m)}
           >
-            <span className="mode-card-icon">{icon}</span>
-            <b>{deskCopy.modes[m]}</b>
+            <span className="mode-card-top">
+              <span className="mode-card-icon">{icon}</span>
+              <span className="mode-card-radio" aria-hidden="true" />
+            </span>
+            <b>
+              {deskCopy.modes[m]}
+              {on && <span className="mode-card-now">{c.current}</span>}
+            </b>
             <small>{deskCopy.modeNote[m]}</small>
-            {on && <span className="mode-card-now">{c.current}</span>}
           </button>
         )
       })}

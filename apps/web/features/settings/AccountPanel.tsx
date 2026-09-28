@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useDisconnect } from 'wagmi'
 import { WalletChip } from '@/components/shell/app/WalletChip'
+import { ChainLogo } from '@/components/ui/chain-logo'
 import { openTour } from '@/features/onboarding/tour'
 
 const c = appCopy.settings
@@ -36,7 +37,8 @@ export function AccountPanel({ address }: { address: string }) {
             <span className="st-row-title">{c.address}</span>
             <span className="st-row-sub">{c.realMoney}</span>
           </div>
-          <span className="st-mono" title={address}>
+          <span className="st-mono st-addr" title={address}>
+            <ChainLogo chainId={4663} size={18} />
             {short(address, 6, 4)}
           </span>
         </div>

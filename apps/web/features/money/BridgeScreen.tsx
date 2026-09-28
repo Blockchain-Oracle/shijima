@@ -6,8 +6,9 @@ import type { Route } from 'next'
 import Link from 'next/link'
 import { type ReactNode, useMemo, useState } from 'react'
 import { formatUnits } from 'viem'
-import { BoundaryBadge, Button, Callout, FlowCard, Screen, ScreenTitle, Segmented } from '@/components/kit'
+import { BoundaryBadge, Callout, Screen, ScreenTitle, Segmented } from '@/components/kit'
 import {
+  AssetMark,
   AssetPicker,
   AssetPill,
   AssetToggle,
@@ -18,8 +19,10 @@ import {
   TicketBox,
   TicketQuoted,
 } from '@/components/kit/ticket'
-import { CHAIN_LOGOS, ChainLogo } from '@/components/ui/chain-logo'
+import { BrandLogo } from '@/components/ui/brand-logo'
+import { ChainLogo } from '@/components/ui/chain-logo'
 import type { FundChain } from './FundScreen'
+import { NetworksCard } from './MoneyParts'
 import { MoveFlow } from './MoveFlow'
 import { toRaw } from './SendScreen'
 import { useOriginBalance } from './useOriginBalance'
@@ -31,29 +34,9 @@ const USDG_DECIMALS = 6
 
 type Dir = 'out' | 'in' | 'gas'
 
-/** How a bridge moves, beside the ticket: the three steps, and the chains Relay reaches from here. */
+/** How a bridge moves, beside the ticket: the three steps, every network as a logo tile, and Relay's own mark. */
 function HowItMoves() {
-  return (
-    <div className="kit-summary">
-      <strong style={{ fontSize: 13.5 }}>{c.howTitle}</strong>
-      <ol
-        style={{ margin: '10px 0 12px', paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 6 }}
-      >
-        {c.how.map((line) => (
-          <li key={line} style={{ fontSize: 12.5, color: 'var(--tx2)', lineHeight: 1.5 }}>
-            {line}
-          </li>
-        ))}
-      </ol>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {[4663, 8453, 42161, 1, 56].map((id) => (
-          <span key={id} className="kit-chain-chip">
-            <ChainLogo chainId={id} size={16} /> {CHAIN_LOGOS[id]?.name}
-          </span>
-        ))}
-      </div>
-    </div>
-  )
+  return <NetworksCard title={c.howTitle} steps={c.how} via={['relay']} />
 }
 
 /**
@@ -270,10 +253,29 @@ function GetGas({
       doneTitle={c.gasDone}
       route={{ from: { chainId: ROBINHOOD, label: 'USDG' }, to: { chainId: ROBINHOOD, label: 'ETH' } }}
       aside={
-        <div className="kit-summary">
-          <p style={{ margin: 0, fontSize: 12.5, color: 'var(--tx2)', lineHeight: 1.55 }}>
+        <div className="mn-card">
+          <header className="mn-card-head">
+            <AssetMark symbol="ETH" chainId={ROBINHOOD} size={30} />
+            <span className="mn-card-head-text">
+              <strong>
+                <span style={{ fontFamily: 'var(--fm)', fontVariantNumeric: 'tabular-nums' }}>
+                  {Number(eth).toLocaleString('en-US', { maximumFractionDigits: 6 })}
+                </span>{' '}
+                ETH
+              </strong>
+              <small>{moneyCopy.wallet.chainName}</small>
+            </span>
+          </header>
+          <p className="mn-note">
             {c.gasBody} {c.gasHave(Number(eth).toLocaleString('en-US', { maximumFractionDigits: 6 }))}
           </p>
+          <div className="mn-via">
+            <span className="mn-kicker">{t.via}</span>
+            <span className="mn-via-brand">
+              <BrandLogo brand="uniswap" size={18} />
+              {t.uniswap}
+            </span>
+          </div>
         </div>
       }
       ticket={(q) => (
@@ -367,23 +369,24 @@ function FromChain({
         to: { chainId: ROBINHOOD, label: 'Robinhood Chain' },
       }}
       aside={
-        <div className="kit-summary">
-          <p style={{ margin: 0, fontSize: 12.5, color: 'var(--tx2)', lineHeight: 1.55 }}>{c.inWallet}</p>
-          {receive === 'usdg' && (
-            <Link
-              href={'/fund?from=chain' as Route}
-              style={{
-                display: 'inline-block',
-                marginTop: 10,
-                fontSize: 12.5,
-                color: 'var(--ac2)',
-                fontWeight: 600,
-              }}
-            >
-              {c.fundInstead} →
-            </Link>
-          )}
-        </div>
+        <>
+          <div className="mn-card">
+            <header className="mn-card-head">
+              <ChainLogo chainId={ROBINHOOD} size={26} />
+              <span className="mn-card-head-text">
+                <strong>{moneyCopy.fund.sources.wallet}</strong>
+                <small>{moneyCopy.receive.networkValue}</small>
+              </span>
+            </header>
+            <p className="mn-note">{c.inWallet}</p>
+            {receive === 'usdg' && (
+              <Link href={'/fund?from=chain' as Route} className="mn-textlink">
+                {c.fundInstead} →
+              </Link>
+            )}
+          </div>
+          <HowItMoves />
+        </>
       }
       ticket={(q) => (
         <>

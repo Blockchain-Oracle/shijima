@@ -174,6 +174,27 @@ export const appCopy = {
     practice: 'practice',
     open: 'Open',
     signIn: 'Sign in to see what your agents did.',
+    waiting: (n: number) => `${n} WAITING`,
+    upToDate: 'UP TO DATE',
+    stats: {
+      decisions: 'Decisions',
+      decisionsNote: 'Written down, every one',
+      trades: 'Trades',
+      tradesNote: 'Real money moved',
+      practice: 'Practice',
+      practiceNote: 'Decided, nothing sent',
+      needs: 'Need you',
+      needsNote: 'Waiting on your answer',
+    },
+    emptyTitles: { all: 'No decisions yet', needs: 'Nothing waits on you', trades: 'No trades yet' },
+    emptyBodies: {
+      all: 'Your agents look every five minutes and write down each decision here, with why they made it.',
+      needs: 'Your agents act inside your limits and ask for anything larger.',
+      trades: 'Practice decisions show under All.',
+    },
+    emptyCta: 'Create an agent',
+    emptyAll: 'See every decision',
+    sides: { buy: 'BUY', sell: 'SELL', sweep: 'SAVE', redeem: 'REDEEM' } as Record<string, string>,
   },
 
   settings: {
@@ -254,6 +275,58 @@ export const appCopy = {
       serv: 'Reasoned with SERV',
       servTitle:
         'This call was made by a model through OpenServ’s SERV Reasoning. See the same model with and without it.',
+      emptyTitle: 'No decision yet',
+      emptyQuiet:
+        'Every look so far found nothing to do: its stocks are near their targets, or too small to buy. The first real decision lands here.',
+      emptyNew: 'It looks every five minutes. Its first real decision lands here, with why it made it.',
+      firstLook: (when: string) => `Next look ${when}`,
+    },
+    /** What the agent is doing right now, in one card under the header. */
+    status: {
+      title: 'Right now',
+      lastLook: 'Last look',
+      nextLook: 'Next look',
+      market: 'US market',
+      notYet: 'not yet',
+      inTime: (t: string) => `in ${t}`,
+      now: 'any moment',
+      closed: { title: 'Closed', body: 'This agent is closed. It no longer looks or trades.' },
+      onboarding: {
+        title: 'Getting ready',
+        body: 'Its account is being set up. It starts looking once its money lands.',
+      },
+      paused: (own: boolean) => ({
+        title: own ? 'Paused by you' : 'Paused by its owner',
+        body: 'It is not looking or trading. What it holds stays where it is.',
+      }),
+      stopped: {
+        title: 'Stopped by the loss limit',
+        body: 'Its value fell past the loss limit, so it stopped trading. Nothing moves until it is restarted.',
+      },
+      attention: {
+        title: 'Needs attention',
+        body: 'It stopped until its owner looks at what went wrong.',
+      },
+      noMoney: {
+        title: 'Waiting for money',
+        body: 'It has nothing to look after yet. Once money lands, it starts buying on its next look.',
+      },
+      tooSmall: (cash: string) => ({
+        title: 'Holding cash',
+        body: `Its ${cash} is too little to split across its plan, so each look ends in “nothing to do”.`,
+      }),
+      waiting: (side: string, name: string, when: string) => ({
+        title: `Waiting to ${side === 'sell' ? 'sell' : 'buy'} ${name}`,
+        body: `It chose to wait for a better moment, and looks at it again ${when}.`,
+      }),
+      due: (name: string) => ({
+        title: `Rebalancing ${name}`,
+        body: `${name} is off its target, so it acts on its next look, inside its limits.`,
+      }),
+      watching: (n: number, drift: string, practice: boolean) => ({
+        title: practice ? 'Practising' : 'Watching',
+        body: `${n} ${n === 1 ? 'stock' : 'stocks'}, each within ${drift} of its target. It acts when one drifts further${practice ? ', deciding for real and spending nothing' : ''}.`,
+      }),
     },
     record: (better: number, graded: number) =>
       graded === 0 ? 'Timing not graded yet' : `${better} of ${graded} timing calls beat the alternative`,
@@ -267,6 +340,9 @@ export const appCopy = {
       cash: 'Cash (USDG)',
       inSavings: (amount: string) => `${amount} earning in savings`,
       stockPage: (symbol: string) => `${symbol} price, reference and reports`,
+      legendNow: 'Now',
+      legendTarget: 'Target',
+      barLabel: (name: string, now: string, target: string) => `${name}: ${now} now, target ${target}`,
     },
     activity: {
       title: 'Activity',
@@ -279,6 +355,7 @@ export const appCopy = {
         `It holds ${cash} in cash, but split across its plan each buy is under 20¢, the smallest trade, so every check ends in “nothing to do”. Add ${more} more, or pick a plan with fewer stocks.`,
       add: (more: string) => `Add ${more}`,
       plan: 'Change the plan',
+      meter: (buy: string, min: string) => `Largest buy ${buy} · smallest trade ${min}`,
     },
     money: {
       title: 'Agent account',
@@ -297,6 +374,8 @@ export const appCopy = {
       total: 'Total',
       asOf: (when: string) => `Last checked ${when}`,
       receive: 'Receive',
+      split: 'Where its money is',
+      empty: 'No money in it yet.',
     },
   },
 
@@ -326,6 +405,24 @@ export const appCopy = {
     practice: 'Practice',
     liveMode: 'Trading',
     noDecision: 'No decision yet',
+    newAgent: 'New agent',
+    newAgentBody: 'Pick a strategy and an amount',
+    needsYou: (n: number) => `${n} waiting for you`,
+    rank: (n: number) => `#${n}`,
+    looking: 'Looking every 5 min',
+    notRunning: 'Not running',
+    day: '24h',
+    holds: 'Holds',
+    cash: 'Cash',
+    fee: (amount: string) => `Copy fee ${amount}`,
+    free: 'Free to copy',
+    closedToCopy: 'Not open to copying',
+    stocks: (n: number) => `${n} ${n === 1 ? 'stock' : 'stocks'}`,
+    emptyShared: {
+      title: 'No shared agents yet',
+      body: 'When an owner turns sharing on, their agent appears here with what it holds, how it is doing and every decision it makes. Yours can be the first.',
+      create: 'Create an agent',
+    },
   },
 
   copy: {

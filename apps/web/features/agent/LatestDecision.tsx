@@ -9,6 +9,7 @@ import { TokenLogo } from '@/components/ui/token-logo'
 import { When } from '@/components/when'
 import { decisionCard } from '@/features/share/card-data'
 import { ShareDecisionButton } from '@/features/share/ShareDecisionButton'
+import { EmptyFan } from './EmptyFan'
 
 const c = appCopy.agentPage.decision
 
@@ -22,17 +23,23 @@ export function LatestDecision({
   desk,
   full,
   body,
+  symbols = [],
+  looked = false,
 }: {
   slug: string
   desk: PublicDesk
   full: DecisionInFull | undefined
   body: RecordView | undefined
+  /** The plan's stocks, for the empty state's logos. */
+  symbols?: string[]
+  /** Whether it has looked at least once: then "nothing yet" means every look found nothing to do. */
+  looked?: boolean
 }) {
   if (!full) {
     return (
-      <section className="ap-card ap-decision" aria-label={c.title}>
+      <section className="ap-card ap-decision ap-decision--empty" aria-label={c.title}>
         <p className="ap-label">{c.title}</p>
-        <p className="ap-decision-empty">{c.none}</p>
+        <EmptyFan symbols={symbols} title={c.emptyTitle} body={looked ? c.emptyQuiet : c.emptyNew} />
       </section>
     )
   }

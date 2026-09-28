@@ -1,0 +1,365 @@
+/* The owner's own agents on /agents, as cards (after 21st's Stats cards with links, 4402), and a dashed card to
+ * make another. The board's own tokens. */
+.ag-mine--rich {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.ag-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--color-hairline);
+  border-radius: 16px;
+  background: var(--color-surface-1);
+  color: var(--color-ink);
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+.ag-card:hover {
+  border-color: var(--color-accent);
+}
+.ag-card:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.ag-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ag-card-name {
+  font-size: 15px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ag-card-value {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+}
+.ag-card-value strong {
+  font-size: 22px;
+  font-weight: 600;
+}
+.ag-card-value span {
+  font-size: 12px;
+}
+.ag-card-value .is-up {
+  color: var(--color-profit);
+}
+.ag-card-value .is-down {
+  color: var(--color-loss);
+}
+.ag-card-latest {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-hairline);
+  font-size: 12px;
+  color: var(--color-ink-muted);
+}
+.ag-card-latest span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ag-card-latest em {
+  font-style: normal;
+  color: var(--color-warning);
+}
+.ag-card--new {
+  justify-content: center;
+  border-style: dashed;
+  background: transparent;
+}
+.ag-card--new .ag-card-latest {
+  border-top: 0;
+  padding-top: 0;
+}
+.ag-card-plus {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  color: var(--color-accent);
+}
+
+/* Shared agents as ranked cards (after 21st's Leaderboard Card, 13053), the Plan tab's bar: donut and real logos,
+ * value in mono with the day's change and a sparkline, the latest decision, the record, then fee and Copy. */
+.ag-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ag-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--color-hairline);
+  border-radius: 18px;
+  background: var(--color-surface-1);
+  transition: border-color 160ms ease;
+}
+.ag-tile:hover {
+  border-color: var(--color-accent-dim, var(--color-accent));
+}
+.ag-tile-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ag-tile-rank {
+  display: grid;
+  place-items: center;
+  min-width: 30px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: var(--color-surface-2);
+  font-family: var(--font-data);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.ag-tile:first-child .ag-tile-rank {
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  color: var(--color-accent);
+}
+.ag-tile-run {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 11.5px;
+  color: var(--color-ink-muted);
+}
+.ag-tile-run i {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--color-ink-muted);
+}
+.ag-tile-run[data-on] i {
+  background: var(--color-profit);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-profit) 22%, transparent);
+}
+.ag-tile-who {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  color: var(--color-ink);
+}
+.ag-tile-who:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+.ag-tile-name {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.ag-tile-name strong {
+  overflow: hidden;
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ag-tile-who:hover strong {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ag-tile-basket {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.ag-tile-basket small {
+  font-size: 12px;
+  color: var(--color-ink-muted);
+}
+.ag-tile-perf {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-hairline);
+  border-radius: 14px;
+}
+.ag-tile-value {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ag-tile-label {
+  font-size: 11.5px;
+  color: var(--color-ink-muted);
+}
+.ag-tile-amount {
+  font-family: var(--font-data);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}
+.ag-tile-value em {
+  font-family: var(--font-data);
+  font-size: 12.5px;
+  font-style: normal;
+  color: var(--color-ink-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.ag-tile-value em.is-up {
+  color: var(--color-profit);
+}
+.ag-tile-value em.is-down {
+  color: var(--color-loss);
+}
+.ag-tile-value em small {
+  color: var(--color-ink-muted);
+}
+.ag-tile-spark {
+  flex: none;
+}
+.ag-tile-latest {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--color-ink-secondary);
+}
+.ag-tile-latest-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ag-tile-latest-when {
+  flex: none;
+  font-family: var(--font-data);
+  font-size: 11.5px;
+  color: var(--color-ink-muted);
+}
+.ag-tile-record {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  font-size: 12px;
+  color: var(--color-ink-muted);
+}
+.ag-tile-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-hairline);
+}
+.ag-tile-fee {
+  font-family: var(--font-data);
+  font-size: 12px;
+  color: var(--color-ink-secondary);
+}
+.ag-tile-cta {
+  display: inline-flex;
+  gap: 8px;
+}
+.ag-tile-cta > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+/* No shared agent yet (after 21st's Empty State, 1435): three logos fanned out over the words and one way in. */
+.ag-none {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 40px 20px;
+  border: 1px dashed var(--color-hairline);
+  border-radius: 18px;
+  text-align: center;
+}
+.ag-none-fan {
+  display: flex;
+  justify-content: center;
+  isolation: isolate;
+  margin-bottom: 10px;
+}
+.ag-none-tile {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 13px;
+  background: var(--color-surface-2);
+  box-shadow:
+    0 0 0 1px var(--color-hairline),
+    0 10px 24px -12px rgb(0 0 0 / 0.55);
+}
+.ag-none-tile:nth-child(1) {
+  left: 10px;
+  top: 6px;
+  transform: rotate(-6deg);
+}
+.ag-none-tile:nth-child(2) {
+  z-index: 1;
+}
+.ag-none-tile:nth-child(3) {
+  right: 10px;
+  top: 6px;
+  transform: rotate(6deg);
+}
+.ag-none h3 {
+  font-size: 16px;
+  font-weight: 650;
+  color: var(--color-ink);
+}
+.ag-none p {
+  max-width: 34rem;
+  margin-bottom: 8px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--color-ink-secondary);
+}
+@media (max-width: 420px) {
+  .ag-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ag-tile {
+    padding: 16px;
+  }
+}

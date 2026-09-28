@@ -1,13 +1,17 @@
 import { ago, deskCopy, marketsCopy } from '@desk/shared'
+import { Bot, ChevronRight, Eye } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { MarketSessionChip } from '@/components/shell'
 import { ErrorState } from '@/components/states'
 import { SectionHeader } from '@/components/ui/section-header'
+import { TokenLogo } from '@/components/ui/token-logo'
 import { DeskMarks } from '@/features/markets/DeskMarks'
+import { EmptyTiles } from '@/features/markets/EmptyTiles'
 import { StockCard } from '@/features/markets/StockCard'
 import { StrategyHero } from '@/features/markets/StrategyHero'
 import { loadMarkets, type MarketsView, parseRange } from '@/lib/markets.server'
+import '@/styles/kit/discover.css'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: marketsCopy.kicker }
@@ -54,7 +58,14 @@ export default async function Markets({
               aside={<MarketSessionChip />}
             />
             {view.tokens.length === 0 ? (
-              <p className="type-body text-ink-secondary">{marketsCopy.empty}</p>
+              <EmptyTiles
+                tiles={[
+                  <TokenLogo key="a" symbol="NVDA" size={26} />,
+                  <TokenLogo key="b" symbol="SPY" size={26} />,
+                  <TokenLogo key="c" symbol="TSLA" size={26} />,
+                ]}
+                title={marketsCopy.empty}
+              />
             ) : (
               <div className="markets-grid markets-grid-live">
                 {view.tokens.map((t) => (
@@ -73,25 +84,33 @@ export default async function Markets({
           <section className="markets-section flex flex-col gap-4" aria-label={sec.watch.title}>
             <SectionHeader index={sec.watch.index} title={sec.watch.title} />
             {view.desks.length === 0 ? (
-              <p className="type-body text-ink-secondary">{sec.watch.none}</p>
+              <EmptyTiles
+                tiles={[<Bot key="a" />, <Eye key="b" />, <Bot key="c" />]}
+                title={sec.watch.none}
+              />
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="dc-desks">
                 {view.desks.map((d) => (
                   <Link
                     key={d.id}
                     href={`/agents/${d.shareSlug}` as Route}
-                    className="desk-entry"
+                    className="dc-desk"
                     data-cursor="hover"
                   >
-                    <div className="flex items-baseline justify-between gap-3">
-                      <span className="type-body-strong text-ink">{d.name ?? 'An agent'}</span>
-                      <span className="type-caption text-ink-muted">
-                        {d.startedAt ? marketsCopy.running(ago(d.startedAt)) : ''}
+                    <span className="dc-avatar" aria-hidden="true">
+                      {(d.name ?? 'A').trim().charAt(0).toUpperCase()}
+                    </span>
+                    <span className="dc-desk-body">
+                      <span className="dc-desk-name">
+                        <span>{d.name ?? 'An agent'}</span>
+                        <span className="dc-tag">{deskCopy.modes[d.mode]}</span>
                       </span>
-                    </div>
-                    <p className="type-caption text-ink-secondary">
-                      {deskCopy.modes[d.mode]}: {deskCopy.modeNote[d.mode]}
-                    </p>
+                      <p>{deskCopy.modeNote[d.mode]}</p>
+                      {d.startedAt && (
+                        <span className="dc-time">{marketsCopy.running(ago(d.startedAt))}</span>
+                      )}
+                    </span>
+                    <ChevronRight className="dc-chev" aria-hidden="true" />
                   </Link>
                 ))}
               </div>

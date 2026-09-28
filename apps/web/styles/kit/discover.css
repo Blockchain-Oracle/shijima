@@ -1,0 +1,627 @@
+/* The discover and info pages (/markets, /stock, /live, /status, /compare, /how-it-works), in the Plan tab's
+ * grammar (settings.css .pl-*): bordered sections, a real logo on every row, figures in the mono face with
+ * tabular digits. Imported by the pages that use it, so nothing here can reach another surface. */
+
+/* ── a mark in a square tile: 21st's Audit Log With Icon Tiles (28483) ─────────────────────────────── */
+.dc-tile {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  background: var(--card2);
+  color: var(--tx2);
+}
+.dc-tile svg {
+  width: 17px;
+  height: 17px;
+}
+.dc-tile--sm {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+}
+.dc-tile--sm svg {
+  width: 15px;
+  height: 15px;
+}
+.dc-tile--ac {
+  border-color: color-mix(in srgb, var(--ac) 30%, transparent);
+  background: color-mix(in srgb, var(--ac) 10%, transparent);
+  color: var(--ac);
+}
+
+/* ── a bordered panel with a head, like .st-section ─────────────────────────────────────────────────── */
+.dc-panel {
+  border: 1px solid var(--bd);
+  border-radius: 16px;
+  background: var(--card);
+  overflow: hidden;
+}
+.dc-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--bd);
+}
+.dc-panel-head h2,
+.dc-panel-head h3 {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--tx);
+}
+.dc-panel-head p {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--tx3);
+}
+.dc-kicker {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tx3);
+}
+.dc-count {
+  font-family: var(--fm);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--tx3);
+}
+
+/* ── the stats grid: 21st's Stats Grid (29195), bordered cells as in .pl-limits ─────────────────────── */
+.dc-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--bd);
+  border-radius: 16px;
+  background: var(--card);
+  overflow: hidden;
+}
+.dc-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  margin: -1px 0 0 -1px;
+  padding: 18px 20px;
+  border-top: 1px solid var(--bd);
+  border-left: 1px solid var(--bd);
+}
+.dc-stats--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.dc-stat-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.dc-stat-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tx2);
+}
+.dc-stat-value {
+  margin-top: 6px;
+  font-family: var(--fm);
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--tx);
+}
+.dc-stat-note {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--tx3);
+}
+
+/* ── a feed of rows with a tile each: 21st's Audit Log With Icon Tiles (28483) ─────────────────────── */
+.dc-feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.dc-feed > * + * {
+  border-top: 1px solid var(--bd);
+}
+.dc-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  color: inherit;
+  text-decoration: none;
+}
+a.dc-row {
+  transition: background-color 140ms ease;
+}
+a.dc-row:hover {
+  background: color-mix(in srgb, var(--tx) 3%, transparent);
+}
+a.dc-row:focus-visible {
+  outline: 2px solid var(--ac);
+  outline-offset: -2px;
+}
+.dc-row--top {
+  align-items: flex-start;
+}
+.dc-row-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+.dc-row-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--tx);
+}
+a.dc-row:hover .dc-row-title {
+  color: var(--ac2);
+}
+.dc-row-sub {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--tx3);
+}
+.dc-row-sub a {
+  color: var(--tx2);
+}
+.dc-row-sub a:hover {
+  color: var(--tx);
+  text-decoration: underline;
+}
+.dc-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.dc-row-end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex: none;
+  text-align: right;
+}
+.dc-mono {
+  font-family: var(--fm);
+  font-variant-numeric: tabular-nums;
+}
+.dc-time {
+  font-family: var(--fm);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--tx3);
+  white-space: nowrap;
+}
+.dc-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border: 1px solid var(--bd2);
+  border-radius: 999px;
+  font-family: var(--fm);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tx3);
+  white-space: nowrap;
+}
+.dc-tag[data-tone="buy"],
+.dc-tag[data-tone="acted"] {
+  border-color: color-mix(in srgb, var(--pos) 35%, transparent);
+  color: var(--pos);
+}
+.dc-tag[data-tone="sell"] {
+  border-color: color-mix(in srgb, var(--dng) 35%, transparent);
+  color: var(--dng);
+}
+.dc-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--fm);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--tx2);
+  white-space: nowrap;
+  text-decoration: none;
+}
+.dc-link:hover {
+  color: var(--ac2);
+}
+.dc-link:focus-visible {
+  outline: 2px solid var(--ac);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.dc-chev {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--tx3);
+  transition: transform 140ms ease;
+}
+a.dc-row:hover .dc-chev {
+  transform: translateX(2px);
+  color: var(--tx2);
+}
+
+/* A row's marker for what the decision was: a thin bar in the tile's corner. */
+.dc-mark-tile {
+  position: relative;
+  flex: none;
+}
+.dc-mark-tile::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--card);
+  border-radius: 999px;
+  background: var(--tx3);
+}
+.dc-mark-tile[data-kind="acted"]::after {
+  background: var(--ac);
+}
+.dc-mark-tile[data-kind="declined"]::after {
+  background: var(--dng);
+}
+.dc-mark-tile[data-kind="practice"]::after {
+  background: var(--card2);
+  border-color: var(--card);
+  box-shadow: inset 0 0 0 1px var(--bd2);
+}
+
+/* A feed inside a card that already has its padding. */
+.dc-feed--flush .dc-row {
+  padding-inline: 0;
+}
+/* A report date as a calendar leaf. */
+.dc-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 40px;
+  height: 44px;
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  background: var(--card2);
+  overflow: hidden;
+}
+.dc-date small {
+  width: 100%;
+  padding: 1px 0;
+  background: color-mix(in srgb, var(--ac) 14%, transparent);
+  font-family: var(--fm);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--ac);
+}
+.dc-date b {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  font-family: var(--fm);
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--tx);
+}
+
+/* ── key and value rows with a mark: the contracts, the revenue ────────────────────────────────────── */
+.dc-kv {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.dc-kv > li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+}
+.dc-kv > * + * {
+  border-top: 1px solid var(--bd);
+}
+.dc-kv-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--tx2);
+}
+.dc-kv-value {
+  flex: none;
+  font-family: var(--fm);
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--tx);
+}
+.dc-foot {
+  padding: 12px 18px;
+  border-top: 1px solid var(--bd);
+  font-size: 12.5px;
+  color: var(--tx3);
+}
+
+/* ── an empty state: 21st's Empty State (1435), three tilted tiles over a dashed card ──────────────── */
+.dc-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 36px 20px;
+  border: 1px dashed var(--bd2);
+  border-radius: 14px;
+  text-align: center;
+}
+.dc-empty-tiles {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+  isolation: isolate;
+}
+.dc-empty-tiles > span {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--bd2);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--tx3);
+  box-shadow: 0 10px 24px -14px rgb(0 0 0 / 0.6);
+  transition: transform 500ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.dc-empty-tiles > span svg {
+  width: 20px;
+  height: 20px;
+}
+.dc-empty-tiles > span:nth-child(1) {
+  position: relative;
+  left: 8px;
+  top: 5px;
+  transform: rotate(-6deg);
+}
+.dc-empty-tiles > span:nth-child(2) {
+  position: relative;
+  z-index: 1;
+}
+.dc-empty-tiles > span:nth-child(3) {
+  position: relative;
+  right: 8px;
+  top: 5px;
+  transform: rotate(6deg);
+}
+.dc-empty:hover .dc-empty-tiles > span:nth-child(1) {
+  transform: translateX(-10px) rotate(-12deg);
+}
+.dc-empty:hover .dc-empty-tiles > span:nth-child(3) {
+  transform: translateX(10px) rotate(12deg);
+}
+.dc-empty b {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tx);
+}
+.dc-empty p {
+  max-width: 42ch;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--tx3);
+}
+@media (prefers-reduced-motion: reduce) {
+  .dc-empty-tiles > span {
+    transition: none;
+  }
+}
+
+/* ── agents anyone can watch: 21st's Account List Item (29932) ──────────────────────────────────────── */
+.dc-desks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.dc-desk {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--bd);
+  border-radius: 14px;
+  background: var(--card);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 140ms ease;
+}
+.dc-desk:hover {
+  border-color: var(--bd2);
+}
+.dc-desk:focus-visible {
+  outline: 2px solid var(--ac);
+  outline-offset: 2px;
+}
+.dc-avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--sh-grad), var(--card2);
+  border: 1px solid var(--sh-border);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ac);
+}
+.dc-desk-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.dc-desk-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--tx);
+}
+.dc-desk-name span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dc-desk:hover .dc-desk-name span {
+  color: var(--ac2);
+}
+.dc-desk p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--tx3);
+}
+
+/* ── the live page's hero ───────────────────────────────────────────────────────────────────────────── */
+.dc-hero-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.dc-live-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  margin-top: 16px;
+}
+.dc-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── /status: a mark per part, as in 21st's System Status Block (5693) ─────────────────────────────── */
+.status-page .status-row-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13.5px;
+}
+.status-page .status-row-lag {
+  font-size: 13px;
+  color: var(--tx2);
+}
+.status-page .status-row-detail {
+  font-size: 11px;
+  color: var(--tx3);
+}
+.status-page .dc-stats {
+  margin-top: 4px;
+}
+
+/* ── /how-it-works: a token's logo beside its address ──────────────────────────────────────────────── */
+.dc-addr {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: center;
+}
+.dc-addr dt,
+.dc-addr dd {
+  grid-column: 2;
+}
+.dc-addr > :first-child {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+
+@media (max-width: 760px) {
+  .dc-stats,
+  .dc-stats--4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dc-stats > div {
+    padding: 14px 16px;
+  }
+  .dc-stat-value {
+    font-size: 22px;
+  }
+  .dc-live-grid,
+  .dc-desks {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dc-row {
+    padding: 12px 14px;
+  }
+  .dc-row-end .dc-link {
+    font-size: 11px;
+  }
+  .dc-kv > li {
+    padding: 12px 14px;
+  }
+}
+
+/* Counts with no mark read value first, as in the Plan tab's limits. */
+.dc-stats--4 .dc-stat-value {
+  order: -1;
+  margin-top: 0;
+}
+
+/* On a phone a transaction's hash moves under its line, so the line keeps its width. */
+@media (max-width: 480px) {
+  li.dc-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    row-gap: 6px;
+  }
+  li.dc-row > .dc-link {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+
+/* Inside a stock page's card the feed needs no second frame. */
+.sk-card .dc-panel {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.sk-card .dc-panel .dc-row {
+  padding-inline: 0;
+}

@@ -39,6 +39,8 @@ export const studioCopy = {
     buys: 'What it buys',
     limitsTitle: 'The most it may spend',
     limitsBody: 'Written into your agent’s account. It cannot go past these, whatever it decides.',
+    limitsSized: (amount: string) => `Sized to your ${amount}, so its first buys are never held back.`,
+    limitsOwn: 'Set by you.',
     perTrade: 'Per trade',
     perDay: 'Per day',
     more: 'More options',

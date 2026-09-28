@@ -1,10 +1,13 @@
 import type { ComparisonRun, SituationId } from '@desk/core'
 import { compareCopy } from '@desk/shared'
-import { ArrowLeft, CircleCheck, CircleX } from 'lucide-react'
+import { ArrowLeft, Bot, CircleCheck, CircleX, MessageSquare, Scale } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
+import { BrandLogo } from '@/components/ui/brand-logo'
 import { riseDelay } from '@/features/how-it-works/rise'
+import { EmptyTiles } from '@/features/markets/EmptyTiles'
 import { cn } from '@/lib/utils'
+import '@/styles/kit/discover.css'
 
 export interface CompareSituation {
   id: SituationId
@@ -114,23 +117,40 @@ function Answer({
       className={cn('hiw-card hiw-rise flex flex-col gap-4', column === 'serv' && 'hiw-card-blue')}
       style={riseDelay(index)}
     >
-      <header>
-        <h3 className="hiw-card-title" style={{ marginBottom: 4 }}>
-          {c.title}
-        </h3>
-        {run && <p className="type-caption text-ink-muted">{c.sub(run.model)}</p>}
+      <header className="flex items-center gap-3">
+        <span className={cn('dc-tile', column === 'serv' && 'dc-tile--ac')}>
+          {column === 'serv' ? <BrandLogo brand="openserv" size={18} /> : <Bot aria-hidden="true" />}
+        </span>
+        <div className="min-w-0">
+          <h3 className="hiw-card-title" style={{ marginBottom: 2 }}>
+            {c.title}
+          </h3>
+          {run && <p className="dc-time">{c.sub(run.model)}</p>}
+        </div>
       </header>
 
       {!run || !d ? (
-        <p className="hiw-body-dim">{compareCopy.notRun}</p>
+        <EmptyTiles
+          tiles={[
+            <MessageSquare key="a" aria-hidden="true" />,
+            column === 'serv' ? (
+              <BrandLogo key="b" brand="openserv" size={20} />
+            ) : (
+              <Bot key="b" aria-hidden="true" />
+            ),
+            <Scale key="c" aria-hidden="true" />,
+          ]}
+          title={compareCopy.notRunTitle}
+          body={compareCopy.notRun}
+        />
       ) : (
         <>
           <div>
-            <div className="hiw-figure" style={{ fontSize: 22 }}>
+            <div className="hiw-figure dc-mono" style={{ fontSize: 22 }}>
               {compareCopy.options[d.option] ?? d.option}
               {d.option === 'ACT_PART' && d.partPercent ? ` · ${compareCopy.part(d.partPercent)}` : ''}
             </div>
-            <div className="hiw-figure-label">{compareCopy.confidence(d.confidencePercent)}</div>
+            <div className="hiw-figure-label dc-mono">{compareCopy.confidence(d.confidencePercent)}</div>
           </div>
           <p className="hiw-body text-ink">{d.headline}</p>
 
@@ -190,7 +210,7 @@ function Answer({
             </div>
           )}
 
-          <p className="mt-auto type-caption text-ink-muted">
+          <p className="mt-auto dc-time">
             {compareCopy.meta(
               `${(run.latencyMs / 1000).toFixed(1)} s`,
               run.totalTokens === null ? '—' : run.totalTokens.toLocaleString('en-US'),

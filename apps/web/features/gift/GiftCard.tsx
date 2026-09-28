@@ -13,6 +13,8 @@ import {
 import Link from 'next/link'
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { claimGiftAction, type GiftState, giftStateAction } from '@/app/gift-actions'
+import { ChainLogo } from '@/components/ui/chain-logo'
+import { TokenLogo } from '@/components/ui/token-logo'
 import { cn } from '@/lib/utils'
 
 const POLL_MS = 4000
@@ -84,6 +86,20 @@ export function GiftCard({ compact = false, className }: { compact?: boolean; cl
       </div>
       <h3 className="gift-title">{giftCopy.title}</h3>
       <p className="gift-pitch">{giftCopy.pitch}</p>
+      <div className="mn-gift-inside">
+        <span className="mn-gift-chip">
+          <TokenLogo symbol="USDG" size={20} />
+          {giftCopy.inside.usdg}
+        </span>
+        <span className="mn-gift-chip">
+          <TokenLogo symbol="ETH" size={20} />
+          {giftCopy.inside.eth}
+        </span>
+        <span className="mn-gift-chip">
+          <ChainLogo chainId={4663} size={20} />
+          {giftCopy.inside.chain}
+        </span>
+      </div>
       {gift.state === 'eligible' && <p className="gift-left">{giftCopy.left(gift.left)}</p>}
 
       <AnimatePresence mode="wait" initial={false}>

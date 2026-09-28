@@ -6,12 +6,12 @@ import {
   ownerIdOf,
   telegramForOwner,
 } from '@desk/db'
-import { appCopy, DISCLOSURE_VERSION, settingsCopy as s } from '@desk/shared'
+import { DISCLOSURE_VERSION, settingsCopy as s } from '@desk/shared'
+import { TriangleAlert } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { CopySettings } from '@/features/copy/CopySettings'
-import { DeskControls, ModeSwitch } from '@/features/desk/DeskControls'
+import { DeskControls, ModeSwitch, TradingStatus } from '@/features/desk/DeskControls'
 import { DeskSessionProvider } from '@/features/session/DeskSessionProvider'
 import { OwnerSessionPanel } from '@/features/session/OwnerSessionPanel'
 import { AgentSettingsTabs } from '@/features/settings/AgentSettingsTabs'
@@ -19,7 +19,7 @@ import { CloseDeskButton } from '@/features/settings/CloseDeskButton'
 import { Connections } from '@/features/settings/Connections'
 import { Disclosure } from '@/features/settings/Disclosure'
 import { PlanPanel } from '@/features/settings/PlanPanel'
-import { ShareToggle } from '@/features/settings/ShareToggle'
+import { SharingPanel } from '@/features/settings/SharingPanel'
 import { controlsOf } from '@/lib/controls'
 import { db } from '@/lib/db'
 import { loadDesk } from '@/lib/desk.server'
@@ -77,13 +77,16 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
             trading:
               controls && open ? (
                 <div className="st-stack">
+                  <section className="st-section">
+                    <TradingStatus view={controls} />
+                  </section>
                   <div>
                     <p className="st-kicker">{s.modeTitle}</p>
                     <ModeSwitch view={controls} />
                   </div>
                   <div>
                     <p className="st-kicker">{s.controlsTitle}</p>
-                    <DeskControls view={controls} bare withoutMode />
+                    <DeskControls view={controls} bare withoutMode withoutPlan />
                   </div>
                 </div>
               ) : (
@@ -118,27 +121,11 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
               </div>
             ),
             sharing: (
-              <div className="st-stack">
-                <section className="st-section st-section--pad">
-                  <p className="st-kicker">{s.share.title}</p>
-                  <p className="na-note">{s.share.body}</p>
-                  <ShareToggle
-                    deskId={desk.id}
-                    initial={{ enabled: desk.shareEnabled, slug: desk.shareSlug }}
-                  />
-                </section>
-                {open && (
-                  <section className="st-section st-section--pad">
-                    <p className="st-kicker">{appCopy.copy.settings.title}</p>
-                    <p className="na-note">{appCopy.copy.settings.body}</p>
-                    <CopySettings
-                      deskId={desk.id}
-                      shared={desk.shareEnabled}
-                      initial={{ copyable: desk.copyable, feeUsdg: desk.copyFeeUsdg.toString() }}
-                    />
-                  </section>
-                )}
-              </div>
+              <SharingPanel
+                deskId={desk.id}
+                initialShare={{ enabled: desk.shareEnabled, slug: desk.shareSlug }}
+                copy={open ? { copyable: desk.copyable, feeUsdg: desk.copyFeeUsdg.toString() } : null}
+              />
             ),
             agreement: (
               <div className="st-stack">
@@ -150,9 +137,17 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
                   />
                 </section>
                 {open && (
-                  <section className="st-section st-section--pad st-danger">
-                    <p className="st-kicker">{s.close.title}</p>
-                    <p className="na-note">{s.close.body}</p>
+                  <section className="st-section st-section--pad st-danger" aria-labelledby="st-close-title">
+                    <header className="sh-head">
+                      <span className="sh-chip sh-chip--danger" aria-hidden="true">
+                        <TriangleAlert />
+                      </span>
+                      <div className="sh-titles">
+                        <span className="sh-step">{s.danger}</span>
+                        <h3 id="st-close-title">{s.close.title}</h3>
+                      </div>
+                    </header>
+                    <p className="sh-body">{s.close.body}</p>
                     <CloseDeskButton
                       view={{
                         deskId: desk.id,

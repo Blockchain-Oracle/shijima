@@ -104,6 +104,9 @@ export const moneyCopy = {
     agentCallout:
       'Send USDG, or a Stock Token this agent trades. It lands in the agent’s account, and only your wallet can take it out. Never send ETH to an agent: it cannot hold it.',
     elsewhere: 'Coming from Base, Arbitrum, Ethereum or BNB?',
+    network: 'Network',
+    networkValue: 'Robinhood Chain · 4663',
+    takes: 'Takes',
     elsewhereLink: 'Bridge it in',
   },
 
@@ -184,6 +187,8 @@ export const moneyCopy = {
     },
     seeAll: 'See all',
     noActivity: 'Your agents’ decisions and your money moves appear here.',
+    noActivityTitle: 'Nothing has happened yet',
+    chainName: 'Robinhood Chain',
     yourAgents: 'Your agents',
     agentSplit: (cash: string, stocks: string, savings: string) =>
       `Cash ${cash} · Stocks ${stocks} · Savings ${savings}`,
@@ -227,6 +232,13 @@ export const moneyCopy = {
     pickAgent: 'Choose an agent',
     summary: 'Summary',
     summaryEmpty: 'Enter an amount to see what arrives, what it costs and how long it takes.',
+    inWallet: 'In your wallet',
+    inWalletNote: 'On Robinhood Chain, read from the chain just now',
+    networks: 'Networks it reaches',
+    via: 'Routed by',
+    home: 'Home',
+    relay: 'Relay',
+    uniswap: 'Uniswap',
   },
 
   flow: {
@@ -257,6 +269,7 @@ export const moneyCopy = {
     swapped: 'swapped to USDG on the way in',
     stockIn: 'goes in as it is, or swapped',
     emptyWallet: 'Your wallet on Robinhood Chain holds nothing to move yet.',
+    emptyWalletTitle: 'Nothing here to move yet',
     bringIn: 'Bring money from another chain',
     sourceChain: 'SOURCE CHAIN',
     token: 'TOKEN',
@@ -296,6 +309,9 @@ export const moneyCopy = {
     done: 'Sent',
     empty:
       'Your wallet on Robinhood Chain holds nothing to send yet. Withdraw from an agent, or bring money in.',
+    emptyTitle: 'Nothing to send yet',
+    emptyWithdraw: 'Withdraw from an agent',
+    emptyBring: 'Bring money in',
   },
 
   scan: {
@@ -378,6 +394,7 @@ export const moneyCopy = {
     staysInAgent: 'Stays in your agent as cash',
     yourWallet: 'Your wallet',
     holdingsTitle: (name: string) => `What ${name} holds`,
+    holdingsCaption: 'held now',
     cash: 'Cash',
     savings: 'Savings',
     total: 'Total',

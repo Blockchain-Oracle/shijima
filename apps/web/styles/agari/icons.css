@@ -7,7 +7,7 @@
 /* The ten listed tickers' brand colours (D-085), mirrored from `Ticker.brand` in
    packages/core/src/market/tickers.ts — the registry is the source; `asset-marks/brand.test.ts`
    fails when a value here drifts from it. A brand colour identifies the asset, so none flips with
-   the theme. The three fund houses colour a typed monogram (no clean SVG exists for QQQ/VOO/SPY). */
+   the theme. VOO's Vanguard is the one house left with a typed monogram. */
 :root {
   --brand-tesla: #CC0000;
   --brand-nvidia: #76B900;
@@ -16,9 +16,9 @@
   --brand-meta: #0467DF;
   --brand-amazon: #FF9900;
   --brand-google: #4285F4;
-  --brand-invesco: #0A2240;
+  --brand-invesco: #000AD2;
   --brand-vanguard: #96151D;
-  --brand-spdr: #1F3A5F;
+  --brand-spdr: #001AFF;
   --brand-openai: #412991;
   --brand-anthropic: #D97757;
   --brand-spacex: #005288;
@@ -27,12 +27,13 @@
   --brand-kalshi: #00C389;
   --brand-polymarket: #1652F0;
   --brand-figure: #F26522;
-  /* Added for the 23 Sep token scan. iShares (SGOV, SLV) had no fill until now, so its disc drew black. */
-  --brand-ishares: #3D4450;
-  --brand-uscf: #8A5A12;
+  /* Added for the 23 Sep token scan; the fund houses', Micron's and GameStop's taken from their own logo files on
+     28 Sep (State Street's blue for SPY, Invesco's blue, iShares' black, USO's oil black, GameStop's red). */
+  --brand-ishares: #1B1B1B;
+  --brand-uscf: #1A1818;
   --brand-circle: #6E4F9A;
   --brand-micron: #0B4F9C;
-  --brand-gamestop: #D2202F;
+  --brand-gamestop: #EE2A28;
 }
 .mark-tesla-disc { fill: var(--brand-tesla); }
 .mark-nvidia-disc { fill: var(--brand-nvidia); }

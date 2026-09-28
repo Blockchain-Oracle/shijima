@@ -25,4 +25,5 @@ export const giftCopy = {
   unavailable: (why: string) => `Nothing was claimed: ${why}`,
   usdgTx: 'The $1',
   ethTx: 'The fee money',
+  inside: { usdg: '$1 USDG', eth: '≈30¢ ETH', chain: 'Robinhood Chain' },
 } as const

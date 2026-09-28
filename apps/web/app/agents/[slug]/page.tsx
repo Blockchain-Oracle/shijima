@@ -8,6 +8,7 @@ import { LiveBadge } from '@/components/shell/app/LiveBadge'
 import { TokenStack } from '@/components/ui/token-logo'
 import { AgentActivity } from '@/features/agent/AgentActivity'
 import { AgentMoney } from '@/features/agent/AgentMoney'
+import { AgentStatus } from '@/features/agent/AgentStatus'
 import { LatestDecision } from '@/features/agent/LatestDecision'
 import { Portfolio } from '@/features/agent/Portfolio'
 import { TooSmallToTrade } from '@/features/agent/TooSmallToTrade'
@@ -102,7 +103,8 @@ export default async function AgentPage({
         desk={d.address as `0x${string}`}
         contractVersion={d.contractVersion}
       >
-        <AgentMoney address={d.address} balances={view.plate} />
+        <AgentStatus view={view} />
+        <AgentMoney address={d.address} balances={view.plate} holdings={view.holdings} />
         <TooSmallToTrade view={view} />
         {view.isOwner && (
           <div className="ap-actions">
@@ -130,7 +132,14 @@ export default async function AgentPage({
               </div>
             ) : null}
             <div className="ap-o-decision">
-              <LatestDecision slug={view.slug} desk={resolved.face} full={full} body={body} />
+              <LatestDecision
+                slug={view.slug}
+                desk={resolved.face}
+                full={full}
+                body={body}
+                symbols={symbols}
+                looked={d.lastCheckAt !== null}
+              />
             </div>
             <div className="ap-o-activity">
               <AgentActivity

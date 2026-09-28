@@ -1,10 +1,11 @@
 'use client'
 
 import { EXPLORER } from '@desk/chain'
-import { appCopy, short } from '@desk/shared'
+import { appCopy, CASH_LOOK, lookOf, short } from '@desk/shared'
 import { Check, Copy, ExternalLink, QrCode, Wallet } from 'lucide-react'
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import { Qr } from '@/components/ui/qr'
+import { TokenLogo, TokenStack } from '@/components/ui/token-logo'
 
 const c = appCopy.agentPage.money
 
@@ -26,10 +27,13 @@ const dollars = (raw: bigint) =>
 export function AgentMoney({
   address,
   balances,
+  holdings = [],
 }: {
   address: string
   /** The agent's last check: cash, savings and total. Stocks are what remains. */
   balances: AgentBalances | null
+  /** What each stock is worth, for the bar's segments and logos. */
+  holdings?: { symbol: string; valueUsdg: string }[]
 }) {
   const [copied, setCopied] = useState(false)
   const [open, setOpen] = useState(false)
@@ -82,7 +86,7 @@ export function AgentMoney({
           </a>
         </div>
       </div>
-      {balances ? <Balances b={balances} /> : null}
+      {balances ? <Balances b={balances} holdings={holdings} /> : null}
       {open && (
         <div id="ap-wallet-more" className="ap-wallet-more">
           <Qr text={address} label={c.address} className="ap-money-qr" />
@@ -97,26 +101,85 @@ export function AgentMoney({
   )
 }
 
-/** Cash · Savings · Stocks · Total, the wallet card's split for one agent, from its last check. */
-function Balances({ b }: { b: AgentBalances }) {
+/**
+ * Where the money is, as one bar split by what holds it (after 21st's Partition Bar, 26545): a segment per stock
+ * in its own colour, then savings and cash, with the total beside the title and a legend of logos, dollars and
+ * shares under it. An empty account shows an empty track and says so.
+ */
+function Balances({ b, holdings }: { b: AgentBalances; holdings: { symbol: string; valueUsdg: string }[] }) {
   const cash = BigInt(b.cashUsdg)
   const savings = BigInt(b.vaultUsdg)
   const total = BigInt(b.totalUsdg)
   const stocks = total - cash - savings > 0n ? total - cash - savings : 0n
-  const cells: [string, bigint][] = [
-    [c.cash, cash],
-    ...(savings > 0n ? ([[c.savings, savings]] as [string, bigint][]) : []),
-    [c.stocks, stocks],
-    [c.total, total],
+  const held = holdings
+    .map((h) => ({ symbol: h.symbol, value: BigInt(h.valueUsdg) }))
+    .filter((h) => h.value > 0n)
+    .sort((a, b) => (b.value > a.value ? 1 : -1))
+  const share = (v: bigint) => (total > 0n ? Number((v * 10_000n) / total) / 100 : 0)
+  const pct = (v: bigint) => `${share(v).toLocaleString('en-US', { maximumFractionDigits: 1 })}%`
+  const segments = [
+    ...held.map((h) => ({ key: h.symbol, value: h.value, color: lookOf(h.symbol).color })),
+    ...(savings > 0n ? [{ key: c.savings, value: savings, color: 'var(--color-profit)' }] : []),
+    ...(cash > 0n ? [{ key: c.cash, value: cash, color: CASH_LOOK.color }] : []),
+  ]
+  const legend: { key: string; logo: ReactNode; label: string; value: bigint }[] = [
+    {
+      key: 'stocks',
+      logo: held.length > 0 ? <TokenStack symbols={held.map((h) => h.symbol)} size={18} max={4} /> : null,
+      label: c.stocks,
+      value: stocks,
+    },
+    ...(savings > 0n
+      ? [{ key: 'savings', logo: <TokenLogo symbol="USDG" size={18} />, label: c.savings, value: savings }]
+      : []),
+    { key: 'cash', logo: <TokenLogo symbol="USDG" size={18} />, label: c.cash, value: cash },
   ]
   return (
-    <dl className="ap-balances" title={c.asOf(new Date(b.takenAt).toLocaleString())}>
-      {cells.map(([label, v]) => (
-        <div key={label}>
-          <dt>{label}</dt>
-          <dd>{dollars(v)}</dd>
-        </div>
-      ))}
-    </dl>
+    <div
+      className="ap-split"
+      // The time is written in the reader's own zone, which the server cannot know.
+      suppressHydrationWarning
+      title={c.asOf(new Date(b.takenAt).toLocaleString())}
+    >
+      <div className="ap-split-head">
+        <span className="ap-split-title">{c.split}</span>
+        <span className="ap-split-total">
+          <small>{c.total}</small>
+          {dollars(total)}
+        </span>
+      </div>
+      {total > 0n ? (
+        <ul className="ap-split-bar" aria-hidden="true">
+          {segments.map((sg) => (
+            <li
+              className="ap-split-seg"
+              key={sg.key}
+              style={{ flexGrow: share(sg.value), background: sg.color }}
+              title={`${sg.key} ${pct(sg.value)}`}
+            />
+          ))}
+        </ul>
+      ) : (
+        <div className="ap-split-bar is-empty" aria-hidden="true" />
+      )}
+      {total > 0n ? (
+        <dl className="ap-split-legend">
+          {legend.map((l) => (
+            <div key={l.key} className="ap-split-item">
+              <dt>
+                {l.logo}
+                {l.label}
+              </dt>
+              <dd>
+                {dollars(l.value)}
+                <small>{pct(l.value)}</small>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : (
+        <p className="ap-muted">{c.empty}</p>
+      )}
+    </div>
   )
 }

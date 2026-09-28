@@ -163,6 +163,10 @@ export interface ActivityItem {
   agentName: string | null
   /** For a move: which of the kinds it was. For a decision: its outcome. */
   subkind: string
+  /** The Stock Token a decision was about, when it named one: its logo leads the row. */
+  symbol: string | null
+  /** A move's chains, from and to, so the row wears their logos. */
+  chains: [number, number] | null
 }
 
 const MOVE_STATUS: Record<MoneyMoveStatus, ActivityStatus> = {
@@ -210,6 +214,10 @@ export async function recentActivity(owner: string, limit = 30): Promise<Activit
         at: r.decidedAt,
         agentName: d.name ?? 'Agent',
         subkind: r.outcome,
+        symbol: r.token
+          ? (APPROVED_TOKENS.find((t) => t.address.toLowerCase() === r.token?.toLowerCase())?.symbol ?? null)
+          : null,
+        chains: null,
       })),
   )
   const money: ActivityItem[] = moves
@@ -237,6 +245,8 @@ export async function recentActivity(owner: string, limit = 30): Promise<Activit
         at: move.createdAt,
         agentName: deskName,
         subkind: move.kind,
+        symbol: null,
+        chains: [move.fromChainId, move.toChainId] as [number, number],
       }
     })
   return [...decisions, ...money].sort((a, b) => b.at.getTime() - a.at.getTime()).slice(0, limit)

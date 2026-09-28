@@ -3,8 +3,8 @@ import { AssetDisc } from '@/features/markets/marks'
 import { cn } from '@/lib/utils'
 
 /**
- * A Stock Token's face: Agari's asset disc (`AssetDisc`, the brand's colour with its white glyph, a monogram for a
- * fund), at any size, so the strategies, the studio, the desk and the record wear the same marks as the markets
+ * A Stock Token's face: Agari's asset disc (`AssetDisc`, the brand's colour with its white glyph, the issuer's for
+ * a fund), at any size, so the strategies, the studio, the desk and the record wear the same marks as the markets
  * pages. `symbol="CASH"` draws cash's quiet tile. Decorative by default, because the name is written beside it.
  */
 /** Crypto tokens wear their own published logos, kept in public/logos so nothing loads from another site. */

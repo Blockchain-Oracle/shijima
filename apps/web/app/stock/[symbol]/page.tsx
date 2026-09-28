@@ -16,6 +16,7 @@ import { AskAbout } from '@/features/markets/StrategyHero'
 import { RoomButton } from '@/features/room/RoomButton'
 import { bySymbol, loadStock, parseRange, RANGES, type Range } from '@/lib/markets.server'
 import '@/features/markets/stock.css'
+import '@/styles/kit/discover.css'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,6 +33,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 /** "Sep 20, 20:20 New York": a history row needs the day, not only the weekday. */
 const nyDateTime = (at: Date) =>
   `${at.toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })} New York`
+
+/** A report date as a small calendar leaf: the month over the day, read in UTC as the calendar gives it. */
+function DateTile({ iso }: { iso: string }) {
+  const d = new Date(`${iso}T12:00:00Z`)
+  return (
+    <span className="dc-date" aria-hidden="true">
+      <small>{d.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' })}</small>
+      <b>{d.getUTCDate()}</b>
+    </span>
+  )
+}
 
 const usd = (v: number | null) => (v === null ? stockCopy.dash : `$${v.toFixed(2)}`)
 const pct = (bps: number) => `${(bps / 100).toFixed(2)}%`
@@ -202,11 +214,14 @@ export default async function StockPage({ params, searchParams }: Props) {
             ) : view.events.length === 0 ? (
               <p className="mt-4 type-caption text-ink-muted">{s.events.none}</p>
             ) : (
-              <ul className="sj-rows mt-3">
+              <ul className="dc-feed dc-feed--flush mt-3">
                 {view.events.map((e) => (
-                  <li key={e.date}>
-                    <span className="sj-row-when">{e.when}</span>
-                    <span className="sj-row-what">{e.label}</span>
+                  <li key={e.date} className="dc-row">
+                    <DateTile iso={e.date} />
+                    <span className="dc-row-body">
+                      <span className="dc-row-title">{e.label}</span>
+                      <span className="dc-time">{e.when}</span>
+                    </span>
                   </li>
                 ))}
               </ul>

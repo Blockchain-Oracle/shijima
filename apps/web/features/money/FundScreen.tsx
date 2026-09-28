@@ -6,7 +6,16 @@ import type { Route } from 'next'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { type Address, formatUnits } from 'viem'
-import { BoundaryBadge, Callout, FlowCard, QrCard, Screen, ScreenTitle, Segmented } from '@/components/kit'
+import {
+  BoundaryBadge,
+  buttonStyle,
+  Callout,
+  FlowCard,
+  QrCard,
+  Screen,
+  ScreenTitle,
+  Segmented,
+} from '@/components/kit'
 import {
   AssetPicker,
   AssetPill,
@@ -17,8 +26,9 @@ import {
   TicketBox,
   TicketQuoted,
 } from '@/components/kit/ticket'
-import { CHAIN_LOGOS } from '@/components/ui/chain-logo'
-import { hasCryptoLogo } from '@/components/ui/token-logo'
+import { CHAIN_LOGOS, ChainLogo } from '@/components/ui/chain-logo'
+import { hasCryptoLogo, TokenLogo } from '@/components/ui/token-logo'
+import { MoneyEmpty, NetworksCard, WalletList } from './MoneyParts'
 import { MoveFlow } from './MoveFlow'
 import { toRaw, worthOf } from './SendScreen'
 
@@ -127,12 +137,15 @@ export function FundScreen({
     return (
       <Screen width={1100}>
         <ScreenTitle title={c.title} sub={c.sub} />
-        <Callout tone="info" title={c.noAgentTitle}>
-          {c.noAgentBody}{' '}
-          <Link href={'/agents/new' as Route} style={{ color: 'var(--ac2)', fontWeight: 700 }}>
-            {c.create} →
+        <MoneyEmpty
+          marks={[{ token: 'USDG' }, { chain: 4663 }, { token: 'NVDA' }]}
+          title={c.noAgentTitle}
+          body={c.noAgentBody}
+        >
+          <Link href={'/agents/new' as Route} style={buttonStyle('primary')}>
+            {c.create}
           </Link>
-        </Callout>
+        </MoneyEmpty>
       </Screen>
     )
   }
@@ -197,6 +210,17 @@ export function FundScreen({
           >
             {sourceTabs}
             <TicketBox label={c.sendTo}>{agentPill('USDG')}</TicketBox>
+            <div className="mn-net-line">
+              <ChainLogo chainId={ROBINHOOD} size={26} />
+              <span className="mn-net-text">
+                <small>{moneyCopy.receive.network}</small>
+                <strong>{moneyCopy.receive.networkValue}</strong>
+              </span>
+              <span className="mn-net-text mn-net-takes">
+                <small>{moneyCopy.receive.takes}</small>
+                <TokenLogo symbol="USDG" size={20} title="USDG" />
+              </span>
+            </div>
             <div className="kit-address-line">
               <code>{agent.address}</code>
               <button type="button" onClick={() => void navigator.clipboard?.writeText(agent.address)}>
@@ -273,6 +297,22 @@ export function FundScreen({
           },
           to: { chainId: ROBINHOOD, label: agent.name },
         }}
+        aside={
+          source === 'wallet' && assets.length > 0 ? (
+            <WalletList
+              selected={assetToken}
+              lines={assets.map((a) => ({
+                key: a.token,
+                symbol: a.symbol,
+                name: a.name,
+                held: readable(a.balanceRaw, a.decimals),
+                usd: a.valueUsd === null ? null : dollars(a.valueUsd),
+              }))}
+            />
+          ) : source === 'chain' ? (
+            <NetworksCard via={['relay']} />
+          ) : undefined
+        }
         after={
           <Link
             href={`/agents/${agent.slug}` as Route}
@@ -285,12 +325,15 @@ export function FundScreen({
           <>
             {sourceTabs}
             {source === 'wallet' && assets.length === 0 ? (
-              <Callout tone="wallet">
-                {c.emptyWallet}{' '}
-                <button type="button" className="kit-link" onClick={() => setSource('chain')}>
+              <MoneyEmpty
+                marks={[{ chain: 8453 }, { chain: 42161 }, { chain: 1 }]}
+                title={c.emptyWalletTitle}
+                body={c.emptyWallet}
+              >
+                <button type="button" style={buttonStyle('secondary')} onClick={() => setSource('chain')}>
                   {c.bringIn}
                 </button>
-              </Callout>
+              </MoneyEmpty>
             ) : (
               <>
                 <TicketBox

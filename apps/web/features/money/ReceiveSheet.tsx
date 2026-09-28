@@ -5,6 +5,8 @@ import { Check, Copy, ExternalLink } from 'lucide-react'
 import { useState } from 'react'
 import { BoundaryBadge, Callout, QrCard, Segmented } from '@/components/kit'
 import { BottomSheet } from '@/components/kit/sheet'
+import { ChainLogo } from '@/components/ui/chain-logo'
+import { TokenStack } from '@/components/ui/token-logo'
 
 const EXPLORER = 'https://robinhoodchain.blockscout.com'
 
@@ -14,6 +16,8 @@ export interface ReceiveTarget {
   name: string
   address: string
   kind: 'wallet' | 'agent'
+  /** Stock Tokens it can take: an agent's basket, or what the wallet holds. Drawn as logos beside the network. */
+  symbols: string[]
 }
 
 /**
@@ -83,6 +87,21 @@ export function ReceiveSheet({
             }
             caption={isAgent ? c.agentCaption : c.walletCaption}
           />
+        </div>
+        <div className="mn-net-line">
+          <ChainLogo chainId={4663} size={26} />
+          <span className="mn-net-text">
+            <small>{c.network}</small>
+            <strong>{c.networkValue}</strong>
+          </span>
+          <span className="mn-net-text mn-net-takes">
+            <small>{c.takes}</small>
+            <TokenStack
+              symbols={isAgent ? ['USDG', ...target.symbols] : ['USDG', 'ETH', ...target.symbols]}
+              max={4}
+              size={20}
+            />
+          </span>
         </div>
         <div className="kit-address-line">
           <code>{target.address}</code>

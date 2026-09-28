@@ -2,6 +2,9 @@ import { EXPLORER } from '@desk/chain'
 import { howCopy } from '@desk/shared'
 import { ArrowLeft, ArrowRight, CalendarClock, ExternalLink, Scale, ShieldCheck } from 'lucide-react'
 import Link from 'next/link'
+import { BrandLogo } from '@/components/ui/brand-logo'
+import { TokenLogo } from '@/components/ui/token-logo'
+import '@/styles/kit/discover.css'
 import {
   type Card,
   CHAIN,
@@ -372,6 +375,14 @@ function Chain() {
   )
 }
 
+/** A token's real logo beside its address: the name starts with its symbol ("NVDA · Nvidia"); the vault's
+ * shares wear Morpho's mark, the vault they redeem at. */
+function AddressMark({ name }: { name: string }) {
+  const symbol = name.split(' · ')[0]?.trim() ?? ''
+  if (symbol.toLowerCase().startsWith('steak')) return <BrandLogo brand="morpho" size={28} />
+  return <TokenLogo symbol={symbol} size={28} />
+}
+
 /** The escape hatch [8.22]: short, calm, step by step, with every address the call can take. */
 function Withdraw({ desks }: { desks: readonly { name: string; address: string }[] }) {
   const w = howCopy.withdraw
@@ -422,7 +433,8 @@ function Withdraw({ desks }: { desks: readonly { name: string; address: string }
         <h3 className="hiw-fee-title">{w.tokensTitle}</h3>
         <dl className="hiw-params" style={{ marginTop: 16 }}>
           {TOKEN_ADDRESSES.map(([name, address]) => (
-            <div key={address} className="min-w-0">
+            <div key={address} className="dc-addr min-w-0">
+              <AddressMark name={name} />
               <dt>{name}</dt>
               <dd className="break-all font-mono" style={{ display: 'block', marginTop: 2 }}>
                 {address}

@@ -1,9 +1,10 @@
 'use client'
 
-import { lookOf, percent, studioCopy } from '@desk/shared'
+import { lookOf, money, percent, studioCopy } from '@desk/shared'
+import { Sparkles, UserPen } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { AllocationDonut } from '@/components/ui/allocation-donut'
-import { TokenLogo, TokenStack } from '@/components/ui/token-logo'
+import { TokenLogo } from '@/components/ui/token-logo'
 import { RulesEditor } from '@/features/desk/RulesEditor'
 import { cn } from '@/lib/utils'
 import { type DraftToken, draftTotalBps, NOTES_MAX, type StudioDraft } from './draft'
@@ -255,6 +256,17 @@ export function LimitsStep({
     <div className="na-stack">
       <div className="na-limits">
         <p className="na-limits-body">{F.limitsBody}</p>
+        {Number(draft.amount) > 0 && (
+          // One line saying where the numbers came from: limitsFor sized them to the amount until the owner types.
+          <p className="na-limits-sized" data-own={draft.limitsSet ? 'true' : undefined}>
+            {draft.limitsSet ? (
+              <UserPen aria-hidden="true" className="size-3.5" />
+            ) : (
+              <Sparkles aria-hidden="true" className="size-3.5" />
+            )}
+            {draft.limitsSet ? F.limitsOwn : F.limitsSized(money(draft.amount ?? '0'))}
+          </p>
+        )}
         <div className="grid gap-4 sm:grid-cols-2">
           {usd('perAction', F.perTrade, undefined, 250)}
           {usd('daily', F.perDay, undefined, 1000)}

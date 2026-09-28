@@ -1,11 +1,11 @@
 import { APPROVED_TOKENS } from '@desk/chain'
-import { deskRecord, groupQuietRuns, type RecordFilter } from '@desk/db'
+import { currentMandate, deskRecord, groupQuietRuns, mandateFromRow, type RecordFilter } from '@desk/db'
 import { recordPageCopy as c, recordPagesCopy } from '@desk/shared'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { isOutcome, outcomeLabel } from '@/components/outcome'
-import { TokenLogo } from '@/components/ui/token-logo'
+import { TokenLogo, TokenStack } from '@/components/ui/token-logo'
 import { RecordTimeline, type TimelineItem } from '@/features/desk/RecordTimeline'
 import { db } from '@/lib/db'
 import { deskForViewer } from '@/lib/desk.server'
@@ -87,15 +87,24 @@ export default async function RecordPage({
     filter.outcome || filter.token || filter.shadow !== undefined || filter.from || filter.to,
   )
 
-  const decisions = await deskRecord(db(), desk.id, {
-    limit: PAGE,
-    before: query.before ? Number(query.before) : undefined,
-    outcome: filter.outcome,
-    token: filter.token,
-    shadow: filter.shadow,
-    from: filter.from,
-    to: filter.to,
-  })
+  const [decisions, mandateRow] = await Promise.all([
+    deskRecord(db(), desk.id, {
+      limit: PAGE,
+      before: query.before ? Number(query.before) : undefined,
+      outcome: filter.outcome,
+      token: filter.token,
+      shadow: filter.shadow,
+      from: filter.from,
+      to: filter.to,
+    }),
+    currentMandate(db(), desk.id),
+  ])
+  // The agent's own stocks first, with their logos; every other Stock Token folds under one chip.
+  const planned = new Set(
+    (mandateRow ? mandateFromRow(mandateRow).targets.tokens : []).map((t) => t.token.toLowerCase()),
+  )
+  const inPlan = APPROVED_TOKENS.filter((t) => planned.has(t.address.toLowerCase()))
+  const others = APPROVED_TOKENS.filter((t) => !planned.has(t.address.toLowerCase()))
   const rows = groupQuietRuns(decisions)
   const oldest = decisions.at(-1)
   const keep = new URLSearchParams()
@@ -161,12 +170,28 @@ export default async function RecordPage({
             <Chip href={withFilter('token', undefined)} on={!filter.symbol}>
               {c.filters.anyToken}
             </Chip>
-            {APPROVED_TOKENS.map((t) => (
+            {inPlan.map((t) => (
               <Chip key={t.symbol} href={withFilter('token', t.symbol)} on={filter.symbol === t.symbol}>
                 <TokenLogo symbol={t.symbol} size={18} />
                 {t.symbol}
               </Chip>
             ))}
+            {others.length > 0 && (
+              <details className="[&[open]]:basis-full" open={others.some((t) => t.symbol === filter.symbol)}>
+                <summary className="inline-flex h-8 cursor-pointer list-none items-center gap-1.5 rounded-full border border-dashed border-border px-3 text-[12.5px] text-muted-foreground hover:text-foreground">
+                  <TokenStack symbols={others.map((t) => t.symbol)} size={16} max={3} />
+                  {c.filters.others}
+                </summary>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {others.map((t) => (
+                    <Chip key={t.symbol} href={withFilter('token', t.symbol)} on={filter.symbol === t.symbol}>
+                      <TokenLogo symbol={t.symbol} size={18} />
+                      {t.symbol}
+                    </Chip>
+                  ))}
+                </div>
+              </details>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {(['all', 'live', 'practice'] as const).map((v) => (

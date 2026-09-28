@@ -7,6 +7,7 @@ import {
   ArrowLeftRight,
   ArrowUpFromLine,
   ArrowUpRight,
+  Fuel,
   QrCode,
   RefreshCw,
   ShieldCheck,
@@ -28,10 +29,12 @@ import {
   type TxStatus,
   WalletCard,
 } from '@/components/kit'
+import { ChainLogo } from '@/components/ui/chain-logo'
 import { TokenLogo, TokenStack } from '@/components/ui/token-logo'
 import { When } from '@/components/when'
 import { PortfolioChart } from '@/features/desk/PortfolioChart'
 import { GiftCard } from '@/features/gift/GiftCard'
+import { MoneyEmpty } from '@/features/money/MoneyParts'
 import { ReceiveSheet, type ReceiveTarget } from '@/features/money/ReceiveSheet'
 
 export interface WalletViewHolding {
@@ -71,6 +74,12 @@ export interface WalletViewActivity {
   href: string | null
   at: string
   agentName: string | null
+  /** A move's kind, or a decision's outcome. */
+  subkind: string
+  /** The Stock Token a decision was about. */
+  symbol: string | null
+  /** A move's chains, from and to. */
+  chains: [number, number] | null
 }
 
 export interface WalletView {
@@ -120,8 +129,20 @@ export function WalletHome({ view, initialReceive }: { view: WalletView; initial
     if (initialReceive) router.replace('/wallet' as Route, { scroll: false })
   }
   const receiveTargets: ReceiveTarget[] = [
-    { key: 'wallet', name: moneyCopy.receive.tabWallet, address: view.address, kind: 'wallet' },
-    ...view.agents.map((a) => ({ key: a.slug, name: a.name, address: a.address, kind: 'agent' as const })),
+    {
+      key: 'wallet',
+      name: moneyCopy.receive.tabWallet,
+      address: view.address,
+      kind: 'wallet',
+      symbols: (view.wallet?.holdings ?? []).filter((h) => h.kind === 'stock').map((h) => h.symbol),
+    },
+    ...view.agents.map((a) => ({
+      key: a.slug,
+      name: a.name,
+      address: a.address,
+      kind: 'agent' as const,
+      symbols: a.symbols,
+    })),
   ]
   const rail = useRef<HTMLDivElement>(null)
 
@@ -187,7 +208,13 @@ export function WalletHome({ view, initialReceive }: { view: WalletView; initial
 
   const walletFace = (
     <div className="kit-bal kit-bal--wallet">
-      <span className="kit-bal-chip kit-bal-chip--wallet">{c.walletEyebrow}</span>
+      <span
+        className="kit-bal-chip kit-bal-chip--wallet"
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+      >
+        <ChainLogo chainId={4663} size={14} />
+        {c.walletEyebrow}
+      </span>
       {view.wallet === null ? (
         <div className="kit-bal-empty">
           <span>{c.walletFailed}</span>
@@ -365,110 +392,110 @@ export function WalletHome({ view, initialReceive }: { view: WalletView; initial
         </Link>
       </div>
 
-      <section>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-          <span style={{ fontSize: 15, fontWeight: 700 }}>{appCopy.activity.title}</span>
-          <Link
-            href={'/activity' as Route}
-            style={{ marginLeft: 'auto', fontSize: 11.5, color: 'var(--ac2)', fontWeight: 600 }}
-          >
-            {c.seeAll} →
-          </Link>
-        </div>
-        <div style={{ borderTop: '1px solid var(--bd)' }}>
+      <div className="mn-split">
+        <section aria-labelledby="wallet-activity">
+          <div className="mn-section-head">
+            <h2 id="wallet-activity">{appCopy.activity.title}</h2>
+            <Link href={'/activity' as Route}>{c.seeAll} →</Link>
+          </div>
           {view.activity.length === 0 ? (
-            <p style={{ margin: 0, padding: '16px 2px', fontSize: 12, color: 'var(--tx3)' }}>
-              {c.noActivity}
-            </p>
+            <MoneyEmpty
+              marks={[{ token: 'USDG' }, { chain: 4663 }, { token: 'ETH' }]}
+              title={c.noActivityTitle}
+              body={c.noActivity}
+            >
+              {view.agents.length > 0 ? (
+                <Link href={'/fund' as Route} style={buttonStyle('primary')}>
+                  <ArrowDownToLine aria-hidden="true" size={16} /> {c.actions.fund}
+                </Link>
+              ) : null}
+            </MoneyEmpty>
           ) : (
-            view.activity.slice(0, 3).map((a) => (
-              <a
-                key={`${a.kind}-${a.at}-${a.title}`}
-                href={a.href ?? undefined}
-                {...(a.href?.startsWith('http') ? { target: '_blank', rel: 'noreferrer noopener' } : {})}
-                className="kit-act-row"
-              >
-                <span className="kit-act-mark" data-kind={a.kind}>
-                  {a.kind === 'move' ? '⇄' : '◆'}
-                </span>
-                <span className="kit-act-body">
-                  <strong>{a.title}</strong>
-                  <em>
-                    {a.agentName && a.kind === 'decision' ? `${a.agentName} · ` : ''}
-                    {a.detail} · <When at={a.at} />
-                  </em>
-                </span>
-                <span className="kit-act-right">
-                  {a.amountUsd !== null ? <b>{usd(a.amountUsd)}</b> : null}
-                  <StatusPill status={STATUS[a.status]} {...(a.label ? { label: a.label } : {})} />
-                </span>
-              </a>
-            ))
+            <div className="mn-feed">
+              {view.activity.slice(0, 5).map((a) => (
+                <a
+                  key={`${a.kind}-${a.at}-${a.title}`}
+                  href={a.href ?? undefined}
+                  {...(a.href?.startsWith('http') ? { target: '_blank', rel: 'noreferrer noopener' } : {})}
+                  className="mn-feed-row"
+                >
+                  <ActivityMark item={a} />
+                  <span className="mn-feed-body">
+                    <span className="mn-feed-title">
+                      <span className="mn-feed-name">{a.title}</span>
+                    </span>
+                    <span className="mn-feed-meta">
+                      {a.agentName && a.kind === 'decision' ? `${a.agentName} · ` : ''}
+                      {a.detail} · <When at={a.at} />
+                    </span>
+                  </span>
+                  <span className="mn-feed-right">
+                    {a.amountUsd !== null ? <b>{usd(a.amountUsd)}</b> : null}
+                    <StatusPill status={STATUS[a.status]} {...(a.label ? { label: a.label } : {})} />
+                  </span>
+                </a>
+              ))}
+            </div>
           )}
-        </div>
-      </section>
+        </section>
 
-      <section style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ fontSize: 15, fontWeight: 700 }}>{c.yourAgents}</span>
-          <Link
-            href={'/agents/new' as Route}
-            style={{ marginLeft: 'auto', fontSize: 11.5, color: 'var(--ac2)', fontWeight: 600 }}
-          >
-            {appCopy.nav.newAgent} →
-          </Link>
-        </div>
-        {view.agents.length === 0 ? (
-          <div className="kit-empty-agents">
-            <strong>{appCopy.overview.empty.title}</strong>
-            <p>{appCopy.overview.empty.body}</p>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+        <section aria-labelledby="wallet-agents" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div className="mn-section-head">
+            <h2 id="wallet-agents">{c.yourAgents}</h2>
+            <Link href={'/agents/new' as Route}>{appCopy.nav.newAgent} →</Link>
+          </div>
+          {view.agents.length === 0 ? (
+            <MoneyEmpty
+              marks={[{ token: 'AAPL' }, { token: 'NVDA' }, { token: 'SPY' }]}
+              title={appCopy.overview.empty.title}
+              body={appCopy.overview.empty.body}
+            >
               <Link href={'/agents/new' as Route} style={buttonStyle('primary')}>
                 {appCopy.overview.empty.create}
               </Link>
               <Link href={'/agents' as Route} style={buttonStyle('secondary')}>
                 {appCopy.overview.empty.copy}
               </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="kit-agent-grid">
-            {view.agents.map((a) => (
-              <Link key={a.id} href={`/agents/${a.slug}` as Route} className="kit-agent-card">
-                <span className="kit-agent-card-top">
-                  <TokenStack symbols={a.symbols.length ? a.symbols : ['CASH']} max={3} size={26} />
-                  <strong>{a.name}</strong>
-                  <span className="kit-agent-card-mode">{deskCopy.modes[a.mode]}</span>
-                </span>
-                <span className="kit-agent-card-value">
-                  {usd(a.totalUsd)}
-                  {a.changePct !== null ? (
-                    <em data-up={a.changePct >= 0 || undefined}>
-                      {a.changePct >= 0 ? '+' : ''}
-                      {a.changePct.toFixed(2)}%
-                    </em>
+            </MoneyEmpty>
+          ) : (
+            <div className="kit-agent-grid" style={{ gridTemplateColumns: 'minmax(0, 1fr)' }}>
+              {view.agents.map((a) => (
+                <Link key={a.id} href={`/agents/${a.slug}` as Route} className="kit-agent-card">
+                  <span className="kit-agent-card-top">
+                    <TokenStack symbols={a.symbols.length ? a.symbols : ['CASH']} max={3} size={26} />
+                    <strong>{a.name}</strong>
+                    <span className="kit-agent-card-mode">{deskCopy.modes[a.mode]}</span>
+                  </span>
+                  <span className="kit-agent-card-value">
+                    {usd(a.totalUsd)}
+                    {a.changePct !== null ? (
+                      <em data-up={a.changePct >= 0 || undefined}>
+                        {a.changePct >= 0 ? '+' : ''}
+                        {a.changePct.toFixed(2)}%
+                      </em>
+                    ) : null}
+                  </span>
+                  <span className="kit-agent-card-split">
+                    {c.agentSplit(usd(a.cashUsd), usd(a.stocksUsd), usd(a.savingsUsd))}
+                  </span>
+                  {a.latest ? (
+                    <span className="kit-agent-card-latest">
+                      <Eyebrow>{c.latest}</Eyebrow>
+                      <span>{a.latest.summary}</span>
+                    </span>
                   ) : null}
-                </span>
-                <span className="kit-agent-card-split">
-                  {c.agentSplit(usd(a.cashUsd), usd(a.stocksUsd), usd(a.savingsUsd))}
-                </span>
-                {a.latest ? (
-                  <span className="kit-agent-card-latest">
-                    <Eyebrow>{c.latest}</Eyebrow>
-                    <span>{a.latest.summary}</span>
+                  <span className="kit-agent-card-foot">
+                    {a.needsYou > 0 ? <StatusPill status="pending" label={c.needs(a.needsYou)} /> : null}
+                    <span style={{ marginLeft: 'auto' }}>
+                      {a.checked ? moneyCopy.checked.justNow : c.fromSnapshot}
+                    </span>
                   </span>
-                ) : null}
-                <span className="kit-agent-card-foot">
-                  {a.needsYou > 0 ? <StatusPill status="pending" label={c.needs(a.needsYou)} /> : null}
-                  <span style={{ marginLeft: 'auto' }}>
-                    {a.checked ? moneyCopy.checked.justNow : c.fromSnapshot}
-                  </span>
-                </span>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
 
       {view.combined.length > 1 ? (
         <section className="kit-panel">
@@ -498,5 +525,39 @@ function CrossLink({ href, label, icon }: { href: string; label: string; icon: R
       <span>{icon}</span>
       <em>{label}</em>
     </Link>
+  )
+}
+
+const MOVE_ICON: Record<string, ReactNode> = {
+  fund: <ArrowDownToLine aria-hidden="true" size={17} />,
+  bridge_in: <ArrowDownToLine aria-hidden="true" size={17} />,
+  withdraw: <ArrowUpFromLine aria-hidden="true" size={17} />,
+  sell_some: <ArrowLeftRight aria-hidden="true" size={17} />,
+  send: <ArrowUpRight aria-hidden="true" size={17} />,
+  bridge_out: <ArrowLeftRight aria-hidden="true" size={17} />,
+  get_gas: <Fuel aria-hidden="true" size={17} />,
+}
+
+/**
+ * A row's tile, after 21st's Audit Log With Icon Tiles (28483): a decision wears its stock's real logo, a money
+ * move wears what it did with the chain it landed on as a badge.
+ */
+function ActivityMark({ item }: { item: WalletViewActivity }) {
+  if (item.kind === 'decision') {
+    return (
+      <span className="mn-feed-mark">
+        <TokenLogo symbol={item.symbol ?? 'CASH'} size={30} />
+      </span>
+    )
+  }
+  return (
+    <span className="mn-feed-mark">
+      {MOVE_ICON[item.subkind] ?? <ArrowLeftRight aria-hidden="true" size={17} />}
+      {item.chains ? (
+        <span className="mn-feed-badge">
+          <ChainLogo chainId={item.chains[1]} size={16} />
+        </span>
+      ) : null}
+    </span>
   )
 }

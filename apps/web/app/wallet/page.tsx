@@ -88,6 +88,9 @@ export default async function WalletPage({ searchParams }: { searchParams: Promi
         href: a.href,
         at: a.at.toISOString(),
         agentName: a.agentName,
+        subkind: a.subkind,
+        symbol: a.symbol,
+        chains: a.chains,
       }
     }),
     needs: overview.needs.length,

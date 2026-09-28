@@ -1,7 +1,7 @@
 'use client'
 
 import { CASH_LOOK, deskCopy, lookOf, settingsCopy } from '@desk/shared'
-import { PencilLine } from 'lucide-react'
+import { PencilLine, ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
 import { AllocationDonut, type DonutSlice } from '@/components/ui/allocation-donut'
 import { TokenLogo, TokenStack } from '@/components/ui/token-logo'
@@ -18,10 +18,10 @@ const usd = (raw: string) =>
 /**
  * The Plan tab: what the agent was told, drawn rather than listed. The basket as 21st's Sectors Donut (22247) beside
  * one row per stock with its real logo and a bar to its target, then the limits as 21st's Stats Grid (29195)
- * bordered cells, then the owner's notes. One button opens the same edit card the chat would make.
+ * bordered cells, then the owner's notes. Edit plan and Change limits open the same cards the chat would make.
  */
 export function PlanPanel({ plan, controls }: { plan: Plan; controls: ControlsView | null }) {
-  const [editing, setEditing] = useState(false)
+  const [editing, setEditing] = useState<'editMandate' | 'limits' | null>(null)
   const names = new Map(controls?.tokens.map((t) => [t.symbol, t.name]) ?? [])
   const rows = [...plan.targets].sort((a, b) => b.weightBps - a.weightBps)
   const slices: DonutSlice[] = [
@@ -56,7 +56,7 @@ export function PlanPanel({ plan, controls }: { plan: Plan; controls: ControlsVi
           </div>
           <span className="pl-version">{deskCopy.mandate.version(plan.version)}</span>
           {controls && (
-            <button type="button" className="pl-edit" onClick={() => setEditing(true)}>
+            <button type="button" className="pl-edit" onClick={() => setEditing('editMandate')}>
               <PencilLine aria-hidden="true" className="size-4" />
               {p.edit}
             </button>
@@ -108,7 +108,15 @@ export function PlanPanel({ plan, controls }: { plan: Plan; controls: ControlsVi
       </section>
 
       <section className="st-section">
-        <div className="st-section-head">{p.limitsTitle}</div>
+        <div className="st-section-head pl-limits-head">
+          <span>{p.limitsTitle}</span>
+          {controls && (
+            <button type="button" className="pl-edit pl-edit--sm" onClick={() => setEditing('limits')}>
+              <ShieldCheck aria-hidden="true" className="size-4" />
+              {p.changeLimits}
+            </button>
+          )}
+        </div>
         <div className="pl-limits">
           {limits.map(([label, value, note]) => (
             <div key={label}>
@@ -139,10 +147,10 @@ export function PlanPanel({ plan, controls }: { plan: Plan; controls: ControlsVi
 
       {controls && (
         <ControlDialog
-          key={editing ? 'edit' : 'none'}
+          key={editing ?? 'none'}
           view={controls}
-          form={editing ? 'editMandate' : null}
-          onClose={() => setEditing(false)}
+          form={editing}
+          onClose={() => setEditing(null)}
         />
       )}
     </div>

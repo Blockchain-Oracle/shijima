@@ -7,9 +7,17 @@ import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import type { Address } from 'viem'
 import { proposeAction } from '@/app/owner-actions'
-import { BoundaryBadge, Button, Callout, FlowCard, Screen, ScreenTitle, Segmented } from '@/components/kit'
 import {
-  AssetMark,
+  BoundaryBadge,
+  Button,
+  buttonStyle,
+  Callout,
+  FlowCard,
+  Screen,
+  ScreenTitle,
+  Segmented,
+} from '@/components/kit'
+import {
   AssetPicker,
   AssetPill,
   dollars,
@@ -21,6 +29,7 @@ import {
 import type { ChatCard } from '@/features/desk/chat-model'
 import { ProposalCard } from '@/features/desk/ProposalCard'
 import { DeskSessionProvider } from '@/features/session/DeskSessionProvider'
+import { HoldingsBreakdown, MoneyEmpty } from './MoneyParts'
 
 export interface WithdrawAgent {
   id: string
@@ -70,7 +79,15 @@ export function WithdrawScreen({
     return (
       <Screen width={1100}>
         <ScreenTitle title={c.title} sub={c.sub} />
-        <Callout tone="info">{c.noAgent}</Callout>
+        <MoneyEmpty
+          marks={[{ token: 'USDG' }, { chain: 4663 }, { token: 'NVDA' }]}
+          title={c.noAgent}
+          body={moneyCopy.fund.noAgentBody}
+        >
+          <Link href={'/agents/new' as Route} style={buttonStyle('primary')}>
+            {moneyCopy.fund.create}
+          </Link>
+        </MoneyEmpty>
       </Screen>
     )
   }
@@ -286,36 +303,36 @@ export function WithdrawScreen({
               </FlowCard>
             ) : (
               <FlowCard icon={<ListChecks size={16} />} title={c.holdingsTitle(agent.name)}>
-                <div className="kit-summary">
-                  <dl className="kit-summary-rows">
-                    <div>
-                      <dt style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <AssetMark symbol="USDG" chainId={ROBINHOOD} size={20} /> {c.cash}
-                      </dt>
-                      <dd>{dollars(agent.cashUsd)}</dd>
-                    </div>
-                    {agent.savingsUsd > 0.005 ? (
-                      <div>
-                        <dt style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <AssetMark symbol="USDG" chainId={ROBINHOOD} size={20} /> {c.savings}
-                        </dt>
-                        <dd>{dollars(agent.savingsUsd)}</dd>
-                      </div>
-                    ) : null}
-                    {agent.stocks.map((s) => (
-                      <div key={s.symbol}>
-                        <dt style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <AssetMark symbol={s.symbol} chainId={ROBINHOOD} size={20} /> {s.symbol}
-                        </dt>
-                        <dd>{s.valueUsd === null ? '—' : dollars(s.valueUsd)}</dd>
-                      </div>
-                    ))}
-                    <div data-strong>
-                      <dt>{c.total}</dt>
-                      <dd>{dollars(cashAndSavings + stocksUsd)}</dd>
-                    </div>
-                  </dl>
-                </div>
+                <HoldingsBreakdown
+                  caption={c.holdingsCaption}
+                  lines={[
+                    { key: 'cash', symbol: 'USDG', name: c.cash, sub: 'USDG', valueUsd: agent.cashUsd },
+                    ...(agent.savingsUsd > 0.005
+                      ? [
+                          {
+                            key: 'savings',
+                            symbol: 'USDG',
+                            name: c.savings,
+                            sub: 'USDG',
+                            valueUsd: agent.savingsUsd,
+                          },
+                        ]
+                      : []),
+                    ...agent.stocks.map((s) => ({
+                      key: s.symbol,
+                      symbol: s.symbol,
+                      name: s.name,
+                      sub: s.symbol,
+                      valueUsd: s.valueUsd,
+                    })),
+                  ]}
+                />
+                <dl className="kit-summary-rows" style={{ borderTop: '1px solid var(--bd)' }}>
+                  <div data-strong>
+                    <dt>{c.total}</dt>
+                    <dd>{dollars(cashAndSavings + stocksUsd)}</dd>
+                  </div>
+                </dl>
                 {tooMuch ? <Callout tone="warn">{c.tooMuch}</Callout> : null}
                 {why ? <Callout tone="warn">{why}</Callout> : null}
                 <Button fullWidth loading={pending} disabled={!ready || pending} onClick={review}>

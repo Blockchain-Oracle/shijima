@@ -1,11 +1,12 @@
 import { deskAbi } from '@desk/chain'
 import { desksOfOwner, disclosureAccepted, ensureOwner, openservPulse, telegramForOwner } from '@desk/db'
 import { appCopy, DISCLOSURE_VERSION, deskCopy, short } from '@desk/shared'
+import { ChevronRight } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import type { Address } from 'viem'
 import { Row, Screen, ScreenTitle } from '@/components/kit'
-import { TokenLogo } from '@/components/ui/token-logo'
+import { ChainLogo } from '@/components/ui/chain-logo'
 import { SignedOutCard } from '@/features/money/SignedOutCard'
 import { AccountPanel } from '@/features/settings/AccountPanel'
 import { AccountConnections } from '@/features/settings/Connections'
@@ -75,83 +76,77 @@ export default async function AccountSettings() {
 
   const agentsList =
     desks.length === 0 ? (
-      <Row
-        top
-        label={
-          <>
-            {c.none}{' '}
-            <Link href="/agents/new" style={{ color: 'var(--ac2)' }}>
-              {appCopy.sidebar.newAgent} →
-            </Link>
-          </>
-        }
-      />
+      <section className="st-section">
+        <Row
+          top
+          label={
+            <>
+              {c.none}{' '}
+              <Link href="/agents/new" style={{ color: 'var(--ac2)' }}>
+                {appCopy.sidebar.newAgent} →
+              </Link>
+            </>
+          }
+        />
+      </section>
     ) : (
-      desks.map((d, index) => {
+      desks.map((d) => {
         const i = open.indexOf(d)
         const acc = i >= 0 ? access[i] : undefined
+        const cells: [string, string][] = acc
+          ? [
+              [a.mode, deskCopy.modes[d.mode]],
+              [
+                a.trades,
+                acc.operator === null
+                  ? '—'
+                  : acc.operator === ZERO
+                    ? a.removed
+                    : a.trader(short(acc.operator, 6, 4)),
+              ],
+              [
+                a.session,
+                acc.session
+                  ? a.sessionUntil(
+                      short(acc.session.key, 6, 4),
+                      acc.session.until.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }),
+                    )
+                  : a.noSession,
+              ],
+              [a.withdraw, a.onlyYou],
+            ]
+          : []
         return (
-          <div key={d.id} style={{ borderTop: index === 0 ? 'none' : '1px solid var(--bd)' }}>
-            <Link
-              href={`/agents/${d.shareSlug ?? d.id}/settings` as Route}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '14px 18px 6px',
-                color: 'var(--tx)',
-                textDecoration: 'none',
-                fontWeight: 700,
-                fontSize: 13.5,
-              }}
-            >
-              <TokenLogo symbol="CASH" size={22} />
-              {d.name ?? 'Agent'}
-              <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--ac2)', fontWeight: 600 }}>
-                {c.agentSettings} →
+          <section key={d.id} className="st-section ag-card">
+            <Link href={`/agents/${d.shareSlug ?? d.id}/settings` as Route} className="ag-head">
+              <span className="sh-avatar" aria-hidden="true">
+                {(d.name ?? 'Agent').slice(0, 1).toUpperCase()}
+              </span>
+              <span className="ag-title">
+                <b>{d.name ?? 'Agent'}</b>
+                <small>
+                  <ChainLogo chainId={4663} size={12} />
+                  {short(d.address, 6, 4)}
+                </small>
+              </span>
+              <span className="ag-go">
+                {c.agentSettings}
+                <ChevronRight aria-hidden="true" className="size-4" />
               </span>
             </Link>
             {acc ? (
-              <dl className="kit-dl">
-                <div>
-                  <dt>{a.mode}</dt>
-                  <dd>{deskCopy.modes[d.mode]}</dd>
-                </div>
-                <div>
-                  <dt>{a.trades}</dt>
-                  <dd>
-                    {acc.operator === null
-                      ? '—'
-                      : acc.operator === ZERO
-                        ? a.removed
-                        : a.trader(short(acc.operator, 6, 4))}
-                  </dd>
-                </div>
-                <div>
-                  <dt>{a.session}</dt>
-                  <dd>
-                    {acc.session
-                      ? a.sessionUntil(
-                          short(acc.session.key, 6, 4),
-                          acc.session.until.toLocaleString('en-GB', {
-                            dateStyle: 'medium',
-                            timeStyle: 'short',
-                          }),
-                        )
-                      : a.noSession}
-                  </dd>
-                </div>
-                <div>
-                  <dt>{a.withdraw}</dt>
-                  <dd>{a.onlyYou}</dd>
-                </div>
+              <dl className="ag-access">
+                {cells.map(([label, value]) => (
+                  <div key={label}>
+                    <dt>{label}</dt>
+                    <dd>{value}</dd>
+                  </div>
+                ))}
               </dl>
             ) : (
-              <p style={{ margin: 0, padding: '0 18px 14px', fontSize: 12.5, color: 'var(--tx3)' }}>
-                {a.closed}
-              </p>
+              <p className="ag-closed">{a.closed}</p>
             )}
-          </div>
+          </section>
         )
       })
     )
@@ -180,7 +175,7 @@ export default async function AccountSettings() {
               pulse={pulseView(pulse)}
             />
           ),
-          agents: <section className="st-section">{agentsList}</section>,
+          agents: <div className="st-stack">{agentsList}</div>,
           agreement: (
             <section className="st-section st-section--pad">
               <Disclosure

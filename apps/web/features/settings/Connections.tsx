@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { type ReactNode, useState } from 'react'
 import type { TelegramState } from '@/app/owner-actions'
 import { BrandLogo } from '@/components/ui/brand-logo'
-import { ChainLogo } from '@/components/ui/chain-logo'
+import { CHAIN_LOGOS, ChainLogo } from '@/components/ui/chain-logo'
 import { Modal } from '@/components/ui/modal'
 import { OpenservConnect } from './OpenservConnect'
 import { TelegramConnect } from './TelegramConnect'
@@ -15,14 +15,16 @@ import { TelegramConnect } from './TelegramConnect'
 const c = settingsCopy.connections
 
 /**
- * One integration, after 21st's Connect Integration Cards (7ovr, 28170): the mark, the name, one line, and a footer
- * with its status and the action. Everything else (codes, QR, steps, addresses) opens in a dialog.
+ * One integration, after 21st's Connect Integration Cards (7ovr, 28170): the mark beside its name and live status,
+ * one line, and a footer with where it lives and the action. Everything else (codes, QR, steps,
+ * addresses) opens in a dialog.
  */
 function IntegrationCard({
   mark,
   name,
   body,
   status,
+  meta,
   action,
   children,
 }: {
@@ -30,22 +32,29 @@ function IntegrationCard({
   name: string
   body: string
   status: { on: boolean; label: string }
+  /** A short line in the footer: where this lives, with its logo. */
+  meta?: ReactNode
   action: string
   children: ReactNode
 }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="int-card">
-      <span className="int-mark" aria-hidden="true">
-        {mark}
-      </span>
-      <h3 className="int-name">{name}</h3>
+    <div className="int-card" data-on={status.on ? '' : undefined}>
+      <div className="int-top">
+        <span className="int-mark" aria-hidden="true">
+          {mark}
+        </span>
+        <div className="int-head">
+          <h3 className="int-name">{name}</h3>
+          <span className="int-status" data-on={status.on ? '' : undefined} title={status.label}>
+            {status.on ? <Check className="size-3.5" aria-hidden="true" /> : <i aria-hidden="true" />}
+            <span>{status.label}</span>
+          </span>
+        </div>
+      </div>
       <p className="int-body">{body}</p>
       <div className="int-foot">
-        <span className="int-status" data-on={status.on ? '' : undefined}>
-          {status.on && <Check className="size-3.5" aria-hidden="true" />}
-          {status.label}
-        </span>
+        <span className="int-meta">{meta}</span>
         <button type="button" className="int-action" onClick={() => setOpen(true)}>
           {action}
           <ArrowUpRight className="size-4" aria-hidden="true" />
@@ -64,6 +73,14 @@ function IntegrationCard({
     </div>
   )
 }
+
+/** A partner's name with its mark, for a card's footer. */
+const Where = ({ logo, label }: { logo: ReactNode; label: string }) => (
+  <>
+    {logo}
+    {label}
+  </>
+)
 
 function Out({ href, children }: { href: string; children: ReactNode }) {
   return (
@@ -105,6 +122,7 @@ function OpenservCard({ pulse, children }: { pulse: PulseView | null; children?:
       name={o.name}
       body={o.body}
       status={{ on: fresh, label: fresh ? o.running(hhmm(pulse?.lastRun ?? null) ?? '') : o.waiting }}
+      meta={c.agentId(OPENSERV.agentId)}
       action={c.details}
     >
       <ul className="int-facts">
@@ -158,6 +176,7 @@ export function AccountConnections({
         name={settingsCopy.telegram.title}
         body={settingsCopy.telegram.body}
         status={telegramStatus(telegram)}
+        meta={`@${settingsCopy.telegram.bot}`}
         action={telegram?.linked ? c.manage : c.connect}
       >
         <TelegramConnect initial={telegram} />
@@ -204,6 +223,7 @@ export function Connections({
         name={settingsCopy.telegram.title}
         body={settingsCopy.telegram.body}
         status={telegramStatus(telegram)}
+        meta={`@${settingsCopy.telegram.bot}`}
         action={telegram?.linked ? c.manage : c.connect}
       >
         <TelegramConnect initial={telegram} />
@@ -216,6 +236,7 @@ export function Connections({
         name={c.wallet}
         body={c.walletBody}
         status={{ on: true, label: short(ownerAddress, 6, 4) }}
+        meta={<Where logo={<ChainLogo chainId={4663} size={14} />} label={CHAIN_LOGOS[4663]?.name ?? ''} />}
         action={c.details}
       >
         <dl className="connection-rows">

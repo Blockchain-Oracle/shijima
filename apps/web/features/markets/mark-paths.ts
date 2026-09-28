@@ -11,7 +11,7 @@
  *
  * Sources (THIRD_PARTY_NOTICES.md "Asset marks"):
  *   tesla, nvidia, apple, meta, google, anthropic, spacex, circle — simple-icons 16.31.0, CC0 1.0 (circle added
- *     by Shijima on 23 Sep for CRCL; Micron and GameStop have no mark in simple-icons or svgl, so they type one).
+ *     by Shijima on 23 Sep for CRCL; Micron and GameStop have no mark in simple-icons or svgl: see below).
  *   amazon — simple-icons 14.15.0, the last release to carry it (CC0 1.0 at publication; removed in 15.0.0
  *     by the maintainers pending permission, not on a brand request).
  *   openai — simple-icons 15.22.0, the last release to carry it (same story: removed in 16.0.0 because no
@@ -20,9 +20,17 @@
  *     its trademark terms (13.0.0), so no third-party artwork is vendored.
  *   polymarket — the standalone pennant from Wikimedia Commons' `Polymarket.svg` (below the threshold of
  *     originality there), refitted to the 24-box by a uniform scale; the wordmark in that file is not vendored.
- * The marks identify the traded assets and imply no endorsement. QQQ, VOO, SPY and the four pre-IPO names
- * with no square symbol in any open set (neuralink, anduril, kalshi, figure) have no glyph: their disc types
- * the registry monogram on the brand colour. None of them gets a drawn approximation.
+ *   spdr, invesco, ishares, micron, gamestop, uscf — added by Shijima on 28 Sep from each brand's own logo file,
+ *     refitted to the 24-box by a uniform scale with nothing redrawn: spdr is State Street's three-bar symbol
+ *     (Commons `State-street-logo-final.svg`; State Street runs SPY), invesco the mountain from en.wikipedia's
+ *     `Invesco_Logo.svg`, ishares the "i" of Commons `Logo-ishares_2019.svg` (the favicon ishares.com serves),
+ *     micron the "m" of Commons `Micron_Technology_logo_2024.svg` (micron.com's favicon), gamestop the "G" and
+ *     "S" of Commons `GameStop_Logo.svg` (gamestop.com's "GS" favicon), uscf USO's oil drop from USCF's own
+ *     `uscfinvestments.com/site-template/assets/images/uscf-logo.svg`, its dark and grey parts with the overlap
+ *     left open.
+ * The marks identify the traded assets and imply no endorsement. VOO and the four pre-IPO names with no square
+ * symbol in any open set (neuralink, anduril, kalshi, figure) have no glyph: their disc types the registry
+ * monogram on the brand colour. None of them gets a drawn approximation.
  */
 export interface MarkGlyph {
   /** Path data in a 24×24 box. */
@@ -109,6 +117,44 @@ export const MARK_GLYPHS: Partial<Record<string, MarkGlyph>> = {
     span: 0.56,
     dx: 0,
     dy: 0,
+  },
+  spdr: {
+    d: 'M11.442 2.767c3.767-1.302 7.736-2.729 12.558-2.728l0 3.333c-4.217 0-7.705 1.24-11.473 2.543-3.721 1.302-7.705 2.729-12.527 2.728v-3.333c4.217 0 7.705-1.24 11.442-2.543z m-11.442 7.551h24v3.364h-1.752-22.248v-3.364z m0 10.31c4.217 0 7.705-1.24 11.442-2.543 3.767-1.302 7.736-2.729 12.558-2.728v3.333c-4.217 0-7.705 1.24-11.473 2.543-3.736 1.302-7.705 2.729-12.527 2.728v-3.333z',
+    span: 0.56,
+    dx: 0,
+    dy: 0,
+  },
+  invesco: {
+    d: 'M22.219 15.149l1.781 0.86-0.916 0.859h-0.865v-0.859l-1.32-0.456-2.236-2.236-1.781-0.859-1.781-2.64-0.916-0.859 0.455-1.315-1.32-1.32-0.916 0.859v1.89l-0.865 0.859 1.781 1.724-0.916 0.859 1.781 1.718v0.916l0.916 1.719h0.916l0.922-0.803-0.461-0.455-0.461-1.32h0.922l0.916 1.775 0.865 0.865-2.64 0.859-0.922 0.86-0.916-0.86-0.461-1.32-1.32-0.46v-0.86h-0.865l-0.455 2.18 0.455 1.206-2.065 0.859-0.632-0.859 0.461-0.865v-0.859h-1.32l-1.781 1.724-1.32-0.461v-1.718l-2.242-0.347-1.718 0.859-0.979-0.455v-1.776l0.859-0.461 3.562-1.718 0.461 0.455 1.32-1.314v-0.922l1.781-1.718 0.973-1.776 1.32-2.179 2.128-0.398h0.916v0.802l1.781 1.775v1.776l2.697 2.64 2.703 1.718 1.32 0.455z',
+    span: 0.78,
+    dx: 0,
+    dy: 0,
+  },
+  ishares: {
+    d: 'M9.313 4.333v-4.333h5.374v4.333zM9.313 24v-17.76h5.374v17.753z',
+    span: 0.56,
+    dx: 0,
+    dy: 0,
+    ring: true,
+  },
+  micron: {
+    d: 'M0 15.936h3.69c1.107 0 1.617-0.439 1.616-1.687v-2.618c0-3.9 1.827-5.939 5.324-5.939 1.827 0 3.215 0.65 4.041 1.898 0.861-1.247 2.179-1.898 4.005-1.898 3.496 0 5.324 2.038 5.324 5.939v6.677h-2.6v-6.677c0-2.407-0.966-3.567-2.724-3.567-1.757 0-2.723 1.16-2.723 3.567v6.677h-2.6v-6.677c0-2.407-0.966-3.567-2.723-3.567-1.757 0-2.723 1.16-2.724 3.567v2.618c0 2.916-1.406 4.059-4.216 4.059h-3.69v-2.372',
+    span: 0.7,
+    dx: 0,
+    dy: 0,
+  },
+  gamestop: {
+    d: 'M11.587 9.899v-0.685c0-4.63-2.765-5.882-5.817-5.882-3.052 0-5.77 1.646-5.77 6.279v4.76c0 3.117 1.321 6.297 4.856 6.297 1.622 0 2.662-0.784 3.11-1.526l0.367 1.283h3.23v-8.877h-5.612v2.861h1.263v0.599c0 1.454-0.202 2.786-1.119 2.785-0.917 0-1.116-1.331-1.116-2.785v-6.098c0-1.417 0.092-2.717 0.804-2.717 0.712 0 0.804 1.3 0.804 2.717v0.989zM19.052 8.8h4.602v-0.718c0-3.289-2.197-4.75-5.454-4.75-3.114 0-5.455 1.742-5.455 4.791 0 5.715 6.468 4.449 6.468 8.326 0 1.027-0.4 1.369-0.887 1.368-0.486 0-0.883-0.342-0.883-1.368v-1.417h-4.643v0.684c0 3.432 2.235 4.952 5.595 4.952 3.21 0 5.605-1.786 5.605-4.982 0-6.368-6.652-4.603-6.652-8.128 0-1.027 0.414-1.369 0.852-1.369 0.438 0 0.852 0.342 0.852 1.369z',
+    span: 0.64,
+    dx: 0,
+    dy: 0,
+  },
+  uscf: {
+    d: 'M13.238 11.119s2.636 1.174 4.407 4.229c0.106-0.385 0.184-0.786 0.225-1.2 0.896-8.902-4.751-14.148-4.75-14.148-7.414 4.167-8.072 12.577-8.073 12.577-0.472 3.844 2.018 7.313 5.559 7.747 0.162 0.02 0.324 0.031 0.484 0.038-0.021-0.079-0.044-0.155-0.061-0.235 0 0-1.305-5.07 2.209-9.008zM18.876 18.47c-0.283-1.209-0.721-2.243-1.231-3.122-0.837 3.043-3.577 5.137-6.554 5.014 0.588 2.218 2.669 3.638 4.761 3.195 2.169-0.457 3.573-2.746 3.024-5.087z',
+    span: 0.7,
+    dx: 0,
+    dy: 0,
+    ring: true,
   },
 }
 

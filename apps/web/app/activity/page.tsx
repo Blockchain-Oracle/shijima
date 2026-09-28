@@ -63,6 +63,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
   return (
     <ActivityScreen
       tab={tab}
+      agents={desks.length}
       rows={perDesk.flatMap((d) => d.rows).sort((a, b) => b.at.localeCompare(a.at))}
       needs={perDesk.flatMap((d) => d.needs).sort((a, b) => b.createdAt.localeCompare(a.createdAt))}
     />

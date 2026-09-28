@@ -156,11 +156,6 @@
   font-size: 0.75rem;
   color: var(--color-ink-muted);
 }
-.ap-decision-empty {
-  font-size: 0.9rem;
-  line-height: 1.55;
-  color: var(--color-ink-secondary);
-}
 
 .ap-decision-main {
   display: flex;
@@ -284,21 +279,6 @@
   font-size: 0.72rem;
   color: var(--color-ink-muted);
 }
-.ap-next {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.1rem 0.55rem;
-  border: 1px solid var(--color-hairline);
-  border-radius: 999px;
-}
-.ap-next-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--color-profit);
-  animation: pulse 2s ease-in-out infinite;
-}
 
 .ap-value {
   display: flex;
@@ -397,27 +377,6 @@
 }
 .ap-holding[open] .ap-holding-chev {
   transform: rotate(180deg);
-}
-
-.ap-bar {
-  position: relative;
-  display: block;
-  height: 4px;
-  margin-top: 0.55rem;
-  border-radius: 999px;
-  background: var(--color-hairline);
-}
-.ap-bar > span {
-  position: absolute;
-  inset: 0 auto 0 0;
-  border-radius: inherit;
-}
-.ap-bar > i {
-  position: absolute;
-  top: -3px;
-  bottom: -3px;
-  width: 2px;
-  background: var(--color-ink);
 }
 
 .ap-holding-more {
@@ -594,37 +553,6 @@
   color: var(--color-ink-secondary);
 }
 
-/* The agent's money split, as the wallet card shows it: Cash · Savings · Stocks · Total. */
-.ap-balances {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
-  gap: 0.5rem;
-  margin: 0.85rem 0 0;
-}
-.ap-balances > div {
-  padding: 0.65rem 0.8rem;
-  border: 1px solid var(--bd, var(--color-border));
-  border-radius: 12px;
-  background: var(--card2, transparent);
-}
-.ap-balances dt {
-  font: 700 10px / 1 var(--fm, monospace);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--tx3, var(--color-ink-muted));
-}
-.ap-balances dd {
-  margin: 0.4rem 0 0;
-  font-family: var(--fm, monospace);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--tx, var(--color-ink));
-  font-variant-numeric: tabular-nums;
-}
-.ap-balances > div:last-child dd {
-  color: var(--ac2, var(--color-ink));
-}
-
 /* Cash it can never spend: the plan's buys are all under the smallest trade. Said plainly, with the ways out. */
 .ap-stuck {
   display: flex;
@@ -664,4 +592,454 @@
     flex-direction: column;
     align-items: flex-start;
   }
+}
+
+/* ── right now: what the agent is doing (features/agent/AgentStatus, after 21st's Agent Progress 29323) ── */
+.ap-now {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 24px;
+  padding: 16px 18px;
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg, 16px);
+  background: var(--color-surface-1);
+  --now-tone: var(--color-profit);
+}
+.ap-now[data-tone="warn"] {
+  --now-tone: var(--color-warning);
+  border-color: color-mix(in srgb, var(--color-warning) 35%, var(--color-hairline));
+}
+.ap-now[data-tone="idle"] {
+  --now-tone: var(--color-accent);
+}
+.ap-now[data-tone="off"] {
+  --now-tone: var(--color-ink-muted);
+}
+.ap-now-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  flex: 1 1 320px;
+  min-width: 0;
+}
+.ap-now-glyph {
+  display: grid;
+  grid-template-columns: repeat(3, 6px);
+  gap: 3px;
+  flex: none;
+  margin-top: 3px;
+  padding: 9px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--now-tone) 12%, transparent);
+  color: var(--now-tone);
+}
+.ap-now-glyph i {
+  width: 6px;
+  height: 6px;
+  border-radius: 1.5px;
+  background: currentColor;
+  opacity: 0.35;
+}
+.ap-now[data-tone="live"] .ap-now-glyph i {
+  animation: ap-now-cell 1.55s cubic-bezier(0.77, 0, 0.175, 1) infinite;
+}
+@keyframes ap-now-cell {
+  0%,
+  100% {
+    opacity: 0.28;
+    transform: scale(0.72);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ap-now[data-tone="live"] .ap-now-glyph i {
+    animation: none;
+    opacity: 0.8;
+  }
+}
+.ap-now-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.ap-now-kicker {
+  font-family: var(--font-data);
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--now-tone);
+}
+.ap-now-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.05rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+.ap-now-body {
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--color-ink-secondary);
+}
+.ap-now-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, auto));
+  margin: 0;
+  border: 1px solid var(--color-hairline);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.ap-now-facts > div {
+  padding: 9px 14px;
+  min-width: 7.5rem;
+}
+.ap-now-facts > div + div {
+  border-left: 1px solid var(--color-hairline);
+}
+.ap-now-facts dt {
+  font-size: 0.68rem;
+  color: var(--color-ink-muted);
+}
+.ap-now-facts dd {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 3px 0 0;
+  font-family: var(--font-data);
+  font-size: 0.84rem;
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+.ap-now-ring svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+  transform: rotate(-90deg);
+}
+.ap-now-ring circle {
+  fill: none;
+  stroke: var(--color-hairline);
+  stroke-width: 2.5;
+}
+.ap-now-ring .ap-now-ring-fill {
+  stroke: var(--now-tone);
+  stroke-dasharray: 40.8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear;
+}
+.ap-now-session {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--color-ink-muted);
+}
+.ap-now-session[data-session="regular"] {
+  background: var(--color-profit);
+}
+.ap-now-session[data-session="extended"],
+.ap-now-session[data-session="overnight"] {
+  background: var(--color-warning);
+}
+@media (max-width: 640px) {
+  .ap-now-facts {
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .ap-now-facts > div {
+    min-width: 0;
+    padding: 8px 10px;
+  }
+  .ap-now-facts dd {
+    font-size: 0.78rem;
+    white-space: normal;
+  }
+}
+
+/* ── where the money is (AgentMoney, after 21st's Partition Bar 26545) ── */
+.ap-split {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-hairline);
+}
+.ap-split-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ap-split-title {
+  font-size: 0.78rem;
+  color: var(--color-ink-muted);
+}
+.ap-split-total {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-data);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}
+.ap-split-total small {
+  font-family: var(--font-sans, inherit);
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--color-ink-muted);
+}
+.ap-split-bar {
+  display: flex;
+  gap: 3px;
+  height: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ap-split-seg {
+  flex-basis: 0;
+  min-width: 4px;
+  border-radius: 3px;
+}
+.ap-split-seg:first-child {
+  border-radius: 999px 3px 3px 999px;
+}
+.ap-split-seg:last-child {
+  border-radius: 3px 999px 999px 3px;
+}
+.ap-split-seg:only-child {
+  border-radius: 999px;
+}
+.ap-split-bar.is-empty {
+  border: 1px dashed var(--color-hairline);
+  border-radius: 999px;
+}
+.ap-split-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin: 0;
+}
+.ap-split-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ap-split-legend dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.8rem;
+  color: var(--color-ink-secondary);
+}
+.ap-split-legend dd {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}
+.ap-split-legend dd small {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--color-ink-muted);
+}
+
+/* ── holdings against their targets (Portfolio), the Plan tab's bar with a target tick ── */
+.ap-alloc-legend {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-bottom: -6px;
+  font-size: 0.7rem;
+  color: var(--color-ink-muted);
+}
+.ap-alloc-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.ap-alloc-legend .is-now {
+  width: 12px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--color-ink-secondary);
+}
+.ap-alloc-legend .is-target {
+  width: 2px;
+  height: 10px;
+  border-radius: 1px;
+  background: var(--color-ink);
+}
+.ap-holding-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+.ap-holding-sym {
+  font-family: var(--font-data);
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+.ap-alloc {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+.ap-alloc-track {
+  position: relative;
+  flex: 1;
+  height: 6px;
+  min-width: 48px;
+  border-radius: 999px;
+  background: var(--color-surface-3, var(--color-hairline));
+}
+.ap-alloc-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  transition: width 400ms var(--ease-out, ease-out);
+}
+.ap-alloc-tick {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--color-ink);
+  box-shadow: 0 0 0 2px var(--color-surface-1);
+}
+.ap-alloc-nums {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  flex: none;
+  font-family: var(--font-data);
+  font-size: 0.7rem;
+  color: var(--color-ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+.ap-alloc-nums b {
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.ap-alloc-nums .ap-drift {
+  margin-left: 4px;
+}
+
+/* ── empty blocks (EmptyFan, after 21st's Empty State 1435) ── */
+.ap-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 18px 12px 10px;
+  text-align: center;
+}
+.ap-empty-fan {
+  display: flex;
+  justify-content: center;
+  isolation: isolate;
+  margin-bottom: 12px;
+}
+.ap-empty-tile {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--color-surface-2);
+  box-shadow:
+    0 0 0 1px var(--color-hairline),
+    0 8px 20px -10px rgb(0 0 0 / 0.5);
+  transition: transform 400ms var(--ease-out, ease-out);
+}
+.ap-empty-fan[data-count="3"] .ap-empty-tile:nth-child(1) {
+  position: relative;
+  left: 10px;
+  top: 6px;
+  transform: rotate(-6deg);
+}
+.ap-empty-fan[data-count="3"] .ap-empty-tile:nth-child(2) {
+  position: relative;
+  z-index: 1;
+}
+.ap-empty-fan[data-count="3"] .ap-empty-tile:nth-child(3) {
+  position: relative;
+  right: 10px;
+  top: 6px;
+  transform: rotate(6deg);
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .ap-card:hover .ap-empty-fan[data-count="3"] .ap-empty-tile:nth-child(1) {
+    transform: translateX(-10px) rotate(-12deg);
+  }
+  .ap-card:hover .ap-empty-fan[data-count="3"] .ap-empty-tile:nth-child(3) {
+    transform: translateX(10px) rotate(12deg);
+  }
+}
+.ap-empty-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.ap-empty-body {
+  max-width: 34rem;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--color-ink-secondary);
+}
+.ap-empty-foot {
+  margin-top: 6px;
+  font-family: var(--font-data);
+  font-size: 0.74rem;
+  color: var(--color-ink-muted);
+}
+.ap-decision--empty {
+  border-color: var(--color-hairline);
+  background: var(--color-surface-1);
+}
+
+/* The largest buy against the smallest trade, under the "can't buy yet" words. */
+.ap-stuck-meter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin-top: 8px;
+}
+.ap-stuck-bar {
+  position: relative;
+  width: 160px;
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-warning) 18%, transparent);
+  overflow: hidden;
+}
+.ap-stuck-bar > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--color-warning);
+}
+.ap-stuck-note {
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+  color: var(--color-ink-muted);
 }

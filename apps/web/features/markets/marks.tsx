@@ -3,7 +3,7 @@ import { glyphTransform, MARK_GLYPHS } from './mark-paths'
 
 /**
  * Agari's asset disc (`features/markets/hero/asset-mark.tsx` and `AssetMarkSvg.tsx`), for our Stock Tokens:
- * the brand's colour with its white glyph, or a typed monogram for a fund. The fills live in `icons.css`.
+ * the brand's colour with its white glyph, the fund's issuer's for a fund. The fills live in `icons.css`.
  */
 export const BRANDS: Record<string, { slug: string; monogram: string }> = {
   NVDA: { slug: 'nvidia', monogram: 'N' },
@@ -24,7 +24,7 @@ export const BRANDS: Record<string, { slug: string; monogram: string }> = {
   SLV: { slug: 'ishares', monogram: 'Ag' },
 }
 
-/** The funds: no company, so no reports, and a monogram rather than a mark. */
+/** The funds: no company, so no reports; they wear their issuer's mark. */
 export const FUNDS = new Set(['SPY', 'QQQ', 'SGOV', 'USO', 'SLV'])
 
 function MarkSvg({ slug, monogram }: { slug: string; monogram: string }) {

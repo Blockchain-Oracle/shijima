@@ -2,7 +2,8 @@ import { ago, appCopy, CASH_LOOK, comparedTo, deskCopy, lookOf, usd } from '@des
 import { ChevronDown } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
-import { Countdown, CountUp } from '@/components/ui/count-up'
+import type { ReactNode } from 'react'
+import { CountUp } from '@/components/ui/count-up'
 import { Sparkline } from '@/components/ui/sparkline'
 import { TokenLogo } from '@/components/ui/token-logo'
 import { chartPoints, flowMarkers } from '@/features/desk/chart-points'
@@ -10,6 +11,7 @@ import { MARKER_KIND } from '@/features/desk/DeskPanels'
 import { HoldingFlags } from '@/features/desk/HoldingsPanel'
 import { type ChartMarker, PortfolioChart } from '@/features/desk/PortfolioChart'
 import type { DeskView } from '@/lib/desk.server'
+import { EmptyFan } from './EmptyFan'
 
 const pct = (bps: number) => `${(bps / 100).toFixed(bps % 100 === 0 ? 0 : 1)}%`
 
@@ -25,7 +27,11 @@ export function Portfolio({ view }: { view: DeskView }) {
     return (
       <section className="ap-card ap-portfolio" aria-label={c.title}>
         <p className="ap-label">{c.title}</p>
-        <p className="ap-muted">{c.notYet}</p>
+        <EmptyFan
+          symbols={view.mandate?.targets.map((t) => t.symbol) ?? []}
+          title={deskCopy.plate.title}
+          body={c.notYet}
+        />
       </section>
     )
   }
@@ -42,21 +48,21 @@ export function Portfolio({ view }: { view: DeskView }) {
   ]
   const drift = view.mandate?.driftToleranceBps ?? 300
   const cash = BigInt(p.cashUsdg) + BigInt(p.vaultUsdg)
-  const running = view.desk.state === 'active' && view.desk.lifecycle === 'running'
   const now = new Date()
   const h = deskCopy.holdings
+  // One scale for every bar in the card, so a 14% target reads as the same length on every row.
+  const widest = Math.max(
+    1,
+    p.cashBps,
+    view.mandate?.cashTargetBps ?? 0,
+    ...view.holdings.flatMap((r) => [r.weightBps, r.targetBps]),
+  )
 
   return (
     <section className="ap-card ap-portfolio" aria-label={c.title}>
       <header className="ap-portfolio-head">
         <p className="ap-label">{c.title}</p>
         <span className="ap-portfolio-meta">
-          {running && (
-            <span className="ap-next">
-              <span className="ap-next-dot" aria-hidden />
-              <Countdown to={view.desk.nextCheckAt} />
-            </span>
-          )}
           <span>{c.valued(ago(new Date(p.takenAt)))}</span>
         </span>
       </header>
@@ -78,6 +84,16 @@ export function Portfolio({ view }: { view: DeskView }) {
         </div>
       )}
 
+      <div className="ap-alloc-legend" aria-hidden="true">
+        <span>
+          <i className="is-now" />
+          {c.legendNow}
+        </span>
+        <span>
+          <i className="is-target" />
+          {c.legendTarget}
+        </span>
+      </div>
       <ul className="ap-holdings" aria-label={c.holdings}>
         {view.holdings.map((row) => {
           const off = row.weightBps - row.targetBps
@@ -86,32 +102,29 @@ export function Portfolio({ view }: { view: DeskView }) {
             <li key={row.symbol}>
               <details className="ap-holding">
                 <summary>
-                  <TokenLogo symbol={row.symbol} size={28} />
+                  <TokenLogo symbol={row.symbol} size={32} />
                   <span className="ap-holding-name">
-                    <strong>{row.name}</strong>
-                    <small>
-                      {pct(row.weightBps)} · {h.target(pct(row.targetBps))}
+                    <span className="ap-holding-line">
+                      <strong>{row.name}</strong>
+                      <small className="ap-holding-sym">{row.symbol}</small>
+                    </span>
+                    <Alloc
+                      label={c.barLabel(row.name, pct(row.weightBps), pct(row.targetBps))}
+                      now={row.weightBps}
+                      target={row.targetBps}
+                      widest={widest}
+                      color={lookOf(row.symbol).color}
+                    >
+                      <b>{pct(row.weightBps)}</b> / {pct(row.targetBps)}
                       {drifted && (
-                        <em className="ap-drift">
-                          {' · '}
-                          {off > 0 ? h.over(pct(off)) : h.under(pct(-off))}
-                        </em>
+                        <em className="ap-drift">{off > 0 ? h.over(pct(off)) : h.under(pct(-off))}</em>
                       )}
-                    </small>
+                    </Alloc>
                   </span>
                   <Sparkline values={row.spark} width={64} height={22} className="ap-holding-spark" />
                   <span className="ap-holding-value">{usd(BigInt(row.valueUsdg))}</span>
                   <ChevronDown aria-hidden="true" className="ap-holding-chev size-4" />
                 </summary>
-                <span className="ap-bar" aria-hidden="true">
-                  <span
-                    style={{
-                      width: `${Math.min(100, row.weightBps / 100)}%`,
-                      background: lookOf(row.symbol).color,
-                    }}
-                  />
-                  <i style={{ left: `${Math.min(99.5, row.targetBps / 100)}%` }} />
-                </span>
                 <div className="ap-holding-more">
                   <p>
                     {row.amount} {row.symbol}
@@ -135,24 +148,69 @@ export function Portfolio({ view }: { view: DeskView }) {
         <li>
           <div className="ap-holding ap-holding--cash">
             <div className="ap-holding-row">
-              <TokenLogo symbol="CASH" size={28} />
+              <TokenLogo symbol="USDG" size={32} />
               <span className="ap-holding-name">
-                <strong>{c.cash}</strong>
-                <small>
-                  {pct(p.cashBps)}
-                  {view.mandate ? ` · ${h.target(pct(view.mandate.cashTargetBps))}` : ''}
-                  {BigInt(p.vaultUsdg) > 0n ? ` · ${c.inSavings(usd(BigInt(p.vaultUsdg)))}` : ''}
-                </small>
+                <span className="ap-holding-line">
+                  <strong>{c.cash}</strong>
+                  {BigInt(p.vaultUsdg) > 0n && (
+                    <small className="ap-holding-sym">{c.inSavings(usd(BigInt(p.vaultUsdg)))}</small>
+                  )}
+                </span>
+                <Alloc
+                  label={c.barLabel(
+                    c.cash,
+                    pct(p.cashBps),
+                    view.mandate ? pct(view.mandate.cashTargetBps) : pct(p.cashBps),
+                  )}
+                  now={p.cashBps}
+                  target={view.mandate?.cashTargetBps ?? null}
+                  widest={widest}
+                  color={CASH_LOOK.color}
+                >
+                  <b>{pct(p.cashBps)}</b>
+                  {view.mandate ? ` / ${pct(view.mandate.cashTargetBps)}` : ''}
+                </Alloc>
               </span>
               <span className="ap-holding-value">{usd(cash)}</span>
             </div>
-            <span className="ap-bar" aria-hidden="true">
-              <span style={{ width: `${Math.min(100, p.cashBps / 100)}%`, background: CASH_LOOK.color }} />
-              {view.mandate && <i style={{ left: `${Math.min(99.5, view.mandate.cashTargetBps / 100)}%` }} />}
-            </span>
           </div>
         </li>
       </ul>
     </section>
+  )
+}
+
+/**
+ * A holding against its target, the Plan tab's bar (.pl-bar) with a tick where the target sits: the fill is what
+ * it holds now, the tick is what the plan asks for, so "under" and "over" read without numbers.
+ */
+function Alloc({
+  label,
+  now,
+  target,
+  widest,
+  color,
+  children,
+}: {
+  label: string
+  now: number
+  target: number | null
+  widest: number
+  color: string
+  children: ReactNode
+}) {
+  return (
+    <span className="ap-alloc">
+      <span className="ap-alloc-track" role="img" aria-label={label}>
+        <span
+          className="ap-alloc-fill"
+          style={{ width: `${Math.min(100, (now / widest) * 100)}%`, background: color }}
+        />
+        {target !== null && (
+          <i className="ap-alloc-tick" style={{ left: `${Math.min(99, (target / widest) * 100)}%` }} />
+        )}
+      </span>
+      <small className="ap-alloc-nums">{children}</small>
+    </span>
   )
 }

@@ -1,13 +1,36 @@
 'use client'
 
 import { statusCopy } from '@desk/shared'
-import { AlertTriangle, CheckCircle } from 'lucide-react'
+import { AlertTriangle, Bot, CheckCircle, Cpu, LineChart, MessageSquare } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
+import { BrandLogo } from '@/components/ui/brand-logo'
+import { ChainLogo } from '@/components/ui/chain-logo'
 import { SectionHeader } from '@/components/ui/section-header'
 import { When } from '@/components/when'
+import { EmptyTiles } from '@/features/markets/EmptyTiles'
+import '@/styles/kit/discover.css'
 import type { StatusDesk, StatusPayload, StatusRow } from './protocol'
+
+/** Each part of the agent wears its real mark, as in 21st's System Status Block (5693); our own parts an icon. */
+const MARKS: Record<string, ReactNode> = {
+  worker: <Cpu aria-hidden="true" />,
+  openserv: <BrandLogo brand="openserv" size={15} />,
+  serv: <BrandLogo brand="openserv" size={15} />,
+  rpc: <ChainLogo chainId={4663} size={30} />,
+  prices: <LineChart aria-hidden="true" />,
+  feeds: <BrandLogo brand="chainlink" size={16} />,
+  halts: <ChainLogo chainId={4663} size={30} />,
+  telegram: <BrandLogo brand="telegram" size={16} />,
+  chat: <MessageSquare aria-hidden="true" />,
+}
+
+function RowMark({ id, desk }: { id: string; desk: boolean }) {
+  const mark = desk ? <Bot aria-hidden="true" /> : (MARKS[id] ?? <Cpu aria-hidden="true" />)
+  if (!desk && (id === 'rpc' || id === 'halts')) return mark
+  return <span className="dc-tile dc-tile--sm">{mark}</span>
+}
 
 /** Agari re-checks every 30 s (`features/status/useStatus.ts`), and only while the tab is visible. */
 const POLL_MS = 30_000
@@ -73,7 +96,10 @@ export function StatusScreen({ first }: { first: StatusPayload | null }) {
             className="mt-6"
           />
           {reading.desks.length === 0 ? (
-            <p className="type-body text-ink-secondary">{statusCopy.desks.none}</p>
+            <EmptyTiles
+              tiles={[<Bot key="a" />, <Cpu key="b" />, <Bot key="c" />]}
+              title={statusCopy.desks.none}
+            />
           ) : (
             <Table title={statusCopy.desks.tableTitle(reading.desks.length)} rows={reading.desks} />
           )}
@@ -84,12 +110,12 @@ export function StatusScreen({ first }: { first: StatusPayload | null }) {
             desc={statusCopy.countsSection.desc}
             className="mt-6"
           />
-          <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <dl className="dc-stats dc-stats--4">
             {reading.counts.map((c) => (
-              <div key={c.label} className="status-table px-5 py-4">
-                <dt className="status-table-title">{c.label}</dt>
-                <dd className="status-checkpoint-value mt-1 text-xl">{c.value}</dd>
-                <dd className="mt-1 type-caption text-ink-muted">{c.note}</dd>
+              <div key={c.label}>
+                <dt className="dc-stat-label">{c.label}</dt>
+                <dd className="dc-stat-value">{c.value}</dd>
+                <dd className="dc-stat-note">{c.note}</dd>
               </div>
             ))}
           </dl>
@@ -138,13 +164,16 @@ function Table({ title, rows }: { title: string; rows: readonly (StatusRow | Sta
             <div key={r.id} className="status-row">
               <span className="status-dot" data-tone={r.tone} aria-hidden />
               <span className="status-row-label">
-                {href ? (
-                  <Link href={href as Route} className="hover:underline" data-cursor="hover">
-                    {label}
-                  </Link>
-                ) : (
-                  label
-                )}
+                <RowMark id={r.id} desk={'name' in r} />
+                <span className="truncate">
+                  {href ? (
+                    <Link href={href as Route} className="hover:underline" data-cursor="hover">
+                      {label}
+                    </Link>
+                  ) : (
+                    label
+                  )}
+                </span>
               </span>
               <span className="status-row-lag">{r.lag ?? '—'}</span>
               <span className="status-row-detail" title={r.detail}>

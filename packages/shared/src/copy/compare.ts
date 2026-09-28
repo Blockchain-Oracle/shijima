@@ -40,6 +40,7 @@ export const compareCopy = {
     raw: { title: 'The model on its own', sub: (model: string) => `${model}, SERV’s reasoning layer off` },
     serv: { title: 'Through SERV Reasoning', sub: (model: string) => `${model}, as the agent calls it` },
   },
+  notRunTitle: 'No answer yet',
   notRun: 'Not run yet. The answer appears here once this situation has been asked.',
   options: {
     ACT_NOW: 'Do it now',

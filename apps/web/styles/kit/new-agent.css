@@ -1206,3 +1206,26 @@
   align-items: center;
   gap: 8px;
 }
+
+/* Limits step: where the numbers came from, sized to the amount or set by hand. */
+.na-limits-sized {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 5px 10px;
+  border: 1px solid color-mix(in srgb, var(--ac) 40%, var(--bd));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ac) 10%, transparent);
+  font-size: 12.5px;
+  color: var(--tx);
+}
+.na-limits-sized svg {
+  color: var(--ac2, var(--ac));
+}
+.na-limits-sized[data-own] {
+  border-color: var(--bd);
+  background: var(--card);
+  color: var(--tx2);
+}

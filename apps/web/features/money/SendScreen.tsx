@@ -1,10 +1,12 @@
 'use client'
 
 import { moneyCopy, short } from '@desk/shared'
-import { ArrowUpRight } from 'lucide-react'
+import { ArrowLeftRight, ArrowUpFromLine, ArrowUpRight } from 'lucide-react'
+import type { Route } from 'next'
+import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { formatUnits, isAddress, parseUnits } from 'viem'
-import { BoundaryBadge, Callout, Screen, ScreenTitle } from '@/components/kit'
+import { BoundaryBadge, buttonStyle, Callout, Screen, ScreenTitle } from '@/components/kit'
 import {
   AssetPicker,
   AssetPill,
@@ -15,6 +17,7 @@ import {
   TicketBox,
 } from '@/components/kit/ticket'
 import type { FundAsset } from './FundScreen'
+import { MoneyEmpty, WalletList } from './MoneyParts'
 import { MoveFlow } from './MoveFlow'
 import { ScanButton } from './ScanButton'
 
@@ -74,7 +77,18 @@ export function SendScreen({ owner, assets }: { owner: string; assets: FundAsset
     return (
       <Screen width={1100} gap={8}>
         <ScreenTitle title={c.title} sub={c.sub} />
-        <Callout tone="wallet">{c.empty}</Callout>
+        <MoneyEmpty
+          marks={[{ token: 'USDG' }, { chain: 4663 }, { token: 'ETH' }]}
+          title={c.emptyTitle}
+          body={c.empty}
+        >
+          <Link href={'/withdraw' as Route} style={buttonStyle('primary')}>
+            <ArrowUpFromLine aria-hidden="true" size={16} /> {c.emptyWithdraw}
+          </Link>
+          <Link href={'/bridge' as Route} style={buttonStyle('secondary')}>
+            <ArrowLeftRight aria-hidden="true" size={16} /> {c.emptyBring}
+          </Link>
+        </MoneyEmpty>
       </Screen>
     )
   }
@@ -98,6 +112,18 @@ export function SendScreen({ owner, assets }: { owner: string; assets: FundAsset
           to: { chainId: ROBINHOOD, label: validTo ? short(recipient, 6, 4) : c.toThem },
         }}
         extraRows={validTo ? [{ label: c.to, value: short(recipient, 6, 4) }] : []}
+        aside={
+          <WalletList
+            selected={asset.token}
+            lines={assets.map((a) => ({
+              key: a.token,
+              symbol: a.symbol,
+              name: a.name,
+              held: readable(a.balanceRaw, a.decimals),
+              usd: a.valueUsd === null ? null : dollars(a.valueUsd),
+            }))}
+          />
+        }
         ticket={() => (
           <>
             <TicketBox
