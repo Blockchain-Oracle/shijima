@@ -45,6 +45,12 @@ const config: NextConfig = {
   // working: it lands on the same thing at its new address.
   async redirects() {
     return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.shijima.xyz' }],
+        destination: 'https://shijima.xyz/:path*',
+        permanent: true,
+      },
       { source: '/desk/:path*', destination: '/agents/:path*', permanent: true },
       { source: '/desks', destination: '/agents', permanent: true },
       { source: '/start', destination: '/agents/new', permanent: false },
