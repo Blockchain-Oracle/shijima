@@ -15,6 +15,7 @@ import { useEffect, useRef, useState, useTransition } from 'react'
 import { claimGiftAction, type GiftState, giftStateAction } from '@/app/gift-actions'
 import { ChainLogo } from '@/components/ui/chain-logo'
 import { TokenLogo } from '@/components/ui/token-logo'
+import { SESSION_CHANGED_EVENT } from '@/lib/session-events'
 import { cn } from '@/lib/utils'
 
 const POLL_MS = 4000
@@ -35,17 +36,22 @@ export function GiftCard({ compact = false, className }: { compact?: boolean; cl
   const moving = gift?.state === 'queued' || gift?.state === 'sending'
   useEffect(() => {
     let stopped = false
-    const read = () =>
-      giftStateAction()
-        .then((g) => !stopped && setGift(g))
+    let latest = 0
+    const read = () => {
+      const request = ++latest
+      return giftStateAction()
+        .then((g) => !stopped && request === latest && setGift(g))
         .catch(() => undefined)
+    }
     read()
     const timer = moving ? setInterval(read, POLL_MS) : undefined
     window.addEventListener(GIFT_EVENT, read)
+    window.addEventListener(SESSION_CHANGED_EVENT, read)
     return () => {
       stopped = true
       if (timer) clearInterval(timer)
       window.removeEventListener(GIFT_EVENT, read)
+      window.removeEventListener(SESSION_CHANGED_EVENT, read)
     }
   }, [moving])
 

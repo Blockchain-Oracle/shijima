@@ -32,7 +32,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className={cn('antialiased cursor-custom', fontVariables)} suppressHydrationWarning>
-        <Providers>
+        <Providers
+          emailEnabled={Boolean(process.env.NEXT_PUBLIC_PRIVY_APP_ID && process.env.PRIVY_APP_SECRET)}
+          signedInAs={shell.signedInAs}
+        >
           <TooltipProvider>
             <Toaster limit={1}>
               <ShellSwitch {...shell}>{children}</ShellSwitch>

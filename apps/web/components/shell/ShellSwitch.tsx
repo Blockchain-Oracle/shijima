@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { WebsiteShell } from '@/features/home/landing/WebsiteShell'
 import { AppShell } from './app/AppShell'
+import { AskDrawer } from './app/AskDrawer'
 import type { SidebarAgent } from './app/types'
 import type { TickerCell } from './Marquee'
 import type { HeaderProps } from './types'
@@ -27,7 +28,12 @@ export function ShellSwitch({
 }: HeaderProps & { children: ReactNode; ticker: TickerCell[]; agents: SidebarAgent[] }) {
   const pathname = usePathname()
   if (isWebsite(pathname)) {
-    return <WebsiteShell signedIn={Boolean(header.signedInAs)}>{children}</WebsiteShell>
+    return (
+      <>
+        <WebsiteShell signedIn={Boolean(header.signedInAs)}>{children}</WebsiteShell>
+        <AskDrawer agents={agents} signedInAs={header.signedInAs} />
+      </>
+    )
   }
   return (
     <AppShell signedInAs={header.signedInAs} unread={header.unread} agents={agents}>

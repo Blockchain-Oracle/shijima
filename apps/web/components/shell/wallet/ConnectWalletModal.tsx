@@ -1,7 +1,7 @@
 'use client'
 
 import { webCopy } from '@desk/shared'
-import { ChevronLeft, Loader2, Wallet } from 'lucide-react'
+import { ChevronLeft, Loader2, Mail, Wallet } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { robinhood } from 'viem/chains'
@@ -9,11 +9,13 @@ import { type Connector, useAccount, useConnect, useConnectors, useDisconnect, u
 import { BrandLogo } from '@/components/ui/brand-logo'
 import { Modal } from '@/components/ui/modal'
 import { Qr } from '@/components/ui/qr'
+import { EmailSignIn } from './EmailSignIn'
+import { useEmailAuth } from './email-auth-context'
 import { isRejection, useSignIn } from './useSignIn'
 
 const W = webCopy.wallet
 
-type Step = 'pick' | 'connecting' | 'qr' | 'verify'
+type Step = 'pick' | 'email' | 'connecting' | 'qr' | 'verify'
 
 /**
  * The wallet picker, in the shape RainbowKit made familiar: every wallet this browser has (found through
@@ -40,6 +42,7 @@ export function ConnectWalletModal({
   const { disconnectAsync } = useDisconnect()
   const { switchChainAsync } = useSwitchChain()
   const signIn = useSignIn()
+  const emailAuth = useEmailAuth()
 
   const [step, setStep] = useState<Step>('pick')
   const [pending, setPending] = useState<Connector>()
@@ -49,11 +52,10 @@ export function ConnectWalletModal({
   const [problem, setProblem] = useState<string>()
   const started = useRef(false)
 
-  // Every opening starts fresh: on the signature when a wallet is already connected, else on the list.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: only on opening; a connection made inside the modal moves the step itself
+  // Every opening starts with the choice of email or a wallet.
   useEffect(() => {
     if (!open) return
-    setStep(isConnected ? 'verify' : 'pick')
+    setStep('pick')
     setProblem(undefined)
     setPhase('idle')
     started.current = false
@@ -131,21 +133,25 @@ export function ConnectWalletModal({
   }
 
   const title =
-    step === 'verify'
-      ? W.verifyTitle
-      : step === 'qr'
-        ? W.qrTitle
-        : step === 'connecting' && pending
-          ? W.opening(pending.name)
-          : W.pickTitle
+    step === 'email'
+      ? 'Continue with email'
+      : step === 'verify'
+        ? W.verifyTitle
+        : step === 'qr'
+          ? W.qrTitle
+          : step === 'connecting' && pending
+            ? W.opening(pending.name)
+            : 'Welcome to Shijima'
   const description =
-    step === 'verify'
-      ? W.verifyBody
-      : step === 'qr'
-        ? W.qrBody
-        : step === 'connecting'
-          ? W.approve
-          : W.pickBody
+    step === 'email'
+      ? 'A code in your inbox. A wallet of your own.'
+      : step === 'verify'
+        ? W.verifyBody
+        : step === 'qr'
+          ? W.qrBody
+          : step === 'connecting'
+            ? W.approve
+            : 'Sign in with email or connect the wallet you already use.'
 
   // At the page root: inside the app frame a fixed panel is clipped by the frame, not the screen.
   if (typeof document === 'undefined') return null
@@ -153,13 +159,50 @@ export function ConnectWalletModal({
     <Modal
       open={open}
       onClose={onClose}
-      eyebrow={W.eyebrow}
+      eyebrow="Your account"
       title={title}
       description={description}
       closeLabel={W.close}
     >
       {step === 'pick' && (
         <div className="wallet-pick">
+          <button
+            type="button"
+            className="wallet-row email-choice"
+            disabled={!emailAuth.enabled}
+            onClick={() => setStep('email')}
+          >
+            <span className="wallet-row-icon">
+              <Mail className="size-5" aria-hidden="true" />
+            </span>
+            <span className="wallet-row-text">
+              <span className="wallet-row-name">Continue with email</span>
+              <span className="wallet-row-note">
+                {emailAuth.enabled
+                  ? 'A six-digit code. No wallet app needed.'
+                  : 'Email sign-in is being set up'}
+              </span>
+            </span>
+          </button>
+          <span className="email-divider">or connect a wallet</span>
+          {isConnected && address && (
+            <button
+              type="button"
+              className="wallet-row"
+              onClick={() => {
+                started.current = false
+                setStep('verify')
+              }}
+            >
+              <span className="wallet-row-icon">
+                <Wallet className="size-4" aria-hidden="true" />
+              </span>
+              <span className="wallet-row-text">
+                <span className="wallet-row-name">{active?.name ?? 'Connected wallet'}</span>
+                <span className="wallet-row-note">{address}</span>
+              </span>
+            </button>
+          )}
           {browserWallets.length > 0 || fallback ? (
             <>
               <span className="wallet-pick-label">{W.installed}</span>
@@ -199,6 +242,8 @@ export function ConnectWalletModal({
           )}
         </div>
       )}
+
+      {step === 'email' && <EmailSignIn onDone={onSignedIn} onBack={() => setStep('pick')} />}
 
       {step === 'connecting' && (
         <div className="wallet-wait">

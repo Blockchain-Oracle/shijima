@@ -7,8 +7,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useDisconnect } from 'wagmi'
 import { WalletChip } from '@/components/shell/app/WalletChip'
+import { useEmailAuth } from '@/components/shell/wallet/email-auth-context'
 import { ChainLogo } from '@/components/ui/chain-logo'
 import { openTour } from '@/features/onboarding/tour'
+import { sessionChanged } from '@/lib/session-events'
+import { EmailAccount } from './EmailAccount'
 
 const c = appCopy.settings
 
@@ -22,15 +25,19 @@ const VERIFY_HREF = ['/evidence', '/live', '/evidence'] as const
 export function AccountPanel({ address }: { address: string }) {
   const router = useRouter()
   const { disconnect } = useDisconnect()
+  const emailAuth = useEmailAuth()
   const signOut = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
+    await emailAuth.logout()
     disconnect()
+    sessionChanged()
     router.push('/home' as Route)
     router.refresh()
   }
 
   return (
     <div className="st-stack">
+      <EmailAccount address={address} />
       <section className="st-section">
         <div className="st-row">
           <div className="st-row-text">

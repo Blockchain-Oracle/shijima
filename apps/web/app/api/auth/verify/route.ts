@@ -44,6 +44,8 @@ export async function POST(request: Request) {
 
     // The nonce is spent. A new sign-in needs a new one.
     delete session.nonce
+    delete session.email
+    delete session.privyUserId
     session.address = parsed.toLowerCase()
     session.signedInAt = new Date().toISOString()
     await session.save()

@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next'
 
 const dev = process.env.NODE_ENV !== 'production'
+const emailEnabled = Boolean(process.env.NEXT_PUBLIC_PRIVY_APP_ID)
 
 /**
  * A content security policy for a page that shows a model's words and other people's posts. Scripts run only
@@ -18,7 +19,7 @@ const localRpc = (() => {
 
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${dev ? " 'unsafe-eval'" : ''}`,
+  `script-src 'self' 'unsafe-inline'${dev ? " 'unsafe-eval'" : ''}${emailEnabled ? ' https://challenges.cloudflare.com' : ''}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   "img-src 'self' data: blob:",
@@ -27,7 +28,7 @@ const csp = [
   "worker-src 'self' blob:",
   // WalletConnect's Verify API: a hidden frame that lets a phone wallet confirm this site is who it says it is.
   // YouTube's no-cookie player: the demo film on /demo.
-  "frame-src 'self' https://verify.walletconnect.org https://verify.walletconnect.com https://www.youtube-nocookie.com",
+  `frame-src 'self' https://verify.walletconnect.org https://verify.walletconnect.com https://www.youtube-nocookie.com${emailEnabled ? ' https://auth.privy.io https://challenges.cloudflare.com' : ''}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

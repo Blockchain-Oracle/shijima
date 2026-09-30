@@ -146,6 +146,134 @@ button.wallet-row:hover {
   opacity: 0.6;
 }
 
+.email-choice {
+  border-color: color-mix(in srgb, var(--ac) 35%, var(--bd));
+}
+.email-choice .wallet-row-icon {
+  color: var(--ac);
+}
+.wallet-row:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.email-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0;
+  color: var(--tx3);
+  font-size: 11px;
+}
+.email-divider::before,
+.email-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--bd);
+}
+.email-flow,
+.email-flow form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.email-emblem {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--ac) 10%, var(--card));
+  color: var(--ac);
+}
+.email-flow label {
+  color: var(--tx);
+  font-size: 13px;
+  font-weight: 600;
+}
+.email-flow input {
+  width: 100%;
+  min-width: 0;
+  padding: 14px;
+  background: var(--card);
+  color: var(--tx);
+  border: 1px solid var(--bd2);
+  border-radius: 12px;
+  font-size: 16px;
+}
+.email-flow input:focus-visible,
+.wallet-row:focus-visible,
+.wallet-link:focus-visible {
+  outline: 2px solid var(--ac);
+  outline-offset: 3px;
+}
+.email-flow .email-code {
+  font-family: var(--font-mono);
+  font-size: clamp(24px, 6vw, 32px);
+  letter-spacing: 0.35em;
+  text-align: center;
+  padding-left: calc(14px + 0.35em);
+}
+.email-note {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--tx2);
+  overflow-wrap: anywhere;
+}
+.email-note strong {
+  color: var(--tx);
+}
+.email-secondary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.email-secondary button,
+.email-flow > .wallet-link {
+  min-height: 40px;
+}
+.email-footnote {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 6px;
+  padding-top: 4px;
+  font-size: 10px;
+  color: var(--tx3);
+}
+.email-footnote svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.email-verified {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--pos);
+  font-size: 13px;
+}
+.email-flow button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+@media (max-width: 480px) {
+  .email-flow .btn {
+    min-height: 46px;
+  }
+  .wallet-pick .wallet-row {
+    min-height: 58px;
+  }
+  .wallet-row-note {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .header-account-menu {
+    min-width: min(300px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
+  }
+}
+
 /* Partner marks (components/ui/brand-logo): the real logo, white or black for OpenServ as the theme asks. */
 .brand-logo {
   display: inline-grid;

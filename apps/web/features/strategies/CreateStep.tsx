@@ -169,7 +169,7 @@ export function CreateStep({
     return (
       <div className="na-stack">
         <p className="na-note">{C.connect}</p>
-        <SignInButton className="na-cta" label={C.connectWallet} />
+        <SignInButton className="na-cta" />
       </div>
     )
   }

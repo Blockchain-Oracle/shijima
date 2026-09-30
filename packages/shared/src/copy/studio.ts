@@ -216,7 +216,7 @@ export const studioCopy = {
     wrongNetwork: 'Switch your wallet to Robinhood Chain',
     wrongWallet:
       'Your wallet has switched to a different address. Switch back to the one you signed in with.',
-    connect: 'Connect your wallet and sign in to create the agent.',
+    connect: 'Sign in with email or your wallet to create the agent.',
     connectWallet: 'Connect your wallet',
     disclosureFirst: 'Read this once before any money moves.',
     noEth: {

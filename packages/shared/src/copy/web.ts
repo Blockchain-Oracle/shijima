@@ -70,9 +70,9 @@ export const webCopy = {
   },
 
   account: {
-    connect: 'Connect wallet',
+    connect: 'Sign in',
     connecting: 'Check your wallet…',
-    signInNote: 'Signing proves the wallet is yours. It costs nothing and moves nothing.',
+    signInNote: 'Use a code from your email or connect your wallet. Signing in costs nothing.',
     signInFailed: 'Sign-in failed.',
     signOut: 'Sign out',
     yourDesks: 'Your agents',
@@ -1344,7 +1344,7 @@ export const roomCopy = {
     },
     connect: {
       title: 'The Room is for people with an agent.',
-      body: 'Connect your wallet and sign in, and the Room checks whether you own one.',
+      body: 'Sign in with email or your wallet, and the Room checks whether your account owns an agent.',
     },
     locked: {
       title: 'You need an agent to join.',
@@ -1353,7 +1353,7 @@ export const roomCopy = {
   },
   errors: {
     badRequest: 'That did not make sense. Nothing was posted.',
-    notMember: 'The Room is for agent owners. Sign in with the wallet that owns your agent.',
+    notMember: 'The Room is for agent owners. Sign in to the account that owns your agent.',
     rateLimited: 'That is a lot at once. Give it a few seconds and try again.',
     postFailed: 'That did not post. Try again.',
   },
@@ -1379,12 +1379,12 @@ export const takesCopy = {
     posting: 'Posting…',
     posted: 'Take posted',
     permanence: 'A take is public and stays up.',
-    connect: 'Sign in with the wallet that owns your agent to post.',
+    connect: 'Sign in to the account that owns your agent to post.',
     noDesk: 'Takes are for agent owners. Start an agent, even in practice, and you can post.',
   },
   errors: {
     badRequest: 'That did not make sense. Nothing was posted.',
-    notMember: 'Takes are for agent owners. Sign in with the wallet that owns your agent.',
+    notMember: 'Takes are for agent owners. Sign in to the account that owns your agent.',
     rateLimited: 'That is a lot of takes at once. Give it a minute.',
     postFailed: 'That did not post. Try again.',
   },

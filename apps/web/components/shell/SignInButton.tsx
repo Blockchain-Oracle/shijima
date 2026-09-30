@@ -3,12 +3,13 @@
 import { webCopy } from '@desk/shared'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { toast } from '@/components/ui/toast'
+import { sessionChanged } from '@/lib/session-events'
 import { ConnectWalletModal } from './wallet/ConnectWalletModal'
 
 /**
- * "Connect wallet": the header's button, also used wherever a page needs a signed-in wallet (the Room, the take
- * composer, creating an agent). It opens the wallet picker, which connects, moves the wallet to Robinhood Chain
- * and signs in with one message. `onSignedIn` lets a caller re-read what depends on the session.
+ * Opens email OTP or the wallet picker. Success is reported only after the app session is saved.
+ * `onSignedIn` lets a caller re-read what depends on that session.
  */
 export function SignInButton({
   onSignedIn,
@@ -39,6 +40,8 @@ export function SignInButton({
         onClose={() => setOpen(false)}
         signedInAs={signedInAs}
         onSignedIn={() => {
+          sessionChanged()
+          toast.add({ title: 'You’re signed in', type: 'success' })
           setOpen(false)
           router.refresh()
           onSignedIn?.()

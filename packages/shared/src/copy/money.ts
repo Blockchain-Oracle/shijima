@@ -46,7 +46,7 @@ export const moneyCopy = {
     quoteFresh: 'The price holds for 60 seconds; after that it is checked again.',
   },
   refusals: {
-    signIn: 'Sign in with your wallet first.',
+    signIn: 'Sign in with email or your wallet first.',
     notYourAgent: 'That is not your agent.',
     minimum: 'The smallest amount is $1.',
     amount: 'Enter an amount.',
@@ -81,7 +81,7 @@ export const moneyCopy = {
   signedOut: {
     title: 'Shijima',
     welcome: 'Your wallet, and your agents',
-    body: 'Connect the wallet you hold money in. Signing in costs nothing and moves nothing.',
+    body: 'Sign in with email or connect the wallet you hold money in. Signing in costs nothing.',
     note: 'Only your wallet can take money out of your agents. Not us, and not the agent.',
   },
 

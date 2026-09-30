@@ -1,7 +1,7 @@
 /**
  * Who is signed in.
  *
- * A wallet, proven by a signature, and nothing else: no password to store, no email to leak. The session is
+ * A wallet, proven by a signature or a verified email identity with a linked wallet. The session is
  * a signed cookie, so the server keeps no session table and a stolen database row cannot impersonate anyone.
  *
  * Proving a wallet is NOT permission to spend from it. Every transaction that moves money is still signed by
@@ -11,6 +11,8 @@ import { getIronSession, type SessionOptions } from 'iron-session'
 import { cookies } from 'next/headers'
 
 export interface Session {
+  email?: string
+  privyUserId?: string
   /** Lower case, always. The one place a desk is tied to a person. */
   address?: string
   /** Proven at. A session older than the cookie's own life cannot exist, but this is what the UI shows. */

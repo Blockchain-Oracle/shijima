@@ -208,7 +208,7 @@ export const homeCopy = {
       open: 'Open the app',
       watch: 'Watch a live agent',
       small:
-        'Sign in with MetaMask, Rabby or Robinhood Wallet. Scan to open it on your phone. Stock Tokens are not available to people in the US, the UK, Canada or Switzerland.',
+        'Sign in with email, MetaMask, Rabby or Robinhood Wallet. Scan to open it on your phone. Stock Tokens are not available to people in the US, the UK, Canada or Switzerland.',
       qr: 'QR code that opens Shijima',
     },
     telegram: {

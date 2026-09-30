@@ -298,7 +298,8 @@ export const reportCopy = {
 /** Your desks: the list for an owner of more than one. */
 export const desksCopy = {
   title: 'Your agents',
-  signIn: 'Connect your wallet and sign in above to see them. Signing costs nothing and moves nothing.',
+  signIn:
+    'Sign in with email or your wallet above to see your agents. Signing in costs nothing and moves nothing.',
   none: 'This wallet does not own an agent yet. An agent is an account on the network that only you can withdraw from, and the AI that looks after it inside limits you set.',
   makeOne: 'Make one in Strategies →',
   publicView: 'The public view →',

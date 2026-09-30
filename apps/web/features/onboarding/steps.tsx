@@ -11,6 +11,7 @@ import { Callout } from '@/components/kit'
 import { ShijimaMark } from '@/components/shell/ShijimaMark'
 import { SignInButton } from '@/components/shell/SignInButton'
 import { GiftCard } from '@/features/gift/GiftCard'
+import { SESSION_CHANGED_EVENT } from '@/lib/session-events'
 
 /** The words every step leads with: a title and one line under it, rising in as the reference's slides do. */
 function Words({ title, sub, tag }: { title: string; sub: string; tag?: string }) {
@@ -117,15 +118,20 @@ export function GiftStep({ signedInAs, onFund }: { signedInAs: string | undefine
   // biome-ignore lint/correctness/useExhaustiveDependencies: a new session changes what the gift state says.
   useEffect(() => {
     let stopped = false
-    const read = () =>
-      giftStateAction()
-        .then((g) => !stopped && setGift(g))
+    let latest = 0
+    const read = () => {
+      const request = ++latest
+      return giftStateAction()
+        .then((g) => !stopped && request === latest && setGift(g))
         .catch(() => undefined)
+    }
     read()
     window.addEventListener(GIFT_EVENT, read)
+    window.addEventListener(SESSION_CHANGED_EVENT, read)
     return () => {
       stopped = true
       window.removeEventListener(GIFT_EVENT, read)
+      window.removeEventListener(SESSION_CHANGED_EVENT, read)
     }
   }, [signedInAs])
 

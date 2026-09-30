@@ -9,7 +9,7 @@ export const giftCopy = {
   slide: 'Slide to claim your $1',
   left: (n: number) => (n === 1 ? '1 left' : `${n} left`),
   states: {
-    signedOut: 'Connect your wallet first. The $1 goes to the wallet you sign in with.',
+    signedOut: 'Sign in with email or your wallet first. The $1 goes to your account’s wallet.',
     eligible: 'You can claim it now.',
     queued: 'Claimed. It will arrive in your wallet in about a minute.',
     sending: 'On its way to your wallet.',

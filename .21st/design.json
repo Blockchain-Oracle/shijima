@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "project": {
+    "name": "Shijima",
+    "productType": "Stock Token agent application",
+    "stack": ["Next.js 16", "React 19", "TypeScript", "Tailwind CSS 4", "wagmi 3", "Base UI"]
+  },
+  "sources": {
+    "tokens": ["apps/web/styles/kit/tokens.css", "apps/web/styles/agari/tokens.css"],
+    "components": ["apps/web/components/ui", "apps/web/components/shell", "apps/web/features/desk"],
+    "assets": ["apps/web/public/logos", "apps/web/components/shell/ShijimaMark.tsx"],
+    "instructions": ["apps/web/AGENTS.md"]
+  },
+  "design": {
+    "colorMode": "light-and-dark",
+    "colors": {
+      "accent": "#CCFF00",
+      "surface": "var(--card)",
+      "text": "var(--tx)",
+      "border": "var(--bd)"
+    },
+    "typography": {},
+    "spacing": {},
+    "radius": {},
+    "shadows": {},
+    "motion": {},
+    "density": "unknown"
+  },
+  "components": {
+    "installed": [],
+    "preferredPrimitives": ["Modal", "TokenLogo", "ShijimaMark", "DeskChat"],
+    "patterns": []
+  },
+  "constraints": {
+    "must": [
+      "Reuse existing Shijima tokens and logo",
+      "Support 320px mobile layouts, safe areas and on-screen keyboards",
+      "Keep wallet ownership and transaction approval intact",
+      "Label visitor discovery separately from authenticated AI answers"
+    ],
+    "avoid": [
+      "Changing established brand colors",
+      "Inventing token prices",
+      "Introducing a second wallet state manager"
+    ]
+  },
+  "decisions": [
+    "Privy email OTP and verified wallet linking; public EIP-1193 bridge into existing wagmi",
+    "Always-visible assistant with discovery, general AI and agent contexts",
+    "Single native OTP input for paste and autofill",
+    "Mobile Ask Shijima opens as a bottom drawer, expands for conversation, and follows the keyboard; Agents navigation stays unchanged"
+  ],
+  "evidence": [],
+  "generatedAt": "2026-09-30T13:49:40.751Z"
+}

@@ -1,7 +1,7 @@
 'use client'
 
 import { X } from 'lucide-react'
-import { type ReactNode, useEffect, useId, useState } from 'react'
+import { type ReactNode, useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 /**
@@ -27,28 +27,56 @@ export function Modal({
   children: ReactNode
 }) {
   const titleId = useId()
+  const panel = useRef<HTMLDivElement>(null)
+  const close = useRef(onClose)
+  close.current = onClose
   // Drawn at the page root: inside the app frame a fixed panel is clipped by the frame, not the screen.
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
   useEffect(() => {
-    if (!open) return
+    if (!open || !mounted) return
+    const previousFocus = document.activeElement as HTMLElement | null
+    const frame = requestAnimationFrame(() => {
+      if (!panel.current?.contains(document.activeElement))
+        panel.current?.querySelector<HTMLElement>('input, button')?.focus()
+    })
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape') {
+        event.stopPropagation()
+        close.current()
+      }
+      if (event.key === 'Tab') {
+        const items = panel.current?.querySelectorAll<HTMLElement>(
+          'button:not(:disabled), input:not(:disabled), a[href], select:not(:disabled), [tabindex="0"]',
+        )
+        const first = items?.[0]
+        const last = items?.[items.length - 1]
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault()
+          last?.focus()
+        }
+        if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault()
+          first?.focus()
+        }
+      }
     }
     const previous = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     document.addEventListener('keydown', onKey)
     return () => {
       document.body.style.overflow = previous
+      cancelAnimationFrame(frame)
+      previousFocus?.focus()
       document.removeEventListener('keydown', onKey)
     }
-  }, [open, onClose])
+  }, [open, mounted])
 
   if (!open || !mounted) return null
   return createPortal(
     <div className="modal-root">
       <button type="button" className="modal-scrim" aria-label={closeLabel} tabIndex={-1} onClick={onClose} />
-      <div className="modal" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <div ref={panel} className="modal" role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <button
           type="button"
           onClick={onClose}

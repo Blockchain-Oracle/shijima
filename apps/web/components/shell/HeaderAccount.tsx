@@ -8,10 +8,12 @@ import { type RefObject, useRef, useState } from 'react'
 import { robinhood } from 'viem/chains'
 import { useAccount, useDisconnect, useSwitchChain } from 'wagmi'
 import { TelegramConnect } from '@/features/settings/TelegramConnect'
+import { sessionChanged } from '@/lib/session-events'
 import { AccountBalances } from './AccountBalances'
 import { SignInButton } from './SignInButton'
 import type { HeaderTelegram } from './types'
 import { useFloatingMenus } from './useFloatingMenus'
+import { useEmailAuth } from './wallet/email-auth-context'
 
 /**
  * The account corner, in Agari's shape (`HeaderAccount.tsx`): "Connect wallet", which opens the picker and
@@ -27,10 +29,16 @@ export function HeaderAccount({
   telegram?: HeaderTelegram | null
 }) {
   const router = useRouter()
+  const emailAuth = useEmailAuth()
   const { disconnect } = useDisconnect()
   const { isConnected, chainId } = useAccount()
   const { switchChain, isPending: switching } = useSwitchChain()
   const wrongNetwork = isConnected && chainId !== robinhood.id
+  const email = emailAuth.accounts.some(
+    (account) => account.address.toLowerCase() === signedInAs?.toLowerCase(),
+  )
+    ? emailAuth.email
+    : undefined
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const refs = useRef<ReadonlyArray<RefObject<HTMLElement | null>>>([menuRef])
@@ -39,7 +47,9 @@ export function HeaderAccount({
   const signOut = async () => {
     setOpen(false)
     await fetch('/api/auth/logout', { method: 'POST' })
+    await emailAuth.logout()
     disconnect()
+    sessionChanged()
     router.refresh()
   }
 
@@ -70,6 +80,14 @@ export function HeaderAccount({
         </button>
         {open && (
           <div className="header-account-menu" role="menu">
+            {email && (
+              <div className="header-account-row">
+                <span>Email</span>
+                <span className="val max-w-48 truncate" title={email}>
+                  {email}
+                </span>
+              </div>
+            )}
             <AccountBalances address={signedInAs} />
             {telegram?.linked && (
               <div className="header-account-pools">

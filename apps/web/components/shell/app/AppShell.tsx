@@ -123,7 +123,7 @@ function TopRow({
       </Link>
       <MarketSessionChip className="kit-top-session" />
       <div className="kit-top-right">
-        {signedInAs && agents.length > 0 ? <AskDrawer agents={agents} /> : null}
+        <AskDrawer agents={agents} signedInAs={signedInAs} />
         <span className="kit-top-theme">
           <ThemeToggle />
         </span>

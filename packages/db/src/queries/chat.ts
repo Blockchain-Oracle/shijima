@@ -166,13 +166,13 @@ export async function askRequestForOwner(db: DbOrTx, id: string, ownerAddress: s
 }
 
 /** The last few exchanges on this desk, oldest first, so the desk can follow a conversation. */
-export async function recentConversation(db: DbOrTx, deskId: string, ownerAddress: string, limit = 4) {
+export async function recentConversation(db: DbOrTx, deskId: string | null, ownerAddress: string, limit = 4) {
   const rows = await db
     .select({ question: askRequests.question, reply: askRequests.reply, at: askRequests.createdAt })
     .from(askRequests)
     .where(
       and(
-        eq(askRequests.deskId, deskId),
+        deskId === null ? isNull(askRequests.deskId) : eq(askRequests.deskId, deskId),
         eq(askRequests.ownerAddress, ownerAddress.toLowerCase()),
         eq(askRequests.status, 'answered'),
         eq(askRequests.kind, 'ask'),
@@ -466,7 +466,7 @@ export async function overrideWait(
 }
 
 /** The owner's conversation with one desk, oldest first, each message with the card it produced. */
-export async function askHistory(db: DbOrTx, deskId: string, ownerAddress: string, limit = 30) {
+export async function askHistory(db: DbOrTx, deskId: string | null, ownerAddress: string, limit = 30) {
   const rows = await db
     .select({
       id: askRequests.id,
@@ -488,7 +488,7 @@ export async function askHistory(db: DbOrTx, deskId: string, ownerAddress: strin
     .leftJoin(askProposals, eq(askProposals.requestId, askRequests.id))
     .where(
       and(
-        eq(askRequests.deskId, deskId),
+        deskId === null ? isNull(askRequests.deskId) : eq(askRequests.deskId, deskId),
         eq(askRequests.ownerAddress, ownerAddress.toLowerCase()),
         eq(askRequests.kind, 'ask'),
       ),

@@ -441,7 +441,7 @@ export const appCopy = {
       split: (creator: string, shijima: string) => `${creator} to the creator · ${shijima} to Shijima`,
       trading:
         'Trading on Shijima itself is free. The network fee for each trade is paid by Shijima, about 5¢.',
-      signIn: 'Connect your wallet to copy. Your agent is made in your own wallet.',
+      signIn: 'Sign in with email or your wallet to copy. Your agent belongs to your account’s wallet.',
       continue: 'Continue: set up your agent',
       yours: 'This is your own agent. Others can copy it once you allow it in its settings.',
       settings: 'Open its settings',
@@ -487,7 +487,7 @@ export const appCopy = {
       closed: 'That agent is closed.',
       notCopyable: 'Its owner has not opened it to copying.',
       noStrategy: 'That agent has no strategy yet.',
-      signIn: 'Connect your wallet first.',
+      signIn: 'Sign in with email or your wallet first.',
       notYours: 'That is not your agent.',
       own: 'You cannot copy your own agent.',
       feeNotSeen: 'The fee transfer was not found on chain yet. Wait a moment and try again.',

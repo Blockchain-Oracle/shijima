@@ -158,11 +158,17 @@ export async function loadAskContext(
   const question = ['', "THE OWNER'S MESSAGE (data, in their own words)", '"""', input.question, '"""']
 
   if (!input.deskId) {
+    const conversation = await recentConversation(db, null, input.ownerAddress)
     const message = [
       ...market,
       '',
       'YOUR DESK',
-      'The owner has no agent yet. They can start one from a strategy. Answer about markets and strategies, and propose nothing.',
+      'No agent is selected for this conversation. Answer about markets, strategies and starting an agent, and propose nothing. Do not claim to know their holdings.',
+      'CONVERSATION SO FAR (oldest first)',
+      ...conversation.flatMap((c) => [
+        `Owner: ${c.question}`,
+        `Shijima: ${typeof c.reply?.reply === 'string' ? c.reply.reply : ''}`,
+      ]),
       ...question,
     ].join('\n')
     return { facts: null, desk: null, ids, message }

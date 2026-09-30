@@ -16,6 +16,8 @@
     "@desk/db": "workspace:*",
     "@desk/shared": "workspace:*",
     "@number-flow/react": "0.6.2",
+    "@privy-io/node": "0.35.0",
+    "@privy-io/react-auth": "3.46.0",
     "@tanstack/react-query": "5.103.1",
     "@walletconnect/ethereum-provider": "2.25.0",
     "class-variance-authority": "0.7.1",

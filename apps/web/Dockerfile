@@ -9,6 +9,8 @@ ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH CI=1 NEXT_TELEMETRY_DISABLED=1
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates && rm -rf /var/lib/apt/lists/* \
     && corepack enable && corepack prepare pnpm@11.24.0 --activate
 WORKDIR /app
+ARG NEXT_PUBLIC_PRIVY_APP_ID
+ENV NEXT_PUBLIC_PRIVY_APP_ID=$NEXT_PUBLIC_PRIVY_APP_ID
 COPY . .
 RUN --mount=type=cache,id=shijima-pnpm-store,target=/pnpm/store \
     pnpm install --frozen-lockfile --filter "@desk/web..."

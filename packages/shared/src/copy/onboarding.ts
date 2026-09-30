@@ -39,16 +39,16 @@ export const firstRunCopy = {
     ],
   },
   connect: {
-    title: 'Connect your wallet',
-    sub: 'Sign one message to prove it is yours. It costs nothing and moves nothing.',
-    connected: 'Wallet connected',
+    title: 'Sign in your way',
+    sub: 'Use a code from your email or connect your wallet. New email users get a wallet of their own.',
+    connected: 'Signed in',
     region:
       'People in the US, the UK, Canada, Switzerland and some other places may not hold Stock Tokens. Looking around stays open to everyone.',
   },
   gift: {
     title: 'Get your free $1',
     sub: 'Try it with our money first: $1 to trade with and a little ETH for network fees.',
-    connectFirst: 'Connect your wallet first. The $1 goes to the wallet you sign in with.',
+    connectFirst: 'Sign in with email or your wallet first. The $1 goes to your account’s wallet.',
     left: (n: number) => (n === 1 ? 'Only 1 left' : `${n} left`),
     none: 'None left right now.',
     claimed: 'Your $1 is claimed. Want more to trade with?',
