@@ -141,7 +141,8 @@
   .dc-hero { grid-template-columns: minmax(0, 1fr); padding: 18px; }
   .dc-hero-side-col { position: absolute; top: 14px; right: 14px; }
   .dc-hero-side-col .dkit-gauge { transform: scale(0.72); transform-origin: top right; }
-  .dc-hero-top { padding-right: 76px; }
+  /* Reserve the scaled confidence ring's height as well as its width. */
+  .dc-hero-top { min-height: 66px; padding-right: 76px; }
   .dc-steps::before { left: 15px; }
   .dc-step { grid-template-columns: 32px minmax(0, 1fr); gap: 10px; }
   .dc-step-icon { width: 32px; height: 32px; border-radius: 10px; }
