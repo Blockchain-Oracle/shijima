@@ -8,12 +8,14 @@
  */
 import type { ApprovedToken } from '@desk/chain'
 import {
+  completedChecksOf,
   currentMandate,
   type Db,
   type DeskWithOwner,
   deskById,
   deskRecord,
   GO_LIVE_CHECKS,
+  lastCheckOf,
   latestPricePoints,
   latestValueSnapshot,
   mandateFromRow,
@@ -23,7 +25,7 @@ import {
   standingWaits,
   timingSummary,
 } from '@desk/db'
-import { DecisionRecordV2, type Mandate, marketClock, PRESETS } from '@desk/shared'
+import { DecisionRecordV2, type Mandate, marketClock, PRESETS, readQualification } from '@desk/shared'
 import { ownerRules, structuredRules } from '../wake/evidence'
 import { type DeskFacts, formatUsd, type StandingWait } from './proposal'
 
@@ -106,7 +108,7 @@ async function marketSections(db: Db, approved: ApprovedToken[], now: Date, ids:
   const lines = [
     'NOW',
     `New York time: ${nyTime(now)}. Session: ${clock.session}${clock.anchored ? ', anchored' : ', not anchored (thin weekend or holiday market)'}.`,
-    'The agent checks every hour, on the hour.',
+    'The worker checks every five minutes. OpenServ starts the hourly review at the top of the hour. SERV timing is requested only when a trade qualifies; a check is not necessarily a model call or a trade.',
     '',
     'STRATEGIES',
     ...PRESETS.map(
@@ -182,15 +184,19 @@ export async function loadAskContext(
   if (!mandateRow) return { refused: 'This agent has no settings yet. Finish setting it up first.' }
   const mandate = mandateFromRow(mandateRow)
 
-  const [snapshot, approvals, record, waits, graded, timing, conversation] = await Promise.all([
-    latestValueSnapshot(db, desk.id),
-    pendingApprovals(db, desk.id),
-    deskRecord(db, desk.id, { limit: 12 }),
-    standingWaits(db, desk.id),
-    recentGrades(db, desk.id, 12),
-    timingSummary(db, desk.id),
-    recentConversation(db, desk.id, input.ownerAddress),
-  ])
+  const [snapshot, approvals, record, waits, graded, timing, conversation, check, checks] = await Promise.all(
+    [
+      latestValueSnapshot(db, desk.id),
+      pendingApprovals(db, desk.id),
+      deskRecord(db, desk.id, { limit: 12 }),
+      standingWaits(db, desk.id),
+      recentGrades(db, desk.id, 12),
+      timingSummary(db, desk.id),
+      recentConversation(db, desk.id, input.ownerAddress),
+      lastCheckOf(db, desk.id),
+      completedChecksOf(db, desk.id),
+    ],
+  )
 
   const lines = [...market, '', 'YOUR DESK']
   lines.push(
@@ -222,6 +228,20 @@ export async function loadAskContext(
   }
 
   lines.push('', 'SETTINGS', ...mandateLines(mandate, approved, ids))
+  lines.push(
+    '',
+    'CURRENT FIXED-RULE CHECK',
+    `${checks} checks completed. Latest check: ${check ? `${nyTime(check.at)}, ${check.status}` : 'not yet'}.`,
+  )
+  const qualification = readQualification(check?.sourceHealth)
+  if (qualification) lines.push(qualification.summary)
+  else
+    lines.push(
+      'No current qualification detail is available. Do not infer current eligibility from an old record.',
+    )
+  lines.push(
+    'Five-minute checks that change nothing do not each create a decision. A quiet daily record is historical; its older generic wording is not proof that all current holdings are within range.',
+  )
 
   lines.push('', 'WAITING FOR YOU')
   const approvalIds = new Map<string, { id: string; summary: string }>()

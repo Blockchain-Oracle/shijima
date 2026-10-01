@@ -34,6 +34,10 @@ export interface Blocker {
     | 'EVENT_WINDOW'
     | 'LOSS_LIMIT'
     | 'COPY_MISSED'
+    | 'MINIMUM_TRADE'
+    | 'CASH_RESERVE'
+    | 'ACTION_LIMIT'
+    | 'PRICE_UNAVAILABLE'
   text: string
 }
 

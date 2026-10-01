@@ -10,7 +10,7 @@ import {
   deskRecord,
   followersOf,
   gradeTally,
-  isQuiet,
+  latestDecisionOf,
   latestValueSnapshot,
   mandateFromRow,
   sharedDesks,
@@ -59,10 +59,10 @@ export interface PublicAgent {
 }
 
 export async function publicAgents(): Promise<PublicAgent[]> {
-  const shared = (await sharedDesks(db())).filter((d) => d.lifecycle !== 'closed' && d.shareSlug)
+  const shared = (await sharedDesks(db())).filter((d) => d.lifecycle !== 'closed')
   const rows = await Promise.all(
     shared.map(async (d): Promise<PublicAgent> => {
-      const [now, dayAgo, mandateRow, record, tally, history, followers, full] = await Promise.all([
+      const [now, dayAgo, mandateRow, record, tally, history, followers, full, decision] = await Promise.all([
         latestValueSnapshot(db(), d.id),
         valueSnapshotAtOrBefore(db(), d.id, new Date(Date.now() - DAY_MS)),
         currentMandate(db(), d.id),
@@ -71,9 +71,10 @@ export async function publicAgents(): Promise<PublicAgent[]> {
         valueHistory(db(), d.id, 200),
         followersOf(db(), d.id),
         deskById(db(), d.id),
+        latestDecisionOf(db(), d.id),
       ])
       const mandate = mandateRow ? mandateFromRow(mandateRow) : null
-      const latest = record.find((r) => !isQuiet(r)) ?? record[0]
+      const latest = decision ?? record[0]
       const recent = history.filter((h) => h.takenAt.getTime() > Date.now() - 2 * DAY_MS)
       const step = Math.max(1, Math.ceil(recent.length / 32))
       return {

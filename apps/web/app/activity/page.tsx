@@ -1,5 +1,5 @@
 import { APPROVED_TOKENS } from '@desk/chain'
-import { deskRecord, desksOfOwner, isQuiet, pendingApprovals } from '@desk/db'
+import { deskRecord, desksOfOwner, pendingApprovals } from '@desk/db'
 import { appCopy } from '@desk/shared'
 import { type ActivityRow, ActivityScreen, type NeedRow } from '@/features/activity/ActivityScreen'
 import { SignedOutCard } from '@/features/money/SignedOutCard'
@@ -35,18 +35,16 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
         d.lifecycle === 'closed' ? Promise.resolve([]) : pendingApprovals(db(), d.id),
       ])
       const agent = { id: d.id, name: d.name ?? 'Agent', slug: d.shareSlug ?? d.id }
-      const rows: ActivityRow[] = record
-        .filter((r) => !isQuiet(r))
-        .map((r) => ({
-          agent,
-          seq: r.seq,
-          outcome: r.outcome,
-          shadow: r.shadow,
-          side: r.side,
-          symbol: symbolOf(r.token),
-          summary: r.summary,
-          at: r.decidedAt.toISOString(),
-        }))
+      const rows: ActivityRow[] = record.map((r) => ({
+        agent,
+        seq: r.seq,
+        outcome: r.outcome,
+        shadow: r.shadow,
+        side: r.side,
+        symbol: symbolOf(r.token),
+        summary: r.summary,
+        at: r.decidedAt.toISOString(),
+      }))
       const needs: NeedRow[] = waiting.map((w) => ({
         agent,
         approvalId: w.id,

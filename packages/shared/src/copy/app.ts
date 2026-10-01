@@ -165,7 +165,7 @@ export const appCopy = {
     meta: 'Activity',
     kicker: 'Every agent, every decision',
     title: 'Activity',
-    sub: 'Every decision your agents made, and what waits on you. Each links to its record and its proof.',
+    sub: 'Recent decisions from every agent, including quiet checks, and what waits on you. Each links to its record and its proof.',
     tabs: { all: 'All', needs: 'Needs you', trades: 'Trades' },
     quiet: 'Hide quiet checks',
     noneAll: 'No decisions yet. Your agents look every five minutes and write down each decision here.',
@@ -178,9 +178,9 @@ export const appCopy = {
     upToDate: 'UP TO DATE',
     stats: {
       decisions: 'Decisions',
-      decisionsNote: 'Written down, every one',
+      decisionsNote: 'In this recent feed',
       trades: 'Trades',
-      tradesNote: 'Real money moved',
+      tradesNote: 'Real trades in this feed',
       practice: 'Practice',
       practiceNote: 'Decided, nothing sent',
       needs: 'Need you',
@@ -313,15 +313,18 @@ export const appCopy = {
       },
       tooSmall: (cash: string) => ({
         title: 'Holding cash',
-        body: `Its ${cash} is too little to split across its plan, so each look ends in “nothing to do”.`,
+        body: `It holds ${cash}, but a required buy or the cash available above its reserve is below the minimum trade.`,
       }),
+      notQualified: { title: 'No trade qualified' },
+      checks: (count: number) =>
+        `${count.toLocaleString('en-US')} checks completed. Quiet looks do not each create a decision.`,
       waiting: (side: string, name: string, when: string) => ({
         title: `Waiting to ${side === 'sell' ? 'sell' : 'buy'} ${name}`,
         body: `It chose to wait for a better moment, and looks at it again ${when}.`,
       }),
       due: (name: string) => ({
         title: `Rebalancing ${name}`,
-        body: `${name} is off its target, so it acts on its next look, inside its limits.`,
+        body: `${name} is off its target. On its next look, it reviews timing, trading conditions and limits before acting.`,
       }),
       watching: (n: number, drift: string, practice: boolean) => ({
         title: practice ? 'Practising' : 'Watching',
@@ -352,7 +355,7 @@ export const appCopy = {
     tooSmall: {
       title: 'Your agent can’t buy yet.',
       body: (cash: string, more: string) =>
-        `It holds ${cash} in cash, but split across its plan each buy is under 20¢, the smallest trade, so every check ends in “nothing to do”. Add ${more} more, or pick a plan with fewer stocks.`,
+        `It holds ${cash}, but the required buy or cash available above its reserve is below the 20¢ minimum. Adding at least ${more} is estimated to make one buy large enough while keeping your cash target. Prices can change; timing and limits still apply.`,
       add: (more: string) => `Add ${more}`,
       plan: 'Change the plan',
       meter: (buy: string, min: string) => `Largest buy ${buy} · smallest trade ${min}`,
@@ -644,7 +647,7 @@ export const appCopy = {
     meta: 'Not found',
     code: '404',
     title: 'Nothing here but the quiet',
-    body: 'This address leads nowhere. It may have been mistyped, or the agent behind it may no longer be shared.',
+    body: 'We could not find this page or record. Agent decisions are public during the beta; you do not need to sign in to read them. Open Live agents to find the record you need.',
     didYouMean: 'Did you mean',
     home: 'Back to the start',
     markets: 'Markets',

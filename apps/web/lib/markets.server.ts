@@ -264,7 +264,7 @@ const markKind = (outcome: string, shadow: boolean): DeskMark['kind'] =>
 function toMarks(decisions: SharedDecision[], times: number[]): DeskMark[] {
   return firstOfRuns(decisions).flatMap((d) => {
     const token = d.token ? byAddress(d.token) : undefined
-    if (!token || !d.shareSlug) return []
+    if (!token) return []
     const t = Math.floor(d.decidedAt.getTime() / 1000)
     // A marker must sit on a point of the series: the last one at or before the decision.
     let snapped = times[0] ?? t
@@ -278,7 +278,7 @@ function toMarks(decisions: SharedDecision[], times: number[]): DeskMark[] {
         kind: markKind(d.outcome, d.shadow),
         side: d.side === 'buy' || d.side === 'sell' ? d.side : null,
         symbol: token.symbol,
-        href: `/agents/${d.shareSlug}/decision/${d.seq}`,
+        href: `/agents/${d.shareSlug ?? d.deskId}/decision/${d.seq}`,
         line: marketsCopy.decisionLine(d.deskName ?? 'An agent', outcome, d.side, token.displayName),
         outcome,
         summary: d.summary,

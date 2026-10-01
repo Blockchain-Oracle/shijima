@@ -1,11 +1,10 @@
 'use client'
 
 import { appCopy, settingsCopy } from '@desk/shared'
-import { CircleAlert, CircleCheck, Link2, Users } from 'lucide-react'
+import { CircleAlert, CircleCheck, Users } from 'lucide-react'
 import { useEffect, useId, useState, useTransition } from 'react'
 import { followersAction, setCopyableAction } from '@/app/copy-actions'
 import { Switch } from '@/components/ui/switch'
-import { type ShareState, setShare } from '@/features/settings/ShareToggle'
 
 const c = appCopy.copy.settings
 const g = settingsCopy.sharing
@@ -19,27 +18,20 @@ const dollars = (n: number) =>
 const usd = (raw: string) => dollars(Number(raw) / 1e6)
 
 type Follower = Awaited<ReturnType<typeof followersAction>>[number]
-type Outcome =
-  | { saved: true; on: boolean; fee: number; linked: boolean }
-  | { saved: false; why: string }
-  | null
+type Outcome = { saved: true; on: boolean; fee: number } | { saved: false; why: string } | null
 
 /**
  * Step 2, the creator's side of copy trading, kept apart from the link so the two never read as one switch. After
  * 21st's Feature Toggle Switch Cards (22208) for the card and its on state, and Receipt Pricing (26309) for the fee
- * as a ledger with dot leaders: the fee, then 80% to the creator and 20% to Shijima, in dollars. Copying needs the
- * link on (copyQuoteAction refuses otherwise), so with the link off the card says so and turns it on for you.
+ * as a ledger with dot leaders: the fee, then 80% to the creator and 20% to Shijima, in dollars. Public reading
+ * is independent of the owner’s explicit permission to copy.
  */
 export function CopySettings({
   deskId,
   initial,
-  share,
-  onShare,
 }: {
   deskId: string
   initial: { copyable: boolean; feeUsdg: string }
-  share: ShareState
-  onShare: (next: ShareState) => void
 }) {
   const [copyable, setCopyable] = useState(initial.copyable)
   const [fee, setFee] = useState((Number(initial.feeUsdg) / 1e6).toString())
@@ -62,40 +54,20 @@ export function CopySettings({
 
   const save = (next: boolean) =>
     start(async () => {
-      let linked = false
-      // Copying is found through the link: turning copying on with the link off turns the link on first.
-      if (next && !share.enabled) {
-        const on = await setShare(deskId, share, true)
-        if (!on) {
-          setOutcome({ saved: false, why: appCopy.copy.refused.failed })
-          return
-        }
-        onShare(on)
-        linked = true
-      }
       const r = await setCopyableAction(deskId, next, feeNum)
       if (r.ok) {
         setCopyable(next)
-        setOutcome({ saved: true, on: next, fee: feeNum, linked })
+        setOutcome({ saved: true, on: next, fee: feeNum })
       } else setOutcome({ saved: false, why: r.why ?? appCopy.copy.refused.failed })
     })
 
-  const turnLinkOn = () =>
-    start(async () => {
-      const on = await setShare(deskId, share, true)
-      if (on) onShare(on)
-      else setOutcome({ saved: false, why: appCopy.copy.refused.failed })
-    })
-
-  const live = copyable && share.enabled
-  const hidden = copyable && !share.enabled
+  const live = copyable
   const earned = followers.reduce((sum, f) => sum + BigInt(f.feeUsdg), 0n)
 
   return (
     <section
       className="sh-card sh-card--copy"
       data-on={live ? '' : undefined}
-      data-warn={hidden ? '' : undefined}
       aria-labelledby="sh-copy-title"
     >
       <header className="sh-head">
@@ -106,9 +78,9 @@ export function CopySettings({
           <span className="sh-step">{g.step(2)}</span>
           <h3 id="sh-copy-title">{g.copyTitle}</h3>
         </div>
-        <span className="sh-pill" data-on={live ? '' : undefined} data-warn={hidden ? '' : undefined}>
+        <span className="sh-pill" data-on={live ? '' : undefined}>
           <i aria-hidden="true" />
-          {live ? g.copyOn : hidden ? g.copyHidden : g.copyOff}
+          {live ? g.copyOn : g.copyOff}
         </span>
       </header>
       <p className="sh-body">{c.body}</p>
@@ -126,16 +98,6 @@ export function CopySettings({
           disabled={pending}
         />
       </div>
-
-      {!share.enabled && (
-        <div className="sh-callout" role="note">
-          <Link2 aria-hidden="true" />
-          <p>{g.needsLink}</p>
-          <button type="button" className="st-btn st-btn--sm" onClick={turnLinkOn} disabled={pending}>
-            {pending ? g.turningOn : g.turnLinkOn}
-          </button>
-        </div>
-      )}
 
       <div className="sh-fee">
         <div className="sh-fee-input">
@@ -202,7 +164,6 @@ export function CopySettings({
             <CircleCheck aria-hidden="true" />
             <span>
               {outcome.on ? (outcome.fee > 0 ? g.savedOn(dollars(outcome.fee)) : g.savedOnFree) : g.savedOff}
-              {outcome.linked && ` ${g.alsoLinked}`}
             </span>
           </p>
         ) : outcome ? (

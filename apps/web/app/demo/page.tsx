@@ -84,6 +84,7 @@ export default function DemoPage() {
         <div className="sh-demo-clips">
           {clips.map((clip) => (
             <figure className="sh-demo-clip" key={clip.name}>
+              {/* biome-ignore lint/a11y/useMediaCaption: these screen recordings contain no audio; the flow is described below. */}
               <video
                 controls
                 playsInline

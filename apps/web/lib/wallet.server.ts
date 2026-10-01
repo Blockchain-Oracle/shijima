@@ -19,6 +19,7 @@ import {
   deskRecord,
   desksOfOwner,
   isQuiet,
+  latestDecisionOf,
   latestValueSnapshot,
   type MoneyMoveStatus,
   moneyMovesOfOwner,
@@ -85,15 +86,16 @@ export interface Wallet {
 
 /** One agent: its money from the chain, and its day, its requests and its latest decision from the database. */
 async function loadAgent(d: Awaited<ReturnType<typeof desksOfOwner>>[number]): Promise<WalletAgent> {
-  const [chain, now, dayAgo, mandateRow, waiting, record] = await Promise.all([
+  const [chain, now, dayAgo, mandateRow, waiting, record, decision] = await Promise.all([
     readDeskWallet(pub(), d.address as Address).catch((): DeskWalletReading | null => null),
     latestValueSnapshot(db(), d.id),
     valueSnapshotAtOrBefore(db(), d.id, new Date(Date.now() - DAY_MS)),
     currentMandate(db(), d.id),
     pendingApprovals(db(), d.id),
     deskRecord(db(), d.id, { limit: 40 }),
+    latestDecisionOf(db(), d.id),
   ])
-  const latest = record.find((r) => !isQuiet(r)) ?? record[0]
+  const latest = decision ?? record[0]
   const targets = (mandateRow?.targets as { tokens?: { token: string; weightBps: number }[] } | undefined)
     ?.tokens
   return {

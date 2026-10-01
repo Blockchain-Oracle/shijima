@@ -5,6 +5,7 @@ import { CornerDownRight } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { ShijimaMark } from '@/components/shell/ShijimaMark'
 
 /** Where a lost reader most likely meant to go. */
 const PLACES = [
@@ -59,6 +60,9 @@ export function NotFoundScreen() {
   const guess = suggest(pathname)
   return (
     <div className="app-container nf">
+      <span className="logo-mark text-accent" style={{ width: 40, height: 40 }} aria-hidden="true">
+        <ShijimaMark />
+      </span>
       <p className="nf-code">{c.code}</p>
       <h1 className="nf-title">{c.title}</h1>
       <p className="nf-body">{c.body}</p>

@@ -2,7 +2,7 @@
 
 import { settingsCopy } from '@desk/shared'
 import { Check, Copy, Link2 } from 'lucide-react'
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useState } from 'react'
 import { shareAction } from '@/app/owner-actions'
 
 const s = settingsCopy.share
@@ -24,34 +24,17 @@ export async function setShare(
 }
 
 /**
- * Step 1, the read-only link (design brief 8.19), after 21st's Feature Toggle Switch Cards (22208): an icon chip,
- * the title and a status pill, then the link itself. Its control is a button, not a switch, so it never reads as
- * the same thing as the copy switch below it.
+ * The public beta link, shown independently of the owner’s copy-trading permission.
  */
-export function ShareToggle({
-  deskId,
-  share,
-  onChange,
-}: {
-  deskId: string
-  share: ShareState
-  onChange: (next: ShareState) => void
-}) {
+export function ShareToggle({ deskId, share }: { deskId: string; share: ShareState }) {
   const [copied, setCopied] = useState(false)
-  const [pending, start] = useTransition()
   // Read after mounting, so the server and the browser draw the same first frame.
   const [origin, setOrigin] = useState<string | null>(null)
   useEffect(() => setOrigin(window.location.origin), [])
-  const url = share.enabled && share.slug && origin ? `${origin}/agents/${share.slug}` : null
-
-  const flip = () =>
-    start(async () => {
-      const next = await setShare(deskId, share, !share.enabled)
-      if (next) onChange(next)
-    })
+  const url = origin ? `${origin}/agents/${share.slug ?? deskId}` : null
 
   return (
-    <section className="sh-card" data-on={share.enabled ? '' : undefined} aria-labelledby="sh-link-title">
+    <section className="sh-card" data-on="" aria-labelledby="sh-link-title">
       <header className="sh-head">
         <span className="sh-chip" aria-hidden="true">
           <Link2 />
@@ -60,9 +43,9 @@ export function ShareToggle({
           <span className="sh-step">{g.step(1)}</span>
           <h3 id="sh-link-title">{g.linkTitle}</h3>
         </div>
-        <span className="sh-pill" data-on={share.enabled ? '' : undefined}>
+        <span className="sh-pill" data-on="">
           <i aria-hidden="true" />
-          {share.enabled ? g.linkOn : g.linkOff}
+          {g.linkOn}
         </span>
       </header>
       <p className="sh-body">{s.body}</p>
@@ -83,16 +66,6 @@ export function ShareToggle({
           </button>
         </div>
       )}
-      <div className="sh-foot">
-        <button
-          type="button"
-          className={share.enabled ? 'st-btn st-btn--sm' : 'st-btn st-btn--sm st-btn--primary'}
-          onClick={flip}
-          disabled={pending}
-        >
-          {share.enabled ? s.turnOff : s.turnOn}
-        </button>
-      </div>
     </section>
   )
 }

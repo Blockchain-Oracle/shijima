@@ -1,7 +1,7 @@
 import type { ApprovedToken } from '@desk/chain'
 import type { Mandate } from '@desk/shared'
 import { describe, expect, it } from 'vitest'
-import { findNeeds } from './needs'
+import { findNeeds, minimumBuyFunding, qualificationOf } from './needs'
 import type { HoldingValue, Valuation } from './valuation'
 
 /**
@@ -104,5 +104,95 @@ describe('the owner’s standing rule', () => {
     const tighter: Mandate = { ...mandate, targets: { ...mandate.targets, cashBps: 6500 } }
     const [capped] = findNeeds({ ...desk, cashTargetBps: 6500 }, tighter, 10_000n * USDG)
     expect(capped?.candidate.amountIn).toBe(500n * USDG)
+  })
+})
+
+describe('qualification at the starter-balance boundary', () => {
+  const plan: Mandate = {
+    ...mandate,
+    targets: { cashBps: 2000, tokens: [{ token: NVDA.address, weightBps: 2000 }] },
+  }
+  const empty = (total: bigint, cash: bigint): Valuation => ({
+    at: new Date('2026-10-01T18:00:00Z'),
+    totalUsdg: total,
+    cashUsdg: cash,
+    vaultUsdg: 0n,
+    cashWeightBps: Number((cash * 10000n) / total),
+    cashTargetBps: 2000,
+    holdings: [holding(E8, 0n, total, 2000)],
+    unpriced: [],
+  })
+
+  it('reports an off-target holding below the minimum instead of claiming it is within range', () => {
+    const v = empty(999497n, 399935n)
+    expect(findNeeds(v, plan, plan.perActionCapUsdg)).toEqual([])
+    const q = qualificationOf(v, plan, plan.perActionCapUsdg)
+    expect(q.eligibleSymbols).toEqual([])
+    expect(q.excluded[0]?.rule).toBe('MINIMUM_TRADE')
+    expect(q.summary).toContain('$0.199899')
+    expect(q.summary).not.toContain('within its allowed range')
+  })
+
+  it('distinguishes the cash reserve when the target itself meets the minimum', () => {
+    const v = empty(1000399n, 399935n)
+    const q = qualificationOf(v, plan, plan.perActionCapUsdg)
+    expect(findNeeds(v, plan, plan.perActionCapUsdg)).toEqual([])
+    expect(q.excluded[0]?.rule).toBe('CASH_RESERVE')
+    expect(q.summary).toContain('$0.199856')
+  })
+
+  it('keeps the same minimum-sized candidate once both target and cash qualify', () => {
+    const v = empty(1000000n, 400000n)
+    const [need] = findNeeds(v, plan, plan.perActionCapUsdg)
+    expect(need?.candidate.amountIn).toBe(200000n)
+    expect(qualificationOf(v, plan, plan.perActionCapUsdg)).toMatchObject({
+      eligibleSymbols: ['NVDA'],
+      excluded: [],
+    })
+  })
+
+  it('reports a cap that funding cannot resolve', () => {
+    const q = qualificationOf(empty(1000000n, 400000n), plan, 100000n)
+    expect(q.excluded[0]?.rule).toBe('ACTION_LIMIT')
+    expect(q.summary).toContain('$0.1')
+  })
+
+  it('uses the within-range reason only for a holding actually within tolerance', () => {
+    const v = {
+      ...empty(1000000n, 800000n),
+      holdings: [{ ...holding(E8, 0n, 1000000n, 2000), valueUsdg: 200000n, weightBps: 2000, driftBps: 0 }],
+    }
+    expect(qualificationOf(v, plan, plan.perActionCapUsdg)).toMatchObject({
+      excluded: [],
+      eligibleSymbols: [],
+    })
+    expect(qualificationOf(v, plan, plan.perActionCapUsdg).summary).toContain('within its allowed range')
+  })
+})
+
+describe('actionable funding estimates', () => {
+  const input = {
+    total: 999497n,
+    cash: 399935n,
+    vault: 0n,
+    held: 0n,
+    targetBps: 2000,
+    cashBps: 2000,
+    cap: USDG,
+  }
+  it('rounds both observed sub-cent blocks up to one cent', () => {
+    expect(minimumBuyFunding(input)).toBe(10000n)
+    expect(minimumBuyFunding({ ...input, total: 1000399n })).toBe(10000n)
+  })
+  it('accounts for an existing holding when calculating the correction', () => {
+    // $1 total, $0.10 already held at a 20% target: reaching a $0.20 correction requires $0.50 more.
+    expect(minimumBuyFunding({ ...input, total: USDG, cash: 900000n, held: 100000n })).toBe(500000n)
+  })
+  it('does not ask for new funding when vault cash can cover the buy', () => {
+    expect(minimumBuyFunding({ ...input, total: 2000000n, cash: 100000n, vault: 700000n })).toBe(0n)
+  })
+  it('returns zero for an already executable buy and no funding solution for an undersized cap', () => {
+    expect(minimumBuyFunding({ ...input, total: USDG, cash: 400000n })).toBe(0n)
+    expect(minimumBuyFunding({ ...input, cap: 199999n })).toBeNull()
   })
 })

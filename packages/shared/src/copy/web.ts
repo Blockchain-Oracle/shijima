@@ -1031,7 +1031,7 @@ export const settingsCopy = {
   sharing: {
     step: (n: number) => `Step ${n}`,
     linkTitle: 'Public link',
-    linkOn: 'Link on',
+    linkOn: 'Public during beta',
     linkOff: 'Link off',
     copyTitle: 'Copy trading',
     copyOn: 'Copying on',
@@ -1139,8 +1139,8 @@ export const settingsCopy = {
     },
   },
   share: {
-    title: 'Share a read-only link',
-    body: 'Anyone with the link sees this agent’s holdings and record, never your chat or your notes. Turn it off at any time.',
+    title: 'Public agent link',
+    body: 'During the beta, every agent’s holdings and decision records are public so anyone can check the proof. Your chat, private notes and controls remain yours.',
     on: 'Sharing is on',
     off: 'Sharing is off',
     turnOn: 'Turn sharing on',

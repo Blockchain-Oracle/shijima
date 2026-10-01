@@ -14,7 +14,7 @@ export function ShareDecisionButton({ card }: { card: DecisionCard }) {
       disabled={busy}
       aria-busy={busy}
       onClick={() => {
-        const url = `${window.location.origin}${card.path}`
+        const url = `https://shijima.xyz${card.path}`
         void share({
           render: () => renderDecisionCard(card, url),
           fileName: card.fileName,

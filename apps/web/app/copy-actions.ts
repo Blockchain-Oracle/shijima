@@ -73,7 +73,7 @@ export type CopyQuoteResult = CopyQuote | { ok: false; why: string }
 export async function copyQuoteAction(leaderRef: string): Promise<CopyQuoteResult> {
   const id = await resolveId(leaderRef)
   const leader = id ? await deskById(db(), id) : undefined
-  if (!leader || !leader.shareEnabled) return { ok: false, why: c.refused.missing }
+  if (!leader) return { ok: false, why: c.refused.missing }
   if (leader.lifecycle === 'closed') return { ok: false, why: c.refused.closed }
   if (!leader.copyable) return { ok: false, why: c.refused.notCopyable }
   const mandateRow = await currentMandate(db(), leader.id)

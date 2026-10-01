@@ -1,4 +1,4 @@
-import { MIN_TRADE_USDG } from '@desk/core'
+import { MIN_TRADE_USDG, minimumBuyFunding } from '@desk/core'
 import { appCopy } from '@desk/shared'
 import { ArrowDownToLine, SlidersHorizontal } from 'lucide-react'
 import type { Route } from 'next'
@@ -18,18 +18,40 @@ export function stuckOf(view: DeskView) {
   const plate = view.plate
   const m = view.mandate
   if (!plate || !m || view.desk.lifecycle !== 'running') return null
+  if (view.qualification?.excluded.some((e) => e.rule === 'ACTION_LIMIT')) return null
   const total = BigInt(plate.totalUsdg)
   const cash = BigInt(plate.cashUsdg)
   if (cash <= 0n) return null
-  const short = view.holdings
-    .map((h) => ({ symbol: h.symbol, need: (total * BigInt(h.targetBps)) / 10_000n - BigInt(h.valueUsdg) }))
-    .filter((h) => h.need > 0n)
   const behind = view.holdings.filter((h) => h.targetBps - h.weightBps > m.driftToleranceBps)
-  if (behind.length === 0 || short.some((h) => h.need >= MIN_TRADE_USDG)) return null
-  const smallest = Math.min(...behind.map((h) => h.targetBps))
-  const enough = (MIN_TRADE_USDG * 10_000n + BigInt(smallest) - 1n) / BigInt(smallest)
-  const largest = short.reduce((a, h) => (h.need > a ? h.need : a), 0n)
-  return { cash, more: enough > total ? enough - total : 0n, behind, largest }
+  if (behind.length === 0) return null
+  const cap = BigInt(m.perActionCapUsdg)
+  const vault = BigInt(plate.vaultUsdg)
+  const cashFloor = (total * BigInt(m.cashTargetBps)) / 10_000n
+  const aboveReserve = cash + vault > cashFloor ? cash + vault - cashFloor : 0n
+  const spendable = aboveReserve < cash ? aboveReserve : cash
+  const short = behind.map((h) => ({
+    h,
+    need: (total * BigInt(h.targetBps)) / 10_000n - BigInt(h.valueUsdg),
+    more: minimumBuyFunding({
+      total,
+      cash,
+      vault,
+      held: BigInt(h.valueUsdg),
+      targetBps: h.targetBps,
+      cashBps: m.cashTargetBps,
+      cap,
+    }),
+  }))
+  if (short.some((s) => s.more === 0n)) return null
+  const amounts = short.flatMap((s) => (s.more === null ? [] : [s.more]))
+  if (amounts.length === 0) return null // Funding cannot solve a per-action cap below the minimum.
+  const more = amounts.reduce((a, b) => (a < b ? a : b))
+  const largest = short.reduce((a, s) => {
+    const available = s.need < spendable ? s.need : spendable
+    const sized = available < cap ? available : cap
+    return sized > a ? sized : a
+  }, 0n)
+  return { cash, more, behind, largest }
 }
 
 /**
@@ -51,7 +73,9 @@ export function TooSmallToTrade({ view }: { view: DeskView }) {
           <span className="ap-stuck-bar" aria-hidden="true">
             <span style={{ width: `${fill}%` }} />
           </span>
-          <small className="ap-stuck-note">{c.meter(dollars(stuck.largest), dollars(MIN_TRADE_USDG))}</small>
+          <small className="ap-stuck-note">
+            {c.meter(`$${(Number(stuck.largest) / 1e6).toFixed(6)}`, dollars(MIN_TRADE_USDG))}
+          </small>
         </div>
       </div>
       <div className="ap-stuck-actions">

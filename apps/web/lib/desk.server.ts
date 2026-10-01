@@ -1,6 +1,6 @@
 /**
  * Everything one desk's page shows, read on the server from Postgres. The owner gets the whole desk and the
- * chat. A visitor gets the same page read-only, and only when the owner turned sharing on. Nothing here reads
+ * chat. A visitor gets the public beta page read-only. Nothing here reads
  * the chain or holds a key.
  */
 import { APPROVED_TOKENS, fetchVaultRate } from '@desk/chain'
@@ -9,6 +9,7 @@ import {
   ASSISTANT_REMOVED,
   askHistory,
   companyEventsFrom,
+  completedChecksOf,
   currentMandate,
   deskById,
   deskFlows,
@@ -18,6 +19,7 @@ import {
   GO_LIVE_CHECKS,
   groupQuietRuns,
   lastCheckOf,
+  latestDecisionOf,
   latestPricePoints,
   latestValueSnapshot,
   mandateFromRow,
@@ -32,7 +34,7 @@ import {
   valueHistory,
   valueSnapshotAtOrBefore,
 } from '@desk/db'
-import { PRESETS, price, tokens as tokenAmount } from '@desk/shared'
+import { PRESETS, price, readQualification, tokens as tokenAmount } from '@desk/shared'
 import { type ChatTurn, toChatTurn } from '@/features/desk/chat-model'
 import { db } from './db'
 import { signedInAddress } from './session'
@@ -64,9 +66,8 @@ export async function currentVaultRateBps(): Promise<number | null> {
 }
 
 /**
- * Who may see the desk a slug names, and how. The owner reaches their desk by its id or its share slug whether
- * sharing is on or not. Anyone else sees it only through the share link, and only while sharing is on. Every
- * desk page resolves through here, so an owner is never locked out of their own record, report or decisions.
+ * Agent holdings and immutable records are public during the beta, by ID or an existing share slug.
+ * Ownership still controls chat, settings, approvals and every action. Unpublished onboarding drafts stay private.
  */
 export async function deskForViewer(slug: string) {
   const viewer = await signedInAddress().catch(() => undefined)
@@ -75,7 +76,7 @@ export async function deskForViewer(slug: string) {
   const desk = await deskById(db(), id)
   if (!desk) return undefined
   const isOwner = viewer !== undefined && viewer.toLowerCase() === desk.ownerAddress.toLowerCase()
-  if (!isOwner && !(desk.shareEnabled && desk.shareSlug === slug)) return undefined
+  if (!isOwner && desk.lifecycle === 'onboarding' && desk.deployedAt === null) return undefined
   return {
     isOwner,
     slug,
@@ -90,7 +91,7 @@ export async function deskForViewer(slug: string) {
       state: desk.state,
       stateReason: desk.stateReason,
       lifecycle: desk.lifecycle,
-      shareSlug: desk.shareEnabled ? desk.shareSlug : null,
+      shareSlug: desk.shareSlug,
       startedAt: desk.startedAt,
       shadowChecks: desk.shadowChecks,
       shadowReportOpenedAt: desk.shadowReportOpenedAt,
@@ -143,19 +144,31 @@ export async function loadDesk(slug: string) {
       .filter((_, i) => i % step === 0 || i === rows.length - 1)
       .map((r) => Number(r.poolMidE8) / 1e8)
   }
-  const [lastCheck, notes, prices, events, spentToday, atReopen, telegram, waits, counts] = await Promise.all(
-    [
-      lastCheckOf(db(), desk.id),
-      deskNotes(db(), desk.id, desk.startedAt ?? desk.createdAt, tokens),
-      latestPricePoints(db()),
-      tokens.length > 0 ? companyEventsFrom(db(), today, tokens) : Promise.resolve([]),
-      spentSince(db(), desk.id, new Date(now.getTime() - 24 * 60 * 60 * 1000)),
-      valueSnapshotAtOrBefore(db(), desk.id, reopenedAt),
-      isOwner ? telegramForDesk(db(), desk.id) : Promise.resolve(null),
-      standingWaits(db(), desk.id),
-      outcomeCounts(db(), desk.id),
-    ],
-  )
+  const [
+    lastCheck,
+    notes,
+    prices,
+    events,
+    spentToday,
+    atReopen,
+    telegram,
+    waits,
+    counts,
+    checks,
+    latestDecision,
+  ] = await Promise.all([
+    lastCheckOf(db(), desk.id),
+    deskNotes(db(), desk.id, desk.startedAt ?? desk.createdAt, tokens),
+    latestPricePoints(db()),
+    tokens.length > 0 ? companyEventsFrom(db(), today, tokens) : Promise.resolve([]),
+    spentSince(db(), desk.id, new Date(now.getTime() - 24 * 60 * 60 * 1000)),
+    valueSnapshotAtOrBefore(db(), desk.id, reopenedAt),
+    isOwner ? telegramForDesk(db(), desk.id) : Promise.resolve(null),
+    standingWaits(db(), desk.id),
+    outcomeCounts(db(), desk.id),
+    completedChecksOf(db(), desk.id),
+    latestDecisionOf(db(), desk.id),
+  ])
   const priceOf = new Map(prices.map((p) => [p.token.toLowerCase(), p]))
   const reportOf = (token: string) => {
     const e = events.find((x) => x.token.toLowerCase() === token.toLowerCase() && x.kind === 'earnings')
@@ -265,7 +278,7 @@ export async function loadDesk(slug: string) {
       lifecycle: desk.lifecycle,
       assistantRemoved: desk.state === 'needs_attention' && desk.stateReason === ASSISTANT_REMOVED,
       contractVersion: desk.contractVersion,
-      shareSlug: desk.shareEnabled ? desk.shareSlug : null,
+      shareSlug: desk.shareSlug,
       shadowChecks: desk.shadowChecks,
       goLiveChecks: GO_LIVE_CHECKS,
       reportOpened: desk.shadowReportOpenedAt !== null,
@@ -294,6 +307,8 @@ export async function loadDesk(slug: string) {
         }
       : null,
     holdings,
+    qualification: readQualification(lastCheck?.sourceHealth),
+    checksCompleted: checks,
     mandate: mandate
       ? {
           preset: PRESETS.find((p) => p.id === mandate.preset)?.name ?? null,
@@ -331,7 +346,9 @@ export async function loadDesk(slug: string) {
       preview: a.preview as { amountIn?: string; expectedOut?: string },
     })),
     record: groupQuietRuns(record),
-    notes: notes.map((n) => ({ at: n.at.toISOString(), kind: n.kind, detail: n.detail ?? {} })),
+    notes: isOwner
+      ? notes.map((n) => ({ at: n.at.toISOString(), kind: n.kind, detail: n.detail ?? {} }))
+      : [],
     history: history.map((h) => ({
       at: h.takenAt.toISOString(),
       totalUsdg: h.totalUsdg.toString(),
@@ -382,7 +399,7 @@ export async function loadDesk(slug: string) {
     agent: (() => {
       const count = (...o: string[]) =>
         counts.filter((c) => o.includes(c.outcome)).reduce((a, c) => a + c.n, 0)
-      const latest = record.find((d) => d.outcome !== 'nothing_to_do')
+      const latest = latestDecision
       return {
         waits: waits.map((w) => {
           const candidate = (w.record as { candidate?: { amountIn?: string } | null }).candidate

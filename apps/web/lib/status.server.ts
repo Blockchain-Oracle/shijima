@@ -287,12 +287,7 @@ function deskRow(desk: DeskCheck, now: Date): StatusDesk {
   const base = {
     id: desk.id,
     name: desk.name ?? s.unnamed,
-    href:
-      desk.shareEnabled && desk.shareSlug
-        ? `/agents/${desk.shareSlug}`
-        : desk.mine
-          ? `/agents/${desk.shareSlug ?? desk.id}`
-          : null,
+    href: `/agents/${desk.shareSlug ?? desk.id}`,
     chip: null,
   }
   const who = join(deskCopy.modes[desk.mode], desk.mine && s.yours)

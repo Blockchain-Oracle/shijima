@@ -61,7 +61,7 @@ export function decisionCard(
         )
       : shareCopy.outOfVault(money(body?.preview?.expectedOut ?? '0'))
     : decision.outcome === 'nothing_to_do'
-      ? shareCopy.withinRange
+      ? (decision.summary ?? shareCopy.withinRange)
       : [
           size && c ? shareCopy.size(size, c.side) : null,
           body?.price ? shareCopy.gap(comparedTo(body.price.gapBps)) : null,
@@ -92,11 +92,11 @@ export function decisionCard(
     shareCopy.proof.record(short(decision.recordHash, 10, 6)),
     tx ? shareCopy.proof.tx(short(tx, 10, 6)) : shareCopy.proof.sealedLater,
   ].join(' · ')
-  const slug = desk.shareSlug ?? 'desk'
+  const slug = desk.shareSlug ?? desk.id
   const name = vault ? 'the savings vault' : (token?.displayName ?? null)
 
   return {
-    folio: `${slug.toUpperCase()}-${decision.seq}`,
+    folio: `${(desk.shareSlug ?? desk.id.slice(0, 8)).toUpperCase()}-${decision.seq}`,
     path: `/agents/${slug}/decision/${decision.seq}`,
     fileName: `shijima-${slug}-${decision.seq}.png`,
     symbol: token?.symbol ?? null,

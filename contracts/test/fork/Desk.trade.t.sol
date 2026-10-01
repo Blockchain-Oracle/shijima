@@ -176,10 +176,12 @@ contract DeskTradeForkTest is ForkBase {
 
     // ---------------------------------------------------------------- the pinned pool and the oracle floor
     function test_owner_cannotPinAnEmptyPool() public {
-        // NVDA has an initialised but EMPTY 1% pool. getPool != 0 for it. It must still be refused.
+        // Liquidity on the live chain changes. Make this existing, initialised pool empty explicitly:
+        // getPool != 0 must not be enough to admit it.
+        vm.mockCall(NVDA_POOL_500, abi.encodeWithSignature("liquidity()"), abi.encode(uint128(0)));
         vm.prank(owner);
         vm.expectRevert(Desk.BadPool.selector);
-        desk.allowToken(NVDA, 10000, NVDA_FEED);
+        desk.allowToken(NVDA, 500, NVDA_FEED);
     }
 
     function test_oracleFloor_blocksOperator_whenPoolIsPushedFarFromFeed() public {

@@ -78,6 +78,8 @@ export function desk(overrides: {
 }): DeskView {
   return {
     isOwner: true,
+    qualification: null,
+    checksCompleted: 30,
     slug: 'fixture',
     owner: '0x0000000000000000000000000000000000000001',
     desk: {

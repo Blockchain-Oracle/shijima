@@ -1,5 +1,5 @@
 import { EXPLORER } from '@desk/chain'
-import { deskRecord, desksOfOwner, isQuiet, moneyMovesOfOwner } from '@desk/db'
+import { deskRecord, desksOfOwner, moneyMovesOfOwner } from '@desk/db'
 import { marketsCopy, moneyCopy, OPENSERV, short } from '@desk/shared'
 import { EvidenceScreen } from '@/features/money/EvidenceScreen'
 import { SignedOutCard } from '@/features/money/SignedOutCard'
@@ -28,18 +28,16 @@ export default async function EvidencePage() {
         name: desk.name ?? 'Agent',
         slug: desk.shareSlug ?? desk.id,
         address: desk.address,
-        rows: record
-          .filter((r) => !isQuiet(r))
-          .map((r) => ({
-            seq: r.seq,
-            summary: r.summary,
-            outcome: r.outcome,
-            outcomeLabel: marketsCopy.outcomes[r.outcome] ?? r.outcome,
-            shadow: r.shadow,
-            recordHash: r.recordHash,
-            sealedByTx: r.sealedByTx ?? null,
-            at: when(r.decidedAt),
-          })),
+        rows: record.map((r) => ({
+          seq: r.seq,
+          summary: r.summary,
+          outcome: r.outcome,
+          outcomeLabel: marketsCopy.outcomes[r.outcome] ?? r.outcome,
+          shadow: r.shadow,
+          recordHash: r.recordHash,
+          sealedByTx: r.sealedByTx ?? null,
+          at: when(r.decidedAt),
+        })),
       }
     }),
   )

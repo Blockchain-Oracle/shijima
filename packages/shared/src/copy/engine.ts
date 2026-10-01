@@ -54,6 +54,16 @@ export const engineCopy = {
   },
 
   need: {
+    tooSmall: (name: string, side: string, amount: string, minimum: string) =>
+      `${name} is off target, but its ${amount} ${side} is below the ${minimum} minimum trade.`,
+    cashReserve: (name: string, wanted: string, available: string, minimum: string) =>
+      `${name} needs a ${wanted} buy, but only ${available} is available after keeping your cash target; the minimum trade is ${minimum}.`,
+    actionLimit: (name: string, cap: string, minimum: string) =>
+      `${name} is off target, but your ${cap} per-action limit is below the ${minimum} minimum trade.`,
+    noPrice: (name: string) => `${name} could not be considered because its price is unavailable.`,
+    noneQualified: (reasons: string[]) => `No trade qualified. ${reasons.join(' ')}`,
+    qualified: (names: string[]) =>
+      `${names.join(', ')} ${names.length === 1 ? 'qualifies' : 'qualify'} for a timing review. Price, trading status and limits still have to pass.`,
     drifted: (name: string, weightBps: number, targetBps: number, thresholdBps: number) =>
       `${name} is ${pct(weightBps)} of the agent’s value against a target of ${pct(targetBps)}. That is further than the ${pct(thresholdBps)} it may wander.`,
     dropped: (name: string) => `${name} is no longer in the mandate, so the agent would sell it.`,

@@ -41,7 +41,7 @@ function statusOf(r: ActivityRow): { status: TxStatus; label: string } {
   const label = (marketsCopy.outcomes[r.outcome] ?? r.outcome).toUpperCase()
   if (r.shadow) return { status: 'confirmed', label: `${label} · PRACTICE` }
   if (TRADED.has(r.outcome)) return { status: 'done', label }
-  if (r.outcome === 'failed' || r.outcome === 'blocked') return { status: 'failed', label }
+  if (r.outcome === 'failed' || r.outcome === 'blocked_by_limit') return { status: 'failed', label }
   return { status: 'confirmed', label }
 }
 

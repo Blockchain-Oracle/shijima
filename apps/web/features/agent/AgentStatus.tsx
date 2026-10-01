@@ -19,6 +19,16 @@ function stateOf(view: DeskView): { tone: Tone; title: string; body: string; sym
   if (d.state === 'stopped_by_loss_limit') return one('warn', s.stopped)
   if (d.state === 'needs_attention') return one('warn', s.attention)
   if (!view.plate || BigInt(view.plate.totalUsdg) === 0n) return one('idle', s.noMoney)
+  if (
+    view.qualification &&
+    view.qualification.eligibleSymbols.length === 0 &&
+    view.qualification.excluded.length > 0
+  )
+    return one(
+      'warn',
+      { title: s.notQualified.title, body: view.qualification.summary },
+      view.qualification.excluded.map((e) => e.symbol),
+    )
   const stuck = stuckOf(view)
   if (stuck) return one('warn', s.tooSmall(dollars(stuck.cash)))
   const wait = view.agent.waits[0]
@@ -62,6 +72,7 @@ export function AgentStatus({ view }: { view: DeskView }) {
             {st.title}
           </p>
           <p className="ap-now-body">{st.body}</p>
+          <p className="ap-now-body">{s.checks(view.checksCompleted ?? 0)}</p>
         </div>
       </div>
       <dl className="ap-now-facts">

@@ -60,7 +60,7 @@ import { considerCandidate } from './consider'
 import { type CopySource, runCopy } from './copy'
 import { pauseOnChain } from './loss-stop'
 import { type EventSource, referenceFor } from './market'
-import { findNeeds, MAX_CANDIDATES_PER_WAKE, type Need } from './needs'
+import { findNeeds, MAX_CANDIDATES_PER_WAKE, type Need, qualificationOf } from './needs'
 import { OUTCOME_COLUMN, type PlannedOutcome } from './plan'
 import { allPriced, findOutsideChanges, netFlowUsdg, scaledBaseline, VAULT_ASSET } from './reconcile'
 import { buildDecisionBody, mandateFingerprint, RECORD_SCHEMA_VERSION } from './record'
@@ -74,10 +74,10 @@ const REPEAT_WINDOW_MS = 10 * 60 * 1000
 /** On this many consecutive checks below the loss limit, the desk pauses itself on the chain. */
 const ON_CHAIN_PAUSE_AT_BREACH = 2
 /**
- * A watching look (trigger `watch`, every five minutes) keeps a value snapshot only this often, unless money moved.
- * The charts and the loss limit need about an hour's resolution, not twelve rows an hour.
+ * Keep the portfolio current on five-minute watching checks. Leave room for check-time jitter; chart queries
+ * thin their own history. Money movements still save a snapshot immediately.
  */
-const WATCH_SNAPSHOT_MS = 55 * 60 * 1000
+const WATCH_SNAPSHOT_MS = 4 * 60 * 1000
 
 /**
  * True for the one watching look each hour that stands for the hour: it counts toward practice and refreshes the
@@ -553,6 +553,7 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
           )
         : []
     let needs = currentNeeds().slice(0, MAX_CANDIDATES_PER_WAKE)
+    const qualification = () => qualificationOf(valuation, mandate, state.perActionCapUsdg, references)
     if (needs.length === 0 && watching) {
       say('nothing to do: a watching look, so nothing is recorded')
     } else if (needs.length === 0) {
@@ -562,7 +563,7 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
           ? engineCopy.notLooking(stateText)
           : mandate.follow
             ? engineCopy.followingOnly
-            : engineCopy.nothingToDo
+            : qualification().summary
       const seq = dry
         ? null
         : (
@@ -574,7 +575,10 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
                 need: null,
                 candidate: null,
                 deferral: null,
-                blockers: [],
+                blockers:
+                  deskState === 'active'
+                    ? qualification().excluded.map(({ rule, text }) => ({ rule, text }))
+                    : [],
                 evidence: [],
                 answer: null,
                 gate: null,
@@ -694,7 +698,11 @@ export async function wakeDesk(deps: WakeDeps, input: WakeInput): Promise<WakeRe
       )
         await bumpShadowChecks(db, desk.id)
     }
-    if (wake) await finishWake(db, wake.id, { status: 'completed', sourceHealth: { rpc: true } })
+    if (wake)
+      await finishWake(db, wake.id, {
+        status: 'completed',
+        sourceHealth: { rpc: true, qualification: deskState === 'active' ? qualification() : null },
+      })
     return { status: 'completed', records }
   } catch (e) {
     const message = errorText(e)

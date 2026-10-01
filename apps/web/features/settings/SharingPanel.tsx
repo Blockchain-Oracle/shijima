@@ -1,12 +1,10 @@
 'use client'
 
-import { useState } from 'react'
 import { CopySettings } from '@/features/copy/CopySettings'
 import { type ShareState, ShareToggle } from './ShareToggle'
 
 /**
- * The Sharing tab: the public link, then copying, as two separate numbered cards. The link's state lives here so
- * the copy card sees it change, and can turn it on itself, without a reload.
+ * The Sharing tab: a public beta link, then the owner’s independent permission to copy.
  */
 export function SharingPanel({
   deskId,
@@ -18,11 +16,10 @@ export function SharingPanel({
   /** Null once the agent is closed: nothing can start copying it. */
   copy: { copyable: boolean; feeUsdg: string } | null
 }) {
-  const [share, setShare] = useState(initialShare)
   return (
     <div className="st-stack">
-      <ShareToggle deskId={deskId} share={share} onChange={setShare} />
-      {copy && <CopySettings deskId={deskId} initial={copy} share={share} onShare={setShare} />}
+      <ShareToggle deskId={deskId} share={initialShare} />
+      {copy && <CopySettings deskId={deskId} initial={copy} />}
     </div>
   )
 }

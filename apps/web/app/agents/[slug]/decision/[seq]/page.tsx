@@ -79,10 +79,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function DecisionPage({ params }: { params: Promise<{ slug: string; seq: string }> }) {
   const { slug, seq } = await params
+  const sequence = Number(seq)
+  if (!Number.isSafeInteger(sequence) || sequence < 1) notFound()
   const resolved = await deskForViewer(slug)
   if (!resolved) notFound()
   const { face: desk, isOwner } = resolved
-  const full = await decisionInFull(db(), desk.id, Number(seq))
+  const full = await decisionInFull(db(), desk.id, sequence)
   if (!full) notFound()
 
   const { decision, actions, grade, approval } = full

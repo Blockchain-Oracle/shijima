@@ -1,12 +1,12 @@
 /**
- * What a stranger may see: a desk the owner chose to share, and its record.
+ * What a stranger may see during the public beta: a published agent and its record.
  *
  * Every query here names its columns. `decisions.private` is the owner's alone, because it holds headline TEXT
  * that our news licence forbids us to pass on, and it must never appear in a public projection by accident.
  * The hashed `record` body is public by design: it is the thing whose fingerprint is written on-chain, and a
  * record nobody can read proves nothing.
  */
-import { and, asc, desc, eq, gt, gte, inArray, lt, lte, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, gt, gte, inArray, lt, lte, ne, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import type { DbOrTx } from '../client'
 import {
@@ -65,18 +65,29 @@ export const publicDecisionColumns = {
   decidedAt: decisions.decidedAt,
 } as const
 
-/** undefined when there is no such desk, or its owner has not shared it. */
+/** Public beta records resolve by either a stable ID or an existing share slug. */
 export async function deskByShareSlug(db: DbOrTx, slug: string) {
   const [row] = await db
     .select(publicDeskColumns)
     .from(desks)
-    .where(and(eq(desks.shareSlug, slug), eq(desks.shareEnabled, true)))
+    .where(
+      and(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug)
+          ? eq(desks.id, slug)
+          : eq(desks.shareSlug, slug),
+        sql`not (${desks.lifecycle} = 'onboarding' and ${desks.deployedAt} is null)`,
+      ),
+    )
   return row
 }
 
-/** Every shared desk, for the home page. */
+/** Every published agent, for the public beta board. */
 export async function sharedDesks(db: DbOrTx) {
-  return db.select(publicDeskColumns).from(desks).where(eq(desks.shareEnabled, true)).orderBy(desks.createdAt)
+  return db
+    .select(publicDeskColumns)
+    .from(desks)
+    .where(sql`not (${desks.lifecycle} = 'onboarding' and ${desks.deployedAt} is null)`)
+    .orderBy(desks.createdAt)
 }
 
 /** The record's filters [8.10]: outcome, token, dates, practice or live. Each one is optional. */
@@ -240,8 +251,11 @@ export async function predecessorOf(db: DbOrTx, address: string) {
  * change between two points net of it is what the desk itself did, so a withdrawal never reads as a loss.
  */
 export async function valueHistory(db: DbOrTx, deskId: string, limit = 400) {
-  const rows = await db
-    .select({
+  // Snapshot frequency must not shorten the chart's horizon. Keep the last observation of each hour,
+  // including the current one, before applying the point limit.
+  const hour = sql`date_trunc('hour', ${deskValueSnapshots.takenAt})`
+  const hourly = db
+    .selectDistinctOn([hour], {
       takenAt: deskValueSnapshots.takenAt,
       totalUsdg: deskValueSnapshots.totalUsdg,
       cashUsdg: deskValueSnapshots.cashUsdg,
@@ -249,8 +263,9 @@ export async function valueHistory(db: DbOrTx, deskId: string, limit = 400) {
     })
     .from(deskValueSnapshots)
     .where(eq(deskValueSnapshots.deskId, deskId))
-    .orderBy(desc(deskValueSnapshots.takenAt))
-    .limit(limit)
+    .orderBy(hour, desc(deskValueSnapshots.takenAt))
+    .as('hourly_values')
+  const rows = await db.select().from(hourly).orderBy(desc(hourly.takenAt)).limit(limit)
   return rows.reverse()
 }
 
@@ -343,7 +358,12 @@ export async function sharedMixes(db: DbOrTx) {
     })
     .from(desks)
     .innerJoin(mandates, and(eq(mandates.deskId, desks.id), eq(mandates.status, 'applied')))
-    .where(and(eq(desks.shareEnabled, true), sql`${desks.lifecycle} <> 'closed'`))
+    .where(
+      and(
+        sql`${desks.lifecycle} <> 'closed'`,
+        sql`not (${desks.lifecycle} = 'onboarding' and ${desks.deployedAt} is null)`,
+      ),
+    )
     .orderBy(desks.createdAt)
 }
 
@@ -434,10 +454,35 @@ export async function deskIdBySlug(db: DbOrTx, slug: string): Promise<string | u
 /** The desk's most recent check of any kind, for "has not checked in" [8.16]. */
 export async function lastCheckOf(db: DbOrTx, deskId: string) {
   const [row] = await db
-    .select({ at: wakes.startedAt, status: wakes.status })
+    .select({ at: wakes.startedAt, status: wakes.status, sourceHealth: wakes.sourceHealth })
     .from(wakes)
     .where(eq(wakes.deskId, deskId))
     .orderBy(desc(wakes.startedAt))
+    .limit(1)
+  return row
+}
+
+export async function completedChecksOf(db: DbOrTx, deskId: string) {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::integer` })
+    .from(wakes)
+    .where(and(eq(wakes.deskId, deskId), eq(wakes.status, 'completed')))
+  return row?.count ?? 0
+}
+
+/** Quiet records cannot push the last actual decision out of a bounded recent feed. */
+export async function latestDecisionOf(db: DbOrTx, deskId: string) {
+  const [row] = await db
+    .select(publicDecisionColumns)
+    .from(decisions)
+    .where(
+      and(
+        eq(decisions.deskId, deskId),
+        ne(decisions.outcome, 'nothing_to_do'),
+        sql`not (${decisions.outcome} = 'waited' and coalesce(${decisions.record}->'deferral'->'stillStanding', 'false'::jsonb) = 'true'::jsonb)`,
+      ),
+    )
+    .orderBy(desc(decisions.seq))
     .limit(1)
   return row
 }

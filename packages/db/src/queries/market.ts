@@ -211,7 +211,7 @@ export async function sharedDecisionsOn(db: DbOrTx, tokens: string[], from: Date
     .innerJoin(desks, eq(decisions.deskId, desks.id))
     .where(
       and(
-        eq(desks.shareEnabled, true),
+        sql`not (${desks.lifecycle} = 'onboarding' and ${desks.deployedAt} is null)`,
         inArray(
           decisions.token,
           tokens.map((t) => t.toLowerCase()),

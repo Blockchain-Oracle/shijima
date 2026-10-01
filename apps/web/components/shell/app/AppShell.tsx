@@ -21,6 +21,7 @@ import { AgentRows, AppSidebar, NavLink } from './AppSidebar'
 import { AskDrawer } from './AskDrawer'
 import { DISCOVER, HOME_HREF, isOn, MONEY, SETTINGS } from './nav'
 import type { SidebarAgent } from './types'
+import { useLiveRefresh } from './useLiveRefresh'
 import { WalletChip } from './WalletChip'
 
 export interface AppShellProps {
@@ -39,6 +40,7 @@ export interface AppShellProps {
 export function AppShell({ children, signedInAs, unread, agents }: AppShellProps) {
   const pathname = usePathname()
   const router = useRouter()
+  useLiveRefresh(pathname)
   const main = useRef<HTMLElement>(null)
   const [more, setMore] = useState(false)
 

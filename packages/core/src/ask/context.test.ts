@@ -27,5 +27,8 @@ describe('assistant before an agent exists', () => {
     expect(context.message).toContain('Shijima: Nvidia is a Stock Token.')
     expect(context.message).toContain('propose nothing')
     expect(context.message).toContain('And the strategies?')
+    expect(context.message).toContain('worker checks every five minutes')
+    expect(context.message).toContain('OpenServ starts the hourly review')
+    expect(context.message).toContain('only when a trade qualifies')
   })
 })

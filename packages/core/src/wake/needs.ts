@@ -13,6 +13,7 @@
  */
 import type { Mandate, MandateRule } from '@desk/shared'
 import { engineCopy } from '@desk/shared'
+import { formatUnits } from 'viem'
 import type { Candidate } from './types'
 import type { HoldingValue, Valuation } from './valuation'
 
@@ -55,6 +56,18 @@ export function thresholdBps(h: HoldingValue, mandate: Mandate): number {
 }
 
 const min = (a: bigint, b: bigint) => (a < b ? a : b)
+const preciseUsd = (raw: bigint) => `$${formatUnits(raw, 6)}`
+
+export interface NeedExclusion {
+  symbol: string
+  rule: 'MINIMUM_TRADE' | 'CASH_RESERVE' | 'ACTION_LIMIT' | 'PRICE_UNAVAILABLE'
+  text: string
+}
+
+export interface NeedAssessment {
+  needs: Need[]
+  excluded: NeedExclusion[]
+}
 
 /**
  * A sell is sized off the 30 minute average, but the CONTRACT counts it at the larger of the USDG received and
@@ -74,7 +87,13 @@ export function sellAmountFor(h: HoldingValue, usdg: bigint): bigint {
  * `fallBps` below the reference. `references` holds the reference price per token, 8 decimals, from the same
  * source every decision uses. A token with no reference cannot be judged, so its rule stays quiet.
  */
-function ruleNeeds(v: Valuation, mandate: Mandate, cap: bigint, references: Record<string, bigint>): Need[] {
+function ruleNeeds(
+  v: Valuation,
+  mandate: Mandate,
+  cap: bigint,
+  references: Record<string, bigint>,
+  excluded: NeedExclusion[],
+): Need[] {
   const needs: Need[] = []
   for (const rule of mandate.rules ?? []) {
     const h = v.holdings.find((x) => x.token.address.toLowerCase() === rule.token.toLowerCase())
@@ -84,7 +103,22 @@ function ruleNeeds(v: Valuation, mandate: Mandate, cap: bigint, references: Reco
     if (gapBps > -rule.fallBps) continue
     const fullUsdg = (h.valueUsdg * BigInt(rule.cutBps)) / BPS
     const usdg = min(fullUsdg, cap)
-    if (usdg < MIN_TRADE_USDG) continue
+    if (usdg < MIN_TRADE_USDG) {
+      excluded.push({
+        symbol: h.token.symbol,
+        rule: cap < MIN_TRADE_USDG ? 'ACTION_LIMIT' : 'MINIMUM_TRADE',
+        text:
+          cap < MIN_TRADE_USDG
+            ? engineCopy.need.actionLimit(h.token.displayName, preciseUsd(cap), preciseUsd(MIN_TRADE_USDG))
+            : engineCopy.need.tooSmall(
+                h.token.displayName,
+                'sale',
+                preciseUsd(usdg),
+                preciseUsd(MIN_TRADE_USDG),
+              ),
+      })
+      continue
+    }
     const amountIn = fullUsdg <= cap ? (h.balance * BigInt(rule.cutBps)) / BPS : sellAmountFor(h, usdg)
     if (amountIn === 0n) continue
     needs.push({
@@ -106,16 +140,21 @@ function ruleNeeds(v: Valuation, mandate: Mandate, cap: bigint, references: Reco
   return needs
 }
 
-export function findNeeds(
+export function assessNeeds(
   v: Valuation,
   mandate: Mandate,
   perActionCapUsdg: bigint,
   references: Record<string, bigint> = {},
-): Need[] {
+): NeedAssessment {
   // The smaller of the owner's mandate and what the chain will actually allow.
   const cap = perActionCapUsdg < mandate.perActionCapUsdg ? perActionCapUsdg : mandate.perActionCapUsdg
-  const needs: Need[] = ruleNeeds(v, mandate, cap, references)
-  if (mandate.follow) return needs.map((n, i) => ({ ...n, candidate: { ...n.candidate, id: `c${i + 1}` } }))
+  const excluded: NeedExclusion[] = []
+  const needs: Need[] = ruleNeeds(v, mandate, cap, references, excluded)
+  if (mandate.follow)
+    return {
+      needs: needs.map((n, i) => ({ ...n, candidate: { ...n.candidate, id: `c${i + 1}` } })),
+      excluded,
+    }
   const ruled = new Set(needs.map((n) => n.candidate.token.address.toLowerCase()))
   // A buy never takes cash below the mandate's cash target. Cash in the vault counts as cash: a redeem is a
   // later step. What a buy may spend is the cash above that floor, and no more than the loose cash it has.
@@ -130,13 +169,42 @@ export function findNeeds(
     const threshold = thresholdBps(h, mandate)
     // A token the mandate no longer names is sold whatever its size. Anything else must be past its threshold.
     if (!notInMandate && Math.abs(h.driftBps) <= threshold) continue
-    if (h.driftBps === 0 || h.twapE8 === 0n) continue
+    if (h.driftBps === 0) continue
+    if (h.twapE8 === 0n) {
+      excluded.push({
+        symbol: h.token.symbol,
+        rule: 'PRICE_UNAVAILABLE',
+        text: engineCopy.need.noPrice(h.token.displayName),
+      })
+      continue
+    }
 
     const side = h.driftBps > 0 ? 'sell' : 'buy'
     const fullUsdg = (v.totalUsdg * BigInt(Math.abs(h.driftBps))) / BPS
     let usdg = fullUsdg > cap ? cap : fullUsdg
     if (side === 'buy') usdg = min(usdg, spendable)
-    if (usdg < MIN_TRADE_USDG) continue
+    if (usdg < MIN_TRADE_USDG) {
+      const rule =
+        cap < MIN_TRADE_USDG ? 'ACTION_LIMIT' : fullUsdg < MIN_TRADE_USDG ? 'MINIMUM_TRADE' : 'CASH_RESERVE'
+      const text =
+        rule === 'ACTION_LIMIT'
+          ? engineCopy.need.actionLimit(h.token.displayName, preciseUsd(cap), preciseUsd(MIN_TRADE_USDG))
+          : rule === 'CASH_RESERVE'
+            ? engineCopy.need.cashReserve(
+                h.token.displayName,
+                preciseUsd(fullUsdg),
+                preciseUsd(spendable),
+                preciseUsd(MIN_TRADE_USDG),
+              )
+            : engineCopy.need.tooSmall(
+                h.token.displayName,
+                side === 'buy' ? 'buy' : 'sale',
+                preciseUsd(fullUsdg),
+                preciseUsd(MIN_TRADE_USDG),
+              )
+      excluded.push({ symbol: h.token.symbol, rule, text })
+      continue
+    }
 
     // Selling a token the mandate dropped sells the balance itself, so no dust is left behind.
     const sellAll = side === 'sell' && notInMandate && fullUsdg <= cap
@@ -161,7 +229,65 @@ export function findNeeds(
   // The owner's own rules first. Then sales, because they free the cash that buys need. Within a side, the
   // largest drift first.
   const rank = (n: Need) => (n.rule ? 0 : n.candidate.side === 'sell' ? 1 : 2)
-  return needs
-    .sort((a, b) => rank(a) - rank(b) || Math.abs(b.driftBps) - Math.abs(a.driftBps))
-    .map((n, i) => ({ ...n, candidate: { ...n.candidate, id: `c${i + 1}` } }))
+  return {
+    excluded,
+    needs: needs
+      .sort((a, b) => rank(a) - rank(b) || Math.abs(b.driftBps) - Math.abs(a.driftBps))
+      .map((n, i) => ({ ...n, candidate: { ...n.candidate, id: `c${i + 1}` } })),
+  }
+}
+
+/** Existing callers get identical candidates; diagnosis never relaxes a trading rule. */
+export function findNeeds(
+  v: Valuation,
+  mandate: Mandate,
+  cap: bigint,
+  references: Record<string, bigint> = {},
+): Need[] {
+  return assessNeeds(v, mandate, cap, references).needs
+}
+
+export function qualificationOf(
+  v: Valuation,
+  mandate: Mandate,
+  cap: bigint,
+  references: Record<string, bigint> = {},
+) {
+  const assessment = assessNeeds(v, mandate, cap, references)
+  const excluded = [
+    ...assessment.excluded,
+    ...v.unpriced.map((h) => ({ symbol: h.token.symbol, rule: 'PRICE_UNAVAILABLE' as const, text: h.why })),
+  ]
+  const summary =
+    assessment.needs.length > 0
+      ? engineCopy.need.qualified(assessment.needs.map((n) => n.candidate.token.displayName))
+      : mandate.follow
+        ? engineCopy.followingOnly
+        : excluded.length > 0
+          ? engineCopy.need.noneQualified(excluded.map((e) => e.text))
+          : engineCopy.nothingToDo
+  return { summary, eligibleSymbols: assessment.needs.map((n) => n.candidate.token.symbol), excluded }
+}
+
+/** Extra cash needed for a minimum-sized buy, preserving the cash target and existing holding. */
+export function minimumBuyFunding(input: {
+  total: bigint
+  cash: bigint
+  vault: bigint
+  held: bigint
+  targetBps: number
+  cashBps: number
+  cap: bigint
+}): bigint | null {
+  if (input.targetBps <= 0 || input.cashBps >= 10_000 || input.cap < MIN_TRADE_USDG) return null
+  const ceil = (n: bigint, d: bigint) => (n <= 0n ? 0n : (n + d - 1n) / d)
+  const target = ceil((MIN_TRADE_USDG + input.held) * BPS, BigInt(input.targetBps)) - input.total
+  const reserve = ceil(
+    MIN_TRADE_USDG * BPS + input.total * BigInt(input.cashBps) - (input.cash + input.vault) * BPS,
+    BPS - BigInt(input.cashBps),
+  )
+  // Vault cash can be redeemed by the existing housekeeping step; it is not new funding.
+  const more = target > reserve ? target : reserve
+  // UI amounts must be actionable cents, always rounded up.
+  return ceil(more, 10_000n) * 10_000n
 }
