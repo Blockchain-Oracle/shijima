@@ -115,7 +115,7 @@ export const howCopy = {
     },
     record: {
       title: 'The record',
-      body: 'Every check is written down with its reasons and the options it turned down, and fingerprinted on the public network. Anyone with the link can check it in their own browser.',
+      body: 'Every decision is written down with its reasons and the options it turned down, including a daily record when nothing changes. The agent page counts completed checks separately. Anyone with the link can verify a record in their own browser.',
     },
   },
 
@@ -175,7 +175,7 @@ export const howCopy = {
       },
       write: {
         label: 'Write it down',
-        desc: 'Every check goes into the record, including the ones that did nothing. Each entry carries the fingerprint of the one before it, and a fingerprint goes on the public network with every action and once a day.',
+        desc: 'Every decision goes into the record, with a quiet daily entry if nothing changes. Unchanged five-minute checks are counted separately. Each entry carries the fingerprint of the one before it, and a fingerprint goes on the public network with every action and once a day.',
       },
     },
   },
@@ -301,7 +301,7 @@ export const howCopy = {
     },
     awake: {
       q: 'How do I know it is awake?',
-      a: 'Status shows the last check of every shared agent, the worker’s heartbeat, the trigger from OpenServ, and every data source, live. In Telegram, one pinned message is updated at every check.',
+      a: 'Status shows the last check of every published agent, the worker’s heartbeat, the trigger from OpenServ, and every data source, live. In Telegram, one pinned message is updated at every check.',
     },
     practice: {
       q: 'What is practice?',

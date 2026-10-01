@@ -58,10 +58,10 @@ export const recordPagesCopy = {
 export const recordPageCopy = {
   title: 'Every decision',
   intro:
-    'One entry for every check, including the ones that found nothing to do. Those are the proof it was awake.',
+    'Every written decision, including quiet daily records. Unchanged five-minute checks are counted on the agent page without repeating the same record.',
   empty: 'Nothing recorded yet.',
   emptyFiltered: 'Nothing matches those filters.',
-  quiet: (n: number, from: string, to: string) => `${n} checks, nothing new · ${from} to ${to}`,
+  quiet: (n: number, from: string, to: string) => `${n} quiet records · ${from} to ${to}`,
   older: 'Older →',
   filters: {
     title: 'Show',
@@ -79,7 +79,7 @@ export const recordPageCopy = {
     inPlan: 'In its plan',
     others: 'Other Stock Tokens',
   },
-  quietRun: (n: number) => `${n} checks, nothing new`,
+  quietRun: (n: number) => `${n} quiet records`,
 } as const
 
 /** One decision, in full [8.11]. Section titles in the brief's order. */
