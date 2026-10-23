@@ -1,43 +1,34 @@
 # Third-party notices
 
-This file records where the website's design came from, and the attribution for material it carries. It does
-not grant a licence to Shijima as a whole, change any upstream terms, or imply endorsement by the projects named.
-File-level notices and each dependency's own licence still apply.
+This file records the earlier work and third-party material the project carries. It does not grant a licence to
+Shijima as a whole, change any upstream terms, or imply endorsement by the projects named. File-level notices and each
+dependency's own licence still apply.
 
-## Masayume, Agari and Yosuku: the interface
+## Earlier work by the author: the interface
 
-The website's look comes from **Masayume** (`sommina-events` @ `a255ae9`), by way of **Agari**
-(`agari-wt/w1`, branch `integration/w1` @ `695e7ca`). Agari had already moved Masayume onto US stocks. Both are
-the same author's own projects. Masayume's interface is itself a source-led port of **Yosuku**.
+The website's design system comes from the author's own earlier projects, built before this one. It lives in
+`apps/web/styles/`, `apps/web/components/ui/` (shadcn `base-nova` primitives on Base UI), `apps/web/components/shell/`
+and `apps/web/components/states/`. The author approved reusing it for Shijima.
 
-- **Yosuku:** [Cybire1/yosuku](https://github.com/Cybire1/yosuku), pinned reference commit
-  `3c56ef52b78dae28cc198495f753480292f6a5ad`. `apps/web/styles/yosuku/` holds its design system, copied
-  verbatim from Agari. The parts join byte for byte into the reference's `globals.css`. Only the `@source` lines
-  in `index.css` are ours, and they point at this app's folders.
-- **Carried over from Agari:** `apps/web/styles/agari/`, the semantic bridge, the component tokens and the
-  sheets for the surfaces Shijima keeps, all verbatim. `apps/web/components/ui/` holds the shadcn `base-nova`
-  primitives on Base UI. `apps/web/components/shell/` and `apps/web/components/states/` are adapted from
-  Agari's own files, and each file names its source in a comment.
-- **Approval:** the owner approved reusing Yosuku's source, CSS, tokens and assets for Masayume on
-  1 September 2026. Agari carried that approval on 13 September, and Shijima carries it here.
-- **What is not known:** Yosuku's pinned README shows an MIT badge, but its tree has no licence file for the
-  badge to point at. No MIT grant is inferred from the badge or from this notice. The question stays open for
-  public redistribution, as it was for Agari.
+- **Design system source:** [Cybire1/yosuku](https://github.com/Cybire1/yosuku), pinned at commit
+  `3c56ef52b78dae28cc198495f753480292f6a5ad`. Its README shows an MIT badge, but its tree has no licence file for the
+  badge to point at. No MIT grant is inferred from the badge or from this notice, and the question stays open for
+  public redistribution.
 
-## ZK Freighter: the wallet screens
+## Earlier work by the author: the wallet screens
 
-The app's frame, sidebar, wallet, money screens, settings, phone chrome and landing page follow **ZK Freighter**
-([Blockchain-Oracle/zk-freighter](https://github.com/Blockchain-Oracle/zk-freighter), pinned at `859d95f`), the same
-author's own wallet project. Its components were ported into `apps/web/components/kit/`, `apps/web/styles/kit/`,
-`apps/web/components/shell/app/`, `apps/web/features/money/`, `apps/web/features/wallet/` and
-`apps/web/features/home/landing/`, with Shijima's colours and copy. The author asked for its code to be reused on
-23 September 2026. Its tree at that commit has no licence file, so no licence grant is inferred here.
+The app's frame, sidebar, wallet, money screens, settings, phone chrome and landing page reuse components from the
+author's own earlier wallet project, **ZK Freighter**
+([Blockchain-Oracle/zk-freighter](https://github.com/Blockchain-Oracle/zk-freighter), pinned at `859d95f`), in
+`apps/web/components/kit/`, `apps/web/styles/kit/`, `apps/web/components/shell/app/`, `apps/web/features/money/`,
+`apps/web/features/wallet/` and `apps/web/features/home/landing/`, with Shijima's colours and copy. Its tree at that
+commit has no licence file, so no licence grant is inferred here.
 
 ## Fonts
 
 | Font | Terms | Where |
 | --- | --- | --- |
-| Sora | Copyright 2019 The Sora Project Authors. SIL Open Font License 1.1. | `apps/web/lib/fonts.ts`, through `next/font/google`; the SemiBold TTF is vendored with its licence in `apps/web/features/og/fonts/` for link previews, as Agari does |
+| Sora | Copyright 2019 The Sora Project Authors. SIL Open Font License 1.1. | `apps/web/lib/fonts.ts`, through `next/font/google`; the SemiBold TTF is vendored with its licence in `apps/web/features/og/fonts/` for link previews |
 | Inter | Copyright 2020 The Inter Project Authors. SIL Open Font License 1.1. | the same |
 | JetBrains Mono | Copyright 2020 The JetBrains Mono Project Authors. SIL Open Font License 1.1. | the same |
 | Hanken Grotesk | Copyright 2021 The Hanken Grotesk Project Authors. SIL Open Font License 1.1. | `apps/web/lib/fonts.ts`, through `next/font/google`: the display and body face since round 4 |
@@ -58,7 +49,7 @@ each dependency.
 
 ## Asset marks
 
-The discs that name a Stock Token (`apps/web/features/markets/mark-paths.ts`, copied from Agari) carry the issuer's
+The discs that name a Stock Token (`apps/web/features/markets/mark-paths.ts`) carry the issuer's
 mark as inline SVG path data, so nothing is fetched at runtime. The marks and names are trademarks of their owners;
 they identify the underlying assets and imply no endorsement of, or affiliation with, Shijima. A CC0 grant below
 covers the vectorization, not the trademark.
